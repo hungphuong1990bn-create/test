@@ -1826,6 +1826,29 @@ setInterval(()=>{
   if(currentUser && fbOk() && !document.hidden) updateOnline();
 }, 20000);
 
+// Gộp các lần "vẽ lại giao diện" xảy ra dồn dập (VD nhiều field đổi liên
+// tiếp qua SSE trong vài trăm ms) thành 1 lần duy nhất bằng requestAnimationFrame.
+// Giúp đồng bộ mượt hơn (đỡ giật khi gõ/cuộn) và giảm tải CPU/pin — quan trọng
+// để không ảnh hưởng các app khác đang chạy song song trên máy (Zalo nhắn tin/gọi…).
+// Khi app đang ở nền (document.hidden) thì bỏ qua hẳn việc vẽ lại, chỉ lưu dữ
+// liệu, vì lúc đó không ai nhìn thấy UI và vẽ lại chỉ tốn tài nguyên vô ích.
+let _uiRefreshScheduled = false;
+let _lastSyncToastAt = 0;
+function scheduleUIRefresh(showSyncToast){
+  if(document.hidden) return; // ở nền: khỏi vẽ, đỡ tốn máy cho ứng dụng khác
+  if(showSyncToast){
+    const now = Date.now();
+    if(now - _lastSyncToastAt > 4000){ // gộp toast, tối đa 1 lần/4s cho đỡ chớp màn hình
+      _lastSyncToastAt = now;
+      showToast('🔄 Đã cập nhật dữ liệu');
+    }
+  }
+  if(_uiRefreshScheduled) return;
+  _uiRefreshScheduled = true;
+  const run = ()=>{ _uiRefreshScheduled=false; renderTab(currentTab); updateBadges(); updateOnline(); };
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(run); else setTimeout(run,16);
+}
+
 // Áp dữ liệu Firebase (/data) vào state hiện tại — dùng chung cho lần đọc đầu,
 // polling dự phòng và khi SSE báo thay đổi ở gốc /data
 function applyDataSnapshot(data){
@@ -1857,7 +1880,7 @@ function applyDataSnapshot(data){
   if(data.nghiPhep && JSON.stringify(data.nghiPhep)!==JSON.stringify(DB.nghiPhep)){ DB.nghiPhep = data.nghiPhep; changed = true; }
   if(data.lichLamViec && JSON.stringify(data.lichLamViec)!==JSON.stringify(DB.lichLamViec)){ DB.lichLamViec = data.lichLamViec; changed = true; }
   if(data.baoTri && JSON.stringify(data.baoTri)!==JSON.stringify(DB.baoTri)){ DB.baoTri = data.baoTri; changed = true; }
-  if(changed){ lsSave(); renderTab(currentTab); updateBadges(); updateOnline(); showToast('🔄 Đã cập nhật dữ liệu'); }
+  if(changed){ lsSave(); scheduleUIRefresh(true); }
   return changed;
 }
 
@@ -1912,8 +1935,7 @@ function applyFieldChange(field, val){
     if(JSON.stringify(fresh)===JSON.stringify(DB[field])) return;
     DB[field] = fresh;
   }
-  lsSave(); renderTab(currentTab); updateBadges(); updateOnline();
-  showToast('🔄 Đã cập nhật dữ liệu');
+  lsSave(); scheduleUIRefresh(true);
 }
 
 // Xử lý 1 sự kiện thay đổi từ SSE, theo đúng path Firebase báo về
@@ -5830,15 +5852,24 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkFo
 window.addEventListener('online', checkForNewVersion);
 
 // 3. IDLE RELOAD — tự reload sau 2 phút không tương tác
+// Chỉ đếm khi app đang HIỂN THỊ trên màn hình. Khi app bị đẩy xuống nền
+// (người dùng chuyển qua Zalo nhắn tin/gọi điện, app khác...), dừng hẳn bộ đếm
+// và huỷ mọi lịch reload đang chờ — tránh việc tự reload "ngầm" làm hao pin/CPU/
+// mạng đúng lúc đang gọi điện, và tránh giật/gián đoạn khi người dùng quay lại.
 let _idleTimer = null;
 const IDLE_RELOAD = 2*60*1000; // 2 phút
 
 function resetIdleTimer(){
   clearTimeout(_idleTimer);
+  if(document.hidden) return; // ở nền: không hẹn giờ reload
   _idleTimer = setTimeout(()=>safeReload(false), IDLE_RELOAD);
 }
 ['click','touchstart','keydown','scroll','pointerdown'].forEach(ev=>{
   document.addEventListener(ev, resetIdleTimer, {passive:true});
+});
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){ clearTimeout(_idleTimer); _idleTimer=null; }
+  else resetIdleTimer(); // quay lại app: đếm lại từ đầu, không cộng dồn thời gian ở nền
 });
 resetIdleTimer();
 
