@@ -1361,8 +1361,8 @@ const LOG_KEY = 'sx_log_v2';
 // mở đầu tiên khi offline). Số phiên bản THẬT được .github/workflows/
 // bump-version.yml tự động tăng lên và ghi vào version.json mỗi khi có
 // code mới được đẩy lên nhánh main — không cần sửa tay số này nữa.
-const APP_VERSION    = '2.5.0';
-const APP_BUILD_DATE = '2026-07-02';
+const APP_VERSION    = '2.5.1';
+const APP_BUILD_DATE = '2026-07-04';
 
 const PRI_COLOR = {
   'GẤP 1':'#dc2626','GẤP 2':'#ea580c','GẤP 3':'#d97706',
@@ -1489,25 +1489,56 @@ function logSave(){
 
 let _saving = false;
 
+// Đánh dấu các nhánh dữ liệu vừa sửa cục bộ nhưng CHƯA CHẮC đã lên Firebase
+// thành công ("dirty"). Dấu này chỉ được xoá khi ghi lên Firebase trả về OK.
+// Nếu app bị đóng / mất mạng / tắt máy giữa chừng trước khi ghi xong, dấu vẫn
+// còn trong localStorage → lần MỞ APP SAU sẽ thấy dấu này và tự ĐẨY LẠI dữ
+// liệu cục bộ lên Firebase TRƯỚC KHI tải dữ liệu server về (xem initAndStartSync),
+// để không bị bản cũ trên server ghi đè mất đơn hàng/chấm công vừa nhập
+// — đúng lỗi "nhập đơn/chấm công hôm nay, vào xem lại bị mất".
+const DIRTY_KEY = 'sx_dirty_fields_v1';
+function getDirtyFields(){ try{ return JSON.parse(localStorage.getItem(DIRTY_KEY)||'[]'); }catch(e){ return []; } }
+function markDirty(field){
+  try{ const s=new Set(getDirtyFields()); s.add(field); localStorage.setItem(DIRTY_KEY, JSON.stringify([...s])); }catch(e){}
+}
+function clearDirty(field){
+  try{ const s=new Set(getDirtyFields()); s.delete(field); localStorage.setItem(DIRTY_KEY, JSON.stringify([...s])); }catch(e){}
+}
+
+// Ghi 1 nhánh /data/<field> lên Firebase, có retry ĐÚNG 1 LẦN sau 3s nếu lỗi
+// mạng. QUAN TRỌNG: beginSave() chỉ được gọi 1 LẦN DUY NHẤT ở nơi gọi hàm này
+// (không gọi lại bên trong retry), và endSave() luôn được gọi đúng 1 lần ở
+// điểm kết thúc cuối cùng — dù thành công hay thất bại hẳn.
+// Bản cũ gọi beginSave() lần nữa bên trong khối retry nhưng lại chỉ khớp với
+// đúng 1 endSave() ở cuối → mỗi khi mạng chập chờn 1 lần là bộ đếm
+// _pendingSaves bị "kẹt" ở số dương MÃI MÃI. Vì applyDataSnapshot/doPoll/
+// applyFieldChange đều tự bỏ qua dữ liệu mới khi _pendingSaves>0 (để tránh ghi
+// đè lúc đang lưu dở), hậu quả là thiết bị đó VĨNH VIỄN không nhận thêm bất kỳ
+// cập nhật realtime/polling nào từ thiết bị khác nữa cho tới khi F5 lại trang
+// — đúng lỗi "thêm đơn mới không đồng bộ được sang thiết bị khác".
+function fbSaveField(field, path, isRetry){
+  fbWrite(path, DB[field], 'PUT')
+    .then(()=>{ setSyncDot('ok'); clearDirty(field); endSave(); })
+    .catch(e=>{
+      if(!isRetry){
+        setSyncDot('error');
+        showToast('❌ Lỗi sync: '+e.message, true);
+        setTimeout(()=>fbSaveField(field, path, true), 3000);
+      } else {
+        setSyncDot('error');
+        endSave(); // giữ nguyên dấu "dirty" để lần mở app sau tự đẩy lại, không mất dữ liệu
+      }
+    });
+}
+
 function saveOrders(){
   lsSave();
   _lastHash = hashOrders(DB.orders); // đánh dấu NGAY: đây là bản mới nhất do chính mình vừa tạo
   if(!fbOk()) return;
   setSyncDot('saving');
+  markDirty('orders');
   beginSave();
-  fbWrite('/data/orders', DB.orders, 'PUT')
-    .then(()=>{ setSyncDot('ok'); endSave(); })
-    .catch(e=>{
-      setSyncDot('error');
-      showToast('❌ Lỗi sync: '+e.message, true);
-      // retry 3s
-      setTimeout(()=>{
-        beginSave();
-        fbWrite('/data/orders', DB.orders, 'PUT')
-          .then(()=>{ setSyncDot('ok'); endSave(); })
-          .catch(()=>{ endSave(); });
-      }, 3000);
-    });
+  fbSaveField('orders', '/data/orders', false);
 }
 
 function saveAll(){
@@ -1517,7 +1548,7 @@ function saveAll(){
   setSyncDot('saving');
   beginSave();
   fbWrite('/data', {orders:DB.orders, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri}, 'PUT')
-    .then(()=>{ setSyncDot('ok'); endSave(); })
+    .then(()=>{ setSyncDot('ok'); ['orders','attendance','workers','kyLuat','nghiPhep','lichLamViec','baoTri'].forEach(clearDirty); endSave(); })
     .catch(e=>{ setSyncDot('error'); showToast('❌ Lỗi: '+e.message, true); endSave(); });
 }
 
@@ -1525,40 +1556,37 @@ function saveAttendance(){
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
+  markDirty('attendance');
   beginSave();
-  fbWrite('/data/attendance', DB.attendance, 'PUT')
-    .then(()=>{ setSyncDot('ok'); endSave(); })
-    .catch(e=>{ setSyncDot('error'); showToast('❌ Lỗi sync: '+e.message, true); endSave(); });
+  fbSaveField('attendance', '/data/attendance', false);
 }
+
 
 function saveWorkers(){
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
+  markDirty('workers');
   beginSave();
-  fbWrite('/data/workers', DB.workers, 'PUT')
-    .then(()=>{ setSyncDot('ok'); endSave(); })
-    .catch(e=>{ setSyncDot('error'); showToast('❌ Lỗi sync: '+e.message, true); endSave(); });
+  fbSaveField('workers', '/data/workers', false);
 }
 
 function saveLichLamViec(){
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
+  markDirty('lichLamViec');
   beginSave();
-  fbWrite('/data/lichLamViec', DB.lichLamViec, 'PUT')
-    .then(()=>{ setSyncDot('ok'); endSave(); })
-    .catch(e=>{ setSyncDot('error'); showToast('❌ Lỗi sync: '+e.message, true); endSave(); });
+  fbSaveField('lichLamViec', '/data/lichLamViec', false);
 }
 
 function saveBaoTri(){
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
+  markDirty('baoTri');
   beginSave();
-  fbWrite('/data/baoTri', DB.baoTri, 'PUT')
-    .then(()=>{ setSyncDot('ok'); endSave(); })
-    .catch(e=>{ setSyncDot('error'); showToast('❌ Lỗi sync: '+e.message, true); endSave(); });
+  fbSaveField('baoTri', '/data/baoTri', false);
 }
 
 function saveLog(){
@@ -1760,6 +1788,18 @@ async function initAndStartSync(){
   if(fbOk()){
     setSyncDot('saving');
     try{
+      // Nếu có nhánh dữ liệu bị đánh dấu "dirty" từ phiên trước (đã lưu local
+      // nhưng CHƯA CHẮC lên Firebase kịp — VD app bị đóng/mất mạng ngay sau khi
+      // nhập đơn/chấm công) → đẩy lên TRƯỚC khi tải bản server về. Nếu bỏ qua
+      // bước này, bản server (cũ hơn) sẽ ghi đè lên state hiện tại ngay bên
+      // dưới và xoá mất đúng phần vừa nhập — đây là nguyên nhân chính của lỗi
+      // "nhập đơn/chấm công hôm nay, vào xem lại bị mất".
+      const dirty = getDirtyFields();
+      if(dirty.length){
+        await Promise.all(dirty.map(f=>
+          fbWrite('/data/'+f, DB[f], 'PUT').then(()=>clearDirty(f)).catch(()=>{})
+        ));
+      }
       const data = await fbRead('/data');
       if(data){
         if(data.orders){ DB.orders = Array.isArray(data.orders)?data.orders:Object.values(data.orders); }
@@ -2051,7 +2091,20 @@ function updateLogBadge(){
 // ════════════════════════════════════════════════════════════
 // ONLINE PRESENCE (Firebase Heartbeat)
 // ════════════════════════════════════════════════════════════
-const _devId = (()=>{ let id=localStorage.getItem('sx_dev'); if(!id){id='d'+Date.now().toString(36); localStorage.setItem('sx_dev',id);} return id; })();
+// Mã định danh thiết bị — lưu cố định trong localStorage của trình duyệt để
+// mỗi lần mở lại app (kể cả sau khi tự reload) vẫn dùng đúng 1 mã, tránh bị
+// đếm thành "nhiều thiết bị" trong danh sách Đang truy cập.
+// Có thêm phần ngẫu nhiên (không chỉ dựa vào mốc thời gian) để tránh trường
+// hợp 2 tab/cửa sổ của CÙNG một trình duyệt cùng khởi động gần như đồng thời
+// (VD trình duyệt tự khôi phục nhiều tab cùng lúc sau khi mở lại máy) và vô
+// tình sinh ra 2 mã na ná nhau trước khi kịp ghi lại localStorage cho nhau
+// thấy — đây là một trong các nguyên nhân khiến 1 máy/1 người lại hiện thành
+// nhiều dòng trùng tên trong "Đang truy cập".
+const _devId = (()=>{
+  let id=localStorage.getItem('sx_dev');
+  if(!id){ id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem('sx_dev',id); }
+  return id;
+})();
 
 // Thời điểm bắt đầu phiên làm việc trên thiết bị này — dùng sessionStorage
 // (sống sót qua các lần tự reload định kỳ của app, chỉ mất khi đóng hẳn tab)
@@ -4116,17 +4169,7 @@ function renderSettings(){
         Đăng xuất
       </button>
     </div>
-
-    <div class="sec-title" style="margin-top:14px">Phiên bản ứng dụng</div>
-    <div class="card ver-card" id="verCardBox">${buildVersionCard()}</div>
   `;
-  updateVerConnDot();
-  // Nếu chưa có dữ liệu version.json trong cache, tự kiểm tra ngầm ngay khi
-  // mở tab Cài đặt (không đợi chu kỳ 5s/2 phút), để dòng "Bản build" điền
-  // ngay lần đầu thay vì hiện "Đang đồng bộ…" quá lâu.
-  if(!_versionInfo && typeof checkForNewVersion==='function'){
-    try{ checkForNewVersion(); }catch(e){}
-  }
 }
 
 // ════════════════════════════════════════════════════════════
