@@ -221,6 +221,8 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .ai-card-warn-ico{font-size:12.5px;flex-shrink:0;margin-top:0}
 .ai-card-warn-txt{flex:1}
 .ai-card-warn-txt b{font-weight:800}
+.ai-card-warn-jump{border-color:#f87171}
+.ai-card-warn-jumptag{flex-shrink:0;font-size:8.5px;font-weight:800;background:#dc2626;color:#fff;padding:1px 6px;border-radius:20px;letter-spacing:.2px;white-space:nowrap}
 @keyframes warn-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.25)}60%{box-shadow:0 0 0 5px rgba(220,38,38,.0)}}
 @keyframes card-flash{0%{box-shadow:0 0 0 0 rgba(37,99,235,.55)}70%{box-shadow:0 0 0 10px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
 .flash-highlight{animation:card-flash 1s ease-out 2}
@@ -2779,7 +2781,7 @@ function dashMiniCard(o, onClick){
       : o.createdAt ? fmtDateTime(o.createdAt) : '';
   const timeIcon = s==='done'?'✅':s==='running'?'▶':'🕐';
   const ai = aiAnalyzeOrder(o);
-  const topWarn = ai.warnings[0];
+  const topWarn = ai.oneLine;
 
   // Tính thời gian chạy cho display
   let runTime='';
@@ -2802,7 +2804,7 @@ function dashMiniCard(o, onClick){
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-bottom:2px"><span>Tiến độ</span><span style="font-weight:700;color:var(--brand)">${pct}%</span></div>
       <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--brand),var(--green-m));border-radius:2px"></div></div>
     </div>`:''}
-    ${topWarn?`<div class="ai-warn ${topWarn.level}" style="margin-top:3px;font-size:9px">${topWarn.msg}</div>`:''}
+    ${topWarn?`<div class="ai-warn ${topWarn.level}" style="margin-top:3px;font-size:9px">${topWarn.icon} ${topWarn.msg}</div>`:''}
     ${runTime&&!topWarn?`<div class="ai-warn ok" style="margin-top:3px;font-size:9px">⚙️ Đang chạy ${runTime}</div>`:''}
     ${timeStr?`<div class="dash-mini-time" style="margin-top:3px">${timeIcon} ${timeStr}</div>`:''}
   </div>`;
@@ -2848,7 +2850,7 @@ function fmtHrs(hrs){
 function aiAnalyzeOrder(o){
   const now = Date.now();
   const s = o.status==='cutting'?'running':o.status;
-  const warnings = [];
+  const warnings = []; // {level, tag, sev, icon, msg} — sev = độ nghiêm trọng, dùng để chọn dòng quan trọng nhất
   let score = 0;
   let urgencyTag = ''; // '' | 'normal' | 'warning' | 'critical' | 'overdue'
 
@@ -2863,24 +2865,24 @@ function aiAnalyzeOrder(o){
 
     if(hrs >= 48){
       // Chạy hơn 2 ngày — cực kỳ nghiêm trọng
-      warnings.push({level:'red', msg:`🆘 Chạy ${timeStr} — PHẢI HOÀN THÀNH NGAY!`});
+      warnings.push({level:'red', tag:'run', sev:500, icon:'🆘', msg:`Chạy ${timeStr} — PHẢI HOÀN THÀNH NGAY!`});
       score += 500;
       urgencyTag = 'critical';
     } else if(hrs >= 24){
       // Chạy hơn 1 ngày
-      warnings.push({level:'red', msg:`🚨 Chạy ${timeStr} — cần hoàn thiện gấp!`});
+      warnings.push({level:'red', tag:'run', sev:350, icon:'🚨', msg:`Chạy ${timeStr} — cần hoàn thiện gấp!`});
       score += 350;
       urgencyTag = 'critical';
     } else if(hrs >= 12){
-      warnings.push({level:'red', msg:`⛔ Chạy ${timeStr} — đã quá nửa ngày!`});
+      warnings.push({level:'red', tag:'run', sev:200, icon:'⛔', msg:`Chạy ${timeStr} — đã quá nửa ngày!`});
       score += 200;
       urgencyTag = 'warning';
     } else if(hrs >= 8){
-      warnings.push({level:'red', msg:`🚨 Chạy ${timeStr} — kiểm tra ngay!`});
+      warnings.push({level:'red', tag:'run', sev:150, icon:'🚨', msg:`Chạy ${timeStr} — kiểm tra ngay!`});
       score += 150;
       urgencyTag = 'warning';
     } else if(hrs >= 4){
-      warnings.push({level:'amber', msg:`⏱ Chạy ${timeStr} — theo dõi tiến độ`});
+      warnings.push({level:'amber', tag:'run', sev:70, icon:'⏱', msg:`Chạy ${timeStr} — theo dõi tiến độ`});
       score += 70;
       urgencyTag = 'normal';
     } else if(hrs >= 2){
@@ -2889,10 +2891,10 @@ function aiAnalyzeOrder(o){
 
     // Tiến độ cực chậm
     if(hrs >= 4 && pct < 10 && o.qty > 0){
-      warnings.push({level:'red', msg:`📉 Tiến độ chỉ ${Math.round(pct)}% sau ${timeStr} — rất chậm!`});
+      warnings.push({level:'red', tag:'progress', sev:90, icon:'📉', msg:`Tiến độ chỉ ${Math.round(pct)}% sau ${timeStr} — rất chậm!`});
       score += 80;
     } else if(hrs >= 2 && pct < 25 && o.qty > 0){
-      warnings.push({level:'amber', msg:`📉 Tiến độ ${Math.round(pct)}% sau ${timeStr}`});
+      warnings.push({level:'amber', tag:'progress', sev:40, icon:'📉', msg:`Tiến độ ${Math.round(pct)}% sau ${timeStr}`});
       score += 35;
     }
   }
@@ -2901,21 +2903,48 @@ function aiAnalyzeOrder(o){
     const daysLeft = (new Date(o.deliveryDate) - now) / 86400000;
     if(daysLeft < 0){
       const overDays = Math.abs(Math.floor(daysLeft));
-      warnings.push({level:'red', msg:`🔥 Trễ ${overDays>0?overDays+' ngày':'hôm nay'}!`});
-      score += 300;
+      // Trễ càng lâu → điểm leo thang, đẩy đơn lên đầu hàng đợi càng mạnh
+      warnings.push({level:'red', tag:'deadline', sev:600+overDays*10, icon:'🔥', msg:`Trễ ${overDays>0?overDays+' ngày':'hôm nay'}!`});
+      score += 300 + overDays*15;
       urgencyTag = 'overdue';
     } else if(daysLeft < 1){
-      warnings.push({level:'red', msg:`🔴 Hạn giao HÔM NAY`});
+      warnings.push({level:'red', tag:'deadline', sev:260, icon:'🔴', msg:`Hạn giao HÔM NAY`});
       score += 180;
     } else if(daysLeft < 2){
-      warnings.push({level:'amber', msg:`🟡 Hạn giao ngày mai`});
+      warnings.push({level:'amber', tag:'deadline', sev:90, icon:'🟡', msg:`Hạn giao ngày mai`});
       score += 80;
     } else if(daysLeft <= 3){
       score += 25;
     }
   }
 
-  return { warnings, score, urgencyTag };
+  // Combo nguy cấp: vừa trễ/gần hạn vừa chạy quá lâu → AI cộng điểm gấp bội
+  // để đẩy đơn này vượt hẳn lên trên, bất kể đang ở cấp GẤP nào
+  const hasDeadlineCrit = warnings.some(w=>w.tag==='deadline'&&w.level==='red');
+  const hasRunCrit = warnings.some(w=>w.tag==='run'&&w.level==='red');
+  if(hasDeadlineCrit && hasRunCrit){ score += 150; urgencyTag = 'overdue'; }
+
+  // Sắp xếp cảnh báo theo độ nghiêm trọng — mục nào nguy cấp nhất lên đầu
+  warnings.sort((a,b)=>b.sev-a.sev);
+
+  // Gộp tối đa 2 tín hiệu nguy cấp nhất thành ĐÚNG 1 DÒNG gọn gàng cho mỗi đơn
+  // (thay vì hiện từng cảnh báo riêng lẻ gây rối mắt)
+  let oneLine = null;
+  if(warnings.length){
+    const top = warnings.slice(0,2);
+    const level = top[0].level;
+    const icon = top[0].icon;
+    const parts = top.map(w=>w.msg.replace(/[!]+$/,''));
+    const bang = top.some(w=>w.msg.endsWith('!'));
+    oneLine = { level, icon, msg: parts.join(' · ') + (bang?'!':'') };
+  }
+
+  // Đơn thật sự khẩn cấp (quá hạn / hạn hôm nay / chạy quá lâu) — AI cho phép
+  // "vượt cấp" hiển thị lên đầu danh sách chờ xử lý, bất kể mức GẤP gốc
+  const critical = urgencyTag==='overdue' || urgencyTag==='critical' ||
+    warnings.some(w=>w.tag==='deadline'&&w.level==='red');
+
+  return { warnings, score, urgencyTag, oneLine, critical };
 }
 
 // AI tổng hợp insights — phân loại nghiêm trọng → nhẹ
@@ -3363,7 +3392,7 @@ function ddNewCard(o){
   const pc = priColor(o.priority);
   const si = statusInfo(s);
   const ai = aiAnalyzeOrder(o);
-  const topW = ai.warnings[0];
+  const topW = ai.oneLine;
   const age = o.createdAt ? Date.now()-o.createdAt : 0;
   const ageStr = age<3600000
     ? Math.floor(age/60000)+'p trước'
@@ -3385,7 +3414,7 @@ function ddNewCard(o){
         <span class="dd-new-tag" style="background:#f0fdf4;border:1px solid #86efac;color:#166534">⚖️${o.kg||0}kg</span>
         <span class="badge ${si.cls}" style="font-size:9px;padding:1px 6px;border-radius:10px">${si.label}</span>
       </div>
-      ${topW?`<div style="margin-top:3px;font-size:9.5px;font-weight:700;color:${topW.level==='red'?'#dc2626':'#b45309'};background:${topW.level==='red'?'#fee2e2':'#fef3c7'};padding:2px 6px;border-radius:5px;display:inline-block">${topW.msg}</div>`:''}
+      ${topW?`<div style="margin-top:3px;font-size:9.5px;font-weight:700;color:${topW.level==='red'?'#dc2626':'#b45309'};background:${topW.level==='red'?'#fee2e2':'#fef3c7'};padding:2px 6px;border-radius:5px;display:inline-block">${topW.icon} ${topW.msg}</div>`:''}
       ${renderStageBadge(o)}
       <div class="dd-new-time">🕐 ${ageStr}${o.po?' · PO: '+o.po:''}</div>
     </div>
@@ -3404,6 +3433,8 @@ function ddPriCard(o, rank){
   const overdue = s!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<new Date();
   const canEdit = isAdmin(), canStatus = isStaff();
   const sp = specStr(o), ql = qtyLabel(o);
+  const priNumSelf = parseInt((o.priority||'GẤP 9').replace('GẤP ',''))||9;
+  const jumped = ai.critical && priNumSelf>1; // AI đẩy vượt cấp GẤP thật sự (chỉ đúng khi không phải GẤP 1)
   const bgB = ai.urgencyTag==='critical'?'border-left:3px solid #dc2626':ai.urgencyTag==='warning'?'border-left:3px solid #f59e0b':`border-left:3px solid ${pc}`;
   return `<div class="dd-pri-card" data-order-id="${o.id}" style="${bgB}">
     <!-- Header: số thứ tự + khách + priority + status -->
@@ -3440,8 +3471,11 @@ function ddPriCard(o, rank){
         <div style="display:flex;gap:4px;flex-wrap:wrap">${o.matCodes.map(m=>`<span class="mat-chip" style="background:#fff;border-color:#e9d5ff;color:#6b21a8;font-size:11px;padding:2px 7px">🏷 ${m}</span>`).join('')}</div>
       </div>`:''}
 
-      <!-- AI warnings -->
-      ${ai.warnings.length?`<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px">${ai.warnings.map(w=>`<div style="font-size:9.5px;font-weight:700;color:${w.level==='red'?'#dc2626':'#b45309'};background:${w.level==='red'?'#fee2e2':'#fef3c7'};padding:2px 7px;border-radius:5px">${w.level==='red'?'🚨':'⚠️'} ${w.msg}</div>`).join('')}</div>`:''}
+      <!-- AI warning: gộp thông minh thành 1 dòng duy nhất, tránh rối mắt -->
+      ${ai.oneLine?`<div style="margin-top:4px;display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;color:${ai.oneLine.level==='red'?'#dc2626':'#b45309'};background:${ai.oneLine.level==='red'?'#fee2e2':'#fef3c7'};padding:2px 7px;border-radius:5px">
+        <span>${ai.oneLine.icon} ${ai.oneLine.msg}</span>
+        ${jumped?'<span style="flex-shrink:0;font-size:8px;font-weight:800;background:#dc2626;color:#fff;padding:1px 5px;border-radius:20px;white-space:nowrap">VƯỢT CẤP</span>':''}
+      </div>`:''}
 
       <!-- Ghi chú -->
       ${o.note?`<div style="margin-top:5px;padding:5px 9px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-left:3px solid #fbbf24;border-radius:0 6px 6px 0;font-size:12px;font-weight:600;color:#92400e;display:flex;align-items:flex-start;gap:5px"><span style="flex-shrink:0">📝</span><span>${o.note}</span></div>`:''}
@@ -3471,11 +3505,14 @@ function renderDorDang(){
   let allActive = DB.orders.filter(o=>o.status!=='done');
   const total = allActive.length;
   let newList = [...allActive].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  // Cột 2: sort theo GẤP 1 → GẤP 8, trong cùng cấp thì AI score cao lên trước
+  // Cột 2: AI sắp xếp thông minh — đơn thật sự khẩn cấp (quá hạn/chạy quá lâu)
+  // được VƯỢT CẤP lên trên mọi đơn khác, kể cả GẤP thấp hơn. Trong cùng nhóm
+  // (khẩn cấp hay bình thường), giữ thứ tự GẤP 1→8, cùng cấp thì AI score cao lên trước.
   let priList = [...allActive].sort((a,b)=>{
+    const aiA=aiAnalyzeOrder(a), aiB=aiAnalyzeOrder(b);
+    if(aiA.critical!==aiB.critical) return aiA.critical?-1:1; // khẩn cấp luôn lên đầu
     const pa=getPri(a), pb=getPri(b);
     if(pa!==pb) return pa-pb; // GẤP 1 trước GẤP 2...
-    const aiA=aiAnalyzeOrder(a), aiB=aiAnalyzeOrder(b);
     return aiB.score-aiA.score; // cùng cấp: nguy cấp hơn lên đầu
   });
   if(searchQ){ newList=newList.filter(o=>matchSearch(o,searchQ)); priList=priList.filter(o=>matchSearch(o,searchQ)); }
@@ -5386,26 +5423,21 @@ function goToOrderCard(orderId){
 }
 
 // ════ AI WARNING BLOCK — hiện trong mọi card mọi tab ═══════
+// Gộp thông minh tất cả tín hiệu (thời gian chạy, tiến độ, hạn giao) thành
+// ĐÚNG 1 DÒNG duy nhất/đơn — tránh xếp chồng nhiều dòng gây rối mắt.
 function renderAIWarn(o){
   const s = o.status==='cutting'?'running':o.status;
   if(s==='done') return ''; // Đơn xong không cần cảnh báo
 
   const ai = aiAnalyzeOrder(o);
-  if(!ai.warnings.length) return '';
+  if(!ai.oneLine) return '';
 
-  const levelClass = {red:'critical', amber:'warning', green:'info', ok:'ok'};
-  const rows = ai.warnings.map(w=>{
-    const cls = w.level==='red'?'critical':w.level==='amber'?'warning':'info';
-    return `<div class="ai-card-warn-row ${cls}">
-      <span class="ai-card-warn-ico">${
-        w.level==='red'?(ai.urgencyTag==='critical'?'🆘':'🚨'):
-        w.level==='amber'?'⚠️':'💡'
-      }</span>
-      <span class="ai-card-warn-txt">${w.msg}</span>
-    </div>`;
-  }).join('');
-
-  return `<div class="ai-card-warn">${rows}</div>`;
+  const cls = ai.oneLine.level==='red'?'critical':'warning';
+  return `<div class="ai-card-warn"><div class="ai-card-warn-row ${cls}${ai.critical?' ai-card-warn-jump':''}">
+      <span class="ai-card-warn-ico">${ai.oneLine.icon}</span>
+      <span class="ai-card-warn-txt">${ai.oneLine.msg}</span>
+      ${ai.critical?'<span class="ai-card-warn-jumptag">AI ưu tiên</span>':''}
+    </div></div>`;
 }
 
 // Helper hiển thị progress bar — CHỈ số lượng đã sản xuất (bao nhiêu thanh)
@@ -5488,6 +5520,10 @@ function setStage(id, stage){
   saveOrders();
 }
 
+// Khối lượng riêng đồng đỏ (Cu) — dùng để tính KG thanh cái dẹt
+// D ≈ 8.96 g/cm³. Công thức chuẩn: KG = T(mm) × W(mm) × L(mm) × D / 1.000.000
+const CU_DENSITY = 8.96; // g/cm³
+
 // Tự tính KG khi nhập Φ hoặc dày/rộng/dài/qty
 function calcKgAuto(){
   const phi = parseFloat($('ofPhi').value)||0;
@@ -5503,10 +5539,10 @@ function calcKgAuto(){
     $('ofKg').value = kg;
     if(lbl) lbl.textContent = `✓ Tự tính thanh tròn Φ${phi}`;
   } else if(t && w && l && qty){
-    // Thanh dẹt: KG = (t/10)×(w/10)×(l/10)×qty×8.5/1000
-    const kg = parseFloat(((t/10)*(w/10)*(l/10)*qty*8.5/1000).toFixed(3));
+    // Thanh dẹt (đồng đỏ): KG = T × W × L × D / 1.000.000 × qty  (D=8.96 g/cm³)
+    const kg = parseFloat((t*w*l*CU_DENSITY/1000000*qty).toFixed(3));
     $('ofKg').value = kg;
-    if(lbl) lbl.textContent = '✓ Tự tính thanh dẹt';
+    if(lbl) lbl.textContent = '✓ Tự tính thanh dẹt (đồng đỏ, D=8.96)';
   } else {
     if(lbl) lbl.textContent = '';
   }
@@ -5524,7 +5560,7 @@ function saveOrder(){
   // Auto-calc nếu chưa có
   if(!kg){
     if(phi&&l&&qty) kg=parseFloat((phi*phi*l*7/1000000*qty).toFixed(3));
-    else if(t&&w&&l&&qty) kg=parseFloat(((t/10)*(w/10)*(l/10)*qty*8.5/1000).toFixed(3));
+    else if(t&&w&&l&&qty) kg=parseFloat((t*w*l*CU_DENSITY/1000000*qty).toFixed(3));
   }
   const isRound = phi > 0; // true = thanh tròn
   const data={
