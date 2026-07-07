@@ -16,6 +16,11 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --brand:#1e3a8a;--brand2:#2563eb;--brand3:#3b82f6;
+  --purple-m:#7c3aed;--purple-l:#ede9fe;
+  --cyan-m:#0891b2;--cyan-l:#cffafe;
+  --pink-m:#db2777;--pink-l:#fce7f3;
+  --orange-m:#ea580c;--orange-l:#ffedd5;
+  --slate-m:#475569;--slate-l:#f1f5f9;
   --green:#065f46;--green-l:#d1fae5;--green-m:#10b981;
   --amber:#92400e;--amber-l:#fef3c7;--amber-m:#f59e0b;
   --red:#991b1b;--red-l:#fee2e2;--red-m:#ef4444;
@@ -58,7 +63,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .topbar-menu{background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
 .topbar-menu:active{background:var(--bg)}
 .topbar-logo{width:32px;height:32px;border-radius:8px;object-fit:contain}
-.topbar-title{flex:1;font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.2px}
+.topbar-title{flex:1;font-size:15.5px;font-weight:800;letter-spacing:-.2px;color:var(--brand2);background:linear-gradient(120deg,var(--brand2) 20%,var(--purple-m) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .topbar-clock{display:flex;align-items:center;gap:7px;background:#0f172a;border-radius:9px;padding:5px 10px 5px 8px;white-space:nowrap;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
 .topbar-clock .tc-live{width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;flex-shrink:0;animation:tc-pulse 1.8s ease-in-out infinite}
 .topbar-clock .tc-time{font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;font-weight:800;letter-spacing:.4px;color:#60a5fa;font-variant-numeric:tabular-nums;line-height:1}
@@ -84,11 +89,23 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .sb-name{font-size:14px;font-weight:700;color:var(--text)}
 .sb-role{font-size:11.5px;color:var(--text3);margin-top:2px}
 .sb-nav{flex:1;overflow-y:auto;padding:8px 0}
-.sb-section{font-size:10.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;padding:10px 16px 4px}
+.sb-section{font-size:10.5px;font-weight:800;color:var(--brand3);text-transform:uppercase;letter-spacing:.7px;padding:14px 16px 5px;opacity:.85}
 .sb-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border:none;background:none;cursor:pointer;width:100%;color:var(--text2);font-size:13.5px;font-weight:500;font-family:inherit;transition:background .12s;position:relative}
 .sb-item:active,.sb-item.active{background:var(--bg);color:var(--brand)}
 .sb-item.active{font-weight:700}
-.sb-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.sb-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0;border-radius:8px;padding:4px;box-sizing:content-box;transition:transform .12s}
+.sb-item:active svg{transform:scale(.92)}
+#sbi-dashboard svg{color:var(--brand2);background:#dbeafe}
+#sbi-dorDang svg{color:var(--orange-m);background:var(--orange-l)}
+#sbi-keHoach svg{color:var(--purple-m);background:var(--purple-l)}
+#sbi-hoanThanh svg{color:var(--green-m);background:var(--green-l)}
+#sbi-baoCao svg{color:var(--cyan-m);background:var(--cyan-l)}
+#sbi-nhatKy svg{color:var(--slate-m);background:var(--slate-l)}
+#sbi-chamCong svg{color:var(--pink-m);background:var(--pink-l)}
+#sbi-lichLamViec svg{color:var(--amber-m);background:var(--amber-l)}
+#sbi-baoTriMay svg{color:var(--red-m);background:var(--red-l)}
+#sbi-settings svg{color:var(--slate-m);background:var(--slate-l)}
+.sb-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3.5px;border-radius:0 4px 4px 0;background:linear-gradient(180deg,var(--brand3),var(--purple-m))}
 .sb-badge{margin-left:auto;background:var(--red-m);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px}
 .sb-footer{padding:12px 16px;border-top:1px solid var(--border)}
 .sb-online{font-size:11.5px;color:var(--text3);margin-bottom:8px}
@@ -338,7 +355,8 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 }
 
 /* ── SECTION TITLE ── */
-.sec-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:4px 0 0}
+.sec-title{font-size:12px;font-weight:800;color:var(--brand2);text-transform:uppercase;letter-spacing:.6px;padding:5px 0 5px 11px;position:relative}
+.sec-title::before{content:'';position:absolute;left:0;top:3px;bottom:3px;width:4px;border-radius:3px;background:linear-gradient(180deg,var(--brand3),var(--purple-m))}
 
 /* ── SEARCH BAR ── */
 .search-wrap{position:relative}
@@ -494,6 +512,18 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .set-btn:active{background:var(--bg)}
 .set-btn.danger{color:var(--red-m);border-color:var(--red-l);background:var(--red-l)}
 .set-btn svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.set-toggle-card{display:flex;flex-direction:column;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;overflow:hidden}
+.set-toggle-row{display:flex;align-items:center;gap:12px;padding:13px 16px}
+.set-toggle-row+.set-toggle-row{border-top:1px solid var(--border)}
+.set-toggle-info{flex:1;min-width:0}
+.set-toggle-title{font-size:13.5px;font-weight:600;color:var(--text2)}
+.set-toggle-sub{font-size:11.5px;color:var(--text4);margin-top:1px;line-height:1.4}
+.swtch{position:relative;width:44px;height:26px;flex-shrink:0;cursor:pointer;display:inline-block}
+.swtch input{opacity:0;width:0;height:0;position:absolute}
+.swtch-track{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:background .18s}
+.swtch-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.swtch input:checked+.swtch-track{background:linear-gradient(135deg,var(--brand),var(--brand2))}
+.swtch input:checked+.swtch-track .swtch-thumb{transform:translateX(18px)}
 .user-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .user-row:last-child{border-bottom:none}
 .user-info{flex:1;min-width:0}
@@ -1468,6 +1498,17 @@ let _lastHash = '';
 let _knownIds = new Set();
 let _deferInstall = null;
 let _notifOk = false;
+let notifSoundOn = localStorage.getItem('sx_notif_sound_off')!=='1';
+let notifVibrateOn = localStorage.getItem('sx_notif_vibrate_off')!=='1';
+let _audioCtx = null;
+// Mở khóa AudioContext ngay lần chạm/click đầu tiên (bắt buộc trên mobile để phát được âm thanh sau này)
+function _unlockAudioOnce(){
+  try{ getAudioCtx(); }catch(e){}
+  document.removeEventListener('click', _unlockAudioOnce);
+  document.removeEventListener('touchstart', _unlockAudioOnce);
+}
+document.addEventListener('click', _unlockAudioOnce, {once:true});
+document.addEventListener('touchstart', _unlockAudioOnce, {once:true});
 
 // Đếm số lượt ghi lên Firebase đang "bay" (chưa có phản hồi). Trong lúc này,
 // TUYỆT ĐỐI không được ghi đè DB cục bộ bằng dữ liệu đọc về (doPoll / SSE),
@@ -1792,7 +1833,8 @@ async function checkAnnounce(){
     showAnnBanner(ann);
     // Rung chuông nếu thông báo mới (không phải chính mình vừa gửi)
     if(ann.from!==currentUser?.name){
-      animateBell(); flashScreen(ann.type);
+      flashScreen(ann.type);
+      alertUser(ann.type==='urgent'?'urgent':'default');
       showToast(`📢 ${ann.from}: ${ann.msg.slice(0,40)}${ann.msg.length>40?'...':''}`);
       pushNotif('📢 '+ann.from, ann.msg);
     }
@@ -2482,7 +2524,8 @@ async function checkBroadcast(){
       from:bc.from, read:false, tab:''
     };
     notifList.unshift(n);
-    notifSave(); updateBellBadge(); animateBell(); flashScreen();
+    notifSave(); updateBellBadge(); flashScreen();
+    alertUser('urgent');
     showToast('📢 '+bc.from+': '+bc.msg);
     pushNotif('📢 '+bc.from, bc.msg);
   }catch(e){}
@@ -2500,8 +2543,14 @@ async function checkFirebaseNotif(){
     newOnes.forEach(n=>{ notifList.unshift({...n,read:false}); });
     notifList.sort((a,b)=>b.ts-a.ts);
     notifList=notifList.slice(0,100);
-    notifSave(); updateBellBadge(); animateBell();
+    notifSave(); updateBellBadge();
+    // Chuông + rung: ưu tiên "hoàn thành" > "đơn mới" > khác
+    const kindMap={order_done:'done',order_new:'new'};
+    const kinds=newOnes.map(n=>kindMap[n.type]||'default');
+    const kind = kinds.includes('done')?'done':kinds.includes('new')?'new':kinds[0];
+    alertUser(kind);
     showToast('🔔 Có '+newOnes.length+' thông báo mới');
+    pushNotif(newOnes[0].title, newOnes[0].body);
   }catch(e){}
 }
 
@@ -4341,6 +4390,35 @@ function renderSettings(){
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
         Cấu hình Firebase Sync
       </button>
+      <div class="sec-title" style="margin-top:8px">🔔 Chuông & rung thông báo</div>
+      <div class="set-toggle-card">
+        <div class="set-toggle-row">
+          <span style="font-size:19px">🔊</span>
+          <div class="set-toggle-info">
+            <div class="set-toggle-title">Âm thanh thông báo</div>
+            <div class="set-toggle-sub">Reo chuông khi có đơn mới hoặc đơn vừa xong</div>
+          </div>
+          <label class="swtch">
+            <input type="checkbox" ${notifSoundOn?'checked':''} onchange="toggleNotifSound(this.checked)">
+            <span class="swtch-track"><span class="swtch-thumb"></span></span>
+          </label>
+        </div>
+        <div class="set-toggle-row">
+          <span style="font-size:19px">📳</span>
+          <div class="set-toggle-info">
+            <div class="set-toggle-title">Rung điện thoại</div>
+            <div class="set-toggle-sub">Rung khi có đơn mới hoặc đơn vừa xong (Android)</div>
+          </div>
+          <label class="swtch">
+            <input type="checkbox" ${notifVibrateOn?'checked':''} onchange="toggleNotifVibrate(this.checked)">
+            <span class="swtch-track"><span class="swtch-thumb"></span></span>
+          </label>
+        </div>
+      </div>
+      <button class="set-btn" onclick="testNotifAlert()" style="border-color:#bfdbfe;background:#eff6ff;margin-top:2px">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        Thử chuông & rung
+      </button>
       ${admin?`
       <div class="sec-title" style="margin-top:8px">Quản lý tài khoản</div>
       <div class="card" style="padding:0 14px">
@@ -5863,6 +5941,7 @@ function setStatus(id, newStatus){
 
   if(newStatus==='done'){
     pushNotif('✅ Hoàn thành!',`${o.customer} đã xong`);
+    alertUser('done');
     addNotif('order_done','✅ Hoàn thành: '+o.customer,
       `${o.thickness}×${o.width}×${o.length}mm · ${o.qty} thanh · ${o.priority||''}`,'hoanThanh',currentUser?.name);
     // Kiểm tra thăng cấp tự động sau 500ms (để UI render xong)
@@ -5966,6 +6045,76 @@ function pushNotif(title,body){
 function notifyNewOrder(o){
   pushNotif('📦 Đơn mới: '+o.customer,`${o.thickness}×${o.width}mm · ${o.qty} thanh · ${o.priority||''}`);
   showToast('🆕 Đơn mới: '+o.customer);
+  alertUser('new');
+}
+
+// ── CHUÔNG & RUNG (âm thanh + haptic khi có sự kiện quan trọng) ──
+function getAudioCtx(){
+  try{
+    if(!_audioCtx) _audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==='suspended') _audioCtx.resume();
+    return _audioCtx;
+  }catch(e){ return null; }
+}
+function _tone(ctx, freq, startAt, dur, type, vol){
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type=type||'sine'; o.frequency.value=freq;
+  o.connect(g); g.connect(ctx.destination);
+  const t0=ctx.currentTime+startAt;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(vol||0.25, t0+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.start(t0); o.stop(t0+dur+0.05);
+}
+function playNotifSound(kind){
+  if(!notifSoundOn) return;
+  const ctx=getAudioCtx(); if(!ctx) return;
+  try{
+    if(kind==='done'){
+      // Giai điệu đi lên vui tai: hoàn thành đơn hàng
+      _tone(ctx,523.25,0,0.16,'sine',0.28);
+      _tone(ctx,659.25,0.13,0.16,'sine',0.28);
+      _tone(ctx,783.99,0.26,0.32,'sine',0.3);
+    }else if(kind==='new'){
+      // 2 tiếng "ting-ting" báo đơn mới
+      _tone(ctx,880,0,0.13,'sine',0.26);
+      _tone(ctx,880,0.17,0.13,'sine',0.26);
+    }else if(kind==='urgent'){
+      // Báo động khẩn, dồn dập hơn
+      _tone(ctx,660,0,0.12,'square',0.22);
+      _tone(ctx,880,0.15,0.12,'square',0.22);
+      _tone(ctx,660,0.3,0.12,'square',0.22);
+      _tone(ctx,880,0.45,0.2,'square',0.22);
+    }else{
+      _tone(ctx,740,0,0.18,'sine',0.24);
+    }
+  }catch(e){}
+}
+function vibrateDevice(kind){
+  if(!notifVibrateOn) return;
+  if(!('vibrate' in navigator)) return; // iOS Safari không hỗ trợ rung qua web
+  const patterns={done:[80,50,80,50,180],new:[60,60,60],urgent:[120,80,120,80,120,80,260],default:[100]};
+  try{ navigator.vibrate(patterns[kind]||patterns.default); }catch(e){}
+}
+function alertUser(kind){
+  playNotifSound(kind);
+  vibrateDevice(kind);
+  animateBell();
+}
+function toggleNotifSound(on){
+  notifSoundOn=on;
+  localStorage.setItem('sx_notif_sound_off', on?'0':'1');
+  if(on){ getAudioCtx(); playNotifSound('new'); }
+}
+function toggleNotifVibrate(on){
+  notifVibrateOn=on;
+  localStorage.setItem('sx_notif_vibrate_off', on?'0':'1');
+  if(on) vibrateDevice('new');
+}
+function testNotifAlert(){
+  if(!notifSoundOn&&!notifVibrateOn){ showToast('⚠️ Hãy bật ít nhất 1 mục (âm thanh hoặc rung)'); return; }
+  alertUser('done');
+  showToast('🔔 Đã thử chuông & rung');
 }
 
 // ════════════════════════════════════════════════════════════
