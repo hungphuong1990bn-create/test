@@ -9237,6 +9237,7 @@ function renderQR(){
     <div class="qr-actions-row">
       <button class="qr-action-btn" onclick="openBatchPrint()"><span class="ico">🖨</span>In tem hàng loạt</button>
       <button class="qr-action-btn" onclick="exportQrExcel()"><span class="ico">📊</span>Xuất Excel</button>
+      ${isAdmin()?`<button class="qr-action-btn" style="color:var(--red-m)" onclick="deleteQrProductsBulk(DB.qrProducts.slice().filter(p=>qrFilterStatus==='all'||p.status===qrFilterStatus).filter(p=>!qrSearchQ||matchQr(p,qrSearchQ)).map(p=>p.id))"><span class="ico">🗑</span>Xóa theo bộ lọc</button>`:''}
     </div>
     <div class="search-wrap" style="margin-bottom:8px">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -9331,6 +9332,12 @@ function openQrDetail(id){
       <input type="file" accept="image/*" onchange="attachQrImage('${p.id}', this)">
     </div>
     ${(p.images&&p.images.length)?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${p.images.map(im=>`<img src="${im}" style="width:60px;height:60px;object-fit:cover;border-radius:6px">`).join('')}</div>`:''}
+    `:''}
+    ${isAdmin()?`
+    <div class="sec-title" style="margin:14px 0 6px;color:var(--red-m)">Khu vực nguy hiểm</div>
+    <div class="modal-row">
+      <button class="btn btn-ghost" style="color:var(--red-m);border-color:var(--red-l)" onclick="deleteQrProduct('${p.id}')">🗑 Xóa mã QR này</button>
+    </div>
     `:''}
   `;
   openModal('qrDetailModal');
@@ -9445,6 +9452,37 @@ function attachQrImage(id, inputEl){
     img.src = reader.result;
   };
   reader.readAsDataURL(file);
+}
+
+// ── Xóa mã QR (chỉ Admin) ─────────────────────────────────────────────
+function deleteQrProduct(id){
+  if(!isAdmin()){ showToast('❌ Chỉ Admin mới được xóa mã QR', true); return; }
+  const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
+  confirm2('Xóa mã QR', `Xác nhận xóa vĩnh viễn mã QR "${p.qrCode}"? Toàn bộ lịch sử, ghi chú và hình ảnh đính kèm của mã này sẽ bị xóa và KHÔNG thể khôi phục.`, ()=>{
+    DB.qrProducts = DB.qrProducts.filter(x=>x.id!==id);
+    log('Xóa mã QR', p.qrCode, p.orderId, null, {qrCode:p.qrCode});
+    saveQrProducts();
+    closeModal('cfModal');
+    closeModal('qrDetailModal');
+    renderQR();
+    updateBadges();
+    showToast('🗑 Đã xóa mã QR');
+  });
+}
+function deleteQrProductsBulk(ids){
+  if(!isAdmin()){ showToast('❌ Chỉ Admin mới được xóa mã QR', true); return; }
+  if(!ids || !ids.length) return;
+  confirm2('Xóa nhiều mã QR', `Xác nhận xóa vĩnh viễn ${ids.length} mã QR đã chọn? Hành động này KHÔNG thể khôi phục.`, ()=>{
+    const idSet = new Set(ids);
+    const removed = DB.qrProducts.filter(x=>idSet.has(x.id));
+    DB.qrProducts = DB.qrProducts.filter(x=>!idSet.has(x.id));
+    log('Xóa nhiều mã QR', `${removed.length} mã: ${removed.map(p=>p.qrCode).join(', ')}`, null, null, {count:removed.length});
+    saveQrProducts();
+    closeModal('cfModal');
+    renderQR();
+    updateBadges();
+    showToast(`🗑 Đã xóa ${removed.length} mã QR`);
+  });
 }
 
 // ── In tem QR (mục 4) ────────────────────────────────────────────────
