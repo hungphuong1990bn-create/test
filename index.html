@@ -9601,7 +9601,16 @@ async function generateLabelPDF(){
     doc.save(`tem-QR-A4-${Date.now()}.pdf`);
   } else {
     const [w,h] = QR_LABEL_MM[_printSize];
-    const doc = new jsPDF({unit:'mm', format:[w,h]});
+    // QUAN TRỌNG: jsPDF mặc định orientation:'p' (dọc). Khi không khai báo
+    // orientation tường minh, với khổ tem NGANG (w>h như 40x30/50x30/70x50)
+    // jsPDF sẽ tự động HOÁN ĐỔI w<->h để ép về dạng dọc — khiến trang PDF
+    // thực tế hẹp hơn nhiều so với w mà drawLabel() đang dùng để tính toán,
+    // làm nội dung bị vẽ tràn ra ngoài và bị cắt mất bên phải khi in. Đây
+    // chính là nguyên nhân của lỗi "cắt mất phía bên phải" ở mọi khổ tem.
+    // Phải luôn truyền orientation khớp với hình dạng w/h thực tế để tránh
+    // bị tự động hoán đổi.
+    const labelOrientation = w >= h ? 'l' : 'p';
+    const doc = new jsPDF({unit:'mm', format:[w,h], orientation:labelOrientation});
     registerVnFont(doc);
     // Mỗi mã QR được in lặp lại `labelsPerCode` tem liền nhau (mặc định 2 —
     // dán 2 đầu bó hàng) thay vì chỉ 1 tem/mã như trước, để đúng với cách
@@ -9611,7 +9620,9 @@ async function generateLabelPDF(){
     for(let i=0;i<items.length;i++){
       const copies = items[i].labelCount || labelsPerCode;
       for(let c=0;c<copies;c++){
-        if(!first) doc.addPage([w,h]);
+        // addPage() cũng phải truyền orientation, nếu không sẽ lặp lại đúng
+        // lỗi hoán đổi w<->h ở TẤT CẢ các trang từ trang thứ 2 trở đi.
+        if(!first) doc.addPage([w,h], labelOrientation);
         first = false;
         await drawLabel(doc, items[i], 0, 0, w, h);
       }
