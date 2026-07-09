@@ -3279,23 +3279,41 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .mat-chip{display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;color:var(--text2)}
 .mat-chip button{border:none;background:none;cursor:pointer;color:var(--red-m);font-size:14px;line-height:1;padding:0 0 0 2px}
 
-/* Stage tracker: Máy Đùn -> Máy Rút -> Đánh Bóng */
-.stage-tracker{padding:9px 14px 10px;border-top:1px solid var(--border)}
-.stage-tracker-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
-.stage-steps{display:flex;align-items:flex-start}
-.stage-step{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto;width:64px}
+/* Stage tracker: Máy Đùn -> Máy Rút -> Đánh Bóng — bố cục dạng panel
+   gradient hiện đại, có hiệu ứng glow/pop khi chuyển công đoạn */
+.stage-tracker{padding:12px 14px 13px;margin:10px 12px 12px;border-radius:14px;background:linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%);border:1px solid var(--border);position:relative;overflow:hidden}
+.stage-tracker::before{content:'';position:absolute;top:-40%;right:-8%;width:130px;height:130px;background:radial-gradient(circle,rgba(59,130,246,.12),transparent 70%);pointer-events:none}
+.stage-tracker-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;position:relative;z-index:1}
+.stage-tracker-lbl{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.stage-tracker-pct{font-size:10.5px;font-weight:800;color:var(--brand2);background:#fff;border:1px solid #c7d7fb;padding:2px 9px;border-radius:20px;box-shadow:0 1px 4px rgba(37,99,235,.16);transition:all .3s}
+.stage-tracker-pct.is-done{color:#fff;background:linear-gradient(135deg,var(--green-m),#059669);border-color:transparent;box-shadow:0 2px 8px rgba(16,185,129,.35)}
+.stage-steps{display:flex;align-items:flex-start;position:relative;z-index:1}
+.stage-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:0 0 auto;width:64px}
 .stage-step[data-clickable="1"]{cursor:pointer}
-.stage-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2px solid var(--border);background:var(--card);color:var(--text4);transition:all .2s}
-.stage-name{font-size:9.5px;font-weight:700;color:var(--text4);text-align:center;line-height:1.2}
-.stage-line{flex:1 1 auto;height:2px;background:var(--border);margin:12px -2px 0;min-width:10px}
-.stage-step.st-done .stage-dot{background:var(--green-m);border-color:var(--green-m);color:#fff}
-.stage-step.st-done .stage-name{color:var(--green-m)}
-.stage-line.done{background:var(--green-m)}
-.stage-step.st-active .stage-dot{background:var(--brand);border-color:var(--brand);color:#fff;animation:pulse 1.5s infinite}
-.stage-step.st-active .stage-name{color:var(--brand);font-weight:800}
+.stage-step[data-clickable="1"]:hover .stage-dot{transform:translateY(-2px) scale(1.08);box-shadow:0 8px 16px rgba(37,99,235,.3)}
+.stage-step[data-clickable="1"]:hover .stage-name{color:var(--brand2)}
+.stage-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2px solid var(--border);background:#fff;color:var(--text4);transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.stage-name{font-size:9.5px;font-weight:700;color:var(--text4);text-align:center;line-height:1.2;transition:color .25s}
+.stage-line{flex:1 1 auto;height:3px;border-radius:3px;background:var(--border);margin:15px -2px 0;min-width:10px;transition:background .4s ease}
+.stage-step.st-done .stage-dot{background:linear-gradient(135deg,var(--green-m),#059669);border-color:transparent;color:#fff;box-shadow:0 3px 9px rgba(16,185,129,.38);animation:stageDonePop .4s cubic-bezier(.34,1.56,.64,1)}
+.stage-step.st-done .stage-name{color:var(--green-m);font-weight:800}
+.stage-line.done{background:linear-gradient(90deg,var(--green-m),#059669)}
+.stage-step.st-active .stage-dot{background:linear-gradient(135deg,var(--brand2),var(--brand3));border-color:transparent;color:#fff;animation:stagePulseGlow 1.7s ease-in-out infinite}
+.stage-step.st-active .stage-name{color:var(--brand2);font-weight:800}
+.stage-step.st-todo .stage-dot{background:#fff;border-style:dashed}
 .stage-step[data-clickable="1"]:active .stage-dot{transform:scale(.9)}
+@keyframes stagePulseGlow{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}
+  70%{box-shadow:0 0 0 10px rgba(37,99,235,0)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
+}
+@keyframes stageDonePop{
+  0%{transform:scale(.5);opacity:.4}
+  60%{transform:scale(1.18)}
+  100%{transform:scale(1);opacity:1}
+}
 /* Compact badge dùng ở dashboard mini-card */
-.stage-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:#dbeafe;color:var(--brand);margin-top:4px}
+.stage-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:linear-gradient(135deg,#dbeafe,#e0e7ff);color:var(--brand2);margin-top:4px;box-shadow:0 1px 4px rgba(37,99,235,.16)}
 
 /* ══ DESKTOP RESPONSIVE ══════════════════════════════════════ */
 @media(min-width:700px){
@@ -3435,7 +3453,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
       </div>
     </div>
     <div class="sb-nav">
-      <div class="sb-section">Quản lý</div>
+      <div class="sb-section">Quản lý sản xuất</div>
       <button class="sb-item" id="sbi-dashboard" onclick="goTab('dashboard')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Tổng quan
@@ -3452,19 +3470,14 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Đã hoàn thành
       </button>
-      <div class="sb-section">Truy xuất</div>
-      <button class="sb-item" id="sbi-qrCode" onclick="goTab('qrCode')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
-        Quản lý mã QR
-      </button>
-      <div class="sb-section">Báo cáo</div>
       <button class="sb-item" id="sbi-baoCao" onclick="goTab('baoCao')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Báo cáo
       </button>
-      <button class="sb-item" id="sbi-nhatKy" onclick="goTab('nhatKy')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Nhật ký thao tác <span class="sb-badge" id="sbLogBadge" style="display:none">!</span>
+      <div class="sb-section">Truy xuất</div>
+      <button class="sb-item" id="sbi-qrCode" onclick="goTab('qrCode')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
+        Quản lý mã QR
       </button>
       <div class="sb-section">Nhân sự</div>
       <button class="sb-item" id="sbi-chamCong" onclick="goTab('chamCong')">
@@ -3481,6 +3494,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
         Bảo trì máy <span class="sb-badge" id="sbBtmBadge" style="display:none">0</span>
       </button>
       <div class="sb-section">Tài khoản</div>
+      <button class="sb-item" id="sbi-nhatKy" onclick="goTab('nhatKy')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Nhật ký thao tác <span class="sb-badge" id="sbLogBadge" style="display:none">!</span>
+      </button>
       <button class="sb-item" id="sbi-settings" onclick="goTab('settings')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Cài đặt
@@ -3544,6 +3561,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Hoàn thành
       </button>
+      <button class="bn" id="bn-baoCao" onclick="goTab('baoCao')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Báo cáo
+      </button>
       <button class="bn" id="bn-qrCode" onclick="goTab('qrCode')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
         Mã QR
@@ -3551,10 +3572,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
       <button class="bn" id="bn-chamCong" onclick="goTab('chamCong')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/><path d="M9 16l1.5 1.5L15 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Chấm công
-      </button>
-      <button class="bn" id="bn-baoCao" onclick="goTab('baoCao')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Báo cáo
       </button>
       <button class="bn" id="bn-nhatKy" onclick="goTab('nhatKy')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -6939,6 +6956,10 @@ function renderSettings(){
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
         Cấu hình Firebase Sync
       </button>
+      <button class="set-btn" onclick="goTab('nhatKy')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Nhật ký thao tác
+      </button>
       <div class="sec-title" style="margin-top:8px">🔔 Chuông & rung thông báo</div>
       <div class="set-toggle-card">
         <div class="set-toggle-row">
@@ -8273,11 +8294,15 @@ function renderStageTracker(o, clickable){
   if(s==='pending') return ''; // chưa chạy thì chưa có công đoạn
   const curIdx = STAGES.findIndex(x=>x.key===o.stage);
   const activeIdx = s==='done' ? STAGES.length : (curIdx<0?0:curIdx);
+  const pct = Math.round((activeIdx/STAGES.length)*100);
   return `<div class="stage-tracker">
-    <div class="stage-tracker-lbl">🏭 Công đoạn sản xuất</div>
+    <div class="stage-tracker-hd">
+      <span class="stage-tracker-lbl">🏭 Công đoạn sản xuất</span>
+      <span class="stage-tracker-pct${s==='done'?' is-done':''}">${s==='done'?'✓ Hoàn tất':pct+'%'}</span>
+    </div>
     <div class="stage-steps">
       ${STAGES.map((st,i)=>{
-        const state = i<activeIdx ? 'st-done' : (i===activeIdx&&s!=='done' ? 'st-active' : '');
+        const state = i<activeIdx ? 'st-done' : (i===activeIdx&&s!=='done' ? 'st-active' : 'st-todo');
         const canClick = clickable && s!=='done';
         return `${i>0?`<div class="stage-line${i<=activeIdx?' done':''}"></div>`:''}
         <div class="stage-step ${state}" data-clickable="${canClick?1:0}" ${canClick?`onclick="setStage('${o.id}','${st.key}')"`:''} title="${st.label}">
@@ -9293,9 +9318,21 @@ function openQrDetail(id){
     ['Người vận hành', p.operator||'—'], ['Người kiểm tra QC', p.qcInspector||'—'],
     ['Kết quả QC', p.qcResult==='pass'?'✅ Đạt':p.qcResult==='fail'?'❌ Không đạt':'⏳ Chưa kiểm tra'],
     ['Độ cứng', p.hardness||'—'], ['Độ dẫn điện', p.conductivity||'—'],
-    ['Trọng lượng', p.weight||'—'], ['Số lượng', p.quantity||1],
+    ['Trọng lượng', p.weight||'—'],
     ['Vị trí lưu kho', p.location||'—']
   ];
+  // Số lượng thanh: admin được sửa trực tiếp ngay tại đây (input số + nút Lưu)
+  // thay vì chỉ hiển thị tĩnh — vì thực tế hay cần đính chính số thanh sau
+  // khi đã tạo mã QR (đếm lại kho, gộp/tách bó...).
+  const qtyItemHTML = isAdmin()
+    ? `<div class="qr-detail-item qr-qty-edit">
+        <div class="lbl">Số lượng (thanh)</div>
+        <div class="val" style="display:flex;align-items:center;gap:6px">
+          <input id="qrQtyInp-${p.id}" type="number" min="1" value="${p.quantity||1}" style="width:64px;border:1px solid var(--border);border-radius:7px;padding:4px 6px;font-size:13px;font-family:inherit;font-weight:700;color:var(--text);background:var(--card)">
+          <button class="qr-qty-save-btn" onclick="editQrQuantity('${p.id}')" title="Lưu số lượng">💾</button>
+        </div>
+      </div>`
+    : `<div class="qr-detail-item"><div class="lbl">Số lượng</div><div class="val">${p.quantity||1}</div></div>`;
 
   $('qrDetailTitle').textContent = p.qrCode;
   $('qrDetailBody').innerHTML = `
@@ -9303,7 +9340,7 @@ function openQrDetail(id){
       <div id="qrDetailCanvas" style="width:150px;height:150px;background:#fff;display:flex;align-items:center;justify-content:center"></div>
       <span class="qr-badge ${si.cls}" style="font-size:12px">${si.label}</span>
     </div>
-    <div class="qr-detail-grid">${infoItems.map(([l,v])=>`<div class="qr-detail-item"><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join('')}</div>
+    <div class="qr-detail-grid">${infoItems.map(([l,v])=>`<div class="qr-detail-item"><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join('')}${qtyItemHTML}</div>
     ${p.note?`<div class="card-note" style="margin-bottom:10px">📝 ${p.note}</div>`:''}
     <div class="sec-title" style="margin:0 0 6px">Lịch sử công đoạn (Timeline)</div>
     <div class="qr-timeline">
@@ -9452,6 +9489,25 @@ function attachQrImage(id, inputEl){
     img.src = reader.result;
   };
   reader.readAsDataURL(file);
+}
+
+// ── Sửa số lượng thanh của mã QR (chỉ Admin) ─────────────────────────
+function editQrQuantity(id){
+  if(!isAdmin()){ showToast('❌ Chỉ Admin mới được sửa số lượng', true); return; }
+  const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
+  const inp = $('qrQtyInp-'+id); if(!inp) return;
+  const val = parseInt(inp.value);
+  if(!val || val<1){ showToast('❌ Số lượng phải là số nguyên ≥ 1', true); inp.value = p.quantity||1; return; }
+  const oldVal = p.quantity||1;
+  if(val===oldVal){ showToast('Số lượng không đổi'); return; }
+  p.quantity = val;
+  p.history.push({stage:p.currentStage,label:`Sửa số lượng: ${oldVal} → ${val} thanh`,time:Date.now(),by:currentUser?.name||'?'});
+  touchQr(p);
+  log('Sửa số lượng QR', `${p.qrCode}: ${oldVal} → ${val} thanh`, p.orderId, null, {qrCode:p.qrCode,oldVal,newVal:val});
+  saveQrProducts();
+  openQrDetail(id);
+  renderQR();
+  showToast(`✅ Đã cập nhật số lượng: ${val} thanh`);
 }
 
 // ── Xóa mã QR (chỉ Admin) ─────────────────────────────────────────────
