@@ -4307,7 +4307,7 @@ function fbSaveField(field, path, isRetry){
     });
 }
 
-function saveOrders(){
+function saveOrders(){if(guardViewer())return;
   lsSave();
   _lastHash = hashOrders(DB.orders); // đánh dấu NGAY: đây là bản mới nhất do chính mình vừa tạo
   if(!fbOk()) return;
@@ -4317,7 +4317,7 @@ function saveOrders(){
   fbSaveField('orders', '/data/orders', false);
 }
 
-function saveAll(){
+function saveAll(){if(guardViewer())return;
   lsSave();
   _lastHash = hashOrders(DB.orders);
   if(!fbOk()) return;
@@ -4329,7 +4329,7 @@ function saveAll(){
 }
 
 // Lưu danh sách thành phẩm QR — cùng cơ chế field-write như saveOrders/saveWorkers
-function saveQrProducts(){
+function saveQrProducts(){if(guardViewer())return;
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
@@ -4338,7 +4338,7 @@ function saveQrProducts(){
   fbSaveField('qrProducts', '/data/qrProducts', false);
 }
 
-function saveAttendance(){
+function saveAttendance(){if(guardViewer())return;
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
@@ -4348,7 +4348,7 @@ function saveAttendance(){
 }
 
 
-function saveWorkers(){
+function saveWorkers(){if(guardViewer())return;
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
@@ -4357,7 +4357,7 @@ function saveWorkers(){
   fbSaveField('workers', '/data/workers', false);
 }
 
-function saveLichLamViec(){
+function saveLichLamViec(){if(guardViewer())return;
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
@@ -4366,7 +4366,7 @@ function saveLichLamViec(){
   fbSaveField('lichLamViec', '/data/lichLamViec', false);
 }
 
-function saveBaoTri(){
+function saveBaoTri(){if(guardViewer())return;
   lsSave();
   if(!fbOk()) return;
   setSyncDot('saving');
@@ -4391,7 +4391,7 @@ let _currentAnn = null;
 const ANN_ICO  = {info:'ℹ️',warn:'⚠️',urgent:'🚨',ok:'✅'};
 const ANN_LABEL= {info:'Thông tin',warn:'Lưu ý',urgent:'KHẨN CẤP',ok:'Thông báo tốt'};
 
-function openAnnounce(){
+function openAnnounce(){if(guardViewer())return;
   _annType='info';
   const ta=$('annMsg'); if(ta){ta.value='';ta.focus();}
   $('annCount').textContent='0';
@@ -4454,7 +4454,7 @@ function buildAnnHTML(ann){
   </div>`;
 }
 
-function publishAnnounce(){
+function publishAnnounce(){if(guardViewer())return;
   const msg=($('annMsg')?.value||'').trim();
   if(!msg){showToast('Nhập nội dung thông báo',true);return;}
   const expire=parseInt($('annExpire')?.value||'0');
@@ -4531,7 +4531,7 @@ async function checkAnnounce(){
 }
 
 // Admin xóa thông báo đang hiện
-function clearAnnounce(){
+function clearAnnounce(){if(guardViewer())return;
   hideAnnBanner();
   if(fbOk()) fbWrite('/announce',null,'PUT').catch(()=>{});
   try{localStorage.removeItem(ANN_KEY);}catch(e){}
@@ -5449,7 +5449,7 @@ function markAllRead(){
 }
 
 // Admin gửi broadcast
-function sendBroadcast(){
+function sendBroadcast(){if(guardViewer())return;
   const inp=$('notifInp'); if(!inp) return;
   const msg=inp.value.trim(); if(!msg) return;
   inp.value='';
@@ -5567,6 +5567,16 @@ function uid(){ return 'o'+Date.now()+Math.random().toString(36).slice(2,6); }
 function isAdmin(){ return currentUser?.role==='admin'; }
 function isStaff(){ return currentUser?.role==='admin'||currentUser?.role==='staff'; }
 function isOnlyStaff(){ return currentUser?.role==='staff'; }
+function isViewer(){ return currentUser?.role==='viewer'; }
+// Chốt chặn quyền cuối cùng cho tài khoản "Xem": gọi ở ĐẦU mọi hàm có thao tác
+// ghi/sửa/xóa dữ liệu hoặc mở form thêm/sửa. Trả về true = đã chặn (hàm gọi
+// phải return ngay), false = được phép chạy tiếp. Tài khoản Xem chỉ được
+// phép xem dữ liệu và dùng khung chat, không được thao tác bất kỳ ở bất kỳ tab nào.
+function guardViewer(){
+  if(!isViewer()) return false;
+  showToast('🔒 Tài khoản Xem chỉ được xem và trò chuyện, không có quyền thao tác', true);
+  return true;
+}
 
 // ════════════════════════════════════════════════════════════
 // AUTH
@@ -7183,7 +7193,7 @@ function renderNhatKy(){
     }
   }
 }
-function clearLog(){ confirm2('Xoá nhật ký','Xoá toàn bộ nhật ký thao tác?',()=>{ actLog=[]; saveLog(); renderNhatKy(); showToast('Đã xoá nhật ký'); }); }
+function clearLog(){if(guardViewer())return; confirm2('Xoá nhật ký','Xoá toàn bộ nhật ký thao tác?',()=>{ actLog=[]; saveLog(); renderNhatKy(); showToast('Đã xoá nhật ký'); }); }
 
 // ════════════════════════════════════════════════════════════
 // PHIÊN BẢN ỨNG DỤNG & KIỂM TRA CẬP NHẬT (trong tab Cài đặt)
@@ -7450,7 +7460,7 @@ function shiftAttMonth(delta){
   renderChamCong();
 }
 
-function addWorker(){
+function addWorker(){if(guardViewer())return;
   const id = uid();
   DB.workers.push({id, name:''});
   saveWorkers();
@@ -7458,7 +7468,7 @@ function addWorker(){
   renderChamCong();
   setTimeout(()=>{ const el=document.getElementById('wkName_'+id); if(el){ el.focus(); } }, 30);
 }
-function renameWorker(id, name){
+function renameWorker(id, name){if(guardViewer())return;
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
   const old = w.name;
   name = name.trim();
@@ -7467,7 +7477,7 @@ function renameWorker(id, name){
   saveWorkers();
   log('Sửa tên người lao động', `${old||'(chưa có tên)'} → ${name||'(chưa có tên)'}`, '', {name:old}, {name});
 }
-function deleteWorker(id){
+function deleteWorker(id){if(guardViewer())return;
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
   confirm2('Xóa người lao động', `Xóa "${w.name||'(chưa có tên)'}" khỏi bảng chấm công? (Dữ liệu công đã chấm của người này cũng sẽ bị xóa)`, ()=>{
     DB.workers = DB.workers.filter(x=>x.id!==id);
@@ -7479,7 +7489,7 @@ function deleteWorker(id){
   });
 }
 
-function setCell(workerId, day, value){
+function setCell(workerId, day, value){if(guardViewer())return;
   const ym = curYM();
   if(!DB.attendance[ym]) DB.attendance[ym] = {};
   if(!DB.attendance[ym][workerId]) DB.attendance[ym][workerId] = {};
@@ -7579,7 +7589,7 @@ setInterval(maintainAttMonth, 30000);
 // tránh phải bấm lưu riêng cho từng người và tránh sót dữ liệu khi mất
 // focus ô nhập (onchange) lúc mạng chập chờn.
 // silent=true: dùng khi hệ thống tự lưu lúc chuyển tháng, không hiện toast.
-function saveAllAttendance(ymParam, silent){
+function saveAllAttendance(ymParam, silent){if(guardViewer())return;
   const ym = ymParam || curYM();
   if(!DB.attendance[ym]) DB.attendance[ym] = {};
   const nDays = daysInMonth(ym);
@@ -7882,7 +7892,7 @@ function renderChamCong(){
 
 function parseCongValNum(s){ const n=parseFloat(s); return isNaN(n)?0:n; }
 
-function openNghiPhepForm(){
+function openNghiPhepForm(){if(guardViewer())return;
   const f=document.getElementById('nghiPhepForm');
   if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth',block:'start'});}
 }
@@ -7890,7 +7900,7 @@ function closeNghiPhepForm(){
   const f=document.getElementById('nghiPhepForm');
   if(f) f.style.display='none';
 }
-function saveNghiPhep(){
+function saveNghiPhep(){if(guardViewer())return;
   const workerId = document.getElementById('np_worker').value;
   const loai     = document.getElementById('np_loai').value;
   const from     = document.getElementById('np_from').value;
@@ -7911,7 +7921,7 @@ function saveNghiPhep(){
   const el=document.getElementById('nghiPhepList');
   if(el) el.innerHTML=renderNghiPhepList();
 }
-function deleteNghiPhep(id){
+function deleteNghiPhep(id){if(guardViewer())return;
   confirm2('Xóa đơn','Xác nhận xóa đơn nghỉ phép này?',()=>{
     DB.nghiPhep=(DB.nghiPhep||[]).filter(k=>k.id!==id);
     lsSave();
@@ -7921,7 +7931,7 @@ function deleteNghiPhep(id){
     if(el) el.innerHTML=renderNghiPhepList();
   });
 }
-function approveNghiPhep(id, status){
+function approveNghiPhep(id, status){if(guardViewer())return;
   const rec=(DB.nghiPhep||[]).find(k=>k.id===id);
   if(!rec) return;
   rec.status=status;
@@ -7959,7 +7969,7 @@ function renderNghiPhepList(){
   </table></div>`;
 }
 
-function openKyLuatForm(){
+function openKyLuatForm(){if(guardViewer())return;
   const f = document.getElementById('kyLuatForm');
   if(f){ f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'start'}); }
 }
@@ -7968,7 +7978,7 @@ function closeKyLuatForm(){
   if(f) f.style.display='none';
 }
 
-function saveKyLuat(){
+function saveKyLuat(){if(guardViewer())return;
   const workerId = document.getElementById('kl_worker').value;
   const date     = document.getElementById('kl_date').value;
   const loai     = document.getElementById('kl_loai').value;
@@ -7993,7 +8003,7 @@ function saveKyLuat(){
   if(listEl) listEl.innerHTML = renderKyLuatList();
 }
 
-function deleteKyLuat(id){
+function deleteKyLuat(id){if(guardViewer())return;
   confirm2('Xóa kỷ luật','Xác nhận xóa bản ghi kỷ luật này?', ()=>{
     DB.kyLuat = (DB.kyLuat||[]).filter(k=>k.id!==id);
     lsSave();
@@ -8054,7 +8064,7 @@ function csvDownload(filename, rows){
   URL.revokeObjectURL(url);
 }
 
-function exportAttendanceExcel(){
+function exportAttendanceExcel(){if(guardViewer())return;
   const ym = curYM();
   const [y,m] = ym.split('-').map(Number);
   const nDays = daysInMonth(ym);
@@ -8077,7 +8087,7 @@ function exportAttendanceExcel(){
   showToast('✅ Đã xuất file chấm công tháng '+m+'/'+y);
 }
 
-function printAttendance(){
+function printAttendance(){if(guardViewer())return;
   const ym = curYM();
   const [y,m] = ym.split('-').map(Number);
   const nDays = daysInMonth(ym);
@@ -8244,7 +8254,7 @@ function renderLichLamViec(){
 
 function llvSelect(id){ _llvActive = id; renderLichLamViec(); }
 
-function llvAddSheet(){
+function llvAddSheet(){if(guardViewer())return;
   const id = 'llv_'+uid();
   DB.lichLamViec.push({id, name:'Bộ phận mới', period:'', warning:'', rows:[]});
   _llvActive = id;
@@ -8253,7 +8263,7 @@ function llvAddSheet(){
   renderLichLamViec();
 }
 
-function llvSetMeta(sheetId, field, value){
+function llvSetMeta(sheetId, field, value){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const old = s[field];
   value = (value||'').trim();
@@ -8263,7 +8273,7 @@ function llvSetMeta(sheetId, field, value){
   log('Sửa lịch làm việc', `${s.name||'(bộ phận)'} · cập nhật ${field}`, '', {[field]:old}, {[field]:value});
 }
 
-function llvDeleteSheet(sheetId){
+function llvDeleteSheet(sheetId){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   confirm2('Xóa lịch làm việc', `Xóa toàn bộ lịch làm việc của "${s.name||'(bộ phận)'}"?`, ()=>{
     DB.lichLamViec = DB.lichLamViec.filter(x=>x.id!==sheetId);
@@ -8275,7 +8285,7 @@ function llvDeleteSheet(sheetId){
   });
 }
 
-function llvAddRow(sheetId){
+function llvAddRow(sheetId){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   s.rows.push({stt:s.rows.length+1,name:'',gender:'',time:'',leave:'',note:''});
   saveLichLamViec();
@@ -8283,14 +8293,14 @@ function llvAddRow(sheetId){
   renderLichLamViec();
 }
 
-function llvSetCell(sheetId, idx, field, value){
+function llvSetCell(sheetId, idx, field, value){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const row = s.rows[idx]; if(!row) return;
   row[field] = value;
   saveLichLamViec();
 }
 
-function llvDeleteRow(sheetId, idx){
+function llvDeleteRow(sheetId, idx){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const row = s.rows[idx]; if(!row) return;
   confirm2('Xóa khỏi lịch', `Xóa "${row.name||'(chưa có tên)'}" khỏi lịch làm việc?`, ()=>{
@@ -8301,7 +8311,7 @@ function llvDeleteRow(sheetId, idx){
   });
 }
 
-function llvExportExcel(sheetId){
+function llvExportExcel(sheetId){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const rows = [];
   rows.push([`LỊCH LÀM VIỆC BỘ PHẬN ${(s.name||'').toUpperCase()}`]);
@@ -8316,7 +8326,7 @@ function llvExportExcel(sheetId){
   showToast('✅ Đã xuất lịch làm việc');
 }
 
-function llvPrint(sheetId){
+function llvPrint(sheetId){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const esc = v=>(v||'').toString().replace(/</g,'&lt;');
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Lịch làm việc ${esc(s.name)}</title>
@@ -8459,7 +8469,7 @@ function renderBaoTriMay(){
 function btmSelectMachine(id){ _btmActive = id; renderBaoTriMay(); }
 function btmBack(){ _btmActive = null; renderBaoTriMay(); }
 
-function btmOpenAdd(machineId, type){
+function btmOpenAdd(machineId, type){if(guardViewer())return;
   const m = MACHINES.find(x=>x.id===machineId); if(!m) return;
   _btmEditId = null;
   _btmFilterMachineForModal = machineId;
@@ -8477,7 +8487,7 @@ function btmOpenAdd(machineId, type){
   openModal('btmModal');
 }
 
-function btmEditRecord(id){
+function btmEditRecord(id){if(guardViewer())return;
   const r = (DB.baoTri||[]).find(x=>x.id===id); if(!r) return;
   const m = MACHINES.find(x=>x.id===r.machineId);
   _btmEditId = id;
@@ -8496,7 +8506,7 @@ function btmEditRecord(id){
   openModal('btmModal');
 }
 
-function btmSaveRecord(){
+function btmSaveRecord(){if(guardViewer())return;
   const issue = $('btmIssue').value.trim();
   if(!issue){ $('btmErr').textContent='Vui lòng nhập mô tả sự cố / máy hỏng gì'; $('btmErr').style.display='block'; return; }
   const machineId = _btmFilterMachineForModal;
@@ -8530,7 +8540,7 @@ function btmSaveRecord(){
   showToast('✅ Đã lưu bản ghi bảo trì');
 }
 
-function btmMarkDone(id){
+function btmMarkDone(id){if(guardViewer())return;
   const r = (DB.baoTri||[]).find(x=>x.id===id); if(!r) return;
   const m = MACHINES.find(x=>x.id===r.machineId);
   r.status = 'da_xong';
@@ -8542,7 +8552,7 @@ function btmMarkDone(id){
   showToast('✅ Đã đánh dấu hoàn tất');
 }
 
-function btmDeleteRecord(id){
+function btmDeleteRecord(id){if(guardViewer())return;
   const r = (DB.baoTri||[]).find(x=>x.id===id); if(!r) return;
   const m = MACHINES.find(x=>x.id===r.machineId);
   confirm2('Xóa bản ghi bảo trì', `Xóa bản ghi "${r.issue||''}" của ${m?m.name:r.machineId}?`, ()=>{
@@ -8558,8 +8568,8 @@ function btmDeleteRecord(id){
 // ════════════════════════════════════════════════════════════
 // ORDERS CRUD
 // ════════════════════════════════════════════════════════════
-function openAddOrder(){ _editOrderId=null; $('orderModalTitle').textContent='Thêm đơn hàng mới'; ['ofCust','ofPO','ofType','ofNote','ofAddr','ofKg','ofPhi'].forEach(id=>$(id).value=''); ['ofThk','ofW','ofQty'].forEach(id=>$(id).value=''); $('ofL').value='4000'; $('ofMat').value='B*'; $('ofPri').value='GẤP 1'; $('ofDate').value=''; $('orderErr').style.display='none'; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=''; openModal('orderModal'); }
-function editOrder(id){
+function openAddOrder(){if(guardViewer())return; _editOrderId=null; $('orderModalTitle').textContent='Thêm đơn hàng mới'; ['ofCust','ofPO','ofType','ofNote','ofAddr','ofKg','ofPhi'].forEach(id=>$(id).value=''); ['ofThk','ofW','ofQty'].forEach(id=>$(id).value=''); $('ofL').value='4000'; $('ofMat').value='B*'; $('ofPri').value='GẤP 1'; $('ofDate').value=''; $('orderErr').style.display='none'; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=''; openModal('orderModal'); }
+function editOrder(id){if(guardViewer())return;
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   _editOrderId=id;
   $('orderModalTitle').textContent='Sửa đơn hàng';
@@ -8575,7 +8585,7 @@ function editOrder(id){
 let _progressOrderId = null;
 let _pmMats = [];
 
-function openProgress(id){
+function openProgress(id){if(guardViewer())return;
   const o = DB.orders.find(x=>x.id===id); if(!o) return;
   _progressOrderId = id;
   _pmMats = o.matCodes ? [...o.matCodes] : [];
@@ -8595,7 +8605,7 @@ function renderPmMats(){
   ).join('');
 }
 
-function pmAddMat(){
+function pmAddMat(){if(guardViewer())return;
   const inp = document.getElementById('pmMatCode');
   const v = inp.value.trim(); if(!v) return;
   if(!_pmMats.includes(v)) _pmMats.push(v);
@@ -8603,7 +8613,7 @@ function pmAddMat(){
   renderPmMats();
 }
 
-function saveProgress(){
+function saveProgress(){if(guardViewer())return;
   const doneQty = parseInt(document.getElementById('pmDoneQty').value)||0;
   const note = document.getElementById('pmNote').value.trim();
   const o = DB.orders.find(x=>x.id===_progressOrderId); if(!o) return;
@@ -8726,7 +8736,7 @@ function renderStageBadge(o){
   return `<span class="stage-badge">${st.icon} ${st.label}</span>`;
 }
 
-function setStage(id, stage){
+function setStage(id, stage){if(guardViewer())return;
   const o = DB.orders.find(x=>x.id===id); if(!o) return;
   if(!isStaff()) return;
   const old = o.stage;
@@ -8767,7 +8777,7 @@ function calcKgAuto(){
   }
 }
 
-function saveOrder(){
+function saveOrder(){if(guardViewer())return;
   const customer=$('ofCust').value.trim();
   if(!customer){ $('orderErr').textContent='Nhập tên khách hàng'; $('orderErr').style.display='block'; return; }
   const phi = parseFloat($('ofPhi').value)||0;
@@ -8812,7 +8822,7 @@ function saveOrder(){
   renderTab(currentTab);
   saveOrders();
 }
-function deleteOrder(id){
+function deleteOrder(id){if(guardViewer())return;
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   confirm2('Xóa đơn hàng',`Xóa đơn của "${o.customer}"?`,()=>{
     log('Xóa đơn',o.customer,id,{customer:o.customer,status:o.status},null);
@@ -8822,7 +8832,7 @@ function deleteOrder(id){
   });
 }
 // Tự động thăng cấp ưu tiên: khi GẤP N xong hết → nâng GẤP N+1 lên GẤP N
-function aiAutoPromote(){
+function aiAutoPromote(){if(guardViewer())return;
   // Lấy số ưu tiên từ string "GẤP N"
   const getPri = o => parseInt((o.priority||'GẤP 9').replace('GẤP ',''))||9;
 
@@ -8892,7 +8902,7 @@ function aiAutoPromote(){
   return false;
 }
 
-function setStatus(id, newStatus){
+function setStatus(id, newStatus){if(guardViewer())return;
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   const before=o.status;
   o.status=newStatus;
@@ -8935,15 +8945,15 @@ function setStatus(id, newStatus){
 // ════════════════════════════════════════════════════════════
 // USERS CRUD
 // ════════════════════════════════════════════════════════════
-function openAddUser(){ _editUserId=null; $('userModalTitle').textContent='Thêm tài khoản'; ['ufUser','ufPass','ufName','ufEmail','ufPhone'].forEach(id=>$(id).value=''); $('ufRole').value='staff'; $('userErr').style.display='none'; openModal('userModal'); }
-function editUser(id){
+function openAddUser(){if(guardViewer())return; _editUserId=null; $('userModalTitle').textContent='Thêm tài khoản'; ['ufUser','ufPass','ufName','ufEmail','ufPhone'].forEach(id=>$(id).value=''); $('ufRole').value='staff'; $('userErr').style.display='none'; openModal('userModal'); }
+function editUser(id){if(guardViewer())return;
   const u=DB.users.find(x=>x.id===id); if(!u) return;
   _editUserId=id; $('userModalTitle').textContent='Sửa tài khoản';
   $('ufUser').value=u.username; $('ufPass').value=''; $('ufName').value=u.name;
   $('ufRole').value=u.role; $('ufEmail').value=u.email||''; $('ufPhone').value=u.phone||'';
   $('userErr').style.display='none'; openModal('userModal');
 }
-function saveUser(){
+function saveUser(){if(guardViewer())return;
   const username=$('ufUser').value.trim(), name=$('ufName').value.trim(), role=$('ufRole').value, pass=$('ufPass').value, email=$('ufEmail').value.trim(), phone=$('ufPhone').value.trim();
   const errEl=$('userErr'); errEl.style.display='none';
   if(!username||!name){ errEl.textContent='Nhập đủ thông tin'; errEl.style.display='block'; return; }
@@ -8964,7 +8974,7 @@ function saveUser(){
   }
   closeModal('userModal'); renderTab(currentTab); saveAll();
 }
-function deleteUser(id){
+function deleteUser(id){if(guardViewer())return;
   const u=DB.users.find(x=>x.id===id); if(!u) return;
   if(u.role==='admin'&&DB.users.filter(x=>x.role==='admin').length<=1){ showToast('❌ Phải có ít nhất 1 admin',true); return; }
   confirm2('Xóa tài khoản',`Xóa tài khoản "${u.name}" (@${u.username})?`,()=>{
@@ -8973,7 +8983,7 @@ function deleteUser(id){
     renderTab(currentTab); showToast('Đã xóa tài khoản'); saveAll();
   });
 }
-function saveProfile(){
+function saveProfile(){if(guardViewer())return;
   const idx=DB.users.findIndex(x=>x.id===currentUser.id);
   DB.users[idx].name=$('epName').value.trim()||DB.users[idx].name;
   DB.users[idx].email=$('epEmail').value.trim();
@@ -8983,7 +8993,7 @@ function saveProfile(){
   log('Sửa TK','Cập nhật thông tin cá nhân','');
   closeModal('profileModal'); renderSettings(); showToast('✅ Đã lưu'); saveAll();
 }
-function savePass(){
+function savePass(){if(guardViewer())return;
   const old=$('cpOld').value, nw=$('cpNew').value, cf=$('cpCf').value;
   const err=$('passErr'); err.style.display='none';
   if(old!==currentUser.password){ err.textContent='Mật khẩu hiện tại không đúng'; err.style.display='block'; return; }
@@ -8998,7 +9008,7 @@ function savePass(){
 // ════════════════════════════════════════════════════════════
 // FIREBASE SETUP
 // ════════════════════════════════════════════════════════════
-async function saveFbCfg(){
+async function saveFbCfg(){if(guardViewer())return;
   const url=$('fbUrlInp').value.trim().replace(/\/+$/,'');
   if(!url.startsWith('https://')){ alert('URL phải bắt đầu bằng https://'); return; }
   showToast('⏳ Đang kiểm tra kết nối Firebase...');
@@ -9021,7 +9031,7 @@ async function saveFbCfg(){
   log('Cấu hình Firebase','Đã kết nối Firebase','');
   if(currentUser) initAndStartSync();
 }
-function skipFb(){ localStorage.setItem(FB_KEY,'__skip__'); $('fbSetup').style.display='none'; }
+function skipFb(){if(guardViewer())return; localStorage.setItem(FB_KEY,'__skip__'); $('fbSetup').style.display='none'; }
 
 // ════════════════════════════════════════════════════════════
 // NOTIFICATIONS
@@ -9488,7 +9498,7 @@ let _qrBatchCounter = 0;
 
 // ── Tạo hàng loạt QR khi 1 đơn hàng hoàn thành ──────────────────────
 let _qrGenOrderId = null;
-function openQrGenForOrder(orderId){
+function openQrGenForOrder(orderId){if(guardViewer())return;
   const o = DB.orders.find(x=>x.id===orderId);
   if(!o) return;
   _qrGenOrderId = orderId;
@@ -9519,7 +9529,7 @@ function updateQrGenPreview(){
     ? `→ Sẽ tạo ${codeCount} mã QR (mỗi mã ${groupSize} thanh) · In ${codeCount*labelsPerCode} tem`
     : '';
 }
-function confirmGenQr(){
+function confirmGenQr(){if(guardViewer())return;
   const o = DB.orders.find(x=>x.id===_qrGenOrderId);
   if(!o){ closeModal('qrGenModal'); return; }
   const qty = parseInt($('qgQty').value)||0;
@@ -9540,7 +9550,7 @@ function confirmGenQr(){
 // groupSize: số thanh gộp chung vào 1 mã QR (mặc định = toàn bộ đơn, tức
 // chỉ tạo 1 mã QR cho cả đơn). labelsPerCode: số tem cần in cho mỗi mã QR
 // (mặc định 2 — dán 2 đầu bó hàng — thay vì in 1 tem cho từng thanh).
-function createQrBatch(order, qty, opts, groupSize, labelsPerCode){
+function createQrBatch(order, qty, opts, groupSize, labelsPerCode){if(guardViewer())return;
   groupSize = Math.max(1, groupSize||qty||1);
   labelsPerCode = Math.max(1, labelsPerCode||2);
   _qrBatchCounter = 0;
@@ -9802,7 +9812,7 @@ function openQrDetail(id){
 }
 function touchQr(p){ p.updatedAt=Date.now(); p.updatedBy=currentUser?.id; }
 
-function advanceQrStage(id, stageKey){
+function advanceQrStage(id, stageKey){if(guardViewer())return;
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   const st = QR_STAGES.find(s=>s.key===stageKey); if(!st) return;
   p.currentStage = stageKey;
@@ -9818,7 +9828,7 @@ function advanceQrStage(id, stageKey){
   openQrDetail(id);
   showToast(`✅ Đã chuyển sang: ${st.label}`);
 }
-function promptQcResult(id, result){
+function promptQcResult(id, result){if(guardViewer())return;
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   const inspector = (currentUser?.name)||'';
   p.qcResult = result;
@@ -9831,7 +9841,7 @@ function promptQcResult(id, result){
   openQrDetail(id);
   showToast(result==='pass'?'✅ Đã ghi nhận QC Đạt':'❌ Đã ghi nhận QC Không đạt');
 }
-function transferQrWarehouse(id){
+function transferQrWarehouse(id){if(guardViewer())return;
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   const loc = prompt('Nhập vị trí lưu kho (VD: Kho A - Kệ 3):', p.location||'');
   if(loc===null) return;
@@ -9844,7 +9854,7 @@ function transferQrWarehouse(id){
   openQrDetail(id);
   showToast('✅ Đã cập nhật vị trí kho');
 }
-function exportQrWarehouse(id){
+function exportQrWarehouse(id){if(guardViewer())return;
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   confirm2('Xuất kho', `Xác nhận xuất kho mã ${p.qrCode}?`, ()=>{
     p.status='out_stock';
@@ -9858,7 +9868,7 @@ function exportQrWarehouse(id){
     showToast('🚚 Đã xuất kho');
   });
 }
-function addQrNote(id){
+function addQrNote(id){if(guardViewer())return;
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   const inp = $('qrNoteInp-'+id); if(!inp) return;
   const txt = inp.value.trim(); if(!txt) return;
@@ -9869,7 +9879,7 @@ function addQrNote(id){
   openQrDetail(id);
   showToast('✅ Đã thêm ghi chú');
 }
-function attachQrImage(id, inputEl){
+function attachQrImage(id, inputEl){if(guardViewer())return;
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   const file = inputEl.files && inputEl.files[0]; if(!file) return;
   if(!p.images) p.images=[];
@@ -9895,7 +9905,7 @@ function attachQrImage(id, inputEl){
 }
 
 // ── Sửa số lượng thanh của mã QR (chỉ Admin) ─────────────────────────
-function editQrQuantity(id){
+function editQrQuantity(id){if(guardViewer())return;
   if(!isAdmin()){ showToast('❌ Chỉ Admin mới được sửa số lượng', true); return; }
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   const inp = $('qrQtyInp-'+id); if(!inp) return;
@@ -9914,7 +9924,7 @@ function editQrQuantity(id){
 }
 
 // ── Xóa mã QR (chỉ Admin) ─────────────────────────────────────────────
-function deleteQrProduct(id){
+function deleteQrProduct(id){if(guardViewer())return;
   if(!isAdmin()){ showToast('❌ Chỉ Admin mới được xóa mã QR', true); return; }
   const p = DB.qrProducts.find(x=>x.id===id); if(!p) return;
   confirm2('Xóa mã QR', `Xác nhận xóa vĩnh viễn mã QR "${p.qrCode}"? Toàn bộ lịch sử, ghi chú và hình ảnh đính kèm của mã này sẽ bị xóa và KHÔNG thể khôi phục.`, ()=>{
@@ -9928,7 +9938,7 @@ function deleteQrProduct(id){
     showToast('🗑 Đã xóa mã QR');
   });
 }
-function deleteQrProductsBulk(ids){
+function deleteQrProductsBulk(ids){if(guardViewer())return;
   if(!isAdmin()){ showToast('❌ Chỉ Admin mới được xóa mã QR', true); return; }
   if(!ids || !ids.length) return;
   confirm2('Xóa nhiều mã QR', `Xác nhận xóa vĩnh viễn ${ids.length} mã QR đã chọn? Hành động này KHÔNG thể khôi phục.`, ()=>{
@@ -9947,7 +9957,7 @@ function deleteQrProductsBulk(ids){
 // ── In tem QR (mục 4) ────────────────────────────────────────────────
 let _printTargetIds = [];
 let _printSize = '40x30';
-function openPrintModal(id){
+function openPrintModal(id){if(guardViewer())return;
   _printTargetIds = id ? [id] : [];
   // Mặc định lấy đúng số tem đã cấu hình khi tạo mã QR (thường là 2 tem/mã)
   // thay vì luôn in 1 tem — giúp đỡ tốn tem dán như đã cấu hình cho mã này.
@@ -9955,7 +9965,7 @@ function openPrintModal(id){
   if($('qpLabelsPerCode')) $('qpLabelsPerCode').value = (rec && rec.labelCount) || 2;
   openModal('qrPrintModal');
 }
-function openBatchPrint(){
+function openBatchPrint(){if(guardViewer())return;
   const list = DB.qrProducts.filter(p=>qrFilterStatus==='all'||p.status===qrFilterStatus)
     .filter(p=>!qrSearchQ||matchQr(p,qrSearchQ));
   if(!list.length){ showToast('❌ Không có mã QR nào để in theo bộ lọc hiện tại', true); return; }
@@ -10131,7 +10141,7 @@ async function generateLabelPDF(){
 }
 
 // ── Xuất Excel danh sách QR (SheetJS) ────────────────────────────────
-function exportQrExcel(){
+function exportQrExcel(){if(guardViewer())return;
   if(typeof XLSX==='undefined'){ showToast('⏳ Đang tải thư viện Excel, thử lại sau...', true); loadSheetJs(); return; }
   const rows = DB.qrProducts.map(p=>({
     'Mã QR':p.qrCode,'Mã sản phẩm':p.productCode,'Mã nguyên liệu':p.materialCode,'Khách hàng':p.customer,
