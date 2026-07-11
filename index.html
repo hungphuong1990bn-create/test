@@ -3272,6 +3272,45 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .chat-send-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .1s,opacity .15s}
 .chat-send-btn:active{transform:scale(.92)}
 .chat-send-btn:disabled{opacity:.4;cursor:default}
+
+/* ── Reactions (thả tim / cảm xúc) ── */
+.chat-reactions-bar{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+.chat-row.me .chat-reactions-bar{justify-content:flex-end}
+.chat-reaction-chip{display:flex;align-items:center;gap:3px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1px 6px 1px 5px;font-size:12px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);user-select:none;-webkit-tap-highlight-color:transparent}
+.chat-reaction-chip.mine{border-color:var(--brand)}
+.chat-reaction-chip b{font-weight:700;font-size:10px;color:var(--text3)}
+
+.chat-react-overlay{position:fixed;inset:0;z-index:899}
+.chat-react-picker{position:fixed;z-index:900;background:var(--card);border-radius:26px;box-shadow:0 6px 24px rgba(0,0,0,.22);padding:5px 7px;display:flex;gap:2px;animation:chatReactIn .15s ease}
+@keyframes chatReactIn{from{opacity:0;transform:translateY(6px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+.chat-react-picker button{font-size:23px;background:none;border:none;cursor:pointer;padding:4px;border-radius:50%;transition:transform .12s;line-height:1}
+.chat-react-picker button:active{transform:scale(1.35)}
+
+.chat-heart-burst{position:fixed;font-size:38px;pointer-events:none;animation:heartBurst .7s ease forwards;z-index:901}
+@keyframes heartBurst{0%{opacity:0;transform:scale(.3) translateY(0)}25%{opacity:1;transform:scale(1.2) translateY(-8px)}100%{opacity:0;transform:scale(1) translateY(-46px)}}
+
+.chat-bubble{position:relative}
+.chat-sticker{font-size:58px!important;line-height:1;background:none!important;box-shadow:none!important;padding:0!important}
+
+/* ── Nút emoji/sticker + bảng chọn ── */
+.chat-emoji-btn{width:34px;height:34px;border-radius:50%;border:none;background:none;color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:19px;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.chat-emoji-btn:active{background:var(--bg)}
+.chat-emoji-btn.active{color:var(--brand)}
+
+.chat-emoji-panel{display:none;flex-direction:column;background:var(--card);border-top:1px solid var(--border);flex-shrink:0;height:220px}
+.chat-emoji-panel.show{display:flex}
+.chat-emoji-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.chat-emoji-tab{flex:1;text-align:center;padding:9px 0;font-size:12px;font-weight:700;color:var(--text3);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent}
+.chat-emoji-tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.chat-emoji-body{flex:1;overflow-y:auto;padding:8px 10px}
+.chat-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px}
+.chat-emoji-grid button{font-size:21px;background:none;border:none;cursor:pointer;padding:4px 0;border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.chat-emoji-grid button:active{background:var(--bg)}
+.chat-sticker-cat{font-size:10.5px;font-weight:800;color:var(--text4);margin:8px 1px 5px;text-transform:uppercase;letter-spacing:.3px}
+.chat-sticker-cat:first-child{margin-top:1px}
+.chat-sticker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.chat-sticker-grid button{font-size:32px;background:var(--bg);border:none;cursor:pointer;padding:8px 0;border-radius:14px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:transform .1s,background .1s}
+.chat-sticker-grid button:active{transform:scale(.9);background:var(--border)}
 @media (min-width:900px){
   .chat-wrap{height:calc(100vh - var(--top) - var(--safe-t))}
 }
@@ -3717,10 +3756,18 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   <div class="chat-members" id="chatFloatMembers"></div>
   <div class="chat-msgs" id="chatFloatMsgsEl"></div>
   <div class="chat-inputbar">
-    <textarea class="chat-input" id="chatFloatInputEl" rows="1" placeholder="Nhập tin nhắn..." onkeydown="chatInputKeydown(event)" oninput="chatAutoGrow(this)"></textarea>
+    <button class="chat-emoji-btn" id="chatEmojiBtn" onclick="toggleChatEmojiPanel()" title="Emoji & Sticker">😊</button>
+    <textarea class="chat-input" id="chatFloatInputEl" rows="1" placeholder="Nhập tin nhắn..." onkeydown="chatInputKeydown(event)" oninput="chatAutoGrow(this)" onfocus="closeChatEmojiPanel()"></textarea>
     <button class="chat-send-btn" id="chatFloatSendBtn" onclick="sendChatMessage()" title="Gửi">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
+  </div>
+  <div class="chat-emoji-panel" id="chatEmojiPanel">
+    <div class="chat-emoji-tabs">
+      <button class="chat-emoji-tab active" id="chatTabEmoji" onclick="switchChatEmojiTab('emoji')">😀 Emoji</button>
+      <button class="chat-emoji-tab" id="chatTabSticker" onclick="switchChatEmojiTab('sticker')">🎉 Sticker</button>
+    </div>
+    <div class="chat-emoji-body" id="chatEmojiBody"></div>
   </div>
 </div>
 
@@ -4676,6 +4723,8 @@ function closeChatWindow(){
   chatWindowOpen = false;
   const win = $('chatFloatWindow');
   if(win) win.classList.remove('open');
+  closeChatEmojiPanel();
+  closeChatReactPicker();
 }
 function minimizeChatWindow(){ closeChatWindow(); }
 function toggleChatWindow(){ chatWindowOpen ? closeChatWindow() : openChatWindow(); }
@@ -4719,11 +4768,17 @@ function renderChatMessages(){
     }
     const isMe = m.uid===currentUser?.id;
     const grouped = m.uid===lastUid;
+    const isSticker = m.type==='sticker';
+    const bubbleEvents = `ondblclick="quickHeartReact('${m.id}',event)" onpointerdown="chatBubblePointerDown('${m.id}',event)" onpointerup="chatBubblePointerUp()" onpointerleave="chatBubblePointerUp()" oncontextmenu="event.preventDefault();openChatReactPicker('${m.id}',event)"`;
+    const bubbleHtml = isSticker
+      ? `<div class="chat-bubble chat-sticker" ${bubbleEvents}>${m.text}</div>`
+      : `<div class="chat-bubble" ${bubbleEvents}>${chatEsc(m.text)}</div>`;
     html += `<div class="chat-row ${isMe?'me':''} ${grouped?'grouped':''}">
       <div class="chat-av" style="box-shadow:0 0 0 2px ${roleColor(m.role)}">${userInitials(m.name)}</div>
       <div class="chat-bubble-col">
         ${!grouped?`<div class="chat-sender">${m.name}</div>`:''}
-        <div class="chat-bubble">${chatEsc(m.text)}</div>
+        ${bubbleHtml}
+        ${renderChatReactionsBar(m)}
         <div class="chat-time">${chatFmtTime(m.ts)}</div>
       </div>
     </div>`;
@@ -4793,6 +4848,189 @@ function sendChatMessage(){
   fbWrite('/chat/messages/'+msg.id, msg, 'PUT').catch(e=>{
     showToast('❌ Lỗi gửi tin nhắn: '+e.message, true);
   });
+}
+
+// ══════════════════ EMOJI & STICKER PICKER ══════════════════
+const CHAT_EMOJI_LIST = ['😀','😁','😂','🤣','😊','😍','😘','😜','🤔','😎','😇','🥰','😭','😢','😡','😱','😴','🥳','🤗','🙄','😅','😆','😉','😋','😏','😐','😑','😒','😓','😔','😕','😖','🙃','🤩','😬','🤤','😷','🤒','🤕','🤧','🥵','🥶','😵','🤯','🥺','😤','😩','😫','🥱','😈','👿','💀','👻','🤖','😻','🙈','🙉','🙊','👍','👎','👏','🙏','💪','🤝','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💯','🔥','✨','🎉','🎊','⭐','🌟','☀️','🌈','🍀'];
+
+const CHAT_STICKER_CATS = [
+  { name:'Yêu thương', items:['❤️','😍','😘','🥰','💋','💑','💐','💝'] },
+  { name:'Vui vẻ',     items:['😂','🤣','😆','🥳','🎉','🕺','💃','🙌'] },
+  { name:'Buồn / Mệt', items:['😭','😢','😞','🥺','😴','😩','😪','💤'] },
+  { name:'Tức giận',   items:['😡','🤬','😤','👿','💢','😠','🙄','😒'] },
+  { name:'Chào / Ok',  items:['👍','🙏','👌','🤝','👋','✋','🫡','✅'] },
+  { name:'Đồ ăn',      items:['🍕','🍔','🍰','☕','🍺','🍜','🍩','🧋'] },
+];
+
+let _chatEmojiTab = 'emoji';
+
+function toggleChatEmojiPanel(){
+  const p = $('chatEmojiPanel');
+  const btn = $('chatEmojiBtn');
+  if(!p) return;
+  const show = !p.classList.contains('show');
+  p.classList.toggle('show', show);
+  if(btn) btn.classList.toggle('active', show);
+  if(show){ renderChatEmojiBody(); }
+  chatScrollBottom();
+}
+
+function closeChatEmojiPanel(){
+  $('chatEmojiPanel')?.classList.remove('show');
+  $('chatEmojiBtn')?.classList.remove('active');
+}
+
+function switchChatEmojiTab(tab){
+  _chatEmojiTab = tab;
+  $('chatTabEmoji')?.classList.toggle('active', tab==='emoji');
+  $('chatTabSticker')?.classList.toggle('active', tab==='sticker');
+  renderChatEmojiBody();
+}
+
+function renderChatEmojiBody(){
+  const el = $('chatEmojiBody');
+  if(!el) return;
+  if(_chatEmojiTab==='emoji'){
+    el.innerHTML = `<div class="chat-emoji-grid">${CHAT_EMOJI_LIST.map(e=>`<button onclick="insertChatEmoji('${e}')">${e}</button>`).join('')}</div>`;
+  } else {
+    el.innerHTML = CHAT_STICKER_CATS.map(cat=>`
+      <div class="chat-sticker-cat">${cat.name}</div>
+      <div class="chat-sticker-grid">${cat.items.map(e=>`<button onclick="sendChatSticker('${e}')">${e}</button>`).join('')}</div>
+    `).join('');
+  }
+}
+
+function insertChatEmoji(e){
+  const inp = $('chatFloatInputEl');
+  if(!inp) return;
+  const start = inp.selectionStart ?? inp.value.length;
+  const end = inp.selectionEnd ?? inp.value.length;
+  inp.value = inp.value.slice(0,start) + e + inp.value.slice(end);
+  inp.focus();
+  inp.selectionStart = inp.selectionEnd = start + e.length;
+  chatAutoGrow(inp);
+}
+
+function sendChatSticker(emoji){
+  if(!currentUser) return;
+  if(!fbOk()){ showToast('⚠️ Hãy bật Firebase Sync ở Cài đặt để dùng chat nhóm', true); return; }
+  const msg = {
+    id: 'm'+Date.now()+Math.random().toString(36).slice(2,8),
+    uid: currentUser.id,
+    name: currentUser.name,
+    role: currentUser.role,
+    text: emoji,
+    type: 'sticker',
+    ts: Date.now()
+  };
+  chatMessages.push(msg);
+  chatCacheSave();
+  renderChatFloatMessages();
+  markChatRead();
+  updateChatBubble();
+  fbWrite('/chat/messages/'+msg.id, msg, 'PUT').catch(e=>{
+    showToast('❌ Lỗi gửi sticker: '+e.message, true);
+  });
+}
+
+// ══════════════════ REACTIONS (thả tim, thích, ...) ══════════════════
+const CHAT_QUICK_REACTS = ['❤️','😆','😮','😢','😡','👍'];
+let _chatLongPressTimer = null;
+
+function chatReactionSummary(reactions){
+  if(!reactions) return [];
+  return Object.keys(reactions)
+    .filter(k=>reactions[k] && reactions[k].length)
+    .map(k=>({emoji:k, count:reactions[k].length, mine: reactions[k].includes(currentUser?.id)}));
+}
+
+function renderChatReactionsBar(m){
+  const list = chatReactionSummary(m.reactions);
+  if(!list.length) return '';
+  return `<div class="chat-reactions-bar">${list.map(r=>
+    `<span class="chat-reaction-chip${r.mine?' mine':''}" onclick="event.stopPropagation();toggleChatReaction('${m.id}','${r.emoji}')">${r.emoji}<b>${r.count}</b></span>`
+  ).join('')}</div>`;
+}
+
+function toggleChatReaction(msgId, emoji){
+  if(!currentUser) return;
+  const msg = chatMessages.find(m=>m.id===msgId);
+  if(!msg) return;
+  if(!msg.reactions) msg.reactions = {};
+  const uid = currentUser.id;
+  const hadSame = (msg.reactions[emoji]||[]).includes(uid);
+  // Mỗi người chỉ giữ 1 cảm xúc / tin nhắn — bỏ cảm xúc cũ của mình trước
+  Object.keys(msg.reactions).forEach(k=>{
+    msg.reactions[k] = (msg.reactions[k]||[]).filter(id=>id!==uid);
+    if(!msg.reactions[k].length) delete msg.reactions[k];
+  });
+  if(!hadSame){
+    if(!msg.reactions[emoji]) msg.reactions[emoji] = [];
+    msg.reactions[emoji].push(uid);
+  }
+  chatCacheSave();
+  renderChatFloatMessages();
+  fbWrite('/chat/messages/'+msg.id, msg, 'PUT').catch(()=>{});
+}
+
+function chatBubblePointerDown(msgId, ev){
+  clearTimeout(_chatLongPressTimer);
+  _chatLongPressTimer = setTimeout(()=>{ openChatReactPicker(msgId, ev); }, 420);
+}
+function chatBubblePointerUp(){
+  clearTimeout(_chatLongPressTimer);
+}
+
+function quickHeartReact(msgId, ev){
+  toggleChatReaction(msgId, '❤️');
+  showChatHeartBurst(ev);
+}
+
+function showChatHeartBurst(ev){
+  const target = ev?.currentTarget || ev?.target;
+  if(!target) return;
+  const rect = target.getBoundingClientRect();
+  const burst = document.createElement('div');
+  burst.className = 'chat-heart-burst';
+  burst.textContent = '❤️';
+  burst.style.left = (rect.left + rect.width/2 - 19) + 'px';
+  burst.style.top = (rect.top - 6) + 'px';
+  document.body.appendChild(burst);
+  setTimeout(()=>burst.remove(), 700);
+}
+
+function openChatReactPicker(msgId, ev){
+  closeChatReactPicker();
+  const target = ev?.currentTarget || ev?.target;
+  if(!target) return;
+  const rect = target.getBoundingClientRect();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'chat-react-overlay';
+  overlay.id = 'chatReactOverlay';
+  overlay.onclick = closeChatReactPicker;
+  document.body.appendChild(overlay);
+
+  const picker = document.createElement('div');
+  picker.className = 'chat-react-picker';
+  picker.id = 'chatReactPicker';
+  picker.innerHTML = CHAT_QUICK_REACTS.map(e=>
+    `<button onclick="event.stopPropagation();toggleChatReaction('${msgId}','${e}');closeChatReactPicker()">${e}</button>`
+  ).join('');
+  document.body.appendChild(picker);
+
+  let left = rect.left + rect.width/2 - picker.offsetWidth/2;
+  let top = rect.top - picker.offsetHeight - 10;
+  if(top < 10) top = rect.bottom + 10;
+  left = Math.max(8, Math.min(left, window.innerWidth - picker.offsetWidth - 8));
+  picker.style.left = left+'px';
+  picker.style.top = top+'px';
+  if(navigator.vibrate) navigator.vibrate(15);
+}
+
+function closeChatReactPicker(){
+  $('chatReactPicker')?.remove();
+  $('chatReactOverlay')?.remove();
 }
 
 // Hash để detect thay đổi
