@@ -2370,19 +2370,20 @@ var qrcode = function() {
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --brand:#1e3a8a;--brand2:#2563eb;--brand3:#3b82f6;
-  --purple-m:#7c3aed;--purple-l:#ede9fe;
-  --cyan-m:#0891b2;--cyan-l:#cffafe;
-  --pink-m:#db2777;--pink-l:#fce7f3;
-  --orange-m:#ea580c;--orange-l:#ffedd5;
-  --slate-m:#475569;--slate-l:#f1f5f9;
-  --green:#065f46;--green-l:#d1fae5;--green-m:#10b981;
-  --amber:#92400e;--amber-l:#fef3c7;--amber-m:#f59e0b;
-  --red:#991b1b;--red-l:#fee2e2;--red-m:#ef4444;
-  --text:#0f172a;--text2:#334155;--text3:#64748b;--text4:#94a3b8;
-  --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;
-  --r:12px;--r-sm:8px;
-  --sh:0 1px 4px rgba(0,0,0,.1);--sh2:0 4px 16px rgba(0,0,0,.12);
+  --brand:#0f3d73;--brand2:#1d63d6;--brand3:#3b82f6;
+  --purple-m:#6d5bd0;--purple-l:#eeecfb;
+  --cyan-m:#0891b2;--cyan-l:#e0f7fa;
+  --pink-m:#c2478a;--pink-l:#fbe9f3;
+  --orange-m:#d9770f;--orange-l:#fdf0dc;
+  --slate-m:#51606f;--slate-l:#eef1f4;
+  --green:#0f6b4d;--green-l:#e4f5ec;--green-m:#1a9b6c;
+  --amber:#92400e;--amber-l:#fdf1de;--amber-m:#e29a1f;
+  --red:#a3281f;--red-l:#fce9e7;--red-m:#e0463a;
+  --text:#101828;--text2:#3a4657;--text3:#68758a;--text4:#98a3b3;
+  --bg:#eef1f6;--card:#fff;--border:#e3e8ef;
+  --r:16px;--r-sm:10px;--r-lg:20px;
+  --sh:0 1px 2px rgba(16,24,40,.06),0 1px 1px rgba(16,24,40,.04);
+  --sh2:0 10px 28px rgba(16,24,40,.10),0 2px 6px rgba(16,24,40,.06);
   --nav:60px;--top:56px;
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
@@ -2808,9 +2809,15 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .kh-sum-n{font-size:26px;font-weight:800;line-height:1}
 .kh-sum-l{font-size:10.5px;color:var(--text3);font-weight:600;letter-spacing:.1px}
 .wait-c{color:var(--amber-m)}.run-c{color:var(--brand3)}.done-c{color:var(--green-m)}
-.kh-sec-hd{display:flex;align-items:center;gap:8px;padding:4px 2px}
-.kh-sec-hd span:first-child{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.1px}
-.kh-count{background:var(--card);color:var(--text2);font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;margin-left:auto;border:1.5px solid var(--border);box-shadow:var(--sh)}
+.kh-sec-hd{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--r-sm);margin:4px 0 8px;box-shadow:var(--sh)}
+.kh-sec-hd span:first-child{font-size:13.5px;font-weight:800;letter-spacing:-.1px}
+.kh-count{background:rgba(255,255,255,.75);color:var(--text2);font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;margin-left:auto;border:1.5px solid rgba(0,0,0,.08);box-shadow:var(--sh)}
+.kh-sec-hd.type-run{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-left:4px solid var(--brand3)}
+.kh-sec-hd.type-run span:first-child{color:var(--brand2)}
+.kh-sec-hd.type-wait{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-left:4px solid var(--amber-m)}
+.kh-sec-hd.type-wait span:first-child{color:var(--amber)}
+.kh-sec-hd.type-done{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-left:4px solid var(--green-m)}
+.kh-sec-hd.type-done span:first-child{color:var(--green)}
 
 /* ── ACTIVITY LOG ── */
 .act-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start}
@@ -3491,6 +3498,182 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 @media(min-width:1400px){
   .main-content{max-width:1300px}
   .card-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REDESIGN LAYER — visual refresh only (colors, spacing, radius,
+   shadows, motion). No selector below changes display/position/
+   z-index logic used by JS; only cosmetic properties are touched.
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes rzFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rzFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes rzScaleIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+
+body{letter-spacing:-.1px}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ── App shell background ── */
+#appScreen{background:var(--bg)}
+.main-content{animation:rzFadeUp .28s ease-out both}
+
+/* ── Topbar ── */
+.topbar{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 1px 0 rgba(16,24,40,.03);
+  gap:10px;
+}
+.topbar-menu{color:var(--brand);border-radius:10px}
+.topbar-menu:active{background:var(--bg)}
+.topbar-logo{border-radius:9px;box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.topbar-title{
+  font-weight:800;
+  letter-spacing:-.3px;
+  background:linear-gradient(120deg,var(--brand) 10%,var(--brand2) 60%,var(--purple-m) 100%);
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.topbar-clock{background:#0d2547;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.avatar-btn{border-color:var(--border);box-shadow:0 1px 3px rgba(16,24,40,.08)}
+.avatar-btn:active{transform:scale(.95)}
+
+/* ── Sidebar ── */
+.sidebar{box-shadow:0 0 0 1px rgba(16,24,40,.04),var(--sh2)}
+.sb-header{
+  padding:26px 18px 18px;
+  background:linear-gradient(150deg,#0d2547,#123a72 55%,var(--brand2));
+  border-bottom:none;
+}
+.sb-name{color:#fff}
+.sb-role{color:rgba(255,255,255,.72)}
+.sb-avatar{border-color:rgba(255,255,255,.5)}
+.sb-nav{padding:12px 8px}
+.sb-section{color:var(--text4);font-weight:800;letter-spacing:.8px;padding:16px 12px 6px}
+.sb-item{
+  border-radius:10px;
+  padding:10px 12px;
+  margin:1px 0;
+  gap:11px;
+  transition:background .15s,color .15s;
+}
+.sb-item:hover{background:var(--bg)}
+.sb-item:active,.sb-item.active{background:#eaf1fd;color:var(--brand)}
+.sb-item.active::before{
+  left:2px;top:6px;bottom:6px;width:3px;
+  background:linear-gradient(180deg,var(--brand2),var(--purple-m));
+}
+.sb-item svg{border-radius:9px}
+.sb-footer{border-top:1px solid var(--border);padding:14px 16px}
+.sb-logout{border-radius:10px;transition:background .12s}
+.sb-logout:hover{background:#fbdcd9}
+
+@media(min-width:700px){
+  .sidebar{background:var(--card)}
+  .sb-header{background:linear-gradient(150deg,#0d2547,#123a72 55%,var(--brand2))}
+}
+
+/* ── KPI / stat cards ── */
+.stats-grid{gap:12px}
+.stat-card{
+  border-radius:var(--r);
+  border:1px solid var(--border);
+  box-shadow:var(--sh);
+  padding:16px 14px;
+  gap:12px;
+  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;
+  animation:rzFadeUp .3s ease-out both;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--sh2);border-color:#d7dfe9}
+.stat-card:active{transform:translateY(0) scale(.98)}
+.stat-icon-wrap{border-radius:12px}
+.stat-num{font-weight:800;letter-spacing:-.5px}
+
+/* ── Dashboard columns ── */
+.dash-3col{gap:14px}
+.dash-col{
+  border-radius:var(--r);
+  border:1px solid var(--border);
+  box-shadow:var(--sh);
+  transition:box-shadow .15s;
+}
+.dash-col-hd{padding:12px 14px 11px;background:linear-gradient(180deg,#fff,var(--bg))}
+.dash-mini-card{transition:background .12s}
+.dash-mini-card:hover{background:var(--bg)}
+
+/* ── Analytics / chart cards ── */
+.chart-card{border-radius:var(--r);box-shadow:var(--sh);padding:16px}
+.ai-banner{border-radius:14px;background:linear-gradient(135deg,#0d2547,#123a72 70%)}
+
+/* ── Order cards ── */
+.card{
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  border:1px solid var(--border);
+  transition:box-shadow .15s,transform .15s;
+  animation:rzFadeUp .28s ease-out both;
+}
+.card:hover{box-shadow:var(--sh2)}
+.card-header{padding-top:14px}
+.card-customer{font-size:15.5px;letter-spacing:-.1px}
+.spec-grid{gap:8px;padding:10px 14px 6px}
+.spec-box{border-radius:12px}
+.card-actions{background:linear-gradient(180deg,#fbfcfe,var(--card) 45%);padding:10px}
+.ca-status-row{border-radius:12px;padding:3px}
+.ca-btn{border-radius:10px}
+.ca-util-btn{border-radius:10px}
+
+/* ── Badges & chips ── */
+.badge{border-radius:20px;font-weight:800}
+.chip{border-radius:20px}
+.chip.active{box-shadow:0 2px 6px rgba(29,99,214,.28)}
+
+/* ── Machine / QR / misc cards ── */
+.machine-card{border-radius:var(--r-sm);transition:box-shadow .15s,transform .15s}
+.machine-card:hover{box-shadow:var(--sh)}
+.qr-card,.qr-stat-card,.qr-action-btn{border-radius:var(--r);box-shadow:var(--sh)}
+
+/* ── Section headers ── */
+.kh-summary{border-radius:var(--r);box-shadow:var(--sh)}
+.kh-sec-hd{border-radius:12px}
+.act-icon-wrap{border-radius:10px}
+
+/* ── Buttons & inputs ── */
+.btn{border-radius:11px;transition:opacity .12s,transform .12s,box-shadow .12s}
+.btn:active{transform:scale(.98)}
+.btn-primary{box-shadow:0 4px 14px rgba(29,99,214,.30)}
+.btn-ghost{border-radius:11px}
+.field-inp,.search-inp{border-radius:11px}
+.login-btn{border-radius:12px}
+
+/* ── Modals ── */
+.modal-box{border-radius:22px 22px 0 0;animation:rzFadeUp .22s ease-out both}
+.modal.open .modal-box{animation:rzFadeUp .22s ease-out both}
+@media(min-width:700px){
+  .modal-box{border-radius:18px;animation:rzScaleIn .18s ease-out both}
+}
+.modal-handle{background:var(--border)}
+
+/* ── Toast ── */
+#toast{border-radius:12px}
+
+/* ══ Desktop refinements ══ */
+@media(min-width:700px){
+  .main-content{padding:26px 28px}
+  .main-content > * + *{margin-top:18px}
+  .stats-grid{gap:14px}
+  .dash-3col{gap:16px}
+  .card-grid{gap:14px}
+  .stat-card:hover{transform:translateY(-3px)}
+}
+@media(min-width:1100px){
+  .main-content{padding:28px 32px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .main-content,.stat-card,.card,.modal-box{animation:none!important}
+  .stat-card:hover,.card:hover{transform:none}
 }
 </style>
 </head>
@@ -7115,8 +7298,8 @@ function renderKeHoach(){
   // Đơn done → chuyển sang tab "Hoàn thành", KHÔNG hiện ở Kế hoạch
   const done=[];  // bỏ section done khỏi Kế hoạch SX
 
-  function sec(id, icon, title, list, showSeq){
-    const hd=`<div class="kh-sec-hd" id="${id}"><span>${icon} ${title}</span><span class="kh-count">${list.length}</span></div>`;
+  function sec(id, icon, title, list, showSeq, type){
+    const hd=`<div class="kh-sec-hd type-${type}" id="${id}"><span>${icon} ${title}</span><span class="kh-count">${list.length}</span></div>`;
     if(!list.length) return hd+`<div class="empty" style="padding:16px 0 8px">Không có đơn nào</div>`;
     return hd+`<div class="card-grid">`+list.map((o,i)=>orderCardKH(o, showSeq?i+1:null)).join('')+`</div>`;
   }
@@ -7152,8 +7335,8 @@ function renderKeHoach(){
         </button>
       </div>
     </div>
-    ${showRun ?sec('kh-sec-run' ,'⚙️','Đang chạy'           ,running,true ):''}
-    ${showWait?sec('kh-sec-wait','⏳','Chờ sản xuất'         ,waiting,true ):''}
+    ${showRun ?sec('kh-sec-run' ,'⚙️','Đang chạy'           ,running,true ,'run' ):''}
+    ${showWait?sec('kh-sec-wait','⏳','Chờ sản xuất'         ,waiting,true ,'wait'):''}
     <!-- Đơn hoàn thành xem tại tab Hoàn thành -->
   `;
   // Search listener
@@ -7175,7 +7358,7 @@ function renderHoanThanh(){
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input class="search-inp" id="htSearch" type="search" placeholder="🔍 Tìm trong đơn đã hoàn thành..." value="${htSearchQ}" autocomplete="off">
     </div>
-    <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">Hoàn thành (${list.length}${htSearchQ?' kết quả':''})<span style="font-size:10.5px;color:var(--text4);font-weight:400">🗑 Tự xóa sau 30 ngày</span></div>
+    <div class="kh-sec-hd type-done" style="justify-content:space-between"><span>✅ Hoàn thành (${list.length}${htSearchQ?' kết quả':''})</span><span style="font-size:10.5px;color:var(--text4);font-weight:400">🗑 Tự xóa sau 30 ngày</span></div>
     ${list.length
       ? `<div class="card-grid">${list.map(o=>orderCardKH(o,null)).join('')}</div>`
       : `<div class="empty"><div class="empty-icon">${htSearchQ?'🔍':'📦'}</div>${htSearchQ?`Không tìm thấy "${htSearchQ}"`:'Chưa có đơn hoàn thành'}</div>`}
