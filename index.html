@@ -4301,6 +4301,32 @@ body{letter-spacing:-.1px}
   </div>
 </div>
 
+<!-- Modal: mã QR công khai xem Chấm công + Lịch làm việc (người lao động quét
+     bằng camera điện thoại thường, không cần cài app / đăng nhập) -->
+<div class="modal" id="ccllvQrModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏷 Mã QR xem Chấm công &amp; Lịch làm việc</div>
+    <div style="font-size:12.5px;color:var(--text3);margin-bottom:12px">
+      In hoặc dán mã này ở bảng tin, xưởng sản xuất… Người lao động chỉ cần dùng camera điện thoại quét là xem được toàn bộ <b>lịch làm việc</b> và <b>bảng chấm công</b> mới nhất — không cần cài app, không cần đăng nhập.
+    </div>
+    <div style="display:flex;justify-content:center;padding:10px 0">
+      <div id="ccllvQrCanvasWrap" style="background:#fff;padding:12px;border-radius:12px;box-shadow:var(--sh)">
+        <span style="font-size:12px;color:var(--text4)">Đang tạo mã QR…</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:10px;padding:8px 10px;margin-bottom:10px">
+      <span style="font-size:11.5px;color:var(--text3);word-break:break-all;flex:1" id="ccllvQrLinkTxt"></span>
+    </div>
+    <div id="ccllvQrWarn" style="display:none;font-size:11.5px;color:var(--red-m);margin-bottom:10px">⚠️ Chưa bật Firebase Sync (Cài đặt ▸ Cấu hình Firebase Sync) — mã QR sẽ KHÔNG xem được từ điện thoại khác cho tới khi bật đồng bộ.</div>
+    <div class="modal-footer" style="flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="closeModal('ccllvQrModal')">Đóng</button>
+      <button class="btn btn-ghost" onclick="copyCcllvLink()">🔗 Sao chép liên kết</button>
+      <button class="btn btn-primary" onclick="downloadCcllvQr()">⬇️ Tải ảnh mã QR</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: chi tiết 1 mã QR (kết quả quét / xem trong danh sách) -->
 <div class="modal" id="qrDetailModal">
   <div class="modal-box" style="max-height:88vh;overflow-y:auto">
@@ -6099,6 +6125,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   const _qrParam = new URLSearchParams(location.search).get('qr');
   if(_qrParam){
     renderPublicScan(_qrParam);
+    return;
+  }
+  // Link QR xem Chấm công + Lịch làm việc (dán ở bảng tin/xưởng SX) —
+  // cũng hiện thẳng trang công khai, không yêu cầu đăng nhập.
+  const _pubParam = new URLSearchParams(location.search).get('pub');
+  if(_pubParam==='ccllv'){
+    renderPublicCcllv();
     return;
   }
   $('lp').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
@@ -8103,6 +8136,7 @@ function renderChamCong(){
           <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A3')">🖨️ In A3</button>
           <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="captureAttendance()">📷 Chụp ảnh gửi nhóm</button>
           <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportAttendanceExcel()">⬇️ Xuất Excel</button>
+          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="openCcllvQrModal()">🏷 Tạo mã QR xem Chấm công &amp; Lịch làm việc</button>
           ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="addWorker()">➕ Thêm người lao động</button>`:''}
         </div>
       </div>
@@ -8728,6 +8762,7 @@ function renderLichLamViec(){
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}','A3')">🖨️ In A3</button>
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvCapture('${sheet.id}')">📷 Chụp ảnh gửi nhóm</button>
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvExportExcel('${sheet.id}')">⬇️ Xuất Excel</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="openCcllvQrModal()">🏷 Tạo mã QR xem Chấm công &amp; Lịch làm việc</button>
         ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;color:var(--red-m)" onclick="llvDeleteSheet('${sheet.id}')">🗑 Xóa bộ phận này</button>`:''}
       </div>
     </div>
@@ -10173,6 +10208,199 @@ async function renderPublicScan(code){
       </div>
     </div>
     <div class="pub-footer">Trang tra cứu nguồn gốc sản phẩm — dữ liệu cập nhật trực tiếp từ hệ thống sản xuất</div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════
+// MÃ QR CÔNG KHAI: XEM CHẤM CÔNG + LỊCH LÀM VIỆC
+// Người lao động quét bằng camera điện thoại thường (không cần cài app,
+// không cần đăng nhập) sẽ mở thẳng trang tra cứu, đọc dữ liệu trực tiếp
+// từ Firebase RTDB — dùng chung cơ chế với mã QR truy xuất sản phẩm ──
+// ════════════════════════════════════════════════════════════
+function ccllvPublicUrl(){
+  const base = location.origin + location.pathname;
+  const db = fbUrl();
+  return base + '?pub=ccllv' + (db ? '&db=' + encodeURIComponent(db) : '');
+}
+
+async function openCcllvQrModal(){
+  if(guardViewer()) return;
+  openModal('ccllvQrModal');
+  const link = ccllvPublicUrl();
+  $('ccllvQrLinkTxt').textContent = link;
+  $('ccllvQrWarn').style.display = fbOk() ? 'none' : 'block';
+  const wrap = $('ccllvQrCanvasWrap');
+  wrap.innerHTML = '<span style="font-size:12px;color:var(--text4)">Đang tạo mã QR…</span>';
+  await ensureQrLib();
+  if(!$('ccllvQrCanvasWrap')) return; // modal đã đóng trong lúc tải thư viện
+  if(!window.QRCode){ wrap.innerHTML=''; wrap.textContent = link; return; }
+  wrap.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  wrap.appendChild(canvas);
+  QRCode.toCanvas(canvas, link, {width:220, margin:1}, function(err){
+    if(err){ wrap.innerHTML=''; wrap.textContent = link; }
+  });
+}
+
+function copyCcllvLink(){
+  const link = ccllvPublicUrl();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(()=>showToast('✅ Đã sao chép liên kết')).catch(()=>showToast('❌ Không thể sao chép, vui lòng tự chọn và copy', true));
+  } else {
+    showToast('❌ Trình duyệt không hỗ trợ sao chép tự động, vui lòng tự chọn và copy', true);
+  }
+}
+
+async function downloadCcllvQr(){
+  await ensureQrLib();
+  if(!window.QRCode){ showToast('❌ Chưa tải xong thư viện tạo mã QR, kiểm tra kết nối mạng và thử lại', true); return; }
+  try{
+    const dataUrl = await QRCode.toDataURL(ccllvPublicUrl(), {margin:1, width:640});
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'QR_Cham_cong_Lich_lam_viec.png';
+    a.click();
+  }catch(e){
+    showToast('❌ Không tạo được ảnh mã QR, vui lòng thử lại', true);
+  }
+}
+
+// Tính tổng công từ dữ liệu thô (không phụ thuộc DB — dùng cho trang công khai)
+function pubComputeTotal(rowData){
+  let total = 0;
+  Object.values(rowData||{}).forEach(v=>{ const n = parseFloat(v); if(!isNaN(n)) total += n; });
+  return total.toFixed(1).replace(/\.0$/,'');
+}
+
+let _pubCcllvTab = 'llv';
+function pubCcllvSwitchTab(tab){
+  _pubCcllvTab = tab;
+  document.querySelectorAll('.pub-ccllv-tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===tab));
+  document.querySelectorAll('.pub-ccllv-panel').forEach(el=>el.style.display = (el.dataset.tab===tab) ? '' : 'none');
+}
+
+// ── Trang công khai: xem TOÀN BỘ lịch làm việc + bảng chấm công tháng
+// hiện tại, dùng khi người lao động quét mã QR dán ở bảng tin/xưởng SX ──
+async function renderPublicCcllv(){
+  $('loginScreen').classList.remove('active');
+  $('publicScanScreen').classList.add('active');
+  const wrap = $('pubWrap');
+  const params = new URLSearchParams(location.search);
+  const dbUrl = (params.get('db') || fbUrl() || '').replace(/\/$/,'');
+
+  if(!dbUrl){
+    wrap.innerHTML = `<div class="pub-msg">⚠️ Không thể tải dữ liệu — liên kết thiếu thông tin kết nối.<br>Vui lòng liên hệ nhà máy để được hỗ trợ.</div>`;
+    return;
+  }
+
+  let workers=[], attendance={}, lichLamViec=[], errMsg=null;
+  try{
+    const [rw, ra, rl] = await Promise.all([
+      fetch(dbUrl + '/data/workers.json?print=pretty', {cache:'no-store'}),
+      fetch(dbUrl + '/data/attendance.json?print=pretty', {cache:'no-store'}),
+      fetch(dbUrl + '/data/lichLamViec.json?print=pretty', {cache:'no-store'})
+    ]);
+    if(!rw.ok || !ra.ok || !rl.ok){
+      const badStatus = [rw,ra,rl].map(r=>r.status).find(s=>s===401||s===403);
+      errMsg = badStatus
+        ? `⚠️ Không kết nối được tới máy chủ dữ liệu (mã lỗi HTTP ${badStatus}).<br>Có thể quy tắc bảo mật (Rules) của Firebase đang chặn truy cập công khai.`
+        : `⚠️ Không kết nối được tới máy chủ dữ liệu.<br>Vui lòng thử lại sau ít phút hoặc liên hệ nhà máy.`;
+    } else {
+      const dw = await rw.json(), da = await ra.json(), dl = await rl.json();
+      workers = Array.isArray(dw) ? dw.filter(Boolean) : Object.values(dw||{}).filter(Boolean);
+      attendance = da || {};
+      lichLamViec = Array.isArray(dl) ? dl.filter(Boolean) : Object.values(dl||{}).filter(Boolean);
+    }
+  }catch(e){
+    errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
+  }
+
+  if(errMsg){
+    wrap.innerHTML = `<div class="pub-msg">${errMsg}</div>`;
+    return;
+  }
+
+  const ym = todayStr().slice(0,7);
+  const [y,m] = ym.split('-').map(Number);
+  const nDays = daysInMonth(ym);
+  const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
+  const monthData = attendance[ym] || {};
+
+  // ── Khối Lịch làm việc: gộp theo ca, giống bản quản trị ──
+  const llvHtml = lichLamViec.length ? lichLamViec.map(sheet=>{
+    const groups = llvGroupRows(sheet.rows||[]);
+    return `
+      <div class="pub-card">
+        <div class="pub-card-title">${pubEsc(sheet.name||'Bộ phận')}</div>
+        ${sheet.period?`<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:2px">📅 ${pubEsc(sheet.period)}</div>`:''}
+        ${sheet.warning?`<div style="font-size:11.5px;color:#b45309;margin-bottom:8px">⚠️ ${pubEsc(sheet.warning)}</div>`:''}
+        ${groups.map(g=>`
+          <div style="margin-top:8px">
+            <div style="display:inline-block;padding:3px 10px;border-radius:10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700;font-size:12px;margin-bottom:6px">${g.meta.label} · ${g.items.length} người</div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              ${g.items.map(({r},gi)=>`
+                <div style="display:flex;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border);font-size:12.5px">
+                  <span style="color:var(--text4);min-width:18px">${gi+1}.</span>
+                  <span style="flex:1;font-weight:700;color:var(--text)">${pubEsc(r.name||'—')}${r.gender?` <span style="font-weight:500;color:var(--text4)">(${pubEsc(r.gender)})</span>`:''}</span>
+                  <span style="color:var(--text3)">${pubEsc(r.time||'')}</span>
+                </div>
+                ${r.note?`<div style="font-size:11px;color:var(--text4);padding:0 0 4px 26px">📝 ${pubEsc(r.note)}</div>`:''}
+              `).join('')}
+            </div>
+          </div>
+        `).join('') || '<div style="font-size:12px;color:var(--text4);padding:6px 0">Chưa có nhân viên trong lịch</div>'}
+      </div>
+    `;
+  }).join('') : `<div class="pub-card"><div style="font-size:12px;color:var(--text4);text-align:center;padding:10px 0">Chưa có lịch làm việc nào được đăng</div></div>`;
+
+  // ── Khối Bảng chấm công: dạng bảng cuộn ngang, tháng hiện tại ──
+  const attHtml = `
+    <div class="pub-card">
+      <div class="pub-card-title">Bảng chấm công tháng ${m}/${y}</div>
+      ${workers.length ? `
+      <div style="overflow-x:auto">
+        <table style="border-collapse:collapse;font-size:11px;white-space:nowrap">
+          <thead>
+            <tr>
+              <th style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:4px 6px;z-index:1">Họ và tên</th>
+              ${dayCols.map(d=>`<th style="border:1px solid var(--border);padding:3px 4px;min-width:26px">
+                <div>${d}</div><div style="font-size:9px;color:${weekdayVN(y,m,d)==='CN'?'var(--red-m)':'var(--text4)'}">${weekdayVN(y,m,d)}</div>
+              </th>`).join('')}
+              <th style="border:1px solid var(--border);padding:4px 6px;background:var(--green-l);color:var(--green)">Tổng công</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${workers.map(w=>{
+              const rowData = monthData[w.id] || {};
+              return `<tr>
+                <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:4px 6px;text-align:left;font-weight:700">${pubEsc(w.name||'—')}</td>
+                ${dayCols.map(d=>`<td style="border:1px solid var(--border);padding:3px;text-align:center">${pubEsc(rowData[d]!==undefined?rowData[d]:'')}</td>`).join('')}
+                <td style="border:1px solid var(--border);padding:4px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${pubComputeTotal(rowData)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:10.5px;color:var(--text4);margin-top:8px;line-height:1.5">
+        <b>Ghi chú:</b> Đủ ngày công = 1 · Nửa ngày công = 0.5 · Không công = 0. Làm thêm giờ cộng thêm vào công ngày (VD: 1.2 = 1 công + làm thêm 2 tiếng).
+      </div>
+      ` : `<div style="font-size:12px;color:var(--text4);text-align:center;padding:10px 0">Chưa có dữ liệu người lao động</div>`}
+    </div>
+  `;
+
+  wrap.innerHTML = `
+    <div class="pub-header">
+      <div class="pub-header-logo"><img src="${DP_LOGO_DATAURL}" alt="Logo Đông Phương" class="pub-header-logo-img"><span>CÔNG TY CP CÔNG THƯƠNG ĐÔNG PHƯƠNG</span></div>
+      <div class="pub-header-title">Chấm công &amp; Lịch làm việc</div>
+      <div class="pub-header-code">Cập nhật trực tiếp từ hệ thống — ${fmtDate(todayStr())}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="chip pub-ccllv-tab active" data-tab="llv" onclick="pubCcllvSwitchTab('llv')" style="flex:1">📅 Lịch làm việc</button>
+      <button class="chip pub-ccllv-tab" data-tab="cc" onclick="pubCcllvSwitchTab('cc')" style="flex:1">🗓️ Chấm công</button>
+    </div>
+    <div class="pub-ccllv-panel" data-tab="llv">${llvHtml}</div>
+    <div class="pub-ccllv-panel" data-tab="cc" style="display:none">${attHtml}</div>
+    <div class="pub-footer">Trang xem chấm công &amp; lịch làm việc — vui lòng liên hệ quản lý nếu có sai lệch</div>
   `;
 }
 
