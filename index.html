@@ -8099,12 +8099,16 @@ function renderChamCong(){
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
           <button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="saveAllAttendance()">💾 Lưu chấm công</button>
-          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance()">🖨️ In bảng (A4)</button>
-          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportAttendanceExcel()">⬇️ Xuất Excel (.csv)</button>
+          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A4')">🖨️ In A4</button>
+          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A3')">🖨️ In A3</button>
+          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="captureAttendance()">📷 Chụp ảnh gửi nhóm</button>
+          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportAttendanceExcel()">⬇️ Xuất Excel</button>
           ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="addWorker()">➕ Thêm người lao động</button>`:''}
         </div>
       </div>
       <div class="card" style="padding:8px;overflow-x:auto;margin-top:0">
+        <div id="attCaptureArea" style="background:#fff;padding:6px">
+        <div style="text-align:center;font-weight:700;font-size:14px;margin-bottom:6px;text-transform:uppercase">Bảng chấm công tháng ${m}/${y}</div>
         <table id="attTable" style="border-collapse:collapse;font-size:11.5px;white-space:nowrap">
           <thead>
             <tr>
@@ -8139,6 +8143,7 @@ function renderChamCong(){
             ${workers.length===0?`<tr><td colspan="${3+nDays}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có người lao động nào${admin?' · bấm "➕ Thêm người lao động" để bắt đầu':''}</td></tr>`:''}
           </tbody>
         </table>
+        </div>
       </div>
       <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3);line-height:1.6">
         <b>Ghi chú cách chấm:</b> Đủ ngày công = <b>1</b> · Nửa ngày công = <b>0.5</b> · Không công = <b>0</b> · Làm thêm giờ ví dụ 2 tiếng ghi <b>1.2</b> (1 công 8h, .2 là 2h thêm). Đủ 8 giờ thêm giờ = +1 công.
@@ -8494,7 +8499,9 @@ function csvDownload(filename, rows){
   URL.revokeObjectURL(url);
 }
 
-function exportAttendanceExcel(){if(guardViewer())return;
+// Dựng mảng 2 chiều (đúng khung cột như bảng hiển thị trên app) dùng chung
+// cho cả xuất .xlsx (SheetJS) lẫn phương án dự phòng .csv
+function buildAttendanceRows(){
   const ym = curYM();
   const [y,m] = ym.split('-').map(Number);
   const nDays = daysInMonth(ym);
@@ -8513,11 +8520,55 @@ function exportAttendanceExcel(){if(guardViewer())return;
   });
   rows.push([]);
   rows.push(['Ghi chú: Đủ ngày công = 1, Nửa ngày công = 0.5, Không công = 0. Làm thêm giờ cộng vào công ngày (VD thêm 2h = 1.2).']);
-  csvDownload(`Bang_cham_cong_${ym}.csv`, rows);
+  return {rows, ym, y, m, nDays};
+}
+
+function exportAttendanceExcel(){if(guardViewer())return;
+  const {rows, ym, y, m, nDays} = buildAttendanceRows();
+  const nCols = 2 + nDays + 1; // STT + Tên + các ngày + Tổng công
+
+  if(typeof XLSX==='undefined'){
+    // Thư viện Excel chưa tải xong → xuất tạm .csv, khung cột vẫn đúng như app
+    showToast('⏳ Thư viện Excel chưa tải xong, đang xuất tạm .csv...', true);
+    csvDownload(`Bang_cham_cong_${ym}.csv`, rows);
+    loadSheetJs();
+    return;
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  // Gộp ô tiêu đề cho giống khung tiêu đề trên app
+  ws['!merges'] = [
+    {s:{r:0,c:0}, e:{r:0,c:nCols-1}},
+    {s:{r:rows.length-1,c:0}, e:{r:rows.length-1,c:nCols-1}}
+  ];
+  // Độ rộng cột: STT nhỏ, Họ tên rộng, mỗi ngày hẹp, Tổng công vừa — đúng tỉ lệ như bảng trên app
+  ws['!cols'] = [{wch:5}, {wch:22}, ...Array.from({length:nDays},()=>({wch:5})), {wch:11}];
+  // Ghim (freeze) 2 dòng tiêu đề + 2 cột đầu, giống thanh cuộn dính trên app
+  ws['!freeze'] = {xSplit:2, ySplit:4};
+  ws['!rows'] = rows.map(()=>({hpt:18}));
+  // Viền khung cho toàn bộ vùng bảng (kể cả khi mở bằng Excel/Sheets đều có khung ô rõ ràng)
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for(let R=2; R<=range.e.r-1; R++){
+    for(let C=0; C<=range.e.c; C++){
+      const addr = XLSX.utils.encode_cell({r:R,c:C});
+      if(!ws[addr]) ws[addr] = {t:'s', v:''};
+      ws[addr].s = {
+        border:{top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}},
+        alignment:{horizontal: C<2?'left':'center', vertical:'center'},
+        font: (R<=3) ? {bold:true} : undefined
+      };
+    }
+  }
+  ws['A1'] = {t:'s', v:rows[0][0], s:{font:{bold:true,sz:14}, alignment:{horizontal:'center'}}};
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, `ChamCong_${ym}`);
+  XLSX.writeFile(wb, `Bang_cham_cong_${ym}.xlsx`);
   showToast('✅ Đã xuất file chấm công tháng '+m+'/'+y);
 }
 
-function printAttendance(){if(guardViewer())return;
+function printAttendance(size){if(guardViewer())return;
+  size = (size==='A3') ? 'A3' : 'A4';
   const ym = curYM();
   const [y,m] = ym.split('-').map(Number);
   const nDays = daysInMonth(ym);
@@ -8526,7 +8577,7 @@ function printAttendance(){if(guardViewer())return;
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bảng chấm công ${m}/${y}</title>
   <style>
-    @page{ size:A4 landscape; margin:8mm; }
+    @page{ size:${size} landscape; margin:8mm; }
     body{ font-family:Arial,Helvetica,sans-serif; color:#000; }
     h1{ text-align:center; font-size:16px; margin:0 0 4px; text-transform:uppercase }
     .sub{ text-align:center; font-size:12px; margin-bottom:10px }
@@ -8637,13 +8688,19 @@ function renderLichLamViec(){
       <input class="field-inp" value="${(sheet.warning||'').replace(/"/g,'&quot;')}" ${admin?'':'readonly'} onchange="llvSetMeta('${sheet.id}','warning',this.value)" style="margin:4px 0 0">
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
         ${admin?`<button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="llvAddRow('${sheet.id}')">➕ Thêm nhân viên</button>`:''}
-        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}')">🖨️ In lịch (A4)</button>
-        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvExportExcel('${sheet.id}')">⬇️ Xuất Excel (.csv)</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}','A4')">🖨️ In A4</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}','A3')">🖨️ In A3</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvCapture('${sheet.id}')">📷 Chụp ảnh gửi nhóm</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvExportExcel('${sheet.id}')">⬇️ Xuất Excel</button>
         ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;color:var(--red-m)" onclick="llvDeleteSheet('${sheet.id}')">🗑 Xóa bộ phận này</button>`:''}
       </div>
     </div>
     <div class="card" style="padding:8px;overflow-x:auto;margin-top:0">
-      <table style="border-collapse:collapse;font-size:12px;width:100%;min-width:640px">
+      <div id="llvCaptureArea_${sheet.id}" style="background:#fff;padding:6px">
+      <div style="text-align:center;font-weight:700;font-size:14px;margin-bottom:4px;text-transform:uppercase">Lịch làm việc bộ phận ${(sheet.name||'').replace(/</g,'&lt;')}</div>
+      ${sheet.period?`<div style="text-align:center;font-size:12px;margin-bottom:2px">📅 ${(sheet.period||'').replace(/</g,'&lt;')}</div>`:''}
+      ${sheet.warning?`<div style="text-align:center;font-size:11.5px;margin-bottom:8px;color:#b45309">⚠️ ${(sheet.warning||'').replace(/</g,'&lt;')}</div>`:''}
+      <table id="llvTable_${sheet.id}" style="border-collapse:collapse;font-size:12px;width:100%;min-width:640px">
         <thead>
           <tr>
             <th style="border:1px solid var(--border);padding:6px;min-width:36px">STT</th>
@@ -8674,6 +8731,7 @@ function renderLichLamViec(){
           ${sheet.rows.length===0?`<tr><td colspan="${admin?6:5}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</td></tr>`:''}
         </tbody>
       </table>
+      </div>
     </div>
     <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3)">
       <b>Tổng số nhân viên:</b> ${sheet.rows.length}
@@ -8743,6 +8801,7 @@ function llvDeleteRow(sheetId, idx){if(guardViewer())return;
 
 function llvExportExcel(sheetId){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
+  const fname = (s.name||'bo_phan').replace(/\s+/g,'_');
   const rows = [];
   rows.push([`LỊCH LÀM VIỆC BỘ PHẬN ${(s.name||'').toUpperCase()}`]);
   if(s.period) rows.push([`Ngày/tháng: ${s.period}`]);
@@ -8752,16 +8811,50 @@ function llvExportExcel(sheetId){if(guardViewer())return;
   s.rows.forEach((r,i)=>rows.push([i+1, r.name||'', r.gender||'', r.time||'', r.note||'']));
   rows.push([]);
   rows.push(['TỔNG SỐ NHÂN VIÊN', s.rows.length]);
-  csvDownload(`Lich_lam_viec_${(s.name||'bo_phan').replace(/\s+/g,'_')}.csv`, rows);
+
+  if(typeof XLSX==='undefined'){
+    showToast('⏳ Thư viện Excel chưa tải xong, đang xuất tạm .csv...', true);
+    csvDownload(`Lich_lam_viec_${fname}.csv`, rows);
+    loadSheetJs();
+    return;
+  }
+
+  const headerRowIdx = rows.findIndex(r=>r[0]==='STT');
+  const nCols = 5;
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const merges = [{s:{r:0,c:0}, e:{r:0,c:nCols-1}}];
+  if(s.period) merges.push({s:{r:1,c:0}, e:{r:1,c:nCols-1}});
+  if(s.warning) merges.push({s:{r:s.period?2:1,c:0}, e:{r:s.period?2:1,c:nCols-1}});
+  ws['!merges'] = merges;
+  ws['!cols'] = [{wch:6},{wch:26},{wch:12},{wch:20},{wch:22}];
+  ws['!freeze'] = {xSplit:0, ySplit:headerRowIdx+1};
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for(let R=headerRowIdx; R<=range.e.r-2; R++){
+    for(let C=0; C<=range.e.c; C++){
+      const addr = XLSX.utils.encode_cell({r:R,c:C});
+      if(!ws[addr]) ws[addr] = {t:'s', v:''};
+      ws[addr].s = {
+        border:{top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}},
+        alignment:{horizontal: C===1?'left':'center', vertical:'center'},
+        font: (R===headerRowIdx) ? {bold:true} : undefined
+      };
+    }
+  }
+  ws['A1'] = {t:'s', v:rows[0][0], s:{font:{bold:true,sz:14}, alignment:{horizontal:'center'}}};
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'LichLamViec');
+  XLSX.writeFile(wb, `Lich_lam_viec_${fname}.xlsx`);
   showToast('✅ Đã xuất lịch làm việc');
 }
 
-function llvPrint(sheetId){if(guardViewer())return;
+function llvPrint(sheetId, size){if(guardViewer())return;
+  size = (size==='A3') ? 'A3' : 'A4';
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const esc = v=>(v||'').toString().replace(/</g,'&lt;');
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Lịch làm việc ${esc(s.name)}</title>
   <style>
-    @page{ size:A4 portrait; margin:10mm; }
+    @page{ size:${size} portrait; margin:10mm; }
     body{ font-family:Arial,Helvetica,sans-serif; color:#000; }
     h1{ text-align:center; font-size:16px; margin:0 0 4px; text-transform:uppercase }
     .sub{ text-align:center; font-size:12px; margin-bottom:4px }
@@ -10594,6 +10687,88 @@ function loadSheetJs(){
   document.head.appendChild(s);
 }
 loadSheetJs();
+
+// ════════════════════════════════════════════════════════════
+// CHỤP ẢNH BẢNG CÔNG / LỊCH LÀM VIỆC ĐỂ GỬI NHÓM (Zalo/Messenger...)
+// ════════════════════════════════════════════════════════════
+let _html2canvasPromise = null;
+function ensureHtml2Canvas(){
+  if(window.html2canvas) return Promise.resolve();
+  if(_html2canvasPromise) return _html2canvasPromise;
+  _html2canvasPromise = new Promise((resolve)=>{
+    const s=document.createElement('script');
+    s.id='html2canvas-cdn';
+    s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    s.onload=()=>resolve();
+    s.onerror=()=>resolve();
+    document.head.appendChild(s);
+  });
+  return _html2canvasPromise;
+}
+
+// Chụp 1 khối trong app thành ảnh PNG, rồi mở hộp thoại chia sẻ (nếu máy hỗ
+// trợ Web Share, ví dụ điện thoại) để gửi thẳng vào nhóm Zalo/Messenger...
+// Nếu máy/trình duyệt không hỗ trợ chia sẻ file thì tự tải ảnh về máy.
+async function captureAndShareElement(elId, filename, shareTitle){
+  const orig = document.getElementById(elId);
+  if(!orig){ showToast('❌ Không tìm thấy bảng để chụp', true); return; }
+  showToast('⏳ Đang chụp ảnh bảng...');
+  await ensureHtml2Canvas();
+  if(!window.html2canvas){ showToast('❌ Không tải được công cụ chụp ảnh, kiểm tra mạng rồi thử lại', true); return; }
+
+  // Nhân bản khối cần chụp ra ngoài màn hình: bỏ sticky (kẻo bị lặp/kẻ dính),
+  // đổi input thành chữ thường và bỏ nút xoá để ảnh chụp gọn, sạch như biên bản giấy
+  const clone = orig.cloneNode(true);
+  clone.querySelectorAll('input').forEach(inp=>{
+    const span = document.createElement('span');
+    span.textContent = inp.value || '';
+    span.style.cssText = 'display:inline-block;width:100%;text-align:'+(inp.style.textAlign||'center');
+    inp.parentNode.replaceChild(span, inp);
+  });
+  clone.querySelectorAll('button').forEach(b=>b.remove());
+  clone.querySelectorAll('*').forEach(elx=>{ if(elx.style && elx.style.position==='sticky') elx.style.position='static'; });
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-99999px;top:0;background:#fff;';
+  wrap.appendChild(clone);
+  document.body.appendChild(wrap);
+
+  try{
+    const canvas = await window.html2canvas(clone, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+    document.body.removeChild(wrap);
+    canvas.toBlob(async (blob)=>{
+      if(!blob){ showToast('❌ Chụp ảnh thất bại, thử lại', true); return; }
+      const file = new File([blob], filename, {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        try{
+          await navigator.share({files:[file], title:shareTitle, text:shareTitle});
+          showToast('✅ Đã mở hộp thoại chia sẻ — chọn nhóm Zalo/Messenger để gửi');
+          return;
+        }catch(e){ /* người dùng bấm huỷ chia sẻ → rơi xuống tự tải ảnh về */ }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✅ Đã lưu ảnh vào máy — mở Zalo/Messenger để gửi vào nhóm');
+    }, 'image/png');
+  }catch(e){
+    if(wrap.parentNode) document.body.removeChild(wrap);
+    showToast('❌ Lỗi khi chụp ảnh: '+(e.message||e), true);
+  }
+}
+
+function captureAttendance(){if(guardViewer())return;
+  const ym = curYM();
+  captureAndShareElement('attCaptureArea', `Bang_cham_cong_${ym}.png`, `Bảng chấm công tháng ${ym}`);
+}
+
+function llvCapture(sheetId){if(guardViewer())return;
+  const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
+  const fname = (s.name||'bo_phan').replace(/\s+/g,'_');
+  captureAndShareElement(`llvCaptureArea_${sheetId}`, `Lich_lam_viec_${fname}.png`, `Lịch làm việc ${s.name||''}`);
+}
 </script>
 </body>
 </html>
