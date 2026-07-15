@@ -2569,6 +2569,25 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .card-header{display:flex;align-items:center;gap:8px;padding:11px 14px 0;flex-wrap:wrap}
 .card-customer{padding:4px 14px 2px;font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
 .card-customer small{font-size:11px;color:var(--text3);font-weight:400;margin-left:6px;background:var(--bg);padding:1px 6px;border-radius:5px}
+
+/* ── KẾ HOẠCH SX: khối header có nền màu theo trạng thái để nhận diện
+   nhanh (STT / Trạng thái / Gấp / Thời gian chạy) chỉ bằng liếc mắt ── */
+.kh-hd{padding:10px 12px 9px;border-radius:var(--r) var(--r) 0 0;border-bottom:1px solid transparent;transition:background .2s}
+.kh-hd.status-pending{background:linear-gradient(135deg,#fffbeb,#fef3c7 65%);border-bottom-color:#fde68a}
+.kh-hd.status-running{background:linear-gradient(135deg,#eff6ff,#dbeafe 65%);border-bottom-color:#bfdbfe}
+.kh-hd.status-done{background:linear-gradient(135deg,#f0fdf4,#dcfce7 65%);border-bottom-color:#bbf7d0}
+.kh-seq{width:27px;height:27px;border-radius:9px;color:#fff;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(15,23,42,.22),inset 0 1px 0 rgba(255,255,255,.3)}
+.kh-badge{box-shadow:0 1px 3px rgba(15,23,42,.1)}
+.kh-pri{border-width:1.5px;border-style:solid}
+.kh-clock{box-shadow:0 1px 4px rgba(15,23,42,.25)}
+.kh-overdue{font-size:11px;color:#fff;font-weight:800;margin-left:auto;background:linear-gradient(135deg,#ef4444,#b91c1c);padding:3px 9px;border-radius:20px;box-shadow:0 2px 6px rgba(220,38,38,.35);animation:pulse-run 1.6s infinite}
+
+/* ── Khách hàng: avatar tròn + tên nổi bật, hiện đại hơn ── */
+.card-customer-row{display:flex;align-items:center;gap:10px;padding:10px 14px 4px}
+.cust-avatar{width:38px;height:38px;border-radius:12px;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 8px rgba(15,23,42,.2),inset 0 1px 0 rgba(255,255,255,.35);letter-spacing:.3px}
+.cust-info{min-width:0;flex:1}
+.cust-name{font-size:16px;font-weight:800;color:var(--text);line-height:1.25;letter-spacing:-.1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-po{font-size:11px;color:var(--brand3);font-weight:700;margin-top:2px;display:inline-flex;align-items:center;gap:3px;background:var(--bg);padding:1px 8px 1px 6px;border-radius:20px;border:1px solid var(--border)}
 .card-id{font-size:10.5px;color:var(--brand3);font-family:monospace;padding:1px 14px;letter-spacing:.3px}
 .card-added{display:flex;align-items:center;gap:5px;margin:2px 14px 5px;padding:3px 10px 3px 8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;width:fit-content;max-width:calc(100% - 28px)}
 .card-added-ico{font-size:11px;flex-shrink:0}
@@ -6273,6 +6292,16 @@ function statusInfo(s){
   return {label:'⏳ Chờ SX',cls:'b-wait',btnCls:'active-wait'};
 }
 
+// Lấy chữ cái đại diện cho tên khách hàng để hiển thị lên avatar tròn
+// (ví dụ "Công Ty ABC" -> "CT", "Nguyễn Văn A" -> "NV")
+function custInitial(name){
+  if(!name) return '?';
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if(!words.length) return '?';
+  if(words.length===1) return words[0].charAt(0).toUpperCase();
+  return (words[0].charAt(0)+words[1].charAt(0)).toUpperCase();
+}
+
 function orderCard(o, showStatus=true){
   const s=o.status==='cutting'?'running':o.status;
   const si=statusInfo(s);
@@ -7259,15 +7288,21 @@ function orderCardKH(o, seq){
   const canEdit=isAdmin();
   const si=statusInfo(s);
 
-  return `<div class="card" data-order-id="${o.id}" style="border-left:4px solid ${pc}">
-    <div class="card-header">
-      ${seq!=null?`<span style="width:26px;height:26px;border-radius:50%;background:${pc};color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${seq}</span>`:''}
-      <span class="badge ${si.cls}">${si.label}</span>
-      <span class="spec-tag pri" style="background:${pc}20;color:${pc}">${o.priority||'—'}</span>
-      ${hasTimer?`<span class="run-clock" id="clk-${o.id}">⏱ --:--</span>`:''}
-      ${overdue?`<span style="font-size:11px;color:var(--red-m);font-weight:700;margin-left:auto;background:var(--red-l);padding:2px 8px;border-radius:6px">⚠️ QUÁ HẠN</span>`:''}
+  return `<div class="card kh-card" data-order-id="${o.id}" style="border-left:4px solid ${pc}">
+    <div class="card-header kh-hd status-${s}">
+      ${seq!=null?`<span class="kh-seq" style="background:linear-gradient(135deg,${pc},${pc}cc)">${seq}</span>`:''}
+      <span class="badge kh-badge ${si.cls}">${si.label}</span>
+      <span class="spec-tag pri kh-pri" style="background:${pc}1c;color:${pc};border-color:${pc}70">🚩 ${o.priority||'—'}</span>
+      ${hasTimer?`<span class="run-clock kh-clock" id="clk-${o.id}">⏱ --:--</span>`:''}
+      ${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:''}
     </div>
-    <div class="card-customer">${o.customer||'—'}${o.po?`<small>PO: ${o.po}</small>`:''}</div>
+    <div class="card-customer-row">
+      <div class="cust-avatar" style="background:linear-gradient(135deg,${pc},${pc}aa)">${custInitial(o.customer)}</div>
+      <div class="cust-info">
+        <div class="cust-name">${o.customer||'—'}</div>
+        ${o.po?`<div class="cust-po">📄 PO: ${o.po}</div>`:''}
+      </div>
+    </div>
     ${o.createdAt?`<div class="card-added"><span class="card-added-ico">🕐</span><span class="card-added-txt">Thêm lúc <b>${fmtDateTime(o.createdAt)}</b></span></div>`:''}
     ${o.isRound&&o.phi
       ? `<div class="spec-grid">
