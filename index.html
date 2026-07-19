@@ -8715,7 +8715,7 @@ const LLV_SHIFT_META = {
   khac:{label:'❓ CHƯA PHÂN CA', color:'#6b7280', bg:'#f3f4f6'}
 };
 const LLV_SHIFT_ORDER = ['ca1','ca2','ca3','hc','khac'];
-const LLV_TIME_PRESETS = ['Ca 1 : 6h – 14h','Ca 2 : 14h – 22h','HC : 7h – 17h'];
+const LLV_TIME_PRESETS = ['Ca 1 : 6h – 14h','Ca 2 : 14h – 22h','Ca 3 : 22h – 6h','HC : 7h – 17h'];
 
 function llvSeedIfEmpty(){
   if(DB.lichLamViec && DB.lichLamViec.length) return;
@@ -8831,7 +8831,6 @@ function renderLichLamViec(){
       ${sheet.period?`<div style="text-align:center;font-size:12px;margin-bottom:2px">📅 ${(sheet.period||'').replace(/</g,'&lt;')}</div>`:''}
       ${sheet.warning?`<div style="text-align:center;font-size:11.5px;margin-bottom:8px;color:#b45309">⚠️ ${(sheet.warning||'').replace(/</g,'&lt;')}</div>`:''}
       ${groups.length?`<div style="text-align:center;font-size:11.5px;margin-bottom:8px;color:var(--text3)">${groups.map(g=>`<span style="display:inline-block;margin:0 6px;padding:2px 8px;border-radius:10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700">${g.meta.label} · ${g.items.length} người</span>`).join('')}</div>`:''}
-      <datalist id="llvTimePresets_${sheet.id}">${LLV_TIME_PRESETS.map(p=>`<option value="${p}">`).join('')}</datalist>
       <table id="llvTable_${sheet.id}" style="border-collapse:collapse;font-size:12px;width:100%;min-width:640px">
         <thead>
           <tr>
@@ -8859,7 +8858,11 @@ function renderLichLamViec(){
                 <input value="${(r.gender||'').replace(/"/g,'&quot;')}" placeholder="Nam/Nữ" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'gender',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text);text-align:center">
               </td>
               <td style="border:1px solid var(--border);padding:2px">
-                <input value="${(r.time||'').replace(/"/g,'&quot;')}" placeholder="Ca 1 : 6h – 14h" list="llvTimePresets_${sheet.id}" ${admin?'':'readonly'} onchange="llvSetCell2('${sheet.id}',${i},'time',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text)">
+                <select ${admin?'':'disabled'} onchange="llvSetCell2('${sheet.id}',${i},'time',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text);cursor:${admin?'pointer':'default'};-webkit-appearance:menulist">
+                  <option value=""${!r.time?' selected':''}>-- Chọn ca --</option>
+                  ${LLV_TIME_PRESETS.map(p=>`<option value="${p}"${r.time===p?' selected':''}>${p}</option>`).join('')}
+                  ${r.time && !LLV_TIME_PRESETS.includes(r.time)?`<option value="${(r.time||'').replace(/"/g,'&quot;')}" selected>${(r.time||'').replace(/</g,'&lt;')}</option>`:''}
+                </select>
               </td>
               <td style="border:1px solid var(--border);padding:2px">
                 <input value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'note',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text3)">
