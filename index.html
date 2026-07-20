@@ -4588,20 +4588,64 @@ function clearDirty(field){
 // đè lúc đang lưu dở), hậu quả là thiết bị đó VĨNH VIỄN không nhận thêm bất kỳ
 // cập nhật realtime/polling nào từ thiết bị khác nữa cho tới khi F5 lại trang
 // — đúng lỗi "thêm đơn mới không đồng bộ được sang thiết bị khác".
-function fbSaveField(field, path, isRetry){
+function fbSaveField(field, path, isRetry, onSuccess){
   fbWrite(path, DB[field], 'PUT')
-    .then(()=>{ setSyncDot('ok'); clearDirty(field); endSave(); })
+    .then(()=>{ setSyncDot('ok'); clearDirty(field); endSave(); if(onSuccess) onSuccess(); })
     .catch(e=>{
       if(!isRetry){
         setSyncDot('error');
         showToast('❌ Lỗi sync: '+e.message, true);
-        setTimeout(()=>fbSaveField(field, path, true), 3000);
+        setTimeout(()=>fbSaveField(field, path, true, onSuccess), 3000);
       } else {
         setSyncDot('error');
         endSave(); // giữ nguyên dấu "dirty" để lần mở app sau tự đẩy lại, không mất dữ liệu
       }
     });
 }
+
+// ════════════════════════════════════════════════════════════
+// MERGE-BEFORE-WRITE cho /data/orders và /data/attendance
+// ────────────────────────────────────────────────────────────
+// LỖI GỐC: trước đây saveOrders()/saveAttendance() GHI ĐÈ TOÀN BỘ nhánh dữ
+// liệu bằng mảng/object cục bộ. Nhiều người dùng cùng thao tác trong giờ làm
+// việc (thêm đơn, đổi trạng thái, chấm công...) gần như đồng thời từ nhiều
+// thiết bị → thiết bị A thêm đơn mới rồi lưu; ngay sau đó thiết bị B (đang
+// cầm bản dữ liệu cũ hơn vài giây, CHƯA kịp nhận đơn mới của A qua realtime)
+// đổi trạng thái 1 đơn khác rồi lưu → B ghi đè mất luôn đơn mới của A, dù B
+// không hề động tới đơn đó. Đây chính là lỗi "thêm đơn/thao tác đơn xong rồi
+// mất số liệu" xảy ra suốt buổi sáng khi nhiều người cùng dùng app.
+//
+// CÁCH SỬA: mỗi lần lưu, so sánh dữ liệu cục bộ với "ảnh chụp lần đồng bộ gần
+// nhất" để biết CHÍNH XÁC đơn/dòng nào mình vừa thêm/sửa/xoá, rồi đọc lại bản
+// mới nhất từ server làm NỀN, chỉ áp đè đúng phần mình vừa đổi lên trên nền
+// đó trước khi ghi lại. Nhờ vậy thay đổi của thiết bị khác (mà mình chưa kịp
+// nhận) không bị xoá mất, kể cả khi nhiều thiết bị lưu gần như cùng lúc.
+function snapshotOrders(list){
+  const m = {};
+  (list||[]).forEach(o=>{ if(o && o.id) m[o.id] = JSON.stringify(o); });
+  return m;
+}
+let _lastSyncedOrdersSnapshot = {};
+
+function flattenAttendance(att){
+  const m = {};
+  Object.keys(att||{}).forEach(ym=>{
+    const workers = (att||{})[ym]||{};
+    Object.keys(workers).forEach(wid=>{ m[ym+'|'+wid] = JSON.stringify(workers[wid]); });
+  });
+  return m;
+}
+function unflattenAttendance(map){
+  const att = {};
+  Object.keys(map).forEach(key=>{
+    const i = key.indexOf('|');
+    const ym = key.slice(0,i), wid = key.slice(i+1);
+    if(!att[ym]) att[ym] = {};
+    try{ att[ym][wid] = JSON.parse(map[key]); }catch(e){}
+  });
+  return att;
+}
+let _lastSyncedAttendanceSnapshot = {};
 
 function saveOrders(){if(guardViewer())return;
   lsSave();
@@ -4610,7 +4654,42 @@ function saveOrders(){if(guardViewer())return;
   setSyncDot('saving');
   markDirty('orders');
   beginSave();
-  fbSaveField('orders', '/data/orders', false);
+  mergeAndSaveOrders();
+}
+
+async function mergeAndSaveOrders(){
+  const localSnap = snapshotOrders(DB.orders);
+  const changedIds = new Set();
+  Object.keys(localSnap).forEach(id=>{ if(localSnap[id]!==_lastSyncedOrdersSnapshot[id]) changedIds.add(id); });
+  const removedIds = new Set();
+  Object.keys(_lastSyncedOrdersSnapshot).forEach(id=>{ if(!localSnap[id]) removedIds.add(id); });
+
+  let merged;
+  try{
+    const serverRaw = await fbRead('/data/orders');
+    const serverList = serverRaw ? (Array.isArray(serverRaw)?serverRaw:Object.values(serverRaw)) : [];
+    const mergedMap = {};
+    serverList.forEach(o=>{ if(o && o.id) mergedMap[o.id]=o; }); // nền = bản mới nhất trên server
+    DB.orders.forEach(o=>{
+      if(!o || !o.id) return;
+      // chỉ ghi đè bằng bản cục bộ nếu: (a) đơn này CHÍNH thiết bị này vừa
+      // sửa, hoặc (b) đơn hoàn toàn mới chưa từng có trên server
+      if(changedIds.has(o.id) || !mergedMap[o.id]) mergedMap[o.id]=o;
+    });
+    removedIds.forEach(id=>{ delete mergedMap[id]; }); // đơn mình vừa xoá
+    merged = Object.values(mergedMap);
+  }catch(e){
+    // Không đọc được server (mất mạng...) → vẫn ghi bản cục bộ như cũ, để
+    // fbSaveField tự retry/đánh dấu dirty, không chặn thao tác người dùng
+    merged = DB.orders;
+  }
+
+  DB.orders = merged;
+  _lastHash = hashOrders(DB.orders);
+  DB.orders.forEach(o=>_knownIds.add(o.id));
+  lsSave();
+  scheduleUIRefresh(false);
+  fbSaveField('orders', '/data/orders', false, ()=>{ _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders); });
 }
 
 function saveAll(){if(guardViewer())return;
@@ -4640,7 +4719,33 @@ function saveAttendance(){if(guardViewer())return;
   setSyncDot('saving');
   markDirty('attendance');
   beginSave();
-  fbSaveField('attendance', '/data/attendance', false);
+  mergeAndSaveAttendance();
+}
+
+async function mergeAndSaveAttendance(){
+  const localFlat = flattenAttendance(DB.attendance);
+  const changedKeys = new Set();
+  Object.keys(localFlat).forEach(k=>{ if(localFlat[k]!==_lastSyncedAttendanceSnapshot[k]) changedKeys.add(k); });
+  const removedKeys = new Set();
+  Object.keys(_lastSyncedAttendanceSnapshot).forEach(k=>{ if(!localFlat[k]) removedKeys.add(k); });
+
+  let mergedFlat;
+  try{
+    const serverRaw = await fbRead('/data/attendance');
+    const serverFlat = flattenAttendance(serverRaw||{});
+    mergedFlat = {...serverFlat};
+    Object.keys(localFlat).forEach(k=>{
+      if(changedKeys.has(k) || !(k in serverFlat)) mergedFlat[k] = localFlat[k];
+    });
+    removedKeys.forEach(k=>{ delete mergedFlat[k]; });
+  }catch(e){
+    mergedFlat = localFlat;
+  }
+
+  DB.attendance = unflattenAttendance(mergedFlat);
+  lsSave();
+  scheduleUIRefresh(false);
+  fbSaveField('attendance', '/data/attendance', false, ()=>{ _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); });
 }
 
 
@@ -4653,22 +4758,83 @@ function saveWorkers(){if(guardViewer())return;
   fbSaveField('workers', '/data/workers', false);
 }
 
-function saveLichLamViec(){if(guardViewer())return;
+// ════════════════════════════════════════════════════════════
+// MERGE-BEFORE-WRITE dùng CHUNG cho các nhánh dạng "mảng object có
+// id": lichLamViec (lịch làm việc), kyLuat (kỷ luật), nghiPhep
+// (nghỉ phép), baoTri (bảo trì).
+// ────────────────────────────────────────────────────────────
+// Trước đây các nhánh này GHI ĐÈ TOÀN BỘ mảng lên Firebase y hệt
+// lỗi gốc của /data/orders: nếu 2 người cùng sửa lịch làm việc,
+// cùng thêm/duyệt kỷ luật - nghỉ phép, hoặc cùng cập nhật bảo trì
+// gần như đồng thời trên 2 thiết bị khác nhau, người lưu SAU sẽ
+// đè mất luôn thay đổi của người lưu TRƯỚC (dù không hề động tới
+// dòng đó), vì mỗi lần lưu là ghi đè cả mảng bằng bản cục bộ.
+// CÁCH SỬA: áp dụng ĐÚNG cơ chế đã dùng cho orders/attendance ở
+// trên - so sánh với "ảnh chụp lần đồng bộ gần nhất" để biết chính
+// xác dòng nào mình vừa thêm/sửa/xoá, đọc lại bản mới nhất từ
+// server làm nền, rồi chỉ áp đè đúng phần mình vừa đổi lên trên
+// nền đó trước khi ghi lại. Viết 1 hàm generic dùng chung cho cả 4
+// nhánh để không phải lặp lại logic 4 lần.
+function snapshotArrById(list){
+  const m = {};
+  (list||[]).forEach(o=>{ if(o && o.id) m[o.id] = JSON.stringify(o); });
+  return m;
+}
+let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{} };
+
+async function mergeAndSaveArrField(field, path, onSuccess){
+  const localSnap = snapshotArrById(DB[field]);
+  const lastSnap = _lastSyncedArrSnap[field] || {};
+  const changedIds = new Set();
+  Object.keys(localSnap).forEach(id=>{ if(localSnap[id]!==lastSnap[id]) changedIds.add(id); });
+  const removedIds = new Set();
+  Object.keys(lastSnap).forEach(id=>{ if(!localSnap[id]) removedIds.add(id); });
+
+  let merged;
+  try{
+    const serverRaw = await fbRead(path);
+    const serverList = serverRaw ? (Array.isArray(serverRaw)?serverRaw:Object.values(serverRaw)) : [];
+    const mergedMap = {};
+    serverList.forEach(o=>{ if(o && o.id) mergedMap[o.id]=o; }); // nền = bản mới nhất trên server
+    (DB[field]||[]).forEach(o=>{
+      if(!o || !o.id) return;
+      // chỉ ghi đè bằng bản cục bộ nếu: (a) dòng này CHÍNH thiết bị này
+      // vừa sửa, hoặc (b) dòng hoàn toàn mới chưa từng có trên server
+      if(changedIds.has(o.id) || !mergedMap[o.id]) mergedMap[o.id]=o;
+    });
+    removedIds.forEach(id=>{ delete mergedMap[id]; }); // dòng mình vừa xoá
+    merged = Object.values(mergedMap);
+  }catch(e){
+    // Không đọc được server (mất mạng...) → vẫn ghi bản cục bộ như cũ,
+    // để fbSaveField tự retry/đánh dấu dirty, không chặn thao tác người dùng
+    merged = DB[field];
+  }
+
+  DB[field] = merged;
   lsSave();
+  scheduleUIRefresh(false);
+  fbSaveField(field, path, false, ()=>{ _lastSyncedArrSnap[field] = snapshotArrById(DB[field]); if(onSuccess) onSuccess(); });
+}
+
+// Đẩy lên Firebase (nếu đang online) theo cơ chế merge ở trên cho 1
+// trong 4 nhánh; dùng chung bởi mọi thao tác thêm/sửa/xoá/duyệt của
+// lịch làm việc, kỷ luật, nghỉ phép, bảo trì.
+function syncArrFieldToServer(field, path){
   if(!fbOk()) return;
   setSyncDot('saving');
-  markDirty('lichLamViec');
+  markDirty(field);
   beginSave();
-  fbSaveField('lichLamViec', '/data/lichLamViec', false);
+  mergeAndSaveArrField(field, path);
+}
+
+function saveLichLamViec(){if(guardViewer())return;
+  lsSave();
+  syncArrFieldToServer('lichLamViec', '/data/lichLamViec');
 }
 
 function saveBaoTri(){if(guardViewer())return;
   lsSave();
-  if(!fbOk()) return;
-  setSyncDot('saving');
-  markDirty('baoTri');
-  beginSave();
-  fbSaveField('baoTri', '/data/baoTri', false);
+  syncArrFieldToServer('baoTri', '/data/baoTri');
 }
 
 function saveLog(){
@@ -5347,6 +5513,8 @@ async function initAndStartSync(){
         lsSave();
         _lastHash = hashOrders(DB.orders);
         DB.orders.forEach(o=>_knownIds.add(o.id));
+        _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
+        _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
       } else {
         // Lần đầu: đẩy data lên
         await fbWrite('/data', {orders:DB.orders, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri}, 'PUT');
@@ -5438,6 +5606,7 @@ function applyDataSnapshot(data){
       _lastHash = h;
       freshOrders.forEach(o=>{ if(!_knownIds.has(o.id)){ _knownIds.add(o.id); notifyNewOrder(o); } });
       DB.orders = freshOrders;
+      _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
       changed = true;
     }
   }
@@ -5445,7 +5614,7 @@ function applyDataSnapshot(data){
     const freshUsers = Array.isArray(data.users)?data.users:Object.values(data.users);
     if(JSON.stringify(freshUsers) !== JSON.stringify(DB.users)){ DB.users = freshUsers; changed = true; }
   }
-  if(data.attendance && JSON.stringify(data.attendance)!==JSON.stringify(DB.attendance)){ DB.attendance = data.attendance; changed = true; }
+  if(data.attendance && JSON.stringify(data.attendance)!==JSON.stringify(DB.attendance)){ DB.attendance = data.attendance; _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); changed = true; }
   if(data.workers && JSON.stringify(data.workers)!==JSON.stringify(DB.workers)){ DB.workers = data.workers; changed = true; }
   if(data.kyLuat && JSON.stringify(data.kyLuat)!==JSON.stringify(DB.kyLuat)){ DB.kyLuat = data.kyLuat; changed = true; }
   if(data.nghiPhep && JSON.stringify(data.nghiPhep)!==JSON.stringify(DB.nghiPhep)){ DB.nghiPhep = data.nghiPhep; changed = true; }
@@ -5502,6 +5671,7 @@ function applyFieldChange(field, val){
     _lastHash = h;
     fresh.forEach(o=>{ if(!_knownIds.has(o.id)){ _knownIds.add(o.id); notifyNewOrder(o); } });
     DB.orders = fresh;
+    _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
   } else if(field==='users'){
     const fresh = val ? (Array.isArray(val)?val:Object.values(val)) : DB.users;
     if(JSON.stringify(fresh)===JSON.stringify(DB.users)) return;
@@ -5510,6 +5680,7 @@ function applyFieldChange(field, val){
     const fresh = val || (Array.isArray(DB[field])?[]:{});
     if(JSON.stringify(fresh)===JSON.stringify(DB[field])) return;
     DB[field] = fresh;
+    if(field==='attendance') _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
   }
   lsSave(); scheduleUIRefresh(true);
 }
@@ -8436,7 +8607,7 @@ function saveNghiPhep(){if(guardViewer())return;
   const worker = DB.workers.find(w=>w.id===workerId);
   DB.nghiPhep.unshift({id:'np_'+Date.now(), workerId, workerName:worker?worker.name:'', loai, fromDate:from, toDate:to, lydo, status, createdAt:todayStr()});
   lsSave();
-  if(fbOk()) fbWrite('/data/nghiPhep', DB.nghiPhep,'PUT').catch(()=>{});
+  syncArrFieldToServer('nghiPhep', '/data/nghiPhep');
   log('Nghỉ phép',`${worker?worker.name:'?'} · ${loai} · ${from}→${to}`,'','','');
   showToast('✅ Đã lưu đơn nghỉ phép');
   closeNghiPhepForm();
@@ -8447,7 +8618,7 @@ function deleteNghiPhep(id){if(guardViewer())return;
   confirm2('Xóa đơn','Xác nhận xóa đơn nghỉ phép này?',()=>{
     DB.nghiPhep=(DB.nghiPhep||[]).filter(k=>k.id!==id);
     lsSave();
-    if(fbOk()) fbWrite('/data/nghiPhep',DB.nghiPhep,'PUT').catch(()=>{});
+    syncArrFieldToServer('nghiPhep', '/data/nghiPhep');
     showToast('🗑️ Đã xóa');
     const el=document.getElementById('nghiPhepList');
     if(el) el.innerHTML=renderNghiPhepList();
@@ -8458,7 +8629,7 @@ function approveNghiPhep(id, status){if(guardViewer())return;
   if(!rec) return;
   rec.status=status;
   lsSave();
-  if(fbOk()) fbWrite('/data/nghiPhep',DB.nghiPhep,'PUT').catch(()=>{});
+  syncArrFieldToServer('nghiPhep', '/data/nghiPhep');
   showToast(status==='Đã duyệt'?'✅ Đã duyệt đơn':'❌ Đã từ chối đơn');
   const el=document.getElementById('nghiPhepList');
   if(el) el.innerHTML=renderNghiPhepList();
@@ -8515,9 +8686,7 @@ function saveKyLuat(){if(guardViewer())return;
   if(!DB.kyLuat) DB.kyLuat=[];
   DB.kyLuat.unshift(rec);
   lsSave();
-  if(fbOk()){
-    fbWrite('/data/kyLuat', DB.kyLuat, 'PUT').catch(()=>{});
-  }
+  syncArrFieldToServer('kyLuat', '/data/kyLuat');
   log('Kỷ luật', `${worker?worker.name:'?'} · ${loai} · ${date}`, '', '', '');
   showToast('✅ Đã lưu kỷ luật');
   closeKyLuatForm();
@@ -8529,7 +8698,7 @@ function deleteKyLuat(id){if(guardViewer())return;
   confirm2('Xóa kỷ luật','Xác nhận xóa bản ghi kỷ luật này?', ()=>{
     DB.kyLuat = (DB.kyLuat||[]).filter(k=>k.id!==id);
     lsSave();
-    if(fbOk()) fbWrite('/data/kyLuat', DB.kyLuat, 'PUT').catch(()=>{});
+    syncArrFieldToServer('kyLuat', '/data/kyLuat');
     showToast('🗑️ Đã xóa');
     const listEl = document.getElementById('kyLuatList');
     if(listEl) listEl.innerHTML = renderKyLuatList();
