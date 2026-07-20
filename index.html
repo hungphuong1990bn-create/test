@@ -4140,10 +4140,21 @@ body{letter-spacing:-.1px}
       <div class="field"><div class="field-lbl">Dày (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ</span></div><input id="ofThk" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
       <div class="field"><div class="field-lbl">Rộng (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ</span></div><input id="ofW" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
     </div>
-    <div class="modal-row">
-      <div class="field"><div class="field-lbl">Dài (mm)</div><input id="ofL" class="field-inp" type="number" placeholder="4000" value="4000" oninput="calcKgAuto()"></div>
-      <div class="field"><div class="field-lbl">Số cây / Số thanh</div><input id="ofQty" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
+    <!-- Toggle: Đơn hàng dạng cuộn (dây/băng đồng cuốn thành cuộn thay vì cắt thanh) -->
+    <div class="field" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2)">📀 Đơn hàng dạng cuộn (dây/băng cuốn cuộn)</span>
+        <input id="ofIsCoil" type="checkbox" style="width:20px;height:20px;flex-shrink:0" onchange="toggleCoilMode()">
+      </label>
+      <div id="ofCoilExample" style="display:none;font-size:10.5px;color:var(--text4);margin-top:6px;line-height:1.5">
+        VD: 2×12mm × cuộn = <b>15 cuộn</b>, mỗi cuộn <b>100m</b> → tổng <b>1.500m</b>
+      </div>
     </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl" id="ofLLabelTxt">Dài (mm)</div><input id="ofL" class="field-inp" type="number" placeholder="4000" value="4000" oninput="calcKgAuto()"></div>
+      <div class="field"><div class="field-lbl" id="ofQtyLabelTxt">Số cây / Số thanh</div><input id="ofQty" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
+    </div>
+    <div id="ofCoilInfo" style="display:none;font-size:11.5px;font-weight:700;color:#075985;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:6px 10px;margin:-6px 0 10px"></div>
     <div class="modal-row">
       <div class="field">
         <div class="field-lbl">KG <span id="kgAutoLabel" style="font-size:10px;color:var(--green-m);font-weight:600"></span></div>
@@ -4292,8 +4303,8 @@ body{letter-spacing:-.1px}
     <div id="qrGenErr" class="modal-err"></div>
     <div style="font-size:12px;color:var(--text3);margin-bottom:8px" id="qrGenOrderInfo"></div>
     <div class="modal-row">
-      <div class="field"><div class="field-lbl">Tổng số thanh của đơn</div><input id="qgQty" class="field-inp" type="number" min="1" oninput="updateQrGenPreview()"></div>
-      <div class="field"><div class="field-lbl">Số thanh gộp / 1 mã QR</div><input id="qgGroupSize" class="field-inp" type="number" min="1" oninput="updateQrGenPreview()"></div>
+      <div class="field"><div class="field-lbl" id="qgQtyLabelTxt">Tổng số thanh của đơn</div><input id="qgQty" class="field-inp" type="number" min="1" oninput="updateQrGenPreview()"></div>
+      <div class="field"><div class="field-lbl" id="qgGroupLabelTxt">Số thanh gộp / 1 mã QR</div><input id="qgGroupSize" class="field-inp" type="number" min="1" oninput="updateQrGenPreview()"></div>
     </div>
     <div class="field"><div class="field-lbl">Số tem in / 1 mã QR</div><input id="qgLabelsPerCode" class="field-inp" type="number" min="1" value="2" oninput="updateQrGenPreview()"></div>
     <div style="font-size:12px;color:var(--brand);font-weight:700;margin-bottom:8px" id="qrGenPreview"></div>
@@ -6302,6 +6313,49 @@ function custInitial(name){
   return (words[0].charAt(0)+words[1].charAt(0)).toUpperCase();
 }
 
+function orderSpecGridHTML(o){
+  if(o.isCoil){
+    const dimVal = (o.isRound&&o.phi) ? `Φ${o.phi}` : `${o.thickness||'?'}×${o.width||'?'}`;
+    const dimLbl = (o.isRound&&o.phi) ? 'Đường kính' : 'Dày×Rộng (mm)';
+    return `<div class="spec-grid">
+           <div class="spec-box dim-t"><div class="spec-box-val" style="font-size:14px">${dimVal}</div><div class="spec-box-lbl">${dimLbl}</div></div>
+           <div class="spec-box dim-l"><div class="spec-box-val">${o.meterPerCoil||'?'}m</div><div class="spec-box-lbl">Mét/cuộn</div></div>
+           <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số cuộn</div></div>
+           <div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>
+         </div>
+         <div class="spec-row">
+           <span class="spec-tag mat">${o.material||'—'}</span>
+           ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
+           <span class="spec-tag" style="background:#e0f2fe;color:#075985">📏 Tổng ${o.totalMeters||0}m</span>
+           <span class="spec-tag kg">⚖️ ${o.kg||0} kg</span>
+         </div>`;
+  }
+  if(o.isRound&&o.phi){
+    return `<div class="spec-grid">
+           <div class="spec-box dim-phi"><div class="spec-box-val" style="font-size:16px">Φ${o.phi}</div><div class="spec-box-lbl">Đường kính</div></div>
+           <div class="spec-box dim-l"><div class="spec-box-val">${o.length||'?'}mm</div><div class="spec-box-lbl">Dài (mm)</div></div>
+           <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số cây</div></div>
+           <div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>
+         </div>
+         <div class="spec-row">
+           <span class="spec-tag mat">${o.material||'—'}</span>
+           ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
+           <span class="spec-tag kg">⚖️ ${o.kg||0} kg</span>
+         </div>`;
+  }
+  return `<div class="spec-grid">
+           <div class="spec-box dim-t"><div class="spec-box-val">${o.thickness||'?'}</div><div class="spec-box-lbl">Dày (mm)</div></div>
+           <div class="spec-box dim-w"><div class="spec-box-val">${o.width||'?'}</div><div class="spec-box-lbl">Rộng (mm)</div></div>
+           <div class="spec-box dim-l"><div class="spec-box-val">${o.length||'?'}</div><div class="spec-box-lbl">Dài (mm)</div></div>
+           <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số thanh</div></div>
+         </div>
+         <div class="spec-row">
+           <span class="spec-tag mat">${o.material||'—'}</span>
+           ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
+           <span class="spec-tag kg">⚖️ ${o.kg||0} kg</span>
+         </div>`;
+}
+
 function orderCard(o, showStatus=true){
   const s=o.status==='cutting'?'running':o.status;
   const si=statusInfo(s);
@@ -6320,29 +6374,7 @@ function orderCard(o, showStatus=true){
     </div>
     <div class="card-customer">${o.customer||'—'}${o.po?`<small>PO: ${o.po}</small>`:''}</div>
     ${o.createdAt?`<div class="card-added"><span class="card-added-ico">🕐</span><span class="card-added-txt">Thêm lúc <b>${fmtDateTime(o.createdAt)}</b></span></div>`:''}
-    ${o.isRound&&o.phi
-      ? `<div class="spec-grid">
-           <div class="spec-box dim-phi"><div class="spec-box-val" style="font-size:16px">Φ${o.phi}</div><div class="spec-box-lbl">Đường kính</div></div>
-           <div class="spec-box dim-l"><div class="spec-box-val">${o.length||'?'}mm</div><div class="spec-box-lbl">Dài (mm)</div></div>
-           <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số cây</div></div>
-           <div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>
-         </div>
-         <div class="spec-row">
-           <span class="spec-tag mat">${o.material||'—'}</span>
-           ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
-           <span class="spec-tag kg">⚖️ ${o.kg||0} kg</span>
-         </div>`
-      : `<div class="spec-grid">
-           <div class="spec-box dim-t"><div class="spec-box-val">${o.thickness||'?'}</div><div class="spec-box-lbl">Dày (mm)</div></div>
-           <div class="spec-box dim-w"><div class="spec-box-val">${o.width||'?'}</div><div class="spec-box-lbl">Rộng (mm)</div></div>
-           <div class="spec-box dim-l"><div class="spec-box-val">${o.length||'?'}</div><div class="spec-box-lbl">Dài (mm)</div></div>
-           <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số thanh</div></div>
-         </div>
-         <div class="spec-row">
-           <span class="spec-tag mat">${o.material||'—'}</span>
-           ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
-           <span class="spec-tag kg">⚖️ ${o.kg||0} kg</span>
-         </div>`}
+    ${orderSpecGridHTML(o)}
     ${o.deliveryDate?`<div class="card-due${overdue?' overdue':''}">📅 Hạn giao: ${fmtDate(o.deliveryDate)}</div>`:''}
     ${o.note?`<div class="card-note">📝 ${o.note}</div>`:''}
     ${renderProgressBar(o)}
@@ -6391,7 +6423,7 @@ function dashMiniCard(o, onClick){
       <span style="font-size:13px;font-weight:800;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.customer||'—'}</span>
       <span style="font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;background:${pc}20;color:${pc};white-space:nowrap">${o.priority||''}</span>
     </div>
-    <div class="dash-mini-spec">${o.isRound&&o.phi?`Φ${o.phi}×${o.length||'?'}mm · ×${o.qty||0} cây`:`${o.thickness||'?'}×${o.width||'?'}×${o.length||'?'}mm · ×${o.qty||0}`} · ⚖️${o.kg||0}kg</div>
+    <div class="dash-mini-spec">${specStr(o)} · ${qtyLabel(o)} · ⚖️${o.kg||0}kg</div>
     ${o.po||o.type?`<div style="font-size:10.5px;color:var(--text4);margin-top:1px">${o.po?'PO:'+o.po+' ':''} ${o.type||''}</div>`:''}
     ${renderStageBadge(o)}
     ${o.matCodes&&o.matCodes.length?`<div style="font-size:10px;font-weight:700;color:#7e22ce;background:#f3e8ff;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;margin-top:4px">🧵 ${o.matCodes.length>1?o.matCodes.length+' mã NL':o.matCodes[0]}</div>`:''}
@@ -6419,10 +6451,10 @@ function dashMiniCardNew(o){
       <span class="new-card-cust">${o.customer||'—'}</span>
       <span class="badge ${si.cls}" style="font-size:9px;padding:1px 6px;border-radius:10px">${si.label}</span>
     </div>
-    <div class="new-card-spec">${o.isRound&&o.phi?`Φ${o.phi}×${o.length||'?'}mm`:`${o.thickness||'?'}×${o.width||'?'}×${o.length||'?'}mm`}${o.type?' — '+o.type:''}</div>
+    <div class="new-card-spec">${specStr(o)}${o.type?' — '+o.type:''}</div>
     <div class="new-card-row">
       <span class="new-card-chip pri" style="background:${pc}18;border-color:${pc}60;color:${pc}">${o.priority||'—'}</span>
-      <span class="new-card-chip">×${o.qty||0} thanh</span>
+      <span class="new-card-chip">${qtyLabel(o)}</span>
       <span class="new-card-chip kg">⚖️ ${o.kg||0}kg</span>
       ${o.po?`<span class="new-card-chip">PO: ${o.po}</span>`:''}
     </div>
@@ -7058,7 +7090,8 @@ function matchSearch(o, q){
   const fields = [
     o.customer, o.po, o.id, o.type, o.note, o.material, o.priority,
     String(o.thickness||''), String(o.width||''), String(o.length||''),
-    String(o.phi||''), String(o.qty||''), sizeStr
+    String(o.phi||''), String(o.qty||''), sizeStr,
+    o.isCoil?'cuộn coil':'', String(o.meterPerCoil||''), String(o.totalMeters||'')
   ];
   return fields.some(v=>_stripDiacritics(String(v||'').toLowerCase()).includes(s));
 }
@@ -7089,10 +7122,10 @@ function ddNewCard(o){
         <span class="dd-new-cust">${o.customer||'—'}</span>
         ${isNew?'<span style="font-size:9px;font-weight:800;background:#dbeafe;color:var(--brand);padding:1px 6px;border-radius:10px;flex-shrink:0">MỚI</span>':''}
       </div>
-      <div class="dd-new-spec">${o.isRound&&o.phi?`Φ${o.phi}×${o.length||'?'}mm`:`${o.thickness||'?'}×${o.width||'?'}×${o.length||'?'}mm`}${o.type?' · '+o.type:''}</div>
+      <div class="dd-new-spec">${specStr(o)}${o.type?' · '+o.type:''}</div>
       <div class="dd-new-tags">
         <span class="dd-new-tag" style="background:${pc}18;color:${pc};border:1px solid ${pc}40">${o.priority||'—'}</span>
-        <span class="dd-new-tag" style="background:var(--bg);border:1px solid var(--border);color:var(--text2)">×${o.qty||0} thanh</span>
+        <span class="dd-new-tag" style="background:var(--bg);border:1px solid var(--border);color:var(--text2)">${qtyLabel(o)}</span>
         <span class="dd-new-tag" style="background:#f0fdf4;border:1px solid #86efac;color:#166534">⚖️${o.kg||0}kg</span>
         <span class="badge ${si.cls}" style="font-size:9px;padding:1px 6px;border-radius:10px">${si.label}</span>
       </div>
@@ -7131,7 +7164,7 @@ function ddPriCard(o, rank){
       </div>
 
       <!-- Spec -->
-      ${o.isRound&&o.phi
+      ${(o.isRound&&o.phi&&!o.isCoil)
         ? `<div style="font-size:12px;font-weight:700;color:#92400e;background:#fef3c7;padding:3px 9px;border-radius:6px;border:1px solid #fcd34d;display:inline-block;margin-bottom:4px">Φ ${o.phi} × ${o.length||'?'}mm · ${ql}</div>`
         : `<div style="font-size:12px;color:var(--text2);margin-bottom:4px">${sp} · <b>${ql}</b>${o.type?' · '+o.type:''}</div>`}
 
@@ -7255,13 +7288,19 @@ function clearSearch(){
 // Kế hoạch SX
 // Spec string: thanh tròn "Φ6×300mm" hoặc thanh dẹt "12×50×4000mm"
 function specStr(o){
+  if(o.isCoil){
+    return (o.phi && o.isRound) ? `Φ${o.phi}mm` : `${o.thickness||'?'}×${o.width||'?'}mm`;
+  }
   if(o.phi && o.isRound){
     return `Φ${o.phi}×${o.length||'?'}mm`;
   }
   return `${o.thickness||'?'}×${o.width||'?'}×${o.length||'?'}mm`;
 }
-// Label số cây/thanh
-function qtyLabel(o){ return o.isRound?`${o.qty||0} cây`:`${o.qty||0} thanh`; }
+// Label số cây/thanh/cuộn
+function qtyLabel(o){
+  if(o.isCoil) return `${o.qty||0} cuộn${o.meterPerCoil?` × ${o.meterPerCoil}m`:''}${o.totalMeters?` = ${o.totalMeters}m`:''}`;
+  return o.isRound?`${o.qty||0} cây`:`${o.qty||0} thanh`;
+}
 
 function fmtDuration(ms){
   if(!ms||ms<0) return '';
@@ -7304,29 +7343,7 @@ function orderCardKH(o, seq){
       </div>
     </div>
     ${o.createdAt?`<div class="card-added"><span class="card-added-ico">🕐</span><span class="card-added-txt">Thêm lúc <b>${fmtDateTime(o.createdAt)}</b></span></div>`:''}
-    ${o.isRound&&o.phi
-      ? `<div class="spec-grid">
-           <div class="spec-box dim-phi"><div class="spec-box-val" style="font-size:16px">Φ${o.phi}</div><div class="spec-box-lbl">Đường kính</div></div>
-           <div class="spec-box dim-l"><div class="spec-box-val">${o.length||'?'}mm</div><div class="spec-box-lbl">Dài (mm)</div></div>
-           <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số cây</div></div>
-           <div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>
-         </div>
-         <div class="spec-row">
-           <span class="spec-tag mat">${o.material||'—'}</span>
-           ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
-           <span class="spec-tag kg">⚖️ ${o.kg||0} kg</span>
-         </div>`
-      : `<div class="spec-grid">
-           <div class="spec-box dim-t"><div class="spec-box-val">${o.thickness||'?'}</div><div class="spec-box-lbl">Dày (mm)</div></div>
-           <div class="spec-box dim-w"><div class="spec-box-val">${o.width||'?'}</div><div class="spec-box-lbl">Rộng (mm)</div></div>
-           <div class="spec-box dim-l"><div class="spec-box-val">${o.length||'?'}</div><div class="spec-box-lbl">Dài (mm)</div></div>
-           <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số thanh</div></div>
-         </div>
-         <div class="spec-row">
-           <span class="spec-tag mat">${o.material||'—'}</span>
-           ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
-           <span class="spec-tag kg">⚖️ ${o.kg||0} kg</span>
-         </div>`}
+    ${orderSpecGridHTML(o)}
     ${o.deliveryDate?`<div class="card-due${overdue?' overdue':''}">📅 Hạn giao: ${fmtDate(o.deliveryDate)}</div>`:''}
     ${s==='done'&&o.doneAt?`<div class="card-due" style="color:var(--green-m)">✅ Hoàn thành: ${fmtDateTime(o.doneAt)}</div>`:''}
     ${s==='done'&&o.startedAt&&o.doneAt?`<div class="card-due" style="color:var(--text3)">⏱ Thời gian SX: <b style="color:var(--brand)">${fmtDuration(o.doneAt-o.startedAt)}</b></div>`:''}
@@ -9338,14 +9355,19 @@ function btmDeleteRecord(id){if(guardViewer())return;
 // ════════════════════════════════════════════════════════════
 // ORDERS CRUD
 // ════════════════════════════════════════════════════════════
-function openAddOrder(){if(guardViewer())return; _editOrderId=null; $('orderModalTitle').textContent='Thêm đơn hàng mới'; ['ofCust','ofPO','ofType','ofNote','ofAddr','ofKg','ofPhi'].forEach(id=>$(id).value=''); ['ofThk','ofW','ofQty'].forEach(id=>$(id).value=''); $('ofL').value='4000'; $('ofMat').value='B*'; $('ofPri').value='GẤP 1'; $('ofDate').value=''; $('orderErr').style.display='none'; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=''; openModal('orderModal'); }
+function openAddOrder(){if(guardViewer())return; _editOrderId=null; $('orderModalTitle').textContent='Thêm đơn hàng mới'; ['ofCust','ofPO','ofType','ofNote','ofAddr','ofKg','ofPhi'].forEach(id=>$(id).value=''); ['ofThk','ofW','ofQty'].forEach(id=>$(id).value=''); $('ofL').value='4000'; $('ofMat').value='B*'; $('ofPri').value='GẤP 1'; $('ofDate').value=''; $('orderErr').style.display='none'; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=''; if($('ofIsCoil')) $('ofIsCoil').checked=false; toggleCoilMode(); openModal('orderModal'); }
 function editOrder(id){if(guardViewer())return;
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   _editOrderId=id;
   $('orderModalTitle').textContent='Sửa đơn hàng';
   $('ofCust').value=o.customer||''; $('ofPO').value=o.po||''; $('ofType').value=o.type||'';
   $('ofMat').value=o.material||'B*'; $('ofThk').value=o.thickness||''; $('ofW').value=o.width||'';
-  $('ofPhi').value=o.phi||''; $('ofL').value=o.length||4000; $('ofQty').value=o.qty||''; $('ofKg').value=o.kg||''; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=o.phi?`✓ Thanh tròn Φ${o.phi}`:'';
+  $('ofPhi').value=o.phi||'';
+  if($('ofIsCoil')) $('ofIsCoil').checked = !!o.isCoil;
+  $('ofL').value = o.isCoil ? (o.meterPerCoil||100) : (o.length||4000);
+  $('ofQty').value=o.qty||''; $('ofKg').value=o.kg||'';
+  toggleCoilMode();
+  const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=o.phi?(o.isCoil?`✓ Dây tròn Φ${o.phi}`:`✓ Thanh tròn Φ${o.phi}`):'';
   $('ofPri').value=o.priority||'GẤP 1'; $('ofDate').value=o.deliveryDate||'';
   $('ofAddr').value=o.address||''; $('ofNote').value=o.note||'';
   $('orderErr').style.display='none';
@@ -9435,10 +9457,11 @@ function renderAIWarn(o){
     </div></div>`;
 }
 
-// Helper hiển thị progress bar — CHỈ số lượng đã sản xuất (bao nhiêu thanh)
+// Helper hiển thị progress bar — số lượng đã sản xuất (thanh hoặc cuộn)
 function renderProgressBar(o){
   const qty=o.qty||0; const done=o.doneQty||0;
   if(!qty||o.status==='pending') return '';
+  const unit = o.isCoil ? 'cuộn' : (o.isRound?'cây':'thanh');
   const pct=Math.min(100,Math.round(done/qty*100));
   const remain=Math.max(0,qty-done);
   const isDone=pct>=100;
@@ -9450,10 +9473,10 @@ function renderProgressBar(o){
     <div class="card-progress-box" style="background:${bg}">
       <div class="card-progress-icon" style="background:${color}20;color:${color}">📊</div>
       <div class="card-progress-info">
-        <div class="card-progress-lbl">Số thanh đã sản xuất</div>
-        <div class="card-progress-val" style="color:${color}">${done}<small>/ ${qty} thanh</small></div>
+        <div class="card-progress-lbl">Số ${unit} đã sản xuất</div>
+        <div class="card-progress-val" style="color:${color}">${done}<small>/ ${qty} ${unit}</small></div>
       </div>
-      <div class="card-progress-remain" style="background:${remainBg};color:${remainColor}">${isDone?'✅ Đã đủ':'Còn '+remain+' thanh'}</div>
+      <div class="card-progress-remain" style="background:${remainBg};color:${remainColor}">${isDone?'✅ Đã đủ':'Còn '+remain+' '+unit}</div>
     </div>
     ${o.progressNote?`<div style="margin-top:5px;padding:5px 8px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-left:3px solid var(--brand);border-radius:0 6px 6px 0;display:flex;align-items:flex-start;gap:5px">
       <span style="font-size:11px;flex-shrink:0">📋</span>
@@ -9523,49 +9546,81 @@ function setStage(id, stage){if(guardViewer())return;
 // D ≈ 8.96 g/cm³. Công thức chuẩn: KG = T(mm) × W(mm) × L(mm) × D / 1.000.000
 const CU_DENSITY = 8.96; // g/cm³
 
+// Bật/tắt chế độ "Đơn hàng dạng cuộn": đổi nhãn Dài(mm)→Mét/cuộn, Số thanh→Số cuộn
+function toggleCoilMode(){
+  const isCoil = $('ofIsCoil').checked;
+  $('ofLLabelTxt').textContent = isCoil ? 'Mét / cuộn (m)' : 'Dài (mm)';
+  $('ofL').placeholder = isCoil ? 'VD: 100' : '4000';
+  $('ofQtyLabelTxt').textContent = isCoil ? 'Số cuộn' : 'Số cây / Số thanh';
+  $('ofQty').placeholder = isCoil ? 'VD: 15' : '0';
+  const ex = $('ofCoilExample'); if(ex) ex.style.display = isCoil ? 'block' : 'none';
+  if(!$('ofL').value) $('ofL').value = isCoil ? '100' : '4000';
+  calcKgAuto();
+}
+
 // Tự tính KG khi nhập Φ hoặc dày/rộng/dài/qty
 function calcKgAuto(){
+  const isCoil = $('ofIsCoil') && $('ofIsCoil').checked;
   const phi = parseFloat($('ofPhi').value)||0;
-  const l   = parseFloat($('ofL').value)||0;
-  const qty = parseInt($('ofQty').value)||0;
+  const lRaw = parseFloat($('ofL').value)||0; // mm bình thường, hoặc mét/cuộn nếu ở chế độ cuộn
+  const l = isCoil ? lRaw*1000 : lRaw; // quy đổi mét/cuộn → mm để dùng chung công thức tính khối lượng
+  const qty = parseInt($('ofQty').value)||0; // số thanh hoặc số cuộn
   const t   = parseFloat($('ofThk').value)||0;
   const w   = parseFloat($('ofW').value)||0;
   const lbl = $('kgAutoLabel');
+  const coilInfo = $('ofCoilInfo');
+  let kg = 0, computed = false;
 
   if(phi && l && qty){
-    // Thanh tròn: KG = Φ² × L × 7 / 1,000,000 × qty
-    const kg = parseFloat((phi*phi*l*7/1000000*qty).toFixed(3));
-    $('ofKg').value = kg;
-    if(lbl) lbl.textContent = `✓ Tự tính thanh tròn Φ${phi}`;
+    // Thanh/dây tròn: KG = Φ² × L × 7 / 1,000,000 × qty
+    kg = parseFloat((phi*phi*l*7/1000000*qty).toFixed(3));
+    computed = true;
+    if(lbl) lbl.textContent = isCoil ? `✓ Tự tính dây tròn Φ${phi}` : `✓ Tự tính thanh tròn Φ${phi}`;
   } else if(t && w && l && qty){
-    // Thanh dẹt (đồng đỏ): KG = T × W × L × D / 1.000.000 × qty  (D=8.96 g/cm³)
-    const kg = parseFloat((t*w*l*CU_DENSITY/1000000*qty).toFixed(3));
-    $('ofKg').value = kg;
-    if(lbl) lbl.textContent = '✓ Tự tính thanh dẹt (đồng đỏ, D=8.96)';
+    // Thanh/băng dẹt (đồng đỏ): KG = T × W × L × D / 1.000.000 × qty  (D=8.96 g/cm³)
+    kg = parseFloat((t*w*l*CU_DENSITY/1000000*qty).toFixed(3));
+    computed = true;
+    if(lbl) lbl.textContent = isCoil ? '✓ Tự tính băng/dây cuộn (đồng đỏ, D=8.96)' : '✓ Tự tính thanh dẹt (đồng đỏ, D=8.96)';
   } else {
     if(lbl) lbl.textContent = '';
+  }
+  if(computed) $('ofKg').value = kg;
+
+  if(coilInfo){
+    if(isCoil && qty && lRaw){
+      const totalM = parseFloat((qty*lRaw).toFixed(2));
+      coilInfo.style.display = 'block';
+      coilInfo.textContent = `📀 ${qty} cuộn × ${lRaw}m/cuộn = ${totalM.toLocaleString('vi-VN')}m tổng${computed?` · ⚖️ ${kg}kg`:''}`;
+    } else {
+      coilInfo.style.display = 'none';
+    }
   }
 }
 
 function saveOrder(){if(guardViewer())return;
   const customer=$('ofCust').value.trim();
   if(!customer){ $('orderErr').textContent='Nhập tên khách hàng'; $('orderErr').style.display='block'; return; }
+  const isCoil = $('ofIsCoil') ? $('ofIsCoil').checked : false;
   const phi = parseFloat($('ofPhi').value)||0;
   const t   = parseFloat($('ofThk').value)||0;
   const w   = parseFloat($('ofW').value)||0;
-  const l   = parseFloat($('ofL').value)||4000;
-  const qty = parseInt($('ofQty').value)||0;
+  const lInput = parseFloat($('ofL').value)|| (isCoil?100:4000); // mm (thanh) hoặc mét/cuộn (cuộn)
+  const l   = isCoil ? lInput*1000 : lInput; // luôn quy về mm để tính khối lượng nhất quán
+  const meterPerCoil = isCoil ? lInput : 0;
+  const qty = parseInt($('ofQty').value)||0; // số thanh hoặc số cuộn
   let kg    = parseFloat($('ofKg').value)||0;
   // Auto-calc nếu chưa có
   if(!kg){
     if(phi&&l&&qty) kg=parseFloat((phi*phi*l*7/1000000*qty).toFixed(3));
     else if(t&&w&&l&&qty) kg=parseFloat((t*w*l*CU_DENSITY/1000000*qty).toFixed(3));
   }
-  const isRound = phi > 0; // true = thanh tròn
+  const isRound = phi > 0; // true = thanh/dây tròn
+  const totalMeters = isCoil ? parseFloat((qty*meterPerCoil).toFixed(2)) : 0;
   const data={
     customer, po:$('ofPO').value.trim(), type:$('ofType').value.trim(),
     material:$('ofMat').value, thickness:t, width:w, length:l, qty, kg,
     phi: isRound?phi:0, isRound,
+    isCoil, meterPerCoil, totalMeters,
     priority:$('ofPri').value, deliveryDate:$('ofDate').value,
     address:$('ofAddr').value.trim(), note:$('ofNote').value.trim()
   };
@@ -9582,7 +9637,10 @@ function saveOrder(){if(guardViewer())return;
     const newId=uid();
     DB.orders.push({id:newId,status:'pending',createdAt:Date.now(),createdBy:currentUser?.id,...data});
     _knownIds.add(newId);
-    const specStr = isRound?`Φ${phi}×${l}mm · ${qty} cây`:`${t}×${w}×${l}mm · ${qty} thanh`;
+    const dimStr = isRound?`Φ${phi}`:`${t}×${w}`;
+    const specStr = isCoil
+      ? `${dimStr}mm · ${qty} cuộn × ${meterPerCoil}m = ${totalMeters}m`
+      : (isRound?`Φ${phi}×${lInput}mm · ${qty} cây`:`${t}×${w}×${lInput}mm · ${qty} thanh`);
     log('Thêm đơn',`${customer} · ${specStr} · ${data.priority}`,newId,null,{customer,qty,priority:data.priority});
     showToast('✅ Đã thêm đơn hàng mới');
     addNotif('order_new','📦 Đơn mới: '+customer,`${specStr} · ${data.priority}`,'keHoach',currentUser?.name);
@@ -9683,7 +9741,7 @@ function setStatus(id, newStatus){if(guardViewer())return;
   if(newStatus!=='done') delete o.doneAt;
   const lb={pending:'Chờ SX',running:'Đang chạy',done:'Xong'};
   log(lb[newStatus]||newStatus,
-    `${o.customer} · ${o.priority||''} · ${o.thickness||'?'}×${o.width||'?'}×${o.length||'?'}mm · ${o.qty||0} thanh`,
+    `${o.customer} · ${o.priority||''} · ${specStr(o)} · ${qtyLabel(o)}`,
     id,
     {status:before,customer:o.customer,priority:o.priority},
     {status:newStatus,customer:o.customer,priority:o.priority});
@@ -9700,15 +9758,15 @@ function setStatus(id, newStatus){if(guardViewer())return;
     pushNotif('✅ Hoàn thành!',`${o.customer} đã xong`);
     alertUser('done');
     addNotif('order_done','✅ Hoàn thành: '+o.customer,
-      `${o.thickness}×${o.width}×${o.length}mm · ${o.qty} thanh · ${o.priority||''}`,'hoanThanh',currentUser?.name);
+      `${specStr(o)} · ${qtyLabel(o)} · ${o.priority||''}`,'hoanThanh',currentUser?.name);
     // Kiểm tra thăng cấp tự động sau 500ms (để UI render xong)
     setTimeout(()=>{ aiAutoPromote(); renderTab(currentTab); updateBadges(); },500);
-    // Đơn vừa hoàn thành → hỏi có muốn cấp mã QR truy xuất cho từng thanh không
+    // Đơn vừa hoàn thành → hỏi có muốn cấp mã QR truy xuất cho từng thanh/cuộn không
     if(isStaff()) setTimeout(()=>openQrGenForOrder(id), 700);
   }
   if(newStatus==='running'){
     addNotif('order_run','⚙️ Bắt đầu chạy: '+o.customer,
-      `${o.thickness}×${o.width}×${o.length}mm · ${o.qty} thanh · ${o.priority||''}`,'keHoach',currentUser?.name);
+      `${specStr(o)} · ${qtyLabel(o)} · ${o.priority||''}`,'keHoach',currentUser?.name);
   }
 }
 
@@ -9816,7 +9874,7 @@ function pushNotif(title,body){
   try{ new Notification(title,{body,icon:document.querySelector('link[rel="icon"]')?.href}); }catch(e){}
 }
 function notifyNewOrder(o){
-  pushNotif('📦 Đơn mới: '+o.customer,`${o.thickness}×${o.width}mm · ${o.qty} thanh · ${o.priority||''}`);
+  pushNotif('📦 Đơn mới: '+o.customer,`${specStr(o)} · ${qtyLabel(o)} · ${o.priority||''}`);
   showToast('🆕 Đơn mới: '+o.customer);
   alertUser('new');
 }
@@ -10461,17 +10519,24 @@ let _qrBatchCounter = 0;
 
 // ── Tạo hàng loạt QR khi 1 đơn hàng hoàn thành ──────────────────────
 let _qrGenOrderId = null;
+let _qrGenIsCoil = false;
 function openQrGenForOrder(orderId){if(guardViewer())return;
   const o = DB.orders.find(x=>x.id===orderId);
   if(!o) return;
   _qrGenOrderId = orderId;
+  _qrGenIsCoil = !!o.isCoil;
   const specStr = o.isRound ? `Φ${o.phi}×${o.length}mm` : `${o.thickness}×${o.width}×${o.length}mm`;
-  $('qrGenOrderInfo').innerHTML = `Đơn: <b>${o.customer}</b> · ${specStr} · Mác: ${o.material||'—'} · Số lượng đơn: <b>${o.qty||0}</b> thanh`;
+  $('qrGenOrderInfo').innerHTML = `Đơn: <b>${o.customer}</b> · ${specStr} · Mác: ${o.material||'—'} · Số lượng đơn: <b>${o.qty||0}</b> ${o.isCoil?'cuộn':'thanh'}`;
+  const unit = o.isCoil ? 'cuộn' : 'thanh';
+  $('qgQtyLabelTxt').textContent = `Tổng số ${unit} của đơn`;
+  $('qgGroupLabelTxt').textContent = `Số ${unit} gộp / 1 mã QR`;
   $('qgQty').value = o.qty||1;
-  // Mặc định gộp TOÀN BỘ số thanh của đơn vào 1 mã QR duy nhất (in 2 tem)
-  // để đỡ tốn tem — thay vì trước đây mỗi thanh 1 mã QR riêng.
-  $('qgGroupSize').value = o.qty||1;
-  $('qgLabelsPerCode').value = 2;
+  // Đơn dạng cuộn: mặc định MỖI CUỘN 1 mã QR riêng (in 1 tem/cuộn) — vì mỗi
+  // cuộn là 1 đơn vị vật lý độc lập, không gộp chung như bó thanh.
+  // Đơn dạng thanh: vẫn gộp toàn bộ số thanh của đơn vào 1 mã QR như trước
+  // (đỡ tốn tem khi bó thanh dán chung 1 tem).
+  $('qgGroupSize').value = o.isCoil ? 1 : (o.qty||1);
+  $('qgLabelsPerCode').value = o.isCoil ? 1 : 2;
   $('qgGrade').value = 'C1100';
   $('qgMachine').value = '';
   $('qgShift').value = 'Ca 1';
@@ -10482,6 +10547,7 @@ function openQrGenForOrder(orderId){if(guardViewer())return;
   openModal('qrGenModal');
 }
 function updateQrGenPreview(){
+  const unit = _qrGenIsCoil ? 'cuộn' : 'thanh';
   const totalQty = parseInt($('qgQty').value)||0;
   const groupSize = Math.max(1, parseInt($('qgGroupSize').value)||1);
   const labelsPerCode = Math.max(1, parseInt($('qgLabelsPerCode').value)||1);
@@ -10489,14 +10555,15 @@ function updateQrGenPreview(){
   const el = $('qrGenPreview');
   if(!el) return;
   el.textContent = codeCount>0
-    ? `→ Sẽ tạo ${codeCount} mã QR (mỗi mã ${groupSize} thanh) · In ${codeCount*labelsPerCode} tem`
+    ? `→ Sẽ tạo ${codeCount} mã QR (mỗi mã ${groupSize} ${unit}) · In ${codeCount*labelsPerCode} tem`
     : '';
 }
 function confirmGenQr(){if(guardViewer())return;
   const o = DB.orders.find(x=>x.id===_qrGenOrderId);
   if(!o){ closeModal('qrGenModal'); return; }
+  const unit = o.isCoil ? 'cuộn' : 'thanh';
   const qty = parseInt($('qgQty').value)||0;
-  if(qty<1){ $('qrGenErr').textContent='Nhập số lượng thanh hợp lệ (≥1)'; $('qrGenErr').style.display='block'; return; }
+  if(qty<1){ $('qrGenErr').textContent=`Nhập số lượng ${unit} hợp lệ (≥1)`; $('qrGenErr').style.display='block'; return; }
   const groupSize = Math.max(1, parseInt($('qgGroupSize').value)||qty);
   const labelsPerCode = Math.max(1, parseInt($('qgLabelsPerCode').value)||2);
   const opts = {
@@ -10507,7 +10574,7 @@ function confirmGenQr(){if(guardViewer())return;
   };
   const created = createQrBatch(o, qty, opts, groupSize, labelsPerCode);
   closeModal('qrGenModal');
-  showToast(`✅ Đã tạo ${created.length} mã QR (${qty} thanh) cho ${o.customer} · In ${created.length*labelsPerCode} tem`);
+  showToast(`✅ Đã tạo ${created.length} mã QR (${qty} ${unit}) cho ${o.customer} · In ${created.length*labelsPerCode} tem`);
   goTab('qrCode');
 }
 // groupSize: số thanh gộp chung vào 1 mã QR (mặc định = toàn bộ đơn, tức
@@ -10518,10 +10585,12 @@ function createQrBatch(order, qty, opts, groupSize, labelsPerCode){if(guardViewe
   labelsPerCode = Math.max(1, labelsPerCode||2);
   _qrBatchCounter = 0;
   const now = Date.now();
+  const unit = order.isCoil ? 'cuộn' : 'thanh';
   const specStr = order.isRound ? `Φ${order.phi}×${order.length}mm` : `${order.thickness}×${order.width}×${order.length}mm`;
   const created = [];
   let remaining = qty;
   let i = 0;
+  let coveredSoFar = 0; // số thanh/cuộn đã gán vào các mã QR trước đó (dùng đánh số thứ tự cuộn)
   while(remaining>0){
     const thisQty = Math.min(groupSize, remaining);
     const code = genUniqueQrCode();
@@ -10529,13 +10598,17 @@ function createQrBatch(order, qty, opts, groupSize, labelsPerCode){if(guardViewe
     // đơn hàng như trước — vì PO nhiều khi được nhập dưới dạng ngày tháng,
     // gây nhầm lẫn khi hiển thị ở trang tra cứu công khai).
     const productCode = 'SP-' + code.replace(/^DP-/, '');
+    // Đánh số thứ tự cuộn trong đơn (VD: "Cuộn 3/15" hoặc "Cuộn 4-6/15" nếu gộp nhiều cuộn/mã)
+    const rangeStart = coveredSoFar+1, rangeEnd = coveredSoFar+thisQty;
+    const coilLabel = order.isCoil ? (rangeStart===rangeEnd?`${rangeStart}/${qty}`:`${rangeStart}-${rangeEnd}/${qty}`) : '';
     const rec = {
       id: 'qr'+now+'_'+i+Math.random().toString(36).slice(2,5),
       qrCode: code,
       orderId: order.id, orderPO: order.po||'', productCode,
       materialCode: (order.matCodes&&order.matCodes.length)?order.matCodes.join(', '):'', productName: order.type||specStr,
       customer: order.customer||'',
-      spec:{ thickness:order.thickness||0, width:order.width||0, length:order.length||0, isRound:!!order.isRound, phi:order.phi||0 },
+      spec:{ thickness:order.thickness||0, width:order.width||0, length:order.length||0, isRound:!!order.isRound, phi:order.phi||0,
+             isCoil:!!order.isCoil, meterPerCoil:order.meterPerCoil||0 },
       copperGrade: opts.copperGrade||'C1100',
       status:'producing', currentStage:'dun',
       machine: opts.machine||'', shift: opts.shift||'', producer: opts.producer||'',
@@ -10543,19 +10616,22 @@ function createQrBatch(order, qty, opts, groupSize, labelsPerCode){if(guardViewe
       startTime: fmtDateTime ? fmtDateTime(now) : new Date(now).toLocaleString('vi-VN'),
       endTime:'', qcInspector:'', qcResult:'pending',
       hardness:'', conductivity:'', weight:'',
-      // quantity: số thanh gộp trong mã này. labelCount: số tem mặc định
-      // in ra cho mã này khi bấm "In tem" (đỡ tốn tem dán so với 1 tem/thanh).
+      // quantity: số thanh/cuộn gộp trong mã này. labelCount: số tem mặc định
+      // in ra cho mã này khi bấm "In tem" (đỡ tốn tem dán so với 1 tem/thanh;
+      // đơn dạng cuộn mặc định 1 tem/cuộn vì mỗi cuộn là 1 đơn vị vật lý riêng).
       quantity:thisQty, labelCount:labelsPerCode, location:'',
+      coilLabel, coilTotal: order.isCoil?qty:0,
       note:'', images:[],
-      history:[{stage:'dun',label:'Đùn',time:now,by:currentUser?.name||'?',note:`Bắt đầu sản xuất — cấp mã QR (${thisQty} thanh)`}],
+      history:[{stage:'dun',label:'Đùn',time:now,by:currentUser?.name||'?',note:`Bắt đầu sản xuất — cấp mã QR (${thisQty} ${unit})`}],
       createdAt:now, createdBy:currentUser?.id, updatedAt:now, updatedBy:currentUser?.id
     };
     DB.qrProducts.push(rec);
     created.push(rec);
     remaining -= thisQty;
+    coveredSoFar += thisQty;
     i++;
   }
-  log('Tạo mã QR', `${created.length} mã QR (${qty} thanh, ${groupSize}/mã) cho đơn ${order.customer}`, order.id, null, {qty, groupSize, labelsPerCode, codes: created.map(c=>c.qrCode).slice(0,5)});
+  log('Tạo mã QR', `${created.length} mã QR (${qty} ${unit}, ${groupSize}/mã) cho đơn ${order.customer}`, order.id, null, {qty, groupSize, labelsPerCode, codes: created.map(c=>c.qrCode).slice(0,5)});
   saveQrProducts();
   return created;
 }
@@ -10566,7 +10642,7 @@ let qrFilterStatus = 'all';
 function matchQr(p, q){
   if(!q) return true;
   q = q.toLowerCase();
-  return [p.qrCode,p.productCode,p.customer,p.orderPO,p.machine,p.operator,p.prodDate,p.status]
+  return [p.qrCode,p.productCode,p.customer,p.orderPO,p.machine,p.operator,p.prodDate,p.status,p.coilLabel]
     .some(v=>(''+(v||'')).toLowerCase().includes(q));
 }
 function setQrFilter(f){ qrFilterStatus=f; renderQR(); }
@@ -10661,13 +10737,14 @@ function renderQR(){
 function qrCardHTML(p){
   const si = qrStatusInfo(p.status);
   const specStr = p.spec.isRound?`Φ${p.spec.phi}×${p.spec.length}mm`:`${p.spec.thickness}×${p.spec.width}×${p.spec.length}mm`;
+  const coilTxt = p.spec.isCoil ? ` · 📀 Cuộn ${p.coilLabel||''}${p.spec.meterPerCoil?` (${p.spec.meterPerCoil}m/cuộn)`:''}` : '';
   return `<div class="qr-card" onclick="openQrDetail('${p.id}')">
     <div class="qr-card-top">
       <span class="qr-code-txt">${p.qrCode}</span>
       <span class="qr-badge ${si.cls}">${si.label}</span>
     </div>
     <div class="qr-card-info">
-      <b>${p.customer||'—'}</b> · ${specStr} · Mác ${p.copperGrade}<br>
+      <b>${p.customer||'—'}</b> · ${specStr}${coilTxt} · Mác ${p.copperGrade}<br>
       Công đoạn: <b>${QR_STAGE_LABEL[p.currentStage]||p.currentStage}</b> · SX ngày ${fmtDate(p.prodDate)}
     </div>
   </div>`;
@@ -10688,6 +10765,10 @@ function openQrDetail(id){
     ['Mã QR', p.qrCode], ['Mã sản phẩm', p.productCode], ['Mã nguyên liệu', p.materialCode||'—'],
     ['Khách hàng', p.customer||'—'], ['Đơn hàng (PO)', p.orderPO||'—'],
     ['Quy cách', specStr], ['Mác đồng', p.copperGrade],
+    ...(p.spec.isCoil ? [
+      ['📀 Cuộn số', p.coilLabel||'—'],
+      ['Mét / cuộn', p.spec.meterPerCoil?`${p.spec.meterPerCoil}m`:'—']
+    ] : []),
     ['Máy sản xuất', p.machine||'—'],
     ['Ca sản xuất', p.shift||'—'], ['Người sản xuất', p.producer||'—'],
     ['Ngày sản xuất', fmtDate(p.prodDate)], ['Giờ bắt đầu', p.startTime||'—'], ['Giờ kết thúc', p.endTime||'—'],
@@ -10697,18 +10778,19 @@ function openQrDetail(id){
     ['Trọng lượng', p.weight||'—'],
     ['Vị trí lưu kho', p.location||'—']
   ];
-  // Số lượng thanh: admin được sửa trực tiếp ngay tại đây (input số + nút Lưu)
-  // thay vì chỉ hiển thị tĩnh — vì thực tế hay cần đính chính số thanh sau
+  // Số lượng thanh/cuộn: admin được sửa trực tiếp ngay tại đây (input số + nút Lưu)
+  // thay vì chỉ hiển thị tĩnh — vì thực tế hay cần đính chính số thanh/cuộn sau
   // khi đã tạo mã QR (đếm lại kho, gộp/tách bó...).
+  const qtyUnit = p.spec.isCoil ? 'cuộn' : 'thanh';
   const qtyItemHTML = isAdmin()
     ? `<div class="qr-detail-item qr-qty-edit">
-        <div class="lbl">Số lượng (thanh)</div>
+        <div class="lbl">Số lượng (${qtyUnit})</div>
         <div class="val" style="display:flex;align-items:center;gap:6px">
           <input id="qrQtyInp-${p.id}" type="number" min="1" value="${p.quantity||1}" style="width:64px;border:1px solid var(--border);border-radius:7px;padding:4px 6px;font-size:13px;font-family:inherit;font-weight:700;color:var(--text);background:var(--card)">
           <button class="qr-qty-save-btn" onclick="editQrQuantity('${p.id}')" title="Lưu số lượng">💾</button>
         </div>
       </div>`
-    : `<div class="qr-detail-item"><div class="lbl">Số lượng</div><div class="val">${p.quantity||1}</div></div>`;
+    : `<div class="qr-detail-item"><div class="lbl">Số lượng (${qtyUnit})</div><div class="val">${p.quantity||1}</div></div>`;
 
   $('qrDetailTitle').textContent = p.qrCode;
   $('qrDetailBody').innerHTML = `
@@ -11027,11 +11109,14 @@ async function generateLabelPDF(){
     // Dùng "Ø" thay cho "Φ" trong PDF: font nhúng cho tem không có sẵn ký tự
     // Hy Lạp Φ, còn Ø là ký hiệu đường kính tiêu chuẩn trong bản vẽ kỹ thuật.
     const specStr = p.spec.isRound ? `Ø${p.spec.phi}x${p.spec.length}mm` : `${p.spec.thickness}x${p.spec.width}x${p.spec.length}mm`;
+    const lastRow = p.spec.isCoil
+      ? `Cuộn ${p.coilLabel||p.quantity||1}${p.spec.meterPerCoil?`  ${p.spec.meterPerCoil}m/cuộn`:''}  ${fmtDate(p.prodDate)}`
+      : `SL: ${p.quantity||1}  ${fmtDate(p.prodDate)}`;
     const rows = [
       {text: p.productCode||p.qrCode, bold:true,  fs: small?6.2:7.6},
       {text: `KH: ${p.customer||'—'}`,             bold:false, fs: small?5.2:6.4},
       {text: `QC: ${specStr}`,                     bold:false, fs: small?5.2:6.4},
-      {text: `SL: ${p.quantity||1}  ${fmtDate(p.prodDate)}`, bold:false, fs: small?5.2:6.4}
+      {text: lastRow, bold:false, fs: small?5.2:6.4}
     ];
     const lineH = bodyH / rows.length;
     rows.forEach((r,i)=>{
