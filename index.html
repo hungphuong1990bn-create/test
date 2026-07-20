@@ -6237,13 +6237,111 @@ function guardViewer(){
 }
 
 // ════════════════════════════════════════════════════════════
-// AUTH
+// BẢO MẬT MẬT KHẨU
+// ────────────────────────────────────────────────────────────
+// LỖI BẢO MẬT NGHIÊM TRỌNG TRƯỚC ĐÂY: mật khẩu của MỌI tài khoản
+// (kể cả admin) được lưu THẲNG dạng chữ thường (plain text) trong
+// DB.users, và nhánh /data/users này được đọc công khai (kể cả lúc
+// CHƯA đăng nhập, xem đoạn fbRead('/data/users') trong doLogin bên
+// dưới). Nghĩa là bất kỳ ai xem được nhánh dữ liệu đó cũng đọc được
+// mật khẩu thật của tất cả mọi người ngay lập tức.
+// CÁCH SỬA: băm (hash) mật khẩu bằng SHA-256 kèm "salt" (chuỗi ngẫu
+// nhiên riêng cho từng tài khoản) trước khi lưu; từ nay chỉ lưu
+// {passwordHash, salt}, KHÔNG bao giờ lưu mật khẩu gốc nữa. Các tài
+// khoản cũ còn sót trường "password" (chữ thường) sẽ được tự động
+// băm lại (migrate) ngay khi có ai đăng nhập.
+// LƯU Ý QUAN TRỌNG: đây vẫn là hash tính phía TRÌNH DUYỆT (app này
+// không có backend/server riêng), nên chỉ chống lại việc lộ mật khẩu
+// gốc khi bị xem trộm dữ liệu — không chống được kẻ tấn công có toàn
+// quyền ghi vào Firebase (xem ghi chú bảo mật ở fbRead/fbWrite phía
+// dưới về việc cần khoá Rules + bật Firebase Authentication để bảo
+// mật triệt để).
+function genSalt(){
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function hashPassword(pw, salt){ return sha256Hex(salt+':'+pw); }
+// Tạo cặp {passwordHash, salt} mới — dùng khi tạo TK mới / đổi mật khẩu
+async function makePasswordFields(pw){
+  const salt = genSalt();
+  const passwordHash = await hashPassword(pw, salt);
+  return {passwordHash, salt};
+}
+// So khớp mật khẩu nhập vào với 1 user. Hỗ trợ cả user CŨ chưa migrate
+// (còn trường password chữ thường) để không khoá tài khoản ai giữa chừng.
+async function verifyPassword(user, pw){
+  if(!user) return false;
+  if(user.passwordHash && user.salt) return (await hashPassword(pw, user.salt))===user.passwordHash;
+  return user.password===pw; // tài khoản cũ chưa migrate
+}
+// Băm lại TẤT CẢ user còn mật khẩu dạng chữ thường thành passwordHash+salt,
+// đồng thời dọn sạch ký tự < > trong tên/tên đăng nhập cũ (phòng trường
+// hợp đã bị chèn từ trước). Trả về true nếu có thay đổi cần lưu lại.
+async function migrateUserPasswords(users){
+  let changed = false;
+  for(const u of (users||[])){
+    if(!u) continue;
+    if(u.password && !u.passwordHash){
+      const {passwordHash, salt} = await makePasswordFields(u.password);
+      u.passwordHash = passwordHash; u.salt = salt;
+      delete u.password;
+      changed = true;
+    }
+    if(u.name && /[<>]/.test(u.name)){ u.name = sanitizeDisplayText(u.name); changed = true; }
+    if(u.username && /[<>]/.test(u.username)){ u.username = sanitizeDisplayText(u.username); changed = true; }
+  }
+  return changed;
+}
+// Chặn ký tự < > trong các trường hiển thị công khai (tên, tên đăng
+// nhập...) NGAY LÚC LƯU, để không ai chèn được thẻ HTML/script vào các
+// trường này rồi hiển thị cho CẢ NHÓM cùng thấy (kiểu tấn công XSS lưu
+// trữ qua dữ liệu dùng chung trên Firebase — ví dụ tên hiển thị trong
+// khung chat, danh sách tài khoản, danh sách người đang online...).
+// Tên/tên đăng nhập vốn dĩ không cần ký tự < > nên chặn không ảnh
+// hưởng gì tới người dùng bình thường.
+function sanitizeDisplayText(s){ return (s||'').replace(/[<>]/g,'').trim().slice(0,120); }
+
 // ════════════════════════════════════════════════════════════
+// CHỐNG DÒ MẬT KHẨU (BRUTE-FORCE) KHI ĐĂNG NHẬP
+// ────────────────────────────────────────────────────────────
+// Trước đây không giới hạn số lần thử đăng nhập sai → 1 script tự
+// động có thể dò mật khẩu liên tục không giới hạn. Giờ sau 5 lần sai
+// liên tiếp sẽ khoá tạm thời, thời gian khoá tăng dần mỗi lần vẫn sai
+// tiếp (15s → 30s → 60s..., tối đa 5 phút). Đây là chặn ở PHÍA TRÌNH
+// DUYỆT (localStorage) nên chỉ cản người dùng thông thường/bot đơn
+// giản, KHÔNG chặn được kẻ tấn công tự xoá localStorage — vẫn cần
+// khoá Firebase Rules để bảo vệ triệt để (xem ghi chú ở fbRead/fbWrite).
+const LOGIN_LOCK_KEY = 'sx_login_lock';
+function getLoginLock(){ try{ return JSON.parse(localStorage.getItem(LOGIN_LOCK_KEY)||'null'); }catch(e){ return null; } }
+function setLoginLock(o){ try{ localStorage.setItem(LOGIN_LOCK_KEY, JSON.stringify(o)); }catch(e){} }
+function clearLoginLock(){ try{ localStorage.removeItem(LOGIN_LOCK_KEY); }catch(e){} }
+function registerLoginFail(){
+  const lock = getLoginLock() || {fails:0, until:0};
+  lock.fails = (lock.fails||0)+1;
+  let lockSeconds = 0;
+  if(lock.fails>=5){ lockSeconds = Math.min(300, 15*Math.pow(2, lock.fails-5)); lock.until = Date.now()+lockSeconds*1000; }
+  setLoginLock(lock);
+  return lockSeconds;
+}
+function loginLockSecondsLeft(){
+  const lock = getLoginLock();
+  if(!lock || !lock.until) return 0;
+  const left = Math.ceil((lock.until-Date.now())/1000);
+  return left>0 ? left : 0;
+}
+
 async function doLogin(){
   const u=$('lu').value.trim(), p=$('lp').value;
   const err=$('loginErr'), btn=$('loginBtn');
   err.style.display='none';
   if(!u||!p){err.textContent='Nhập đủ tài khoản và mật khẩu';err.style.display='block';return;}
+  const lockLeft = loginLockSecondsLeft();
+  if(lockLeft>0){ err.textContent=`⏳ Sai quá nhiều lần, vui lòng thử lại sau ${lockLeft}s`; err.style.display='block'; return; }
   btn.disabled=true; btn.textContent='Đang xử lý...';
 
   // ── FIX ĐỒNG BỘ TÀI KHOẢN ─────────────────────────────────────
@@ -6266,9 +6364,18 @@ async function doLogin(){
     }catch(e){ /* offline hoặc lỗi mạng → dùng cache cục bộ */ }
   }
 
-  setTimeout(()=>{
-    const user=DB.users.find(x=>x.username===u&&x.password===p);
-    if(user){
+  setTimeout(async ()=>{
+    const foundUser=DB.users.find(x=>x.username===u);
+    const passOk = await verifyPassword(foundUser, p);
+    if(foundUser && passOk){
+      const user = foundUser;
+      clearLoginLock();
+      // Băm lại mật khẩu (của user này và mọi user cũ khác chưa migrate)
+      // ngay khi có dịp, để không còn mật khẩu chữ thường tồn tại lâu dài
+      if(await migrateUserPasswords(DB.users)){
+        lsSave();
+        if(fbOk()) fbWrite('/data/users', DB.users, 'PUT').catch(()=>{});
+      }
       currentUser=user;
       // Lưu session để giữ đăng nhập sau reload
       try{ localStorage.setItem('sx_session_uid', user.id); }catch(e){}
@@ -6294,7 +6401,10 @@ async function doLogin(){
       applyRoleNav();
       goTab(defaultTabFor());
     } else {
-      err.textContent='Tên đăng nhập hoặc mật khẩu không đúng';
+      const lockSeconds = registerLoginFail();
+      err.textContent = lockSeconds>0
+        ? `⏳ Sai quá nhiều lần, tài khoản tạm khoá đăng nhập ${lockSeconds}s`
+        : 'Tên đăng nhập hoặc mật khẩu không đúng';
       err.style.display='block';
       $('loginCard').classList.add('shake');
       setTimeout(()=>$('loginCard').classList.remove('shake'),400);
@@ -6345,6 +6455,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     const savedUser = DB.users.find(u=>u.id===savedUid);
     if(savedUser){
       currentUser = savedUser;
+      // Dọn mật khẩu chữ thường còn sót (nếu có) ngay khi mở app, không
+      // cần đợi ai đó đăng nhập lại mới được băm
+      migrateUserPasswords(DB.users).then(changed=>{
+        if(changed){ lsSave(); if(fbOk()) fbWrite('/data/users', DB.users, 'PUT').catch(()=>{}); }
+      });
       $('sbName').textContent = savedUser.name;
       $('sbRole').textContent = savedUser.role==='admin'?'👑 Quản trị viên':savedUser.role==='staff'?'⚙️ Nhân viên SX':'👁 Xem';
       $('loginScreen').classList.remove('active');
@@ -9951,22 +10066,29 @@ function editUser(id){if(guardViewer())return;
   $('ufRole').value=u.role; $('ufEmail').value=u.email||''; $('ufPhone').value=u.phone||'';
   $('userErr').style.display='none'; openModal('userModal');
 }
-function saveUser(){if(guardViewer())return;
-  const username=$('ufUser').value.trim(), name=$('ufName').value.trim(), role=$('ufRole').value, pass=$('ufPass').value, email=$('ufEmail').value.trim(), phone=$('ufPhone').value.trim();
+async function saveUser(){if(guardViewer())return;
+  const username=sanitizeDisplayText($('ufUser').value.trim()), name=sanitizeDisplayText($('ufName').value.trim()), role=$('ufRole').value, pass=$('ufPass').value, email=$('ufEmail').value.trim(), phone=$('ufPhone').value.trim();
   const errEl=$('userErr'); errEl.style.display='none';
   if(!username||!name){ errEl.textContent='Nhập đủ thông tin'; errEl.style.display='block'; return; }
+  if(!/^[a-zA-Z0-9_.]{3,30}$/.test(username)){ errEl.textContent='Tên đăng nhập chỉ gồm chữ/số/._ (3-30 ký tự)'; errEl.style.display='block'; return; }
+  if(pass && pass.length<4){ errEl.textContent='Mật khẩu ít nhất 4 ký tự'; errEl.style.display='block'; return; }
   if(_editUserId){
     const idx=DB.users.findIndex(x=>x.id===_editUserId);
     const before={role:DB.users[idx].role};
     DB.users[idx]={...DB.users[idx],name,role,email,phone};
-    if(pass) DB.users[idx].password=pass;
+    if(pass){
+      const {passwordHash, salt} = await makePasswordFields(pass);
+      DB.users[idx].passwordHash=passwordHash; DB.users[idx].salt=salt;
+      delete DB.users[idx].password;
+    }
     log('Sửa TK',`${name} · vai trò: ${role}`,''  ,before,{role});
     showToast('✅ Đã cập nhật tài khoản');
   } else {
     if(!pass){ errEl.textContent='Nhập mật khẩu'; errEl.style.display='block'; return; }
     if(DB.users.find(x=>x.username===username)){ errEl.textContent='Tên đăng nhập đã tồn tại'; errEl.style.display='block'; return; }
     const newId=uid();
-    DB.users.push({id:newId,username,password:pass,role,name,email,phone});
+    const {passwordHash, salt} = await makePasswordFields(pass);
+    DB.users.push({id:newId,username,passwordHash,salt,role,name,email,phone});
     log('Thêm TK',`${name} · @${username} · ${role}`,'',null,{username,role});
     showToast('✅ Đã thêm tài khoản');
   }
@@ -9983,7 +10105,7 @@ function deleteUser(id){if(guardViewer())return;
 }
 function saveProfile(){if(guardViewer())return;
   const idx=DB.users.findIndex(x=>x.id===currentUser.id);
-  DB.users[idx].name=$('epName').value.trim()||DB.users[idx].name;
+  DB.users[idx].name=sanitizeDisplayText($('epName').value.trim())||DB.users[idx].name;
   DB.users[idx].email=$('epEmail').value.trim();
   DB.users[idx].phone=$('epPhone').value.trim();
   currentUser=DB.users[idx];
@@ -9991,14 +10113,17 @@ function saveProfile(){if(guardViewer())return;
   log('Sửa TK','Cập nhật thông tin cá nhân','');
   closeModal('profileModal'); renderSettings(); showToast('✅ Đã lưu'); saveAll();
 }
-function savePass(){if(guardViewer())return;
+async function savePass(){if(guardViewer())return;
   const old=$('cpOld').value, nw=$('cpNew').value, cf=$('cpCf').value;
   const err=$('passErr'); err.style.display='none';
-  if(old!==currentUser.password){ err.textContent='Mật khẩu hiện tại không đúng'; err.style.display='block'; return; }
+  const idx=DB.users.findIndex(x=>x.id===currentUser.id);
+  if(!(await verifyPassword(DB.users[idx], old))){ err.textContent='Mật khẩu hiện tại không đúng'; err.style.display='block'; return; }
   if(nw.length<4){ err.textContent='Mật khẩu mới ít nhất 4 ký tự'; err.style.display='block'; return; }
   if(nw!==cf){ err.textContent='Xác nhận không khớp'; err.style.display='block'; return; }
-  const idx=DB.users.findIndex(x=>x.id===currentUser.id);
-  DB.users[idx].password=nw; currentUser=DB.users[idx];
+  const {passwordHash, salt} = await makePasswordFields(nw);
+  DB.users[idx].passwordHash=passwordHash; DB.users[idx].salt=salt;
+  delete DB.users[idx].password;
+  currentUser=DB.users[idx];
   log('Đổi MK','Đổi mật khẩu thành công','');
   closeModal('passModal'); showToast('✅ Đã đổi mật khẩu'); saveAll();
 }
