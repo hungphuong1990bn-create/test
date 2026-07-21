@@ -2684,6 +2684,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 /* ── STATS GRID ── */
 /* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stats-grid-6{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .stat-card{background:var(--card);border-radius:15px;padding:13px 12px;box-shadow:var(--sh);cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform .12s,box-shadow .15s;border:1px solid var(--border);position:relative;overflow:hidden}
 .stat-card::before{content:'';position:absolute;inset:0;opacity:0;background:rgba(255,255,255,.6);transition:opacity .1s}
 .stat-card:active{transform:scale(.97);box-shadow:var(--sh2)}
@@ -3483,6 +3484,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   .main-content > * + *{margin-top:14px}
   #fab{bottom:28px;right:28px;width:60px;height:60px;font-size:28px;box-shadow:0 6px 24px rgba(30,64,175,.45)}
   .stats-grid{grid-template-columns:repeat(4,1fr);gap:12px}
+  .stats-grid-6{grid-template-columns:repeat(3,1fr);gap:12px}
   .stat-card{padding:16px;border-radius:16px}
   .ann-write-btn .ann-btn-text{display:inline}
   .stat-num{font-size:30px}
@@ -7234,6 +7236,19 @@ function renderDashboard(){
 
   const priSort = (a,b)=>parseInt((a.priority||'GẤP 9').replace('GẤP ',''))-parseInt((b.priority||'GẤP 9').replace('GẤP ',''));
 
+  // ══════════ 6 CHỈ SỐ GỌN — hiện ngay khi mở app ══════════
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  const todayOrders   = orders.filter(o=>(o.createdAt||0)>=today0.getTime()).length;
+  const runningKg     = orders.filter(o=>o.status==='running'||o.status==='cutting').reduce((s,o)=>s+(parseFloat(o.kg)||0),0).toFixed(1);
+  const doneOrdersArr = orders.filter(o=>o.status==='done');
+  const doneToday     = doneOrdersArr.filter(o=>(o.doneAt||0)>=today0.getTime()).length;
+  const doneOnTime    = doneOrdersArr.filter(o=>!o.deliveryDate||o.doneAt<=new Date(o.deliveryDate).getTime()+86400000).length;
+  const hieuSuat      = doneOrdersArr.length ? Math.round(doneOnTime/doneOrdersArr.length*100) : 100;
+  const machineWarn   = (typeof MACHINES!=='undefined' && typeof machineStatus==='function') ? MACHINES.filter(m=>machineStatus(m.id)==='hong').length : 0;
+  const canhBao       = overdue + machineWarn;
+
+  const insights = aiGetInsights(orders);
+
   // Cột 1: Đơn mới nhập gần đây (tất cả status, sort mới nhất)
   const recentAll = orders.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,8);
 
@@ -7253,9 +7268,6 @@ function renderDashboard(){
   // Cột 4: Hoàn thành gần đây
   const doneList = orders.filter(o=>o.status==='done').sort((a,b)=>b.doneAt-a.doneAt).slice(0,8);
 
-  // AI insights
-  const insights = aiGetInsights(orders);
-
   const notifBanner = ('Notification' in window&&Notification.permission!=='granted')
     ? `<div class="notif-bar"><span>🔔</span><p>Bật thông báo nhận đơn mới tức thì</p><button onclick="requestNotif();this.closest('.notif-bar')?.remove()">Bật</button></div>` : '';
 
@@ -7263,40 +7275,61 @@ function renderDashboard(){
     ${notifBanner}
     <div id="onlineEl"></div>
 
-    <!-- STATS ROW -->
-    <div class="stats-grid">
+    <!-- 6 CHỈ SỐ GỌN -->
+    <div class="stats-grid-6">
       <div class="stat-card" onclick="goTab('dorDang')">
         <div class="stat-icon-wrap" style="background:#eff6ff">📋</div>
-        <div class="stat-right"><div class="stat-num">${total}</div><div class="stat-lbl">Tổng · ${totalKg}kg</div></div>
-      </div>
-      <div class="stat-card" onclick="goTab('dorDang')">
-        <div class="stat-icon-wrap" style="background:var(--amber-l)">⏳</div>
-        <div class="stat-right"><div class="stat-num" style="color:var(--amber-m)">${waiting}</div><div class="stat-lbl">Chờ SX</div></div>
+        <div class="stat-right"><div class="stat-num">${todayOrders}</div><div class="stat-lbl">Đơn hàng hôm nay</div></div>
       </div>
       <div class="stat-card" onclick="goTab('keHoach')">
         <div class="stat-icon-wrap" style="background:#dbeafe">⚙️</div>
-        <div class="stat-right"><div class="stat-num" style="color:var(--brand3)">${running}</div><div class="stat-lbl">Đang chạy</div></div>
+        <div class="stat-right"><div class="stat-num" style="color:var(--brand3)">${running}</div><div class="stat-lbl">Đang sản xuất</div></div>
       </div>
       <div class="stat-card" onclick="goTab('hoanThanh')">
         <div class="stat-icon-wrap" style="background:var(--green-l)">✅</div>
-        <div class="stat-right"><div class="stat-num" style="color:var(--green-m)">${done}</div><div class="stat-lbl">Xong</div></div>
+        <div class="stat-right"><div class="stat-num" style="color:var(--green-m)">${doneToday}</div><div class="stat-lbl">Đã hoàn thành (hôm nay)</div></div>
+      </div>
+      <div class="stat-card" onclick="goTab('dorDang')">
+        <div class="stat-icon-wrap" style="background:#fee2e2">⏱️</div>
+        <div class="stat-right"><div class="stat-num" style="color:var(--red-m)">${overdue}</div><div class="stat-lbl">Chậm tiến độ</div></div>
+      </div>
+      <div class="stat-card" onclick="toggleDashMore(true)">
+        <div class="stat-icon-wrap" style="background:#f5f3ff">🎯</div>
+        <div class="stat-right"><div class="stat-num" style="color:#7c3aed">${hieuSuat}%</div><div class="stat-lbl">Hiệu suất (đúng hạn)</div></div>
+      </div>
+      <div class="stat-card" onclick="${canhBao>0?"goTab('dorDang')":"toggleDashMore(true)"}">
+        <div class="stat-icon-wrap" style="background:${canhBao>0?'#fef3c7':'#f3f4f6'}">${canhBao>0?'⚠️':'🔔'}</div>
+        <div class="stat-right"><div class="stat-num" style="color:${canhBao>0?'var(--amber-m)':'var(--text)'}">${canhBao}</div><div class="stat-lbl">Cảnh báo${machineWarn?` · ${machineWarn} máy hỏng`:''}</div></div>
       </div>
     </div>
 
-    ${overdue?`<div class="warn-banner">⚠️ ${overdue} đơn quá hạn! <button onclick="goTab('dorDang')" style="background:var(--amber-m);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px;font-family:inherit">Xem ngay</button></div>`:''}
+    <!-- Nút mở rộng: xem biểu đồ & KPI chi tiết (ẩn mặc định cho gọn) -->
+    <div style="text-align:center;margin:10px 0 2px">
+      <button id="dashMoreBtn" onclick="toggleDashMore()" class="chip" style="font-size:12.5px;padding:7px 16px;border:1px solid var(--border);background:var(--card);cursor:pointer;border-radius:20px;font-weight:600;color:var(--text3)">📊 Xem thống kê chi tiết ▾</button>
+    </div>
+    <div id="dashMoreStats" style="display:none">
+      ${overdue?`<div class="warn-banner">⚠️ ${overdue} đơn quá hạn! <button onclick="goTab('dorDang')" style="background:var(--amber-m);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px;font-family:inherit">Xem ngay</button></div>`:''}
 
-    <!-- AI INSIGHTS BANNER -->
-    ${insights.length?`<div class="ai-banner">
-      <div class="ai-banner-title">🤖 AI Phân tích · ${vnTimeHM(new Date())}</div>
-      ${insights.map(i=>`<div class="ai-insight"><span class="ai-insight-icon">${i.icon}</span><span class="ai-insight-text">${i.text}</span></div>`).join('')}
-    </div>`:''}
+      <!-- AI INSIGHTS BANNER -->
+      ${insights.length?`<div class="ai-banner">
+        <div class="ai-banner-title">🤖 AI Phân tích · ${vnTimeHM(new Date())}</div>
+        ${insights.map(i=>`<div class="ai-insight"><span class="ai-insight-icon">${i.icon}</span><span class="ai-insight-text">${i.text}</span></div>`).join('')}
+      </div>`:''}
 
-    <!-- KPI TIẾN ĐỘ KẾ HOẠCH vs THỰC TẾ -->
-    ${buildKpiTrackPanel(orders)}
+      <!-- KPI TIẾN ĐỘ KẾ HOẠCH vs THỰC TẾ -->
+      ${buildKpiTrackPanel(orders)}
 
-    <!-- BIỂU ĐỒ THỐNG KÊ -->
-    <div class="sec-title" style="margin-bottom:2px">📊 Thống kê chi tiết</div>
-    ${buildDashboardAnalytics(orders)}
+      <!-- BIỂU ĐỒ THỐNG KÊ -->
+      <div class="sec-title" style="margin-bottom:2px">📊 Thống kê chi tiết</div>
+      ${buildDashboardAnalytics(orders)}
+
+      <div class="card" style="padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text3);display:flex;flex-wrap:wrap;gap:10px">
+        <span><b>Tổng đơn:</b> ${total} · ${totalKg}kg</span>
+        <span><b>Chờ SX:</b> ${waiting}</span>
+        <span><b>Đang chạy:</b> ${running} · ${runningKg}kg</span>
+        <span><b>Đã xong (tổng):</b> ${done}</span>
+      </div>
+    </div>
 
     <!-- 4 CỘT: scroll ngang mobile, grid desktop -->
     <div class="sec-title" style="margin-bottom:2px">🗂️ Danh sách đơn hàng</div>
@@ -7377,6 +7410,18 @@ function renderDashboard(){
   // mình + đọc lại toàn bộ danh sách + vẽ cả sidebar lẫn Dashboard) để tránh
   // 2 nơi có 2 công thức lọc khác nhau, từng là nguồn gây lệch/không hiện.
   setTimeout(()=>{ if($('onlineEl')) updateOnline(); },300);
+}
+
+// Bật/tắt khối thống kê chi tiết (biểu đồ, KPI, AI insight) trên Dashboard.
+// force=true → luôn mở (dùng khi bấm vào thẻ Hiệu suất/Cảnh báo để xem chi tiết ngay).
+function toggleDashMore(force){
+  const el = document.getElementById('dashMoreStats');
+  const btn = document.getElementById('dashMoreBtn');
+  if(!el) return;
+  const show = force===true ? true : el.style.display==='none';
+  el.style.display = show?'block':'none';
+  if(btn) btn.innerHTML = show? '📊 Ẩn thống kê chi tiết ▴' : '📊 Xem thống kê chi tiết ▾';
+  if(show) el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 let _onlineExpanded = false;
