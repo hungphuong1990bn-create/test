@@ -9072,6 +9072,7 @@ let _llvActive = null;
 // Nhận diện ca làm việc từ chuỗi thời gian tự do (vd: "Ca 1 : 6h – 14h")
 function llvShiftKey(t){
   t = (t||'').toLowerCase();
+  if(/nghỉ/.test(t)) return 'nghi';
   if(/ca\s*1/.test(t)) return 'ca1';
   if(/ca\s*2/.test(t)) return 'ca2';
   if(/ca\s*3/.test(t)) return 'ca3';
@@ -9083,10 +9084,30 @@ const LLV_SHIFT_META = {
   ca2:{label:'🌙 CA 2', color:'#b45309', bg:'#fffbeb'},
   ca3:{label:'🌑 CA 3', color:'#6d28d9', bg:'#f5f3ff'},
   hc:{label:'🏢 HÀNH CHÍNH', color:'#047857', bg:'#ecfdf5'},
+  nghi:{label:'🏖️ NGHỈ (không xếp ca)', color:'#0e7490', bg:'#ecfeff'},
   khac:{label:'❓ CHƯA PHÂN CA', color:'#6b7280', bg:'#f3f4f6'}
 };
-const LLV_SHIFT_ORDER = ['ca1','ca2','ca3','hc','khac'];
-const LLV_TIME_PRESETS = ['Ca 1 : 6h – 14h','Ca 2 : 14h – 22h','Ca 3 : 22h – 6h','HC : 7h – 17h'];
+const LLV_SHIFT_ORDER = ['ca1','ca2','ca3','hc','nghi','khac'];
+const LLV_TIME_PRESETS = ['Ca 1 : 6h – 14h','Ca 2 : 14h – 22h','Ca 3 : 22h – 6h','HC : 7h – 17h','Nghỉ (nghỉ mát/nghỉ tập thể - không xếp ca)'];
+
+// ── Tự động dò đơn nghỉ phép đã duyệt đang hiệu lực (hôm nay) cho 1 nhân viên ──
+// Khớp theo tên (không phân biệt hoa/thường) với DB.nghiPhep.
+// Chỉ tính đơn có trạng thái "Đã duyệt" và hôm nay nằm trong khoảng Từ ngày → Đến ngày.
+// Nhân viên vẫn được giữ nguyên ở ca đã phân (không bị chuyển sang nhóm "Nghỉ").
+function llvActiveLeave(name, list){
+  const nm = (name||'').trim().toLowerCase();
+  if(!nm) return null;
+  const src = list || DB.nghiPhep || [];
+  const today = todayStr();
+  const hit = src.find(k => k.status==='Đã duyệt' && (k.workerName||'').trim().toLowerCase()===nm && (k.fromDate||'')<=today && today<=(k.toDate||''));
+  return hit || null;
+}
+function llvLeaveBadgeHtml(rec){
+  if(!rec) return '';
+  const esc = v=>(v||'').toString().replace(/</g,'&lt;');
+  const till = rec.toDate ? ` · đến ${fmtDate(rec.toDate)}` : '';
+  return `<span title="${esc(rec.lydo||'')}" style="display:inline-block;padding:2px 8px;border-radius:10px;background:#cffafe;color:#0e7490;font-weight:700;font-size:11px;white-space:nowrap">🏖️ ${esc(rec.loai||'Đang nghỉ')}${till}</span>`;
+}
 
 function llvSeedIfEmpty(){
   if(DB.lichLamViec && DB.lichLamViec.length) return;
@@ -9209,6 +9230,7 @@ function renderLichLamViec(){
             <th style="border:1px solid var(--border);padding:6px;min-width:150px;text-align:left">Họ và tên</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:80px">Giới tính</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:150px">Thời gian</th>
+            <th style="border:1px solid var(--border);padding:6px;min-width:140px">🏖️ Tình trạng nghỉ</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:120px">Ghi chú</th>
             ${admin?'<th style="border:1px solid var(--border);padding:6px;min-width:30px"></th>':''}
           </tr>
@@ -9216,11 +9238,13 @@ function renderLichLamViec(){
         <tbody>
           ${groups.map(g=>`
             <tr>
-              <td colspan="${admin?6:5}" style="border:1px solid var(--border);padding:7px 10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700;font-size:12.5px;text-align:left">
+              <td colspan="${admin?7:6}" style="border:1px solid var(--border);padding:7px 10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700;font-size:12.5px;text-align:left">
                 ${g.meta.label} <span style="font-weight:500;opacity:.8">— ${g.items.length} người</span>
               </td>
             </tr>
-            ${g.items.map(({r,i},gi)=>`<tr>
+            ${g.items.map(({r,i},gi)=>{
+              const leaveRec = llvActiveLeave(r.name);
+              return `<tr>
               <td style="border:1px solid var(--border);padding:4px;text-align:center">${gi+1}</td>
               <td style="border:1px solid var(--border);padding:2px">
                 <input value="${(r.name||'').replace(/"/g,'&quot;')}" placeholder="Họ và tên" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'name',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text)">
@@ -9235,19 +9259,23 @@ function renderLichLamViec(){
                   ${r.time && !LLV_TIME_PRESETS.includes(r.time)?`<option value="${(r.time||'').replace(/"/g,'&quot;')}" selected>${(r.time||'').replace(/</g,'&lt;')}</option>`:''}
                 </select>
               </td>
+              <td style="border:1px solid var(--border);padding:2px;text-align:center">
+                ${leaveRec ? llvLeaveBadgeHtml(leaveRec) : `<input value="${(r.leave||'').replace(/"/g,'&quot;')}" placeholder="Không nghỉ" title="Ghi chú nghỉ đột xuất (không có đơn xin nghỉ chính thức)" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'leave',this.value)" style="width:100%;border:none;background:transparent;font-size:11.5px;font-family:inherit;padding:4px;outline:none;color:var(--amber-m,#b45309);text-align:center">`}
+              </td>
               <td style="border:1px solid var(--border);padding:2px">
                 <input value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'note',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text3)">
               </td>
               ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="llvDeleteRow('${sheet.id}',${i})" style="font-size:12px">🗑</button></td>`:''}
-            </tr>`).join('')}
+            </tr>`;}).join('')}
           `).join('')}
-          ${sheet.rows.length===0?`<tr><td colspan="${admin?6:5}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</td></tr>`:''}
+          ${sheet.rows.length===0?`<tr><td colspan="${admin?7:6}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</td></tr>`:''}
         </tbody>
       </table>
       </div>
     </div>
     <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3)">
       <b>Tổng số nhân viên:</b> ${sheet.rows.length}${shiftCountsTxt?` <span style="color:var(--text4)">(${shiftCountsTxt})</span>`:''}
+      ${(()=>{ const nghiCount = (sheet.rows||[]).filter(r=>llvActiveLeave(r.name)).length; return nghiCount>0?` <span style="color:#0e7490;font-weight:700">· 🏖️ ${nghiCount} người đang nghỉ theo đơn đã duyệt</span>`:''; })()}
     </div>
     `:`<div class="card" style="padding:24px;text-align:center;color:var(--text4)">Chưa có lịch làm việc nào${admin?' · bấm "➕ Thêm bộ phận" để tạo lịch đầu tiên':''}</div>`}
   `;
@@ -9413,11 +9441,15 @@ function llvExportExcel(sheetId){if(guardViewer())return;
   if(s.period) rows.push([`Ngày/tháng: ${s.period}`]);
   if(s.warning) rows.push([s.warning]);
   rows.push([]);
-  rows.push(['STT','HỌ VÀ TÊN','GIỚI TÍNH','THỜI GIAN','GHI CHÚ']);
+  rows.push(['STT','HỌ VÀ TÊN','GIỚI TÍNH','THỜI GIAN','TÌNH TRẠNG NGHỈ','GHI CHÚ']);
   groups.forEach(g=>{
     sectionRowIdxs.push(rows.length);
-    rows.push([`${g.meta.label.replace(/^\S+\s/,'')} — ${g.items.length} người`,'','','','']);
-    g.items.forEach(({r},gi)=>rows.push([gi+1, r.name||'', r.gender||'', r.time||'', r.note||'']));
+    rows.push([`${g.meta.label.replace(/^\S+\s/,'')} — ${g.items.length} người`,'','','','','']);
+    g.items.forEach(({r},gi)=>{
+      const leaveRec = llvActiveLeave(r.name);
+      const leaveTxt = leaveRec ? `Đang nghỉ: ${leaveRec.loai||''}${leaveRec.toDate?` (đến ${leaveRec.toDate})`:''}` : (r.leave||'');
+      rows.push([gi+1, r.name||'', r.gender||'', r.time||'', leaveTxt, r.note||'']);
+    });
   });
   rows.push([]);
   rows.push(['TỔNG SỐ NHÂN VIÊN', s.rows.length]);
@@ -9430,14 +9462,14 @@ function llvExportExcel(sheetId){if(guardViewer())return;
   }
 
   const headerRowIdx = rows.findIndex(r=>r[0]==='STT');
-  const nCols = 5;
+  const nCols = 6;
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const merges = [{s:{r:0,c:0}, e:{r:0,c:nCols-1}}];
   if(s.period) merges.push({s:{r:1,c:0}, e:{r:1,c:nCols-1}});
   if(s.warning) merges.push({s:{r:s.period?2:1,c:0}, e:{r:s.period?2:1,c:nCols-1}});
   sectionRowIdxs.forEach(ri=>merges.push({s:{r:ri,c:0}, e:{r:ri,c:nCols-1}}));
   ws['!merges'] = merges;
-  ws['!cols'] = [{wch:6},{wch:26},{wch:12},{wch:20},{wch:22}];
+  ws['!cols'] = [{wch:6},{wch:26},{wch:12},{wch:20},{wch:22},{wch:22}];
   ws['!freeze'] = {xSplit:0, ySplit:headerRowIdx+1};
   const range = XLSX.utils.decode_range(ws['!ref']);
   for(let R=headerRowIdx; R<=range.e.r-2; R++){
@@ -9484,11 +9516,15 @@ function llvPrint(sheetId, size){if(guardViewer())return;
     ${s.period?`<div class="sub">📅 Ngày/tháng: ${esc(s.period)}</div>`:''}
     ${s.warning?`<div class="warn">⚠️ ${esc(s.warning)}</div>`:''}
     <table>
-      <thead><tr><th>STT</th><th>Họ và tên</th><th>Giới tính</th><th>Thời gian</th><th>Ghi chú</th></tr></thead>
+      <thead><tr><th>STT</th><th>Họ và tên</th><th>Giới tính</th><th>Thời gian</th><th>Tình trạng nghỉ</th><th>Ghi chú</th></tr></thead>
       <tbody>
         ${groups.map(g=>`
-          <tr class="section"><td colspan="5">${esc(g.meta.label.replace(/^\S+\s/,''))} — ${g.items.length} người</td></tr>
-          ${g.items.map(({r},gi)=>`<tr><td>${gi+1}</td><td class="name">${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(r.time)}</td><td>${esc(r.note)}</td></tr>`).join('')}
+          <tr class="section"><td colspan="6">${esc(g.meta.label.replace(/^\S+\s/,''))} — ${g.items.length} người</td></tr>
+          ${g.items.map(({r},gi)=>{
+            const leaveRec = llvActiveLeave(r.name);
+            const leaveTxt = leaveRec ? `Đang nghỉ: ${leaveRec.loai||''}${leaveRec.toDate?` (đến ${leaveRec.toDate})`:''}` : (r.leave||'');
+            return `<tr><td>${gi+1}</td><td class="name">${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(r.time)}</td><td>${esc(leaveTxt)}</td><td>${esc(r.note)}</td></tr>`;
+          }).join('')}
         `).join('')}
       </tbody>
     </table>
@@ -10753,12 +10789,13 @@ async function renderPublicCcllv(){
     return;
   }
 
-  let workers=[], attendance={}, lichLamViec=[], errMsg=null;
+  let workers=[], attendance={}, lichLamViec=[], nghiPhep=[], errMsg=null;
   try{
-    const [rw, ra, rl] = await Promise.all([
+    const [rw, ra, rl, rn] = await Promise.all([
       fetch(dbUrl + '/data/workers.json?print=pretty', {cache:'no-store'}),
       fetch(dbUrl + '/data/attendance.json?print=pretty', {cache:'no-store'}),
-      fetch(dbUrl + '/data/lichLamViec.json?print=pretty', {cache:'no-store'})
+      fetch(dbUrl + '/data/lichLamViec.json?print=pretty', {cache:'no-store'}),
+      fetch(dbUrl + '/data/nghiPhep.json?print=pretty', {cache:'no-store'})
     ]);
     if(!rw.ok || !ra.ok || !rl.ok){
       const badStatus = [rw,ra,rl].map(r=>r.status).find(s=>s===401||s===403);
@@ -10767,9 +10804,11 @@ async function renderPublicCcllv(){
         : `⚠️ Không kết nối được tới máy chủ dữ liệu.<br>Vui lòng thử lại sau ít phút hoặc liên hệ nhà máy.`;
     } else {
       const dw = await rw.json(), da = await ra.json(), dl = await rl.json();
+      const dn = rn.ok ? await rn.json() : null;
       workers = Array.isArray(dw) ? dw.filter(Boolean) : Object.values(dw||{}).filter(Boolean);
       attendance = da || {};
       lichLamViec = Array.isArray(dl) ? dl.filter(Boolean) : Object.values(dl||{}).filter(Boolean);
+      nghiPhep = Array.isArray(dn) ? dn.filter(Boolean) : Object.values(dn||{}).filter(Boolean);
     }
   }catch(e){
     errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
@@ -10798,14 +10837,18 @@ async function renderPublicCcllv(){
           <div style="margin-top:8px">
             <div style="display:inline-block;padding:3px 10px;border-radius:10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700;font-size:12px;margin-bottom:6px">${g.meta.label} · ${g.items.length} người</div>
             <div style="display:flex;flex-direction:column;gap:0">
-              ${g.items.map(({r},gi)=>`
+              ${g.items.map(({r},gi)=>{
+                const leaveRec = llvActiveLeave(r.name, nghiPhep);
+                const leaveTxt = leaveRec ? `${leaveRec.loai||'Đang nghỉ'}${leaveRec.toDate?` · đến ${pubEsc(leaveRec.toDate)}`:''}` : (r.leave||'');
+                return `
                 <div style="display:flex;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border);font-size:12.5px">
                   <span style="color:var(--text4);min-width:18px">${gi+1}.</span>
                   <span style="flex:1;font-weight:700;color:var(--text)">${pubEsc(r.name||'—')}${r.gender?` <span style="font-weight:500;color:var(--text4)">(${pubEsc(r.gender)})</span>`:''}</span>
                   <span style="color:var(--text3)">${pubEsc(r.time||'')}</span>
                 </div>
+                ${leaveTxt?`<div style="font-size:11px;color:#0e7490;font-weight:700;padding:0 0 2px 26px">🏖️ ${pubEsc(leaveTxt)}</div>`:''}
                 ${r.note?`<div style="font-size:11px;color:var(--text4);padding:0 0 4px 26px">📝 ${pubEsc(r.note)}</div>`:''}
-              `).join('')}
+              `;}).join('')}
             </div>
           </div>
         `).join('') || '<div style="font-size:12px;color:var(--text4);padding:6px 0">Chưa có nhân viên trong lịch</div>'}
