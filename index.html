@@ -4692,6 +4692,70 @@ async function mergeAndSaveOrders(){
   fbSaveField('orders', '/data/orders', false, ()=>{ _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders); });
 }
 
+// ════════════════════════════════════════════════════════════
+// MERGE-BEFORE-WRITE cho /data/users
+// ────────────────────────────────────────────────────────────
+// LỖI GỐC: mọi thao tác tài khoản (thêm/sửa/xoá TK, đổi hồ sơ, đổi mật khẩu)
+// trước đây đều gọi saveAll() — hàm này GHI ĐÈ TOÀN BỘ node /data bằng bản
+// cục bộ, gồm CẢ orders/attendance/workers/kyLuat/nghiPhep/lichLamViec/
+// baoTri/qrProducts. Nếu đúng lúc đó thiết bị khác vừa thêm đơn hoặc đổi
+// trạng thái (mà thiết bị đang thao tác tài khoản chưa kịp nhận về qua
+// realtime/polling), thao tác tài khoản sẽ xoá mất luôn thay đổi đó — đúng
+// lỗi "mất dữ liệu mới khi thêm/thao tác trạng thái/tài khoản đã tạo".
+//
+// CÁCH SỬA: tách riêng saveUsers() chỉ ghi đúng nhánh /data/users (không đụng
+// các nhánh khác), đồng thời áp dụng cùng cơ chế merge theo từng tài khoản
+// như saveOrders(), để 2 admin cùng thêm/sửa tài khoản gần như đồng thời từ
+// 2 thiết bị cũng không ghi đè mất tài khoản của nhau.
+function snapshotUsers(list){
+  const m = {};
+  (list||[]).forEach(u=>{ if(u && u.id) m[u.id] = JSON.stringify(u); });
+  return m;
+}
+let _lastSyncedUsersSnapshot = {};
+
+function saveUsers(){if(guardViewer())return;
+  lsSave();
+  if(!fbOk()) return;
+  setSyncDot('saving');
+  markDirty('users');
+  beginSave();
+  mergeAndSaveUsers();
+}
+
+async function mergeAndSaveUsers(){
+  const localSnap = snapshotUsers(DB.users);
+  const changedIds = new Set();
+  Object.keys(localSnap).forEach(id=>{ if(localSnap[id]!==_lastSyncedUsersSnapshot[id]) changedIds.add(id); });
+  const removedIds = new Set();
+  Object.keys(_lastSyncedUsersSnapshot).forEach(id=>{ if(!localSnap[id]) removedIds.add(id); });
+
+  let merged;
+  try{
+    const serverRaw = await fbRead('/data/users');
+    const serverList = serverRaw ? (Array.isArray(serverRaw)?serverRaw:Object.values(serverRaw)) : [];
+    const mergedMap = {};
+    serverList.forEach(u=>{ if(u && u.id) mergedMap[u.id]=u; }); // nền = bản mới nhất trên server
+    DB.users.forEach(u=>{
+      if(!u || !u.id) return;
+      // chỉ ghi đè bằng bản cục bộ nếu: (a) tài khoản này CHÍNH thiết bị này
+      // vừa sửa, hoặc (b) tài khoản hoàn toàn mới chưa từng có trên server
+      if(changedIds.has(u.id) || !mergedMap[u.id]) mergedMap[u.id]=u;
+    });
+    removedIds.forEach(id=>{ delete mergedMap[id]; }); // tài khoản mình vừa xoá
+    merged = Object.values(mergedMap);
+  }catch(e){
+    // Không đọc được server (mất mạng...) → vẫn ghi bản cục bộ như cũ, để
+    // fbSaveField tự retry/đánh dấu dirty, không chặn thao tác người dùng
+    merged = DB.users;
+  }
+
+  DB.users = merged;
+  lsSave();
+  scheduleUIRefresh(false);
+  fbSaveField('users', '/data/users', false, ()=>{ _lastSyncedUsersSnapshot = snapshotUsers(DB.users); });
+}
+
 function saveAll(){if(guardViewer())return;
   lsSave();
   _lastHash = hashOrders(DB.orders);
@@ -5515,6 +5579,7 @@ async function initAndStartSync(){
         DB.orders.forEach(o=>_knownIds.add(o.id));
         _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
         _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
+        _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
       } else {
         // Lần đầu: đẩy data lên
         await fbWrite('/data', {orders:DB.orders, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri}, 'PUT');
@@ -5612,7 +5677,7 @@ function applyDataSnapshot(data){
   }
   if(data.users){
     const freshUsers = Array.isArray(data.users)?data.users:Object.values(data.users);
-    if(JSON.stringify(freshUsers) !== JSON.stringify(DB.users)){ DB.users = freshUsers; changed = true; }
+    if(JSON.stringify(freshUsers) !== JSON.stringify(DB.users)){ DB.users = freshUsers; _lastSyncedUsersSnapshot = snapshotUsers(DB.users); changed = true; }
   }
   if(data.attendance && JSON.stringify(data.attendance)!==JSON.stringify(DB.attendance)){ DB.attendance = data.attendance; _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); changed = true; }
   if(data.workers && JSON.stringify(data.workers)!==JSON.stringify(DB.workers)){ DB.workers = data.workers; changed = true; }
@@ -5676,6 +5741,7 @@ function applyFieldChange(field, val){
     const fresh = val ? (Array.isArray(val)?val:Object.values(val)) : DB.users;
     if(JSON.stringify(fresh)===JSON.stringify(DB.users)) return;
     DB.users = fresh;
+    _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
   } else {
     const fresh = val || (Array.isArray(DB[field])?[]:{});
     if(JSON.stringify(fresh)===JSON.stringify(DB[field])) return;
@@ -8427,6 +8493,7 @@ function renderChamCong(){
   const [y,m] = ym.split('-').map(Number);
   const nDays = daysInMonth(ym);
   const admin = isAdmin();
+  const viewer = isViewer();
   const monthData = DB.attendance[ym] || {};
   const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
   const workers = DB.workers;
@@ -8470,6 +8537,7 @@ function renderChamCong(){
           <button class="chip" onclick="changeAttMonth(todayStr().slice(0,7))">Tháng này</button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          ${viewer?'':`
           <button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="saveAllAttendance()">💾 Lưu chấm công</button>
           <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A4')">🖨️ In A4</button>
           <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A3')">🖨️ In A3</button>
@@ -8477,6 +8545,7 @@ function renderChamCong(){
           <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportAttendanceExcel()">⬇️ Xuất Excel</button>
           <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="openCcllvQrModal()">🏷 Tạo mã QR xem Chấm công &amp; Lịch làm việc</button>
           ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="addWorker()">➕ Thêm người lao động</button>`:''}
+          `}
         </div>
       </div>
       <div class="card" style="padding:8px;overflow-x:auto;margin-top:0">
@@ -8506,7 +8575,7 @@ function renderChamCong(){
                 ${dayCols.map(day=>{
                   const v = rowData[day]!==undefined ? rowData[day] : '';
                   return `<td style="border:1px solid var(--border);padding:0">
-                    <input id="cell_${w.id}_${day}" value="${v}" inputmode="decimal" onchange="setCell('${w.id}', ${day}, this.value)" style="width:30px;height:30px;border:none;background:transparent;text-align:center;font-size:11.5px;font-family:inherit;outline:none;color:var(--text)">
+                    <input id="cell_${w.id}_${day}" value="${v}" inputmode="decimal" ${viewer?'readonly':''} onchange="setCell('${w.id}', ${day}, this.value)" style="width:30px;height:30px;border:none;background:transparent;text-align:center;font-size:11.5px;font-family:inherit;outline:none;color:var(--text)${viewer?';cursor:default':''}">
                   </td>`;
                 }).join('')}
                 <td id="wkTotal_${w.id}" style="border:1px solid var(--border);padding:5px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${computeTotal(w.id)}</td>
@@ -10092,7 +10161,7 @@ async function saveUser(){if(guardViewer())return;
     log('Thêm TK',`${name} · @${username} · ${role}`,'',null,{username,role});
     showToast('✅ Đã thêm tài khoản');
   }
-  closeModal('userModal'); renderTab(currentTab); saveAll();
+  closeModal('userModal'); renderTab(currentTab); saveUsers();
 }
 function deleteUser(id){if(guardViewer())return;
   const u=DB.users.find(x=>x.id===id); if(!u) return;
@@ -10100,7 +10169,7 @@ function deleteUser(id){if(guardViewer())return;
   confirm2('Xóa tài khoản',`Xóa tài khoản "${u.name}" (@${u.username})?`,()=>{
     log('Xóa TK',`${u.name} · @${u.username}`,'',{username:u.username,role:u.role},null);
     DB.users=DB.users.filter(x=>x.id!==id);
-    renderTab(currentTab); showToast('Đã xóa tài khoản'); saveAll();
+    renderTab(currentTab); showToast('Đã xóa tài khoản'); saveUsers();
   });
 }
 function saveProfile(){if(guardViewer())return;
@@ -10111,7 +10180,7 @@ function saveProfile(){if(guardViewer())return;
   currentUser=DB.users[idx];
   $('sbName').textContent=currentUser.name;
   log('Sửa TK','Cập nhật thông tin cá nhân','');
-  closeModal('profileModal'); renderSettings(); showToast('✅ Đã lưu'); saveAll();
+  closeModal('profileModal'); renderSettings(); showToast('✅ Đã lưu'); saveUsers();
 }
 async function savePass(){if(guardViewer())return;
   const old=$('cpOld').value, nw=$('cpNew').value, cf=$('cpCf').value;
@@ -10125,7 +10194,7 @@ async function savePass(){if(guardViewer())return;
   delete DB.users[idx].password;
   currentUser=DB.users[idx];
   log('Đổi MK','Đổi mật khẩu thành công','');
-  closeModal('passModal'); showToast('✅ Đã đổi mật khẩu'); saveAll();
+  closeModal('passModal'); showToast('✅ Đã đổi mật khẩu'); saveUsers();
 }
 
 // ════════════════════════════════════════════════════════════
