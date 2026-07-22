@@ -3176,6 +3176,70 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 /* Desktop: 2 cột cạnh nhau */
 @media(min-width:700px){.dd-layout{flex-direction:row}.dd-col{flex:1;min-width:0}}
 
+/* ══════════ ĐƠN ĐANG LÀM v2 — ERP/MES Order Management ══════════ */
+.dd-overview{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:flex-end;font-size:11.5px;color:var(--text3);margin:-4px 0 12px}
+.dd-overview span b{color:var(--text);font-weight:800;margin-right:3px}
+.dd-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:640px){.dd-stats{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1180px){.dd-stats{grid-template-columns:repeat(7,1fr)}}
+.dd-stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .12s,box-shadow .15s,border-color .12s;box-shadow:var(--sh);text-align:left}
+.dd-stat:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.dd-stat.active{border-color:var(--brand);box-shadow:0 0 0 2px rgba(40,86,214,.16)}
+.dd-stat-ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.dd-stat-txt{min-width:0}
+.dd-stat-n{font-size:19px;font-weight:900;color:var(--text);line-height:1.15}
+.dd-stat-l{font-size:10.5px;color:var(--text3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dd-filters{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:9px}
+.dd-filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.dd-filters-row .search-wrap{flex:1;min-width:200px}
+.dd-fld{display:flex;flex-direction:column;gap:3px}
+.dd-fld label{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.dd-fld select,.dd-fld input[type=date]{border:1.5px solid var(--border);border-radius:9px;padding:7px 9px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--text);height:33px}
+.dd-reset-btn{border:1.5px solid var(--border);background:#fff;color:var(--text3);border-radius:9px;padding:0 13px;height:33px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+.dd-reset-btn:hover{background:var(--bg);color:var(--red-m);border-color:var(--red-m)}
+.dd-bulkbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;border-radius:12px;padding:9px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;box-shadow:var(--sh2)}
+.dd-bulkbar .dd-bulk-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.dd-bulkbar .dd-bulk-btn:hover{background:rgba(255,255,255,.26)}
+.dd-bulkbar .dd-bulk-clear{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
+.dd-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:auto;box-shadow:var(--sh)}
+.dd-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:1080px}
+.dd-table thead th{position:sticky;top:0;z-index:5;background:var(--bg2);color:var(--text3);font-weight:800;text-transform:uppercase;font-size:10.2px;letter-spacing:.3px;padding:11px 12px;text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap}
+.dd-table thead th:first-child,.dd-table tbody td:first-child{position:sticky;left:0;z-index:3;background:var(--card)}
+.dd-table thead th:first-child{z-index:6;background:var(--bg2)}
+.dd-table tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.dd-table tbody tr{cursor:pointer}
+.dd-table tbody tr:hover td{background:var(--bg2)}
+.dd-table tbody tr.is-new td{background:#F5F9FF}
+.dd-table tbody tr.is-new:hover td{background:#EAF2FF}
+.dd-table tbody tr.is-new td:first-child{box-shadow:inset 3px 0 0 var(--brand)}
+.dd-table tbody tr.is-overdue td{background:#FFF8F7}
+.dd-table tbody tr.is-overdue:hover td{background:#FEEEEC}
+.dd-code{font-weight:800;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+.dd-cust{font-weight:800;color:var(--text);font-size:13px;line-height:1.25}
+.dd-sub{font-size:10.5px;color:var(--text4);margin-top:1px;font-weight:500}
+.dd-new-pill{font-size:9px;font-weight:800;background:var(--brand);color:#fff;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.dd-status-pill{font-size:11px;font-weight:800;padding:4px 11px;border-radius:20px;white-space:nowrap;display:inline-block;border:1px solid transparent}
+.dd-due{font-weight:700;color:var(--text2)}
+.dd-due.overdue{color:var(--red-m)}
+.dd-actions{display:flex;gap:4px;align-items:center}
+.dd-act-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text3);transition:background .1s,color .1s,border-color .1s;flex-shrink:0}
+.dd-act-btn:hover{background:var(--bg);color:var(--brand);border-color:var(--brand3)}
+.dd-act-btn.plan{color:var(--brand);border-color:#93c5fd;background:#eff6ff}
+.dd-act-btn.plan:hover{background:var(--brand);color:#fff}
+.dd-menu-wrap{position:relative}
+.dd-menu{position:absolute;right:0;top:32px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--sh2);min-width:180px;z-index:30;overflow:hidden;display:none;text-align:left}
+.dd-menu.open{display:block}
+.dd-menu button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:9px 12px;border:none;background:none;font-size:12.5px;font-family:inherit;color:var(--text2);cursor:pointer}
+.dd-menu button:hover{background:var(--bg)}
+.dd-menu button.danger{color:var(--red-m)}
+.dd-check{width:16px;height:16px;cursor:pointer;accent-color:var(--brand)}
+.dd-empty-tbl{padding:44px 20px;text-align:center;color:var(--text4);font-size:13px}
+@media(max-width:700px){
+  .dd-stats{grid-template-columns:repeat(2,1fr)}
+  .dd-filters-row{flex-direction:column;align-items:stretch}
+  .dd-filters-row .dd-fld,.dd-filters-row select{width:100%}
+}
+
 /* ── ANNOUNCE BANNER: hiện cố định phía trên mọi tab ── */
 #announceBanner{display:none;position:sticky;top:0;z-index:90;margin:0 0 0 0;padding:0;background:transparent}
 /* ── ANNOUNCE BANNER ANIMATIONS ── */
@@ -3808,7 +3872,7 @@ body{letter-spacing:-.1px}
       </button>
       <button class="sb-item" id="sbi-dorDang" onclick="goTab('dorDang')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        Đơn đang làm <span class="sb-badge" id="sbBadge" style="display:none">0</span>
+        Đơn Hàng <span class="sb-badge" id="sbBadge" style="display:none">0</span>
       </button>
       <button class="sb-item" id="sbi-keHoach" onclick="goTab('keHoach')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -3913,7 +3977,7 @@ body{letter-spacing:-.1px}
       </button>
       <button class="bn" id="bn-dorDang" onclick="goTab('dorDang')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        Dở dang
+        Đơn Hàng
         <span class="bn-dot" id="bnDot"></span>
       </button>
       <button class="bn" id="bn-keHoach" onclick="goTab('keHoach')">
@@ -4378,6 +4442,19 @@ body{letter-spacing:-.1px}
   </div>
 </div>
 
+<!-- Modal: Xem chi tiết đơn hàng (Tab Đơn đang làm) -->
+<div class="modal" id="ddDetailModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ddDetailTitle">Chi tiết đơn hàng</div>
+    <div id="ddDetailBody" style="font-size:13px;color:var(--text2);line-height:1.9"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('ddDetailModal')">Đóng</button>
+      <button class="btn" style="background:var(--brand);color:#fff;flex:1" id="ddDetailEditBtn" onclick="">✏️ Chỉnh sửa</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════ MODULE QR: các modal ═══════ -->
 
 <!-- Modal: tạo hàng loạt mã QR khi đơn hàng hoàn thành -->
@@ -4565,6 +4642,10 @@ let DB = { orders:[], attendance:{}, workers:[], kyLuat:[], nghiPhep:[], lichLam
 let actLog = [];
 let searchQ = '';
 let filterStatus = 'all';
+// ── Trạng thái riêng cho tab "Đơn đang làm" (ERP order management) ──
+let ddRecvFrom = '', ddRecvTo = '';   // lọc theo ngày nhận đơn
+let ddDueFrom  = '', ddDueTo  = '';   // lọc theo hạn giao
+let ddSelected = new Set();          // các đơn đang được chọn để thao tác hàng loạt
 let _editOrderId = null;
 let _editUserId  = null;
 let _cfCb = null;
@@ -6016,7 +6097,7 @@ function fmtOnlineDuration(startTs){
 }
 
 const TAB_LABEL = {
-  dashboard:'Tổng quan', dorDang:'Đơn đang làm', keHoach:'Kế hoạch SX',
+  dashboard:'Tổng quan', dorDang:'Đơn Hàng', keHoach:'Kế hoạch SX',
   hoanThanh:'Đã hoàn thành', baoCao:'Báo cáo', nhatKy:'Nhật ký thao tác',
   chamCong:'Quản lý nhân sự', baoTriMay:'Bảo trì máy', lichLamViec:'Lịch làm việc', settings:'Cài đặt'
 };
@@ -6713,7 +6794,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn đang làm',keHoach:'Kế hoạch SX',hoanThanh:'Hoàn thành',baoCao:'Báo cáo',chamCong:'Quản lý nhân sự',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Hoàn thành',baoCao:'Báo cáo',chamCong:'Quản lý nhân sự',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
   $('pageTitle').textContent=titles[tab]||tab;
   // FAB: admin mới thấy nút thêm đơn
   // FAB: admin thấy nút + ở tất cả các tab
@@ -7429,10 +7510,6 @@ function renderDashboard(){
         <div class="stat-icon-wrap" style="background:#eff6ff">📋</div>
         <div class="stat-right"><div class="stat-num">${todayOrders}</div><div class="stat-lbl">Đơn hàng hôm nay</div></div>
       </div>
-      <div class="stat-card" onclick="goTab('keHoach')">
-        <div class="stat-icon-wrap" style="background:#dbeafe">⚙️</div>
-        <div class="stat-right"><div class="stat-num" style="color:var(--brand3)">${running}</div><div class="stat-lbl">Đang sản xuất</div></div>
-      </div>
       <div class="stat-card" onclick="goTab('hoanThanh')">
         <div class="stat-icon-wrap" style="background:var(--green-l)">✅</div>
         <div class="stat-right"><div class="stat-num" style="color:var(--green-m)">${doneToday}</div><div class="stat-lbl">Đã hoàn thành (hôm nay)</div></div>
@@ -7661,7 +7738,7 @@ function ddNewCard(o){
       ? Math.floor(age/3600000)+'g trước'
       : Math.floor(age/86400000)+'ngày trước';
   const isNew = age < 3600000;
-  return `<div class="dd-new-card" data-order-id="${o.id}" onclick="goTab('keHoach')">
+  return `<div class="dd-new-card" data-order-id="${o.id}" onclick="goToOrderInPlan('${o.id}')">
     <div class="dd-new-dot" style="background:${s==='running'?'#3b82f6':s==='done'?'#10b981':'#f59e0b'};${s==='running'?'animation:pulse 1.5s infinite':''}"></div>
     <div class="dd-new-body">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
@@ -7754,6 +7831,292 @@ function ddPriCard(o, rank){
   </div>`;
 }
 
+// ════════════════════════════════════════════════════════════════
+// ĐƠN ĐANG LÀM v2 — Trung tâm quản lý đơn hàng (ERP/MES style)
+// Chỉ quản lý & theo dõi đơn hàng — KHÔNG hiển thị tiến độ sản xuất
+// (tiến độ đã có ở tab "Kế hoạch SX").
+// ════════════════════════════════════════════════════════════════
+
+// Đơn có phải "mới nhập" trong 24h gần nhất không
+function ddIsNew(o){ return !!o.createdAt && (Date.now()-o.createdAt) < 86400000; }
+
+// Đơn có quá hạn giao không (chỉ tính khi chưa xong/chưa giao)
+function ddOverdue(o){
+  return o.status!=='done' && !o.delivered && !!o.deliveryDate && new Date(o.deliveryDate) < new Date(new Date().toDateString());
+}
+
+// Trạng thái hiển thị theo đúng 5 mốc nghiệp vụ yêu cầu
+function ddStatusMeta(o){
+  const s = o.status==='cutting'?'running':o.status;
+  if(s==='done'){
+    return o.delivered
+      ? {key:'delivered', label:'Đã giao', color:'#6D28D9', bg:'#F3E8FF', border:'#D8B4FE', dot:'#8B5CF6'}
+      : {key:'completed', label:'Hoàn thành', color:'#0C7A54', bg:'#E3F5EE', border:'#86EFAC', dot:'#15966C'};
+  }
+  if(s==='running'){
+    return {key:'producing', label:'Đang sản xuất', color:'#C2700A', bg:'#FCF0DE', border:'#FCD34D', dot:'#F59E0B'};
+  }
+  return o.planned
+    ? {key:'planned', label:'Đã lập kế hoạch', color:'#2856D6', bg:'#DBEAFE', border:'#93C5FD', dot:'#3B82F6'}
+    : {key:'unplanned', label:'Chưa lập kế hoạch', color:'#556072', bg:'#EEF0F3', border:'#CBD5E1', dot:'#94A3B8'};
+}
+
+// Người phụ trách = người đã tạo đơn (dữ liệu gần nhất hiện có cho việc này)
+// Nhãn nguyên liệu thân thiện, lấy đúng từ lựa chọn khi thêm đơn (A/B*/B/Khác)
+function ddMaterialLabel(mat){
+  const map = {'A':'A (đồng tấm)', 'B*':'B* (onsan)', 'B':'B', 'Khác':'Khác'};
+  return map[mat] || mat || '—';
+}
+
+function ddOwner(o){
+  const u = (DB.users||[]).find(u=>u.id===o.createdBy);
+  return u ? u.name : '—';
+}
+
+// Mã đơn hiển thị: ưu tiên số PO, không có thì sinh mã ngắn từ id
+function ddCode(o){
+  if(o.po) return o.po;
+  return 'DH'+String(o.id||'').replace(/[^a-zA-Z0-9]/g,'').slice(-6).toUpperCase();
+}
+
+function ddInRange(ts, from, to){
+  if(!ts) return !from && !to;
+  const d = new Date(ts); d.setHours(0,0,0,0);
+  if(from && d < new Date(from)) return false;
+  if(to && d > new Date(to)) return false;
+  return true;
+}
+
+// Sắp xếp thông minh mặc định: Mới nhập → Chưa lập kế hoạch → Sắp đến hạn giao → Còn lại
+function ddSmartSort(list){
+  return [...list].sort((a,b)=>{
+    const an=ddIsNew(a)?0:1, bn=ddIsNew(b)?0:1;
+    if(an!==bn) return an-bn;
+    const am=ddStatusMeta(a).key==='unplanned'?0:1, bm=ddStatusMeta(b).key==='unplanned'?0:1;
+    if(am!==bm) return am-bm;
+    const ad=a.deliveryDate?new Date(a.deliveryDate).getTime():Infinity;
+    const bd=b.deliveryDate?new Date(b.deliveryDate).getTime():Infinity;
+    if(ad!==bd) return ad-bd;
+    return (b.createdAt||0)-(a.createdAt||0);
+  });
+}
+
+function ddResetFilters(){
+  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddRecvTo=''; ddDueFrom=''; ddDueTo='';
+  renderDorDang();
+}
+
+function ddSetStatusFilter(key){
+  filterStatus = (filterStatus===key) ? 'all' : key;
+  renderDorDang();
+}
+
+function ddToggleSelect(id, checked){
+  if(checked) ddSelected.add(id); else ddSelected.delete(id);
+  renderDorDang();
+}
+
+let _ddVisibleIds = [];
+function ddToggleSelectAll(checked){
+  if(checked) _ddVisibleIds.forEach(id=>ddSelected.add(id));
+  else _ddVisibleIds.forEach(id=>ddSelected.delete(id));
+  renderDorDang();
+}
+
+function ddClearSelection(){ ddSelected.clear(); renderDorDang(); }
+
+function ddToggleMenu(id, ev){
+  if(ev) ev.stopPropagation();
+  document.querySelectorAll('.dd-menu.open').forEach(m=>{ if(m.id!=='ddmenu-'+id) m.classList.remove('open'); });
+  const m = document.getElementById('ddmenu-'+id);
+  if(m) m.classList.toggle('open');
+}
+document.addEventListener('click', ()=>{ document.querySelectorAll('.dd-menu.open').forEach(m=>m.classList.remove('open')); });
+
+// ── Lập kế hoạch nhanh cho 1 đơn ──
+function ddMarkPlanned(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  if(o.status!=='pending'){ showToast('Đơn này đã ở giai đoạn sản xuất/hoàn tất',true); return; }
+  if(o.planned){ goToOrderInPlan(id); return; }
+  o.planned=true; o.plannedAt=Date.now();
+  log('Lập kế hoạch sản xuất', `${o.customer||''} · ${ddCode(o)}`, id, {planned:false}, {planned:true});
+  saveOrders();
+  showToast('📋 Đã lập kế hoạch — chuyển sang Kế hoạch SX');
+  goToOrderInPlan(id);
+}
+
+// ── Đánh dấu / bỏ đánh dấu đã giao ──
+function ddToggleDelivered(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  if(o.status!=='done'){ showToast('Chỉ đơn đã hoàn thành mới đánh dấu được là đã giao', true); return; }
+  o.delivered = !o.delivered; o.deliveredAt = o.delivered?Date.now():null;
+  log(o.delivered?'Đánh dấu đã giao hàng':'Bỏ đánh dấu đã giao', `${o.customer||''} · ${ddCode(o)}`, id, {}, {});
+  saveOrders();
+  showToast(o.delivered?'🚚 Đã đánh dấu giao hàng':'Đã bỏ đánh dấu giao hàng');
+  renderDorDang();
+}
+
+function ddDeleteRow(id, ev){
+  if(ev) ev.stopPropagation();
+  deleteOrder(id);
+}
+
+function ddEditRow(id, ev){
+  if(ev) ev.stopPropagation();
+  editOrder(id);
+}
+
+// ── Xem chi tiết đơn (chỉ thông tin quản lý, không có tiến độ SX) ──
+function ddViewDetail(id){
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  const meta = ddStatusMeta(o), overdue = ddOverdue(o);
+  $('ddDetailTitle').textContent = `${o.customer||'—'} · ${ddCode(o)}`;
+  $('ddDetailBody').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      <span class="dd-status-pill" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span>
+      ${ddIsNew(o)?'<span class="dd-new-pill">MỚI</span>':''}
+      ${overdue?'<span class="dd-status-pill" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5">⚠️ Quá hạn giao</span>':''}
+    </div>
+    <div><b>Khách hàng:</b> ${o.customer||'—'}</div>
+    <div><b>Sản phẩm:</b> ${o.type||'—'}</div>
+    <div><b>Nguyên liệu:</b> ${ddMaterialLabel(o.material)}</div>
+    <div><b>Quy cách:</b> ${specStr(o)}</div>
+    <div><b>Số lượng:</b> ${qtyLabel(o)}${o.kg?' · ⚖️ '+o.kg+'kg':''}</div>
+    <div><b>Mức ưu tiên:</b> ${o.priority||'—'}</div>
+    ${o.po?`<div><b>Số PO:</b> ${o.po}</div>`:''}
+    <div><b>Ngày nhận đơn:</b> ${fmtDateTime(o.createdAt)}</div>
+    <div><b>Hạn giao:</b> ${fmtDate(o.deliveryDate)}</div>
+    <div><b>Người phụ trách:</b> ${ddOwner(o)}</div>
+    ${o.address?`<div><b>Địa chỉ giao:</b> ${o.address}</div>`:''}
+    ${o.note?`<div style="margin-top:8px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${o.note}</div>`:''}
+  `;
+  const editBtn = $('ddDetailEditBtn');
+  if(editBtn) editBtn.onclick = ()=>{ closeModal('ddDetailModal'); editOrder(id); };
+  openModal('ddDetailModal');
+}
+
+// ── In phiếu 1 đơn hàng ──
+function ddPrintOrder(id, ev){
+  if(ev) ev.stopPropagation();
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  const meta = ddStatusMeta(o);
+  const w = window.open('', '_blank', 'width=720,height=920');
+  if(!w){ showToast('Trình duyệt đang chặn cửa sổ in, vui lòng cho phép popup', true); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${ddCode(o)}</title>
+  <style>body{font-family:Inter,Arial,sans-serif;padding:28px;color:#151924}
+  h1{font-size:19px;margin:0 0 10px}
+  .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-weight:700;font-size:12px;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;margin-top:6px}
+  td{padding:7px 8px;border-bottom:1px solid #e4e7ee;font-size:13.5px}
+  td.lbl{color:#646c7c;width:170px;font-weight:600}</style></head><body>
+  <h1>PHIẾU ĐƠN HÀNG — ${ddCode(o)}</h1>
+  <div class="pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</div>
+  <table>
+    <tr><td class="lbl">Khách hàng</td><td>${o.customer||'—'}</td></tr>
+    <tr><td class="lbl">Sản phẩm</td><td>${o.type||'—'}</td></tr>
+    <tr><td class="lbl">Nguyên liệu</td><td>${ddMaterialLabel(o.material)}</td></tr>
+    <tr><td class="lbl">Quy cách</td><td>${specStr(o)}</td></tr>
+    <tr><td class="lbl">Số lượng</td><td>${qtyLabel(o)}${o.kg?' · '+o.kg+'kg':''}</td></tr>
+    <tr><td class="lbl">Mức ưu tiên</td><td>${o.priority||'—'}</td></tr>
+    <tr><td class="lbl">Ngày nhận đơn</td><td>${fmtDate(o.createdAt)}</td></tr>
+    <tr><td class="lbl">Hạn giao</td><td>${fmtDate(o.deliveryDate)}</td></tr>
+    <tr><td class="lbl">Người phụ trách</td><td>${ddOwner(o)}</td></tr>
+    ${o.note?`<tr><td class="lbl">Ghi chú</td><td>${o.note}</td></tr>`:''}
+  </table>
+  </body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(()=>w.print(), 300);
+}
+
+// ── Thao tác hàng loạt ──
+function ddBulkPlan(){
+  if(guardViewer())return;
+  if(!ddSelected.size){ showToast('Chưa chọn đơn nào', true); return; }
+  let n=0;
+  DB.orders.forEach(o=>{ if(ddSelected.has(o.id) && o.status==='pending' && !o.planned){ o.planned=true; o.plannedAt=Date.now(); n++; } });
+  if(n){
+    log('Lập kế hoạch hàng loạt', `${n} đơn hàng`, null, {}, {});
+    saveOrders();
+    showToast(`📋 Đã lập kế hoạch cho ${n} đơn`);
+  } else showToast('Không có đơn nào trong lựa chọn cần lập kế hoạch', true);
+  ddSelected.clear();
+  renderDorDang();
+}
+
+function ddBulkPrint(){
+  if(!ddSelected.size){ showToast('Chưa chọn đơn nào', true); return; }
+  const list = DB.orders.filter(o=>ddSelected.has(o.id));
+  const w = window.open('', '_blank');
+  if(!w){ showToast('Trình duyệt đang chặn cửa sổ in, vui lòng cho phép popup', true); return; }
+  const rows = list.map(o=>`<tr><td>${ddCode(o)}</td><td>${o.customer||'—'}</td><td>${o.type||'—'}</td><td>${ddMaterialLabel(o.material)}</td><td>${specStr(o)}</td><td>${qtyLabel(o)}</td><td>${fmtDate(o.deliveryDate)}</td><td>${ddStatusMeta(o).label}</td></tr>`).join('');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Danh sách đơn hàng</title>
+  <style>body{font-family:Inter,Arial,sans-serif;padding:22px}table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #ccc;padding:6px 8px;font-size:12px;text-align:left}th{background:#f4f6fa}
+  h2{font-size:16px}</style></head><body>
+  <h2>Danh sách đơn hàng (${list.length})</h2>
+  <table><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Nguyên liệu</th><th>Quy cách</th><th>SL</th><th>Hạn giao</th><th>Trạng thái</th></tr></thead><tbody>${rows}</tbody></table>
+  </body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(()=>w.print(), 300);
+}
+
+function ddBulkExport(){
+  if(!ddSelected.size){ showToast('Chưa chọn đơn nào', true); return; }
+  if(typeof XLSX==='undefined'){ showToast('⏳ Đang tải thư viện Excel, thử lại sau...', true); loadSheetJs(); return; }
+  const list = DB.orders.filter(o=>ddSelected.has(o.id));
+  const rows = list.map(o=>({
+    'Mã đơn':ddCode(o), 'Khách hàng':o.customer||'', 'Sản phẩm':o.type||'', 'Nguyên liệu':ddMaterialLabel(o.material), 'Quy cách':specStr(o),
+    'Số lượng':qtyLabel(o), 'KG':o.kg||'', 'Ngày nhận đơn':fmtDate(o.createdAt), 'Hạn giao':fmtDate(o.deliveryDate),
+    'Trạng thái':ddStatusMeta(o).label, 'Người phụ trách':ddOwner(o), 'Ghi chú':o.note||''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'DonHang');
+  XLSX.writeFile(wb, `danh-sach-don-hang-${Date.now()}.xlsx`);
+}
+
+// ── 1 dòng trong bảng ──
+function ddRow(o){
+  const meta = ddStatusMeta(o);
+  const isNew = ddIsNew(o);
+  const overdue = ddOverdue(o);
+  const checked = ddSelected.has(o.id);
+  const canEdit = isAdmin(), canPlan = isStaff() && o.status==='pending';
+  return `<tr data-order-id="${o.id}" class="${isNew?'is-new':''}${overdue?' is-overdue':''}" onclick="ddViewDetail('${o.id}')">
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="dd-check" ${checked?'checked':''} onchange="ddToggleSelect('${o.id}', this.checked)"></td>
+    <td><span class="dd-code">${ddCode(o)}</span>${isNew?'<span class="dd-new-pill">MỚI</span>':''}</td>
+    <td><div class="dd-cust">${o.customer||'—'}</div>${o.po?`<div class="dd-sub">PO: ${o.po}</div>`:''}</td>
+    <td>${o.type||'—'}</td>
+    <td>${ddMaterialLabel(o.material)}</td>
+    <td>${specStr(o)}</td>
+    <td>${qtyLabel(o)}${o.kg?`<div class="dd-sub">⚖️ ${o.kg}kg</div>`:''}</td>
+    <td>${fmtDate(o.createdAt)}</td>
+    <td><span class="dd-due${overdue?' overdue':''}">${fmtDate(o.deliveryDate)}</span>${overdue?'<div class="dd-sub" style="color:var(--red-m);font-weight:700">⚠️ Quá hạn</div>':''}</td>
+    <td><span class="dd-status-pill" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span></td>
+    <td>${ddOwner(o)}</td>
+    <td onclick="event.stopPropagation()">
+      <div class="dd-actions">
+        <button class="dd-act-btn" title="Xem chi tiết" onclick="ddViewDetail('${o.id}')">👁</button>
+        ${canEdit?`<button class="dd-act-btn" title="Chỉnh sửa" onclick="ddEditRow('${o.id}',event)">✏️</button>`:''}
+        ${canPlan?`<button class="dd-act-btn plan" title="Lập kế hoạch" onclick="ddMarkPlanned('${o.id}',event)">📋</button>`:''}
+        <button class="dd-act-btn" title="In phiếu" onclick="ddPrintOrder('${o.id}',event)">🖨</button>
+        <div class="dd-menu-wrap">
+          <button class="dd-act-btn" title="Thêm" onclick="ddToggleMenu('${o.id}',event)">⋯</button>
+          <div class="dd-menu" id="ddmenu-${o.id}">
+            <button onclick="event.stopPropagation();goTab('keHoach')">🏭 Xem ở Kế hoạch SX</button>
+            ${o.status==='done'?`<button onclick="ddToggleDelivered('${o.id}',event)">${o.delivered?'↩️ Bỏ đánh dấu đã giao':'🚚 Đánh dấu đã giao'}</button>`:''}
+            ${canEdit?`<button class="danger" onclick="ddDeleteRow('${o.id}',event)">🗑 Xóa đơn</button>`:''}
+          </div>
+        </div>
+      </div>
+    </td>
+  </tr>`;
+}
+
 function renderDorDang(){
   const inpOld = document.getElementById('srchInp');
   let caretPos = null, hadFocus = false;
@@ -7762,58 +8125,103 @@ function renderDorDang(){
     hadFocus = document.activeElement===inpOld;
     caretPos = inpOld.selectionStart;
   }
-  const getPri = o => parseInt((o.priority||'GẤP 9').replace('GẤP ',''))||9;
-  let allActive = DB.orders.filter(o=>o.status!=='done');
-  const total = allActive.length;
-  let newList = [...allActive].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  // Cột 2: AI sắp xếp thông minh — đơn thật sự khẩn cấp (quá hạn/chạy quá lâu)
-  // được VƯỢT CẤP lên trên mọi đơn khác, kể cả GẤP thấp hơn. Trong cùng nhóm
-  // (khẩn cấp hay bình thường), giữ thứ tự GẤP 1→8, cùng cấp thì AI score cao lên trước.
-  let priList = [...allActive].sort((a,b)=>{
-    const aiA=aiAnalyzeOrder(a), aiB=aiAnalyzeOrder(b);
-    if(aiA.critical!==aiB.critical) return aiA.critical?-1:1; // khẩn cấp luôn lên đầu
-    const pa=getPri(a), pb=getPri(b);
-    if(pa!==pb) return pa-pb; // GẤP 1 trước GẤP 2...
-    return aiB.score-aiA.score; // cùng cấp: nguy cấp hơn lên đầu
-  });
-  if(searchQ){ newList=newList.filter(o=>matchSearch(o,searchQ)); priList=priList.filter(o=>matchSearch(o,searchQ)); }
-  if(filterStatus!=='all'){ const f=o=>filterStatus==='running'?o.status==='running'||o.status==='cutting':o.status===filterStatus; newList=newList.filter(f); priList=priList.filter(f); }
-  const doneCount = DB.orders.filter(o=>o.status==='done').length;
+  const all = DB.orders;
+  const total = all.length;
+  const newCount   = all.filter(ddIsNew).length;
+  const unplanned  = all.filter(o=>ddStatusMeta(o).key==='unplanned').length;
+  const plannedCnt = all.filter(o=>ddStatusMeta(o).key==='planned').length;
+  const producing  = all.filter(o=>ddStatusMeta(o).key==='producing').length;
+  const completed  = all.filter(o=>ddStatusMeta(o).key==='completed').length;
+  const delivered  = all.filter(o=>ddStatusMeta(o).key==='delivered').length;
+  const totalCustomers = new Set(all.map(o=>o.customer).filter(Boolean)).size;
+  const totalKg = all.reduce((s,o)=>s+(Number(o.kg)||0),0);
+
+  // Áp bộ lọc
+  let list = all;
+  if(searchQ) list = list.filter(o=>matchSearch(o,searchQ));
+  if(filterStatus!=='all'){
+    if(filterStatus==='new') list = list.filter(ddIsNew);
+    else list = list.filter(o=>ddStatusMeta(o).key===filterStatus);
+  }
+  if(ddRecvFrom||ddRecvTo) list = list.filter(o=>ddInRange(o.createdAt, ddRecvFrom, ddRecvTo));
+  if(ddDueFrom||ddDueTo) list = list.filter(o=>ddInRange(o.deliveryDate, ddDueFrom, ddDueTo));
+  list = ddSmartSort(list);
+
+  const stats = [
+    {key:'all',        icon:'📦', ic:'#EEF0F3', col:'#556072', n:total,       l:'Tổng đơn hàng'},
+    {key:'new',        icon:'🆕', ic:'#DBEAFE', col:'#2856D6', n:newCount,    l:'Đơn mới (24h)'},
+    {key:'unplanned',  icon:'⏳', ic:'#EEF0F3', col:'#556072', n:unplanned,   l:'Chưa lập kế hoạch'},
+    {key:'planned',    icon:'📋', ic:'#DBEAFE', col:'#2856D6', n:plannedCnt,  l:'Đã lập kế hoạch'},
+    {key:'producing',  icon:'⚙️', ic:'#FCF0DE', col:'#C2700A', n:producing,   l:'Đang sản xuất'},
+    {key:'completed',  icon:'✅', ic:'#E3F5EE', col:'#0C7A54', n:completed,   l:'Hoàn thành'},
+    {key:'delivered',  icon:'🚚', ic:'#F3E8FF', col:'#6D28D9', n:delivered,   l:'Đã giao'},
+  ];
+
+  const selIds = list.map(o=>o.id);
+  _ddVisibleIds = selIds;
+  const allChecked = selIds.length>0 && selIds.every(id=>ddSelected.has(id));
+
   $('mc').innerHTML=`
-    <div class="dd-toolbar">
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-inp" id="srchInp" type="search" placeholder="🔍 Tìm khách hàng, PO, mã, kích thước, ưu tiên..." value="${searchQ}" autocomplete="off" spellcheck="false">
-        ${searchQ?`<button onclick="clearSearch()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
+    <div class="dd-overview">
+      <span><b>${total}</b>đơn đang quản lý</span>
+      <span><b>${totalCustomers}</b>khách hàng</span>
+      <span><b>${totalKg.toLocaleString('vi-VN')}kg</b>tổng sản lượng</span>
+    </div>
+
+    <div class="dd-stats">
+      ${stats.map(s=>`<button class="dd-stat${filterStatus===s.key?' active':''}" onclick="ddSetStatusFilter('${s.key}')">
+        <div class="dd-stat-ic" style="background:${s.ic};color:${s.col}">${s.icon}</div>
+        <div class="dd-stat-txt"><div class="dd-stat-n">${s.n}</div><div class="dd-stat-l">${s.l}</div></div>
+      </button>`).join('')}
+    </div>
+
+    <div class="dd-filters">
+      <div class="dd-filters-row">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-inp" id="srchInp" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, PO, quy cách..." value="${searchQ}" autocomplete="off" spellcheck="false">
+          ${searchQ?`<button onclick="clearSearch()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
+        </div>
+        <div class="dd-fld">
+          <label>Trạng thái</label>
+          <select onchange="filterStatus=this.value;renderDorDang()">
+            <option value="all">Tất cả</option>
+            <option value="unplanned" ${filterStatus==='unplanned'?'selected':''}>Chưa lập kế hoạch</option>
+            <option value="planned" ${filterStatus==='planned'?'selected':''}>Đã lập kế hoạch</option>
+            <option value="producing" ${filterStatus==='producing'?'selected':''}>Đang sản xuất</option>
+            <option value="completed" ${filterStatus==='completed'?'selected':''}>Hoàn thành</option>
+            <option value="delivered" ${filterStatus==='delivered'?'selected':''}>Đã giao</option>
+          </select>
+        </div>
+        <button class="dd-reset-btn" onclick="ddResetFilters()">↺ Reset bộ lọc</button>
       </div>
-      <div class="chips">
-        <button class="chip${filterStatus==='all'?' active':''}" onclick="filterStatus='all';renderDorDang()">Tất cả (${total})</button>
-        <button class="chip${filterStatus==='pending'?' active':''}" onclick="filterStatus='pending';renderDorDang()">⏳ Chờ SX</button>
-        <button class="chip${filterStatus==='running'?' active':''}" onclick="filterStatus='running';renderDorDang()">⚙️ Đang chạy</button>
-        <button class="chip chip-done" onclick="goTab('hoanThanh')">✅ Xem hoàn thành (${doneCount})</button>
+      <div class="dd-filters-row">
+        <div class="dd-fld"><label>Ngày nhận từ</label><input type="date" value="${ddRecvFrom}" onchange="ddRecvFrom=this.value;renderDorDang()"></div>
+        <div class="dd-fld"><label>Ngày nhận đến</label><input type="date" value="${ddRecvTo}" onchange="ddRecvTo=this.value;renderDorDang()"></div>
+        <div class="dd-fld"><label>Hạn giao từ</label><input type="date" value="${ddDueFrom}" onchange="ddDueFrom=this.value;renderDorDang()"></div>
+        <div class="dd-fld"><label>Hạn giao đến</label><input type="date" value="${ddDueTo}" onchange="ddDueTo=this.value;renderDorDang()"></div>
       </div>
     </div>
-    ${searchQ?`<div style="font-size:12px;color:var(--text3);padding:0 0 4px">Tìm thấy <b>${priList.length}</b> đơn</div>`:''}
-    ${total===0&&!searchQ
-      ? '<div class="empty"><div class="empty-icon">📦</div>Chưa có đơn nào đang làm</div>'
-      : `<div class="dd-layout">
-      <div class="dd-col">
-        <div class="dd-col-hd" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
-          <div class="dd-col-hd-icon" style="background:#dbeafe">🆕</div>
-          <div class="dd-col-hd-info"><div class="dd-col-hd-title">Đơn mới cập nhật</div><div class="dd-col-hd-sub">Thứ tự theo thời gian nhập</div></div>
-          <span class="dd-col-hd-badge" style="background:var(--brand);color:#fff">${newList.length}</span>
-        </div>
-        <div>${newList.length?newList.map(o=>ddNewCard(o)).join(''):'<div class="dd-empty-col">Không có đơn nào</div>'}</div>
-      </div>
-      <div class="dd-col">
-        <div class="dd-col-hd" style="background:linear-gradient(135deg,#fff7ed,#fef3c7)">
-          <div class="dd-col-hd-icon" style="background:#fef3c7">🤖</div>
-          <div class="dd-col-hd-info"><div class="dd-col-hd-title">Thứ tự ưu tiên AI</div><div class="dd-col-hd-sub">Nguy cấp nhất · Ưu tiên cao nhất</div></div>
-          <span class="dd-col-hd-badge" style="background:#f59e0b;color:#fff">${priList.length}</span>
-        </div>
-        <div>${priList.length?priList.map((o,i)=>ddPriCard(o,i+1)).join(''):'<div class="dd-empty-col">Không có đơn nào</div>'}</div>
-      </div>
-    </div>`}
+
+    ${ddSelected.size?`<div class="dd-bulkbar">
+      <b>${ddSelected.size} đơn đã chọn</b>
+      <button class="dd-bulk-btn" onclick="ddBulkPlan()">📋 Lập kế hoạch</button>
+      <button class="dd-bulk-btn" onclick="ddBulkPrint()">🖨 In</button>
+      <button class="dd-bulk-btn" onclick="ddBulkExport()">📊 Xuất Excel</button>
+      <button class="dd-bulk-clear" onclick="ddClearSelection()">Bỏ chọn</button>
+    </div>`:''}
+
+    ${!list.length
+      ? `<div class="dd-table-wrap"><div class="dd-empty-tbl">${searchQ||filterStatus!=='all'||ddRecvFrom||ddDueFrom?'🔍 Không tìm thấy đơn hàng phù hợp':'📦 Chưa có đơn hàng nào trong hệ thống'}</div></div>`
+      : `<div class="dd-table-wrap"><table class="dd-table">
+        <thead><tr>
+          <th><input type="checkbox" class="dd-check" ${allChecked?'checked':''} onchange="ddToggleSelectAll(this.checked)"></th>
+          <th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Nguyên liệu</th><th>Quy cách</th><th>Số lượng</th>
+          <th>Ngày nhận</th><th>Hạn giao</th><th>Trạng thái</th><th>Người phụ trách</th><th>Thao tác</th>
+        </tr></thead>
+        <tbody>${list.map(ddRow).join('')}</tbody>
+      </table></div>
+      <div style="font-size:11.5px;color:var(--text4);padding:8px 2px">Hiển thị ${list.length} / ${total} đơn hàng</div>`}
   `;
   const ni=document.getElementById('srchInp');
   if(ni){
