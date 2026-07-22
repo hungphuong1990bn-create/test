@@ -10381,16 +10381,72 @@ const LLV_SHIFT_META = {
 const LLV_SHIFT_ORDER = ['ca1','ca2','ca3','hc','tangca','nghi','khac'];
 const LLV_TIME_PRESETS = ['Ca 1 : 6h – 14h','Ca 2 : 14h – 22h','Ca 3 : 22h – 6h','HC : 7h – 17h','Tăng ca : 6h – 17h','Nghỉ ( không xếp ca)'];
 
-// ── Tự động dò đơn nghỉ phép đã duyệt đang hiệu lực (hôm nay) cho 1 nhân viên ──
+// ── Dò ngày áp dụng (Từ ngày → Đến ngày) của 1 lịch làm việc, dựa vào ô nhập tay
+// "📅 Thời gian áp dụng" (sheet.period), ví dụ: "23/7 - 24/7", "23-24/7/2026",
+// "Từ 23/7 đến 24/7", "23/07/2026 - 24/07/2026"... Trả về {from,to} dạng
+// 'YYYY-MM-DD', hoặc null nếu không dò được ngày nào trong chuỗi.
+function llvNormYear(y){ y=+y; return y<100 ? 2000+y : y; }
+function llvMkDateStr(y,mo,d){
+  if(!(mo>=1&&mo<=12&&d>=1&&d<=31)) return null;
+  return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+function llvParseOneDateTok(tok, defYear){
+  const mm = tok.match(/(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*\/\s*(\d{2,4}))?/);
+  if(!mm) return null;
+  const d=+mm[1], mo=+mm[2], y = mm[3]?llvNormYear(mm[3]):defYear;
+  return llvMkDateStr(y,mo,d);
+}
+function llvParsePeriod(text){
+  const t = (text||'').trim();
+  if(!t) return null;
+  const curYear = new Date().getFullYear();
+  // Dạng đầy đủ 2 ngày: "23/7 - 24/7", "23/7/2026 đến 24/7/2026", "23/7 → 24/7"...
+  // Ưu tiên khớp trước để không bị hàm rút gọn bên dưới "ăn" nhầm 1 phần ngày.
+  let m = t.match(/(\d{1,2}\s*\/\s*\d{1,2}(?:\s*\/\s*\d{2,4})?)\s*(?:-|–|—|đến|tới|->|→)\s*(\d{1,2}\s*\/\s*\d{1,2}(?:\s*\/\s*\d{2,4})?)/i);
+  if(m){
+    const d1 = llvParseOneDateTok(m[1], curYear);
+    const d2 = llvParseOneDateTok(m[2], curYear);
+    if(d1 && d2) return d1<=d2 ? {from:d1,to:d2} : {from:d2,to:d1};
+  }
+  // Dạng rút gọn "23-24/7" hoặc "23-24/7/2026" (2 ngày chung 1 tháng/năm)
+  m = t.match(/(\d{1,2})\s*-\s*(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*\/\s*(\d{2,4}))?/);
+  if(m){
+    const d1=+m[1], d2=+m[2], mo=+m[3], y = m[4]?llvNormYear(m[4]):curYear;
+    const from = llvMkDateStr(y,mo,Math.min(d1,d2)), to = llvMkDateStr(y,mo,Math.max(d1,d2));
+    if(from && to) return {from, to};
+  }
+  // Dạng chung: gom tất cả ngày dd/mm(/yyyy) xuất hiện trong chuỗi, lấy min→max
+  const re = /(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*\/\s*(\d{2,4}))?/g;
+  const dates = [];
+  let mm;
+  while((mm = re.exec(t))){
+    const d=+mm[1], mo=+mm[2], y = mm[3]?llvNormYear(mm[3]):curYear;
+    const ds = llvMkDateStr(y,mo,d);
+    if(ds) dates.push(ds);
+  }
+  if(!dates.length) return null;
+  dates.sort();
+  return {from:dates[0], to:dates[dates.length-1]};
+}
+
+// ── Tự động dò đơn nghỉ phép đã duyệt đang hiệu lực trong khoảng ngày của
+// LỊCH LÀM VIỆC (không phải "hôm nay" theo máy) cho 1 nhân viên.
 // Khớp theo tên (không phân biệt hoa/thường) với DB.nghiPhep.
-// Chỉ tính đơn có trạng thái "Đã duyệt" và hôm nay nằm trong khoảng Từ ngày → Đến ngày.
+// Chỉ tính đơn có trạng thái "Đã duyệt" và khoảng Từ ngày→Đến ngày của đơn có
+// giao nhau với khoảng ngày áp dụng của lịch làm việc (sheet.period). Nếu lịch
+// không ghi rõ ngày áp dụng (hoặc không dò được), fallback về so với hôm nay
+// như trước đây. Nhờ vậy khi đơn nghỉ hết hiệu lực (vd nghỉ đến 24/7, lịch
+// đang xem là 25/7) badge sẽ tự động biến mất mà không cần sửa tay.
 // Nhân viên vẫn được giữ nguyên ở ca đã phân (không bị chuyển sang nhóm "Nghỉ").
-function llvActiveLeave(name, list){
+function llvActiveLeave(name, list, sheet){
   const nm = (name||'').trim().toLowerCase();
   if(!nm) return null;
   const src = list || DB.nghiPhep || [];
+  const period = sheet ? llvParsePeriod(sheet.period) : null;
   const today = todayStr();
-  const hit = src.find(k => k.status==='Đã duyệt' && (k.workerName||'').trim().toLowerCase()===nm && (k.fromDate||'')<=today && today<=(k.toDate||''));
+  const rangeFrom = period ? period.from : today;
+  const rangeTo = period ? period.to : today;
+  const hit = src.find(k => k.status==='Đã duyệt' && (k.workerName||'').trim().toLowerCase()===nm && (k.fromDate||'')<=rangeTo && rangeFrom<=(k.toDate||''));
   return hit || null;
 }
 function llvLeaveBadgeHtml(rec){
@@ -10538,7 +10594,7 @@ function renderLichLamViec(){
               </td>
             </tr>
             ${g.items.map(({r,i},gi)=>{
-              const leaveRec = llvActiveLeave(r.name);
+              const leaveRec = llvActiveLeave(r.name, null, sheet);
               return `<tr>
               <td style="border:1px solid var(--border);padding:4px;text-align:center">${gi+1}</td>
               <td style="border:1px solid var(--border);padding:2px">
@@ -10570,7 +10626,7 @@ function renderLichLamViec(){
     </div>
     <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3)">
       <b>Tổng số nhân viên:</b> ${sheet.rows.length}${shiftCountsTxt?` <span style="color:var(--text4)">(${shiftCountsTxt})</span>`:''}
-      ${(()=>{ const nghiCount = (sheet.rows||[]).filter(r=>llvActiveLeave(r.name)).length; return nghiCount>0?` <span style="color:#0e7490;font-weight:700">· 🏖️ ${nghiCount} người đang nghỉ theo đơn đã duyệt</span>`:''; })()}
+      ${(()=>{ const nghiCount = (sheet.rows||[]).filter(r=>llvActiveLeave(r.name, null, sheet)).length; return nghiCount>0?` <span style="color:#0e7490;font-weight:700">· 🏖️ ${nghiCount} người đang nghỉ theo đơn đã duyệt</span>`:''; })()}
     </div>
     `:`<div class="card" style="padding:24px;text-align:center;color:var(--text4)">Chưa có lịch làm việc nào${admin?' · bấm "➕ Thêm bộ phận" để tạo lịch đầu tiên':''}</div>`}
   `;
@@ -10741,7 +10797,7 @@ function llvExportExcel(sheetId){if(guardViewer())return;
     sectionRowIdxs.push(rows.length);
     rows.push([`${g.meta.label.replace(/^\S+\s/,'')} — ${g.items.length} người`,'','','','','']);
     g.items.forEach(({r},gi)=>{
-      const leaveRec = llvActiveLeave(r.name);
+      const leaveRec = llvActiveLeave(r.name, null, s);
       const leaveTxt = leaveRec ? `Đang nghỉ: ${leaveRec.loai||''}${leaveRec.toDate?` (đến ${leaveRec.toDate})`:''}` : (r.leave||'');
       rows.push([gi+1, r.name||'', r.gender||'', r.time||'', leaveTxt, r.note||'']);
     });
@@ -10816,7 +10872,7 @@ function llvPrint(sheetId, size){if(guardViewer())return;
         ${groups.map(g=>`
           <tr class="section"><td colspan="6">${esc(g.meta.label.replace(/^\S+\s/,''))} — ${g.items.length} người</td></tr>
           ${g.items.map(({r},gi)=>{
-            const leaveRec = llvActiveLeave(r.name);
+            const leaveRec = llvActiveLeave(r.name, null, s);
             const leaveTxt = leaveRec ? `Đang nghỉ: ${leaveRec.loai||''}${leaveRec.toDate?` (đến ${leaveRec.toDate})`:''}` : (r.leave||'');
             return `<tr><td>${gi+1}</td><td class="name">${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(r.time)}</td><td>${esc(leaveTxt)}</td><td>${esc(r.note)}</td></tr>`;
           }).join('')}
@@ -12408,7 +12464,7 @@ async function renderPublicCcllv(){
             <div style="display:inline-block;padding:3px 10px;border-radius:10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700;font-size:12px;margin-bottom:6px">${g.meta.label} · ${g.items.length} người</div>
             <div style="display:flex;flex-direction:column;gap:0">
               ${g.items.map(({r},gi)=>{
-                const leaveRec = llvActiveLeave(r.name, nghiPhep);
+                const leaveRec = llvActiveLeave(r.name, nghiPhep, sheet);
                 const leaveTxt = leaveRec ? `${leaveRec.loai||'Đang nghỉ'}${leaveRec.toDate?` · đến ${pubEsc(leaveRec.toDate)}`:''}` : (r.leave||'');
                 return `
                 <div style="display:flex;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border);font-size:12.5px">
