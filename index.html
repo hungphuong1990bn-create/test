@@ -3305,6 +3305,31 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-table tbody tr.ht-fresh:hover td{background:#DCFCE7}
 .dd-table tbody tr.ht-fresh td:first-child{box-shadow:inset 3px 0 0 var(--green-m)}
 .ht-fresh-pill{font-size:9px;font-weight:800;background:var(--green-m);color:#fff;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;white-space:nowrap;animation:htFreshPulse 2s ease-in-out infinite}
+
+/* ═══ ĐÓNG BĂNG CỘT khi cuộn ngang ═══
+   Tab Đơn hàng (#ddTable): giữ cố định 2 cột đầu "Ưu tiên" + "Khách hàng".
+   Tab Hoàn thành (#htTable): giữ cố định cột đầu "Khách hàng" (không còn
+   cột Ưu tiên vì đơn đã hoàn thành). Đặt width cố định cho các cột này để
+   "left" luôn khớp đúng vị trí khi cuộn, tránh lệch cột. */
+#ddTable th:nth-child(1), #ddTable td:nth-child(1){position:sticky;left:0;width:118px;min-width:118px;max-width:118px;z-index:3}
+#ddTable th:nth-child(2), #ddTable td:nth-child(2){position:sticky;left:118px;width:172px;min-width:172px;max-width:172px;z-index:3;box-shadow:2px 0 6px rgba(16,24,40,.08);overflow:hidden}
+#htTable th:nth-child(1), #htTable td:nth-child(1){position:sticky;left:0;width:190px;min-width:190px;max-width:190px;z-index:3;box-shadow:2px 0 6px rgba(16,24,40,.08);overflow:hidden}
+#ddTable td:nth-child(2) .ord-cust-name, #htTable td:nth-child(1) .ord-cust-name{max-width:100%}
+#ddTable td:nth-child(1), #ddTable td:nth-child(2), #htTable td:nth-child(1){background:var(--card)}
+#ddTable th:nth-child(1), #ddTable th:nth-child(2), #htTable th:nth-child(1){z-index:8;background:var(--bg2)}
+/* Giữ đúng màu nền của các trạng thái dòng (hover/mới/quá hạn/mới hoàn thành) trên cả các cột đã đóng băng */
+#ddTable tbody tr:hover td:nth-child(1), #ddTable tbody tr:hover td:nth-child(2), #htTable tbody tr:hover td:nth-child(1){background:var(--bg2)}
+#ddTable tbody tr.is-new td:nth-child(1), #ddTable tbody tr.is-new td:nth-child(2){background:#F5F9FF}
+#ddTable tbody tr.is-new:hover td:nth-child(1), #ddTable tbody tr.is-new:hover td:nth-child(2){background:#EAF2FF}
+#ddTable tbody tr.is-overdue td:nth-child(1), #ddTable tbody tr.is-overdue td:nth-child(2){background:#FFF8F7}
+#ddTable tbody tr.is-overdue:hover td:nth-child(1), #ddTable tbody tr.is-overdue:hover td:nth-child(2){background:#FEEEEC}
+#htTable tbody tr.ht-fresh td:nth-child(1){background:#F0FDF4}
+#htTable tbody tr.ht-fresh:hover td:nth-child(1){background:#DCFCE7}
+@media (max-width:640px){
+  #ddTable th:nth-child(1), #ddTable td:nth-child(1){width:92px;min-width:92px;max-width:92px}
+  #ddTable th:nth-child(2), #ddTable td:nth-child(2){left:92px;width:140px;min-width:140px;max-width:140px}
+  #htTable th:nth-child(1), #htTable td:nth-child(1){width:150px;min-width:150px;max-width:150px}
+}
 @keyframes htFreshPulse{0%,100%{opacity:1}50%{opacity:.6}}
 .ht-timeline{display:flex;flex-direction:column;gap:2px}
 .ht-timeline-row{font-size:11px;color:var(--text3)}
@@ -4924,7 +4949,8 @@ function saveOrders(){if(guardViewer())return;
   mergeAndSaveOrders();
 }
 
-async function mergeAndSaveOrders(){
+async function mergeAndSaveOrders(retryCount){
+  retryCount = retryCount||0;
   const localSnap = snapshotOrders(DB.orders);
   const changedIds = new Set();
   Object.keys(localSnap).forEach(id=>{ if(localSnap[id]!==_lastSyncedOrdersSnapshot[id]) changedIds.add(id); });
@@ -4946,9 +4972,24 @@ async function mergeAndSaveOrders(){
     removedIds.forEach(id=>{ delete mergedMap[id]; }); // đơn mình vừa xoá
     merged = Object.values(mergedMap);
   }catch(e){
-    // Không đọc được server (mất mạng...) → vẫn ghi bản cục bộ như cũ, để
-    // fbSaveField tự retry/đánh dấu dirty, không chặn thao tác người dùng
-    merged = DB.orders;
+    // KHÔNG đọc được server (mất mạng/mạng chập chờn) → TUYỆT ĐỐI KHÔNG được
+    // coi DB.orders cục bộ là bản đầy đủ rồi ghi đè lên toàn bộ /data/orders,
+    // vì DB.orders lúc này có thể đã CŨ hơn so với thay đổi của thiết bị khác
+    // cho NHỮNG đơn mình không hề đụng tới (VD thiết bị này đứng im từ sáng ở
+    // Kế hoạch SX, trong lúc đó thiết bị khác vừa bấm "Hoàn thành" 1 đơn khác
+    // hoặc chính đơn này) — ghi đè lúc này sẽ XOÁ MẤT tiến độ mới, đúng lỗi
+    // "đơn vừa hoàn thành buổi sáng, đến trưa quay lại trạng thái Đang chạy/
+    // Chờ SX như ban đầu". Thay vào đó: HOÃN việc ghi, giữ nguyên dấu "dirty"
+    // (đã đánh dấu ở saveOrders) và thử lại sau vài giây cho tới khi đọc được
+    // bản mới nhất từ server để merge an toàn, tối đa vài lần rồi thôi (dấu
+    // dirty vẫn còn nên lần mở app sau sẽ tự đẩy lại — xem initAndStartSync).
+    endSave();
+    if(retryCount < 6){
+      setTimeout(()=>{ beginSave(); mergeAndSaveOrders(retryCount+1); }, 3000);
+    } else {
+      setSyncDot('error');
+    }
+    return;
   }
 
   DB.orders = merged;
@@ -6904,9 +6945,15 @@ function goToOrderInPlan(orderId){
   const o = DB.orders.find(x=>x.id===orderId);
   if(!o) return;
   if(o.status==='done'){
+    // Reset toàn bộ bộ lọc/tìm kiếm của tab Hoàn thành trước khi nhảy sang,
+    // nếu không đơn có thể bị bộ lọc đang áp dụng dở (trạng thái/khách hàng/
+    // khoảng ngày...) che mất, khiến nút bấm trông như "không hoạt động".
+    htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htShipFrom=''; htShipTo=''; htCustomerFilter='all';
     goTab('hoanThanh');
   } else {
+    // Tương tự cho tab Kế hoạch SX: reset filter trạng thái + ô tìm kiếm.
     _khFilter = 'all';
+    khSearchQ = '';
     goTab('keHoach');
   }
   setTimeout(()=>{
@@ -8605,13 +8652,15 @@ function htMatchSearch(o, q){
   return _stripDiacritics(extra.toLowerCase()).includes(s);
 }
 
-// Sắp xếp thông minh: Đơn vừa hoàn thành lên đầu → sau đó theo ngày hoàn thành mới nhất
+// Sắp xếp theo ngày hoàn thành mới nhất lên đầu — LUÔN theo đúng 1 tiêu chí
+// duy nhất (doneAt giảm dần). Trước đây sort ưu tiên "đơn vừa hoàn thành
+// (<48h, chưa xem)" lên đầu TRƯỚC rồi mới xếp theo ngày, khiến 1 đơn hoàn
+// thành cũ hơn nhưng "còn mới/chưa xem" nhảy lên trên các đơn hoàn thành gần
+// đây hơn — nhìn giống như thứ tự bị xáo trộn/lộn xộn theo ngày. Đơn "mới
+// hoàn thành" vẫn được đánh dấu bằng nhãn "🟢 Mới" ở mỗi dòng (xem htIsFresh
+// trong htRow), không cần đảo cả vị trí trong danh sách nữa.
 function htSmartSort(list){
-  return [...list].sort((a,b)=>{
-    const af=htIsFresh(a)?0:1, bf=htIsFresh(b)?0:1;
-    if(af!==bf) return af-bf;
-    return (b.doneAt||0)-(a.doneAt||0);
-  });
+  return [...list].sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
 }
 
 function htResetFilters(){
