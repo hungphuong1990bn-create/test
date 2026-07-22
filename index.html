@@ -10296,6 +10296,7 @@ let _llvActive = null;
 function llvShiftKey(t){
   t = (t||'').toLowerCase();
   if(/nghỉ/.test(t)) return 'nghi';
+  if(/tăng\s*ca/.test(t)) return 'tangca';
   if(/ca\s*1/.test(t)) return 'ca1';
   if(/ca\s*2/.test(t)) return 'ca2';
   if(/ca\s*3/.test(t)) return 'ca3';
@@ -10307,11 +10308,12 @@ const LLV_SHIFT_META = {
   ca2:{label:'🌙 CA 2', color:'#b45309', bg:'#fffbeb'},
   ca3:{label:'🌑 CA 3', color:'#6d28d9', bg:'#f5f3ff'},
   hc:{label:'🏢 HÀNH CHÍNH', color:'#047857', bg:'#ecfdf5'},
+  tangca:{label:'⏱️ TĂNG CA', color:'#c2410c', bg:'#fff7ed'},
   nghi:{label:'🏖️ NGHỈ (không xếp ca)', color:'#0e7490', bg:'#ecfeff'},
   khac:{label:'❓ CHƯA PHÂN CA', color:'#6b7280', bg:'#f3f4f6'}
 };
-const LLV_SHIFT_ORDER = ['ca1','ca2','ca3','hc','nghi','khac'];
-const LLV_TIME_PRESETS = ['Ca 1 : 6h – 14h','Ca 2 : 14h – 22h','Ca 3 : 22h – 6h','HC : 7h – 17h','Nghỉ (nghỉ mát/nghỉ tập thể - không xếp ca)'];
+const LLV_SHIFT_ORDER = ['ca1','ca2','ca3','hc','tangca','nghi','khac'];
+const LLV_TIME_PRESETS = ['Ca 1 : 6h – 14h','Ca 2 : 14h – 22h','Ca 3 : 22h – 6h','HC : 7h – 17h','Tăng ca : 6h – 17h','Nghỉ (nghỉ mát/nghỉ tập thể - không xếp ca)'];
 
 // ── Tự động dò đơn nghỉ phép đã duyệt đang hiệu lực (hôm nay) cho 1 nhân viên ──
 // Khớp theo tên (không phân biệt hoa/thường) với DB.nghiPhep.
@@ -10361,6 +10363,10 @@ function llvSeedIfEmpty(){
   }];
 }
 
+// Nhóm các dòng theo ca dựa theo cột "Thời gian" (r.time). Tình trạng nghỉ phép
+// (đơn đã duyệt, đang hiệu lực hôm nay) chỉ hiển thị dưới dạng badge ở cột
+// "🏖️ Tình trạng nghỉ", KHÔNG làm thay đổi nhóm ca hiển thị — nhân viên vẫn được
+// xếp đúng vào nhóm ca theo thời gian đã phân (Ca 1/Ca 2/Ca 3/HC/Tăng ca...).
 function llvGroupRows(rows){
   const groups = {};
   rows.forEach((r,i)=>{ const k = llvShiftKey(r.time); (groups[k]=groups[k]||[]).push({r,i}); });
