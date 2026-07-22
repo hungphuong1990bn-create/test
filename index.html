@@ -8085,10 +8085,11 @@ function ddRow(o){
   const isNew = ddIsNew(o);
   const overdue = ddOverdue(o);
   const checked = ddSelected.has(o.id);
+  const pc = PRI_COLOR[o.priority]||'#64748b';
   const canEdit = isAdmin(), canPlan = isStaff() && o.status==='pending';
   return `<tr data-order-id="${o.id}" class="${isNew?'is-new':''}${overdue?' is-overdue':''}" onclick="ddViewDetail('${o.id}')">
     <td onclick="event.stopPropagation()"><input type="checkbox" class="dd-check" ${checked?'checked':''} onchange="ddToggleSelect('${o.id}', this.checked)"></td>
-    <td><span class="dd-code">${ddCode(o)}</span>${isNew?'<span class="dd-new-pill">MỚI</span>':''}</td>
+    <td><span class="dd-status-pill" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>${isNew?'<span class="dd-new-pill">MỚI</span>':''}</td>
     <td><div class="dd-cust">${o.customer||'—'}</div>${o.po?`<div class="dd-sub">PO: ${o.po}</div>`:''}</td>
     <td>${o.type||'—'}</td>
     <td>${ddMaterialLabel(o.material)}</td>
@@ -8216,7 +8217,7 @@ function renderDorDang(){
       : `<div class="dd-table-wrap"><table class="dd-table">
         <thead><tr>
           <th><input type="checkbox" class="dd-check" ${allChecked?'checked':''} onchange="ddToggleSelectAll(this.checked)"></th>
-          <th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Nguyên liệu</th><th>Quy cách</th><th>Số lượng</th>
+          <th>Ưu tiên</th><th>Khách hàng</th><th>Sản phẩm</th><th>Nguyên liệu</th><th>Quy cách</th><th>Số lượng</th>
           <th>Ngày nhận</th><th>Hạn giao</th><th>Trạng thái</th><th>Người phụ trách</th><th>Thao tác</th>
         </tr></thead>
         <tbody>${list.map(ddRow).join('')}</tbody>
