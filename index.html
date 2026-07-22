@@ -3201,11 +3201,11 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-bulkbar .dd-bulk-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
 .dd-bulkbar .dd-bulk-btn:hover{background:rgba(255,255,255,.26)}
 .dd-bulkbar .dd-bulk-clear{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
-.dd-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:auto;box-shadow:var(--sh)}
+.dd-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:auto;box-shadow:var(--sh);-webkit-overflow-scrolling:touch}
+.dd-scrolltop{overflow-x:auto;overflow-y:hidden;height:14px;margin-bottom:6px;border-radius:8px;-webkit-overflow-scrolling:touch}
+.dd-scrolltop-inner{height:1px}
 .dd-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:1080px}
 .dd-table thead th{position:sticky;top:0;z-index:5;background:var(--bg2);color:var(--text3);font-weight:800;text-transform:uppercase;font-size:10.2px;letter-spacing:.3px;padding:11px 12px;text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap}
-.dd-table thead th:first-child,.dd-table tbody td:first-child{position:sticky;left:0;z-index:3;background:var(--card)}
-.dd-table thead th:first-child{z-index:6;background:var(--bg2)}
 .dd-table tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 .dd-table tbody tr{cursor:pointer}
 .dd-table tbody tr:hover td{background:var(--bg2)}
@@ -4520,6 +4520,7 @@ body{letter-spacing:-.1px}
     <div id="ddDetailBody" style="font-size:13px;color:var(--text2);line-height:1.9"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('ddDetailModal')">Đóng</button>
+      <button class="btn" style="background:#0C7A54;color:#fff" id="ddDetailPlanBtn" onclick="">🏭 Xem ở Kế hoạch SX</button>
       <button class="btn" style="background:var(--brand);color:#fff;flex:1" id="ddDetailEditBtn" onclick="">✏️ Chỉnh sửa</button>
     </div>
   </div>
@@ -6918,6 +6919,26 @@ function goToOrderInPlan(orderId){
   }, 280);
 }
 
+// ── Thanh cuộn ngang ở TRÊN bảng (đơn hàng / hoàn thành) ─────────────
+// Giúp kéo xem hết các cột mà không cần cuộn xuống dưới cùng của bảng
+// trước. Đồng bộ 2 chiều với vùng bảng thật, và vẫn giữ vuốt ngang mượt
+// trực tiếp trên bảng ở điện thoại (toàn bộ cột, kể cả cột khách hàng,
+// cuộn cùng nhau vì không còn cột nào bị "đóng băng").
+function initTopScroll(topId, innerId, wrapId, tableId){
+  const top = document.getElementById(topId);
+  const inner = document.getElementById(innerId);
+  const wrap = document.getElementById(wrapId);
+  const table = document.getElementById(tableId);
+  if(!top||!inner||!wrap||!table) return;
+  const sync = ()=>{ inner.style.width = table.scrollWidth+'px'; };
+  sync();
+  // Nếu ảnh/nội dung load sau làm bảng đổi kích thước, đồng bộ lại 1 lần nữa
+  setTimeout(sync, 200);
+  let lock = false;
+  top.onscroll = ()=>{ if(lock) return; lock=true; wrap.scrollLeft = top.scrollLeft; lock=false; };
+  wrap.onscroll = ()=>{ if(lock) return; lock=true; top.scrollLeft = wrap.scrollLeft; lock=false; };
+}
+
 function toggleSB(){ $('sidebar').classList.toggle('open'); $('sbOverlay').classList.toggle('active'); }
 function closeSB(){ $('sidebar').classList.remove('open'); $('sbOverlay').classList.remove('active'); }
 
@@ -8116,6 +8137,8 @@ function ddViewDetail(id){
   `;
   const editBtn = $('ddDetailEditBtn');
   if(editBtn) editBtn.onclick = ()=>{ closeModal('ddDetailModal'); editOrder(id); };
+  const planBtn = $('ddDetailPlanBtn');
+  if(planBtn) planBtn.onclick = ()=>{ closeModal('ddDetailModal'); goToOrderInPlan(id); };
   openModal('ddDetailModal');
 }
 
@@ -8206,9 +8229,7 @@ function ddRow(o){
   const overdue = ddOverdue(o);
   const pc = PRI_COLOR[o.priority]||'#64748b';
   const canEdit = isAdmin(), canPlan = isStaff() && o.status==='pending';
-  const checked = ddSelected.has(o.id);
   return `<tr class="${isNew?'is-new':''}${overdue?' is-overdue':''}" data-order-id="${o.id}" onclick="ddViewDetail('${o.id}')">
-    <td onclick="event.stopPropagation()"><input type="checkbox" class="dd-check" ${checked?'checked':''} onchange="ddToggleSelect('${o.id}', this.checked)"></td>
     <td><span class="ord-pri" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>${isNew?'<span class="pill-new" style="margin-left:5px">🟢 Mới</span>':''}</td>
     <td><div class="ord-cust-info"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></td>
     <td>${o.type||'—'}</td>
@@ -8315,22 +8336,13 @@ function renderDorDang(){
       </div>
     </div>
 
-    ${ddSelected.size?`<div class="dd-bulkbar">
-      <b>${ddSelected.size} đơn đã chọn</b>
-      <button class="dd-bulk-btn" onclick="ddBulkPlan()">📋 Lập kế hoạch</button>
-      <button class="dd-bulk-btn" onclick="ddBulkPrint()">🖨 In</button>
-      <button class="dd-bulk-btn" onclick="ddBulkExport()">📊 Xuất Excel</button>
-      <button class="dd-bulk-clear" onclick="ddClearSelection()">Bỏ chọn</button>
-    </div>`:''}
-
     ${!list.length
       ? `<div class="ord-empty">${searchQ||filterStatus!=='all'||ddRecvFrom||ddDueFrom?'🔍 Không tìm thấy đơn hàng phù hợp':'📦 Chưa có đơn hàng nào trong hệ thống'}</div>`
       : `<div class="ord-list-toolbar">
-          <label class="ord-selall"><input type="checkbox" class="dd-check" ${allChecked?'checked':''} onchange="ddToggleSelectAll(this.checked)"> Chọn tất cả</label>
           <span class="ord-list-count">Hiển thị ${list.length} / ${total} đơn hàng</span>
         </div>
-        <div class="dd-table-wrap"><table class="dd-table"><thead><tr>
-          <th style="width:34px"></th>
+        <div class="dd-scrolltop" id="ddScrollTop"><div class="dd-scrolltop-inner" id="ddScrollTopInner"></div></div>
+        <div class="dd-table-wrap" id="ddTableWrap"><table class="dd-table" id="ddTable"><thead><tr>
           <th>Ưu tiên</th>
           <th>Khách hàng</th>
           <th>Sản phẩm</th>
@@ -8353,6 +8365,7 @@ function renderDorDang(){
       try{ ni.setSelectionRange(pos, pos); }catch(e){}
     }
   }
+  initTopScroll('ddScrollTop','ddScrollTopInner','ddTableWrap','ddTable');
 }
 
 function clearSearch(){
@@ -8949,7 +8962,8 @@ function renderHoanThanh(){
       : `<div class="ord-list-toolbar">
           <span class="ord-list-count">Hiển thị ${list.length} / ${totalDone} đơn thành phẩm</span>
         </div>
-        <div class="dd-table-wrap"><table class="dd-table" style="min-width:1440px"><thead><tr>
+        <div class="dd-scrolltop" id="htScrollTop"><div class="dd-scrolltop-inner" id="htScrollTopInner"></div></div>
+        <div class="dd-table-wrap" id="htTableWrap"><table class="dd-table" id="htTable" style="min-width:1440px"><thead><tr>
           <th>Khách hàng</th>
           <th>Sản phẩm</th>
           <th>Nguyên liệu</th>
@@ -8970,6 +8984,7 @@ function renderHoanThanh(){
     hi.focus(); const v=hi.value; hi.value=''; hi.value=v;
     hi.addEventListener('input',function(){htSearchQ=this.value;renderHoanThanh();});
   }
+  initTopScroll('htScrollTop','htScrollTopInner','htTableWrap','htTable');
 }
 
 
