@@ -3227,7 +3227,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-act-btn.plan{color:var(--brand);border-color:#93c5fd;background:#eff6ff}
 .dd-act-btn.plan:hover{background:var(--brand);color:#fff}
 .dd-menu-wrap{position:relative}
-.dd-menu{position:absolute;right:0;top:32px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--sh2);min-width:180px;z-index:30;overflow:hidden;display:none;text-align:left}
+.dd-menu{position:fixed;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--sh2);min-width:180px;z-index:9600;overflow:hidden;display:none;text-align:left}
 .dd-menu.open{display:block}
 .dd-menu button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:9px 12px;border:none;background:none;font-size:12.5px;font-family:inherit;color:var(--text2);cursor:pointer}
 .dd-menu button:hover{background:var(--bg)}
@@ -3239,6 +3239,76 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   .dd-filters-row{flex-direction:column;align-items:stretch}
   .dd-filters-row .dd-fld,.dd-filters-row select{width:100%}
 }
+
+/* ══════════ ERP/MES CARD LIST — Đơn hàng & Hoàn thành (compact, hiện đại) ══════════ */
+.ord-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px 9px;flex-wrap:wrap}
+.ord-selall{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--text3);user-select:none}
+.ord-selall input{width:15px;height:15px;cursor:pointer;accent-color:var(--brand)}
+.ord-list-count{font-size:11.5px;color:var(--text4);font-weight:600}
+.ord-empty{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:44px 20px;text-align:center;color:var(--text4);font-size:13px}
+
+.ord-list{display:flex;flex-direction:column;gap:8px}
+.ord-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);padding:11px 13px 10px;cursor:pointer;transition:box-shadow .15s ease,transform .12s ease,border-color .12s ease;position:relative}
+.ord-card:hover{box-shadow:var(--sh2);border-color:#D7DEEB}
+.ord-card:active{box-shadow:var(--sh)}
+.ord-card.is-new{border-color:#BFD6FF;box-shadow:0 0 0 1px rgba(40,86,214,.10),var(--sh)}
+.ord-card.is-fresh{border-color:#9BE8C4;box-shadow:0 0 0 1px rgba(21,150,108,.12),var(--sh)}
+.ord-card.is-overdue{border-color:#F5C2BC}
+
+.ord-top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.ord-check{flex-shrink:0;display:flex;align-items:center}
+.ord-check input{width:15px;height:15px;cursor:pointer;accent-color:var(--brand)}
+.ord-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:800;font-size:11.5px;color:var(--text3);letter-spacing:.2px;flex-shrink:0}
+.ord-po{font-size:10.5px;color:var(--text4);font-weight:600;flex-shrink:0}
+.ord-badges{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+
+.pill-new,.pill-fresh{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap;border:1px solid transparent;line-height:1.3}
+.pill-new{background:#E7F0FF;color:#2856D6;border-color:#BFD6FF}
+.pill-fresh{background:#E3F5EE;color:#0C7A54;border-color:#9BE8C4}
+
+.ord-main{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+.ord-cust{font-size:14.5px;font-weight:800;color:var(--text);line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.ord-pri{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;border:1px solid transparent;white-space:nowrap}
+.ord-overdue-tag{font-size:10px;font-weight:800;color:var(--red-m);background:var(--red-l);padding:2px 8px;border-radius:20px;white-space:nowrap}
+
+.ord-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;padding:8px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:8px}
+.ord-cell{min-width:0}
+.ord-lbl{display:block;font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}
+.ord-val{display:block;font-size:12px;font-weight:600;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ord-val-done{color:#0C7A54;font-weight:800}
+.ord-val-dur{color:var(--brand);font-weight:800}
+
+/* ── Khách hàng / Quy cách nổi bật trong bảng & Ngày nhận kèm giờ ── */
+.ord-cust-info{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ord-cust-name{font-weight:800;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;letter-spacing:.1px}
+.ord-po-sub{font-size:10px;color:var(--text4);font-weight:700}
+.spec-chip{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:900;font-size:13px;color:#0B0E14;background:#F0F1F4;border:1px solid #DEE1E8;padding:5px 12px;border-radius:8px;white-space:nowrap;letter-spacing:.3px}
+.ord-dt-main{display:block;font-weight:700;font-size:12.5px;color:var(--text2)}
+.ord-dt-sub{font-size:10.5px;color:var(--text4);font-weight:600;margin-top:1px}
+.ord-val.overdue{color:var(--red-m);font-weight:800}
+
+.ord-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ord-actions .dd-menu-wrap{margin-left:auto}
+.ord-actions .dd-act-btn{width:auto;padding:0 10px;gap:4px}
+.ord-actions .dd-act-btn.icon-only{width:28px;padding:0}
+
+@media(min-width:560px){.ord-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.ord-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1180px){.ord-grid{grid-template-columns:repeat(7,1fr)}}
+
+/* ── Tab "Đơn hàng đã hoàn thành" — nhập kho/giao hàng sau sản xuất ── */
+.dd-act-btn.wh{color:var(--green-m);border-color:#86efac;background:var(--green-l)}
+.dd-act-btn.wh:hover{background:var(--green-m);color:#fff}
+.dd-act-btn.ship{color:#6D28D9;border-color:#D8B4FE;background:#F3E8FF}
+.dd-act-btn.ship:hover{background:#6D28D9;color:#fff}
+.dd-table tbody tr.ht-fresh td{background:#F0FDF4}
+.dd-table tbody tr.ht-fresh:hover td{background:#DCFCE7}
+.dd-table tbody tr.ht-fresh td:first-child{box-shadow:inset 3px 0 0 var(--green-m)}
+.ht-fresh-pill{font-size:9px;font-weight:800;background:var(--green-m);color:#fff;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;white-space:nowrap;animation:htFreshPulse 2s ease-in-out infinite}
+@keyframes htFreshPulse{0%,100%{opacity:1}50%{opacity:.6}}
+.ht-timeline{display:flex;flex-direction:column;gap:2px}
+.ht-timeline-row{font-size:11px;color:var(--text3)}
+.ht-timeline-row b{color:var(--text2);font-weight:700}
 
 /* ── ANNOUNCE BANNER: hiện cố định phía trên mọi tab ── */
 #announceBanner{display:none;position:sticky;top:0;z-index:90;margin:0 0 0 0;padding:0;background:transparent}
@@ -3880,7 +3950,7 @@ body{letter-spacing:-.1px}
       </button>
       <button class="sb-item" id="sbi-hoanThanh" onclick="goTab('hoanThanh')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Đã hoàn thành
+        Đơn hoàn thành
       </button>
       <button class="sb-item" id="sbi-baoCao" onclick="goTab('baoCao')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -3986,7 +4056,7 @@ body{letter-spacing:-.1px}
       </button>
       <button class="bn" id="bn-hoanThanh" onclick="goTab('hoanThanh')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Hoàn thành
+        Đơn hoàn thành
       </button>
       <button class="bn" id="bn-baoCao" onclick="goTab('baoCao')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -4454,6 +4524,20 @@ body{letter-spacing:-.1px}
     </div>
   </div>
 </div>
+
+<!-- Modal: chi tiết đơn ở tab "Đơn hàng đã hoàn thành" (chỉ theo dõi nhập kho/giao hàng, không có tiến độ SX) -->
+<div class="modal" id="htDetailModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="htDetailTitle">Chi tiết thành phẩm</div>
+    <div id="htDetailBody" style="font-size:13px;color:var(--text2);line-height:1.9"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('htDetailModal')">Đóng</button>
+      <button class="btn" style="background:var(--brand);color:#fff;flex:1" id="htDetailPrintBtn" onclick="">🖨 In phiếu</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- ═══════ MODULE QR: các modal ═══════ -->
 
@@ -6098,7 +6182,7 @@ function fmtOnlineDuration(startTs){
 
 const TAB_LABEL = {
   dashboard:'Tổng quan', dorDang:'Đơn Hàng', keHoach:'Kế hoạch SX',
-  hoanThanh:'Đã hoàn thành', baoCao:'Báo cáo', nhatKy:'Nhật ký thao tác',
+  hoanThanh:'Đơn hoàn thành', baoCao:'Báo cáo', nhatKy:'Nhật ký thao tác',
   chamCong:'Quản lý nhân sự', baoTriMay:'Bảo trì máy', lichLamViec:'Lịch làm việc', settings:'Cài đặt'
 };
 function roleIcon(role){ return role==='admin'?'👑':role==='staff'?'⚙️':'👁'; }
@@ -6794,7 +6878,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Hoàn thành',baoCao:'Báo cáo',chamCong:'Quản lý nhân sự',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',chamCong:'Quản lý nhân sự',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
   $('pageTitle').textContent=titles[tab]||tab;
   // FAB: admin mới thấy nút thêm đơn
   // FAB: admin thấy nút + ở tất cả các tab
@@ -7837,8 +7921,12 @@ function ddPriCard(o, rank){
 // (tiến độ đã có ở tab "Kế hoạch SX").
 // ════════════════════════════════════════════════════════════════
 
-// Đơn có phải "mới nhập" trong 24h gần nhất không
-function ddIsNew(o){ return !!o.createdAt && (Date.now()-o.createdAt) < 86400000; }
+// Đơn có phải "mới nhập" trong 24-48h gần nhất không (ẩn ngay khi người dùng đã xem)
+function ddIsNew(o){
+  if(!o.createdAt) return false;
+  if(o.viewedNewAt && o.viewedNewAt>=o.createdAt) return false;
+  return (Date.now()-o.createdAt) < 172800000; // 48h
+}
 
 // Đơn có quá hạn giao không (chỉ tính khi chưa xong/chưa giao)
 function ddOverdue(o){
@@ -7887,16 +7975,11 @@ function ddInRange(ts, from, to){
   return true;
 }
 
-// Sắp xếp thông minh mặc định: Mới nhập → Chưa lập kế hoạch → Sắp đến hạn giao → Còn lại
+// Sắp xếp thông minh: Đơn mới nhập lên đầu → sau đó theo ngày nhận đơn mới nhất
 function ddSmartSort(list){
   return [...list].sort((a,b)=>{
     const an=ddIsNew(a)?0:1, bn=ddIsNew(b)?0:1;
     if(an!==bn) return an-bn;
-    const am=ddStatusMeta(a).key==='unplanned'?0:1, bm=ddStatusMeta(b).key==='unplanned'?0:1;
-    if(am!==bm) return am-bm;
-    const ad=a.deliveryDate?new Date(a.deliveryDate).getTime():Infinity;
-    const bd=b.deliveryDate?new Date(b.deliveryDate).getTime():Infinity;
-    if(ad!==bd) return ad-bd;
     return (b.createdAt||0)-(a.createdAt||0);
   });
 }
@@ -7927,11 +8010,47 @@ function ddClearSelection(){ ddSelected.clear(); renderDorDang(); }
 
 function ddToggleMenu(id, ev){
   if(ev) ev.stopPropagation();
-  document.querySelectorAll('.dd-menu.open').forEach(m=>{ if(m.id!=='ddmenu-'+id) m.classList.remove('open'); });
-  const m = document.getElementById('ddmenu-'+id);
-  if(m) m.classList.toggle('open');
+  const menu = document.getElementById('globalActionMenu');
+  if(!menu) return;
+  const wasOpenForThis = menu.classList.contains('open') && menu.dataset.forId === 'dd-'+id;
+  closeAllActionMenus();
+  if(wasOpenForThis) return;
+  const o = DB.orders.find(x=>x.id===id); if(!o) return;
+  const canEdit = isAdmin();
+  menu.innerHTML = `
+    <button onclick="event.stopPropagation();closeAllActionMenus();goTab('keHoach')">🏭 Xem ở Kế hoạch SX</button>
+    ${o.status==='done'?`<button onclick="closeAllActionMenus();ddToggleDelivered('${o.id}',event)">${o.delivered?'↩️ Bỏ đánh dấu đã giao':'🚚 Đánh dấu đã giao'}</button>`:''}
+    ${canEdit?`<button class="danger" onclick="closeAllActionMenus();ddDeleteRow('${o.id}',event)">🗑 Xóa đơn</button>`:''}
+  `;
+  menu.dataset.forId = 'dd-'+id;
+  const btn = ev && ev.target && ev.target.closest('button');
+  if(btn) openActionMenu(menu, btn);
 }
-document.addEventListener('click', ()=>{ document.querySelectorAll('.dd-menu.open').forEach(m=>m.classList.remove('open')); });
+// Đóng toàn bộ menu ⋯/⋮ đang mở (dùng chung cho dd-menu & ht-menu)
+function closeAllActionMenus(){
+  const menu = document.getElementById('globalActionMenu');
+  if(menu){ menu.classList.remove('open'); menu.style.display='none'; menu.innerHTML=''; menu.dataset.forId=''; }
+}
+// Định vị menu ⋯/⋮ theo position:fixed để không bị Card/danh sách che/cắt,
+// tự lật lên trên hoặc sang trái nếu không đủ chỗ phía dưới/phải màn hình
+function openActionMenu(menuEl, btnEl){
+  const r = btnEl.getBoundingClientRect();
+  menuEl.style.left = '-9999px'; menuEl.style.top = '-9999px';
+  menuEl.classList.add('open'); menuEl.style.display = 'block';
+  const mw = menuEl.offsetWidth || 180, mh = menuEl.offsetHeight || 120;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let left = r.right - mw;
+  if(left < 8) left = 8;
+  if(left + mw > vw - 8) left = Math.max(8, vw - 8 - mw);
+  let top = r.bottom + 4;
+  if(top + mh > vh - 8) top = r.top - mh - 4;
+  if(top < 8) top = 8;
+  menuEl.style.left = left + 'px';
+  menuEl.style.top = top + 'px';
+}
+document.addEventListener('click', closeAllActionMenus);
+window.addEventListener('scroll', closeAllActionMenus, true);
+window.addEventListener('resize', closeAllActionMenus);
 
 // ── Lập kế hoạch nhanh cho 1 đơn ──
 function ddMarkPlanned(id, ev){
@@ -7973,6 +8092,7 @@ function ddEditRow(id, ev){
 // ── Xem chi tiết đơn (chỉ thông tin quản lý, không có tiến độ SX) ──
 function ddViewDetail(id){
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  if(ddIsNew(o)){ o.viewedNewAt=Date.now(); saveOrders(); }
   const meta = ddStatusMeta(o), overdue = ddOverdue(o);
   $('ddDetailTitle').textContent = `${o.customer||'—'} · ${ddCode(o)}`;
   $('ddDetailBody').innerHTML = `
@@ -8079,41 +8199,32 @@ function ddBulkExport(){
   XLSX.writeFile(wb, `danh-sach-don-hang-${Date.now()}.xlsx`);
 }
 
-// ── 1 dòng trong bảng ──
+// ── 1 Dòng trong bảng Đơn hàng (ERP/MES table style, giống ảnh mẫu) ──
 function ddRow(o){
   const meta = ddStatusMeta(o);
   const isNew = ddIsNew(o);
   const overdue = ddOverdue(o);
-  const checked = ddSelected.has(o.id);
   const pc = PRI_COLOR[o.priority]||'#64748b';
   const canEdit = isAdmin(), canPlan = isStaff() && o.status==='pending';
-  return `<tr data-order-id="${o.id}" class="${isNew?'is-new':''}${overdue?' is-overdue':''}" onclick="ddViewDetail('${o.id}')">
+  const checked = ddSelected.has(o.id);
+  return `<tr class="${isNew?'is-new':''}${overdue?' is-overdue':''}" data-order-id="${o.id}" onclick="ddViewDetail('${o.id}')">
     <td onclick="event.stopPropagation()"><input type="checkbox" class="dd-check" ${checked?'checked':''} onchange="ddToggleSelect('${o.id}', this.checked)"></td>
-    <td><span class="dd-status-pill" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>${isNew?'<span class="dd-new-pill">MỚI</span>':''}</td>
-    <td><div class="dd-cust">${o.customer||'—'}</div>${o.po?`<div class="dd-sub">PO: ${o.po}</div>`:''}</td>
+    <td><span class="ord-pri" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>${isNew?'<span class="pill-new" style="margin-left:5px">🟢 Mới</span>':''}</td>
+    <td><div class="ord-cust-info"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></td>
     <td>${o.type||'—'}</td>
     <td>${ddMaterialLabel(o.material)}</td>
-    <td>${specStr(o)}</td>
-    <td>${qtyLabel(o)}${o.kg?`<div class="dd-sub">⚖️ ${o.kg}kg</div>`:''}</td>
-    <td>${fmtDate(o.createdAt)}</td>
-    <td><span class="dd-due${overdue?' overdue':''}">${fmtDate(o.deliveryDate)}</span>${overdue?'<div class="dd-sub" style="color:var(--red-m);font-weight:700">⚠️ Quá hạn</div>':''}</td>
+    <td><span class="spec-chip">${specStr(o)}</span></td>
+    <td>${qtyLabel(o)}${o.kg?`<div style="font-size:10.5px;color:var(--text4);font-weight:600">⚖️ ${o.kg}kg</div>`:''}</td>
+    <td><span class="ord-dt-main">${fmtDate(o.createdAt)}</span>${o.createdAt?`<div class="ord-dt-sub">🕐 ${vnTimeHM(new Date(o.createdAt))}</div>`:''}</td>
+    <td${overdue?' style="color:var(--red-m);font-weight:800"':''}>${fmtDate(o.deliveryDate)}${overdue?' ⚠️':''}</td>
     <td><span class="dd-status-pill" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span></td>
     <td>${ddOwner(o)}</td>
-    <td onclick="event.stopPropagation()">
-      <div class="dd-actions">
-        <button class="dd-act-btn" title="Xem chi tiết" onclick="ddViewDetail('${o.id}')">👁</button>
-        ${canEdit?`<button class="dd-act-btn" title="Chỉnh sửa" onclick="ddEditRow('${o.id}',event)">✏️</button>`:''}
-        ${canPlan?`<button class="dd-act-btn plan" title="Lập kế hoạch" onclick="ddMarkPlanned('${o.id}',event)">📋</button>`:''}
-        <button class="dd-act-btn" title="In phiếu" onclick="ddPrintOrder('${o.id}',event)">🖨</button>
-        <div class="dd-menu-wrap">
-          <button class="dd-act-btn" title="Thêm" onclick="ddToggleMenu('${o.id}',event)">⋯</button>
-          <div class="dd-menu" id="ddmenu-${o.id}">
-            <button onclick="event.stopPropagation();goTab('keHoach')">🏭 Xem ở Kế hoạch SX</button>
-            ${o.status==='done'?`<button onclick="ddToggleDelivered('${o.id}',event)">${o.delivered?'↩️ Bỏ đánh dấu đã giao':'🚚 Đánh dấu đã giao'}</button>`:''}
-            ${canEdit?`<button class="danger" onclick="ddDeleteRow('${o.id}',event)">🗑 Xóa đơn</button>`:''}
-          </div>
-        </div>
-      </div>
+    <td onclick="event.stopPropagation()" style="white-space:nowrap">
+      <button class="dd-act-btn icon-only" title="Xem chi tiết" onclick="ddViewDetail('${o.id}')">👁</button>
+      ${canEdit?`<button class="dd-act-btn icon-only" title="Chỉnh sửa" onclick="ddEditRow('${o.id}',event)">✏️</button>`:''}
+      ${canPlan?`<button class="dd-act-btn plan icon-only" title="Lập kế hoạch" onclick="ddMarkPlanned('${o.id}',event)">📋</button>`:''}
+      <button class="dd-act-btn icon-only" title="In phiếu" onclick="ddPrintOrder('${o.id}',event)">🖨</button>
+      <div class="dd-menu-wrap" style="display:inline-block"><button class="dd-act-btn icon-only" title="Thêm" onclick="ddToggleMenu('${o.id}',event)">⋯</button></div>
     </td>
   </tr>`;
 }
@@ -8126,14 +8237,14 @@ function renderDorDang(){
     hadFocus = document.activeElement===inpOld;
     caretPos = inpOld.selectionStart;
   }
-  const all = DB.orders;
+  // Đơn đã hoàn thành (status='done') chuyển hẳn sang tab "Hoàn thành", không còn hiện ở đây nữa
+  const all = DB.orders.filter(o=>o.status!=='done');
+  const doneCount = DB.orders.length - all.length;
   const total = all.length;
   const newCount   = all.filter(ddIsNew).length;
   const unplanned  = all.filter(o=>ddStatusMeta(o).key==='unplanned').length;
   const plannedCnt = all.filter(o=>ddStatusMeta(o).key==='planned').length;
   const producing  = all.filter(o=>ddStatusMeta(o).key==='producing').length;
-  const completed  = all.filter(o=>ddStatusMeta(o).key==='completed').length;
-  const delivered  = all.filter(o=>ddStatusMeta(o).key==='delivered').length;
   const totalCustomers = new Set(all.map(o=>o.customer).filter(Boolean)).size;
   const totalKg = all.reduce((s,o)=>s+(Number(o.kg)||0),0);
 
@@ -8154,8 +8265,6 @@ function renderDorDang(){
     {key:'unplanned',  icon:'⏳', ic:'#EEF0F3', col:'#556072', n:unplanned,   l:'Chưa lập kế hoạch'},
     {key:'planned',    icon:'📋', ic:'#DBEAFE', col:'#2856D6', n:plannedCnt,  l:'Đã lập kế hoạch'},
     {key:'producing',  icon:'⚙️', ic:'#FCF0DE', col:'#C2700A', n:producing,   l:'Đang sản xuất'},
-    {key:'completed',  icon:'✅', ic:'#E3F5EE', col:'#0C7A54', n:completed,   l:'Hoàn thành'},
-    {key:'delivered',  icon:'🚚', ic:'#F3E8FF', col:'#6D28D9', n:delivered,   l:'Đã giao'},
   ];
 
   const selIds = list.map(o=>o.id);
@@ -8174,6 +8283,10 @@ function renderDorDang(){
         <div class="dd-stat-ic" style="background:${s.ic};color:${s.col}">${s.icon}</div>
         <div class="dd-stat-txt"><div class="dd-stat-n">${s.n}</div><div class="dd-stat-l">${s.l}</div></div>
       </button>`).join('')}
+      <button class="dd-stat" title="Xem ở tab Hoàn thành" onclick="goTab('hoanThanh')">
+        <div class="dd-stat-ic" style="background:#E3F5EE;color:#0C7A54">✅</div>
+        <div class="dd-stat-txt"><div class="dd-stat-n">${doneCount}</div><div class="dd-stat-l">Hoàn thành →</div></div>
+      </button>
     </div>
 
     <div class="dd-filters">
@@ -8190,8 +8303,6 @@ function renderDorDang(){
             <option value="unplanned" ${filterStatus==='unplanned'?'selected':''}>Chưa lập kế hoạch</option>
             <option value="planned" ${filterStatus==='planned'?'selected':''}>Đã lập kế hoạch</option>
             <option value="producing" ${filterStatus==='producing'?'selected':''}>Đang sản xuất</option>
-            <option value="completed" ${filterStatus==='completed'?'selected':''}>Hoàn thành</option>
-            <option value="delivered" ${filterStatus==='delivered'?'selected':''}>Đã giao</option>
           </select>
         </div>
         <button class="dd-reset-btn" onclick="ddResetFilters()">↺ Reset bộ lọc</button>
@@ -8213,16 +8324,25 @@ function renderDorDang(){
     </div>`:''}
 
     ${!list.length
-      ? `<div class="dd-table-wrap"><div class="dd-empty-tbl">${searchQ||filterStatus!=='all'||ddRecvFrom||ddDueFrom?'🔍 Không tìm thấy đơn hàng phù hợp':'📦 Chưa có đơn hàng nào trong hệ thống'}</div></div>`
-      : `<div class="dd-table-wrap"><table class="dd-table">
-        <thead><tr>
-          <th><input type="checkbox" class="dd-check" ${allChecked?'checked':''} onchange="ddToggleSelectAll(this.checked)"></th>
-          <th>Ưu tiên</th><th>Khách hàng</th><th>Sản phẩm</th><th>Nguyên liệu</th><th>Quy cách</th><th>Số lượng</th>
-          <th>Ngày nhận</th><th>Hạn giao</th><th>Trạng thái</th><th>Người phụ trách</th><th>Thao tác</th>
-        </tr></thead>
-        <tbody>${list.map(ddRow).join('')}</tbody>
-      </table></div>
-      <div style="font-size:11.5px;color:var(--text4);padding:8px 2px">Hiển thị ${list.length} / ${total} đơn hàng</div>`}
+      ? `<div class="ord-empty">${searchQ||filterStatus!=='all'||ddRecvFrom||ddDueFrom?'🔍 Không tìm thấy đơn hàng phù hợp':'📦 Chưa có đơn hàng nào trong hệ thống'}</div>`
+      : `<div class="ord-list-toolbar">
+          <label class="ord-selall"><input type="checkbox" class="dd-check" ${allChecked?'checked':''} onchange="ddToggleSelectAll(this.checked)"> Chọn tất cả</label>
+          <span class="ord-list-count">Hiển thị ${list.length} / ${total} đơn hàng</span>
+        </div>
+        <div class="dd-table-wrap"><table class="dd-table"><thead><tr>
+          <th style="width:34px"></th>
+          <th>Ưu tiên</th>
+          <th>Khách hàng</th>
+          <th>Sản phẩm</th>
+          <th>Nguyên liệu</th>
+          <th>Quy cách</th>
+          <th>Số lượng</th>
+          <th>Ngày nhận</th>
+          <th>Hạn giao</th>
+          <th>Trạng thái</th>
+          <th>Người phụ trách</th>
+          <th>Thao tác</th>
+        </tr></thead><tbody>${list.map(ddRow).join('')}</tbody></table></div>`}
   `;
   const ni=document.getElementById('srchInp');
   if(ni){
@@ -8380,7 +8500,7 @@ function renderKeHoach(){
         </button>
         <button class="kh-sum" onclick="goTab('hoanThanh')" style="cursor:pointer">
           <div class="kh-sum-n done-c">${DB.orders.filter(o=>o.status==='done').length}</div>
-          <div class="kh-sum-l">✅ Xem hoàn thành →</div>
+          <div class="kh-sum-l">✅ Xem đơn đã hoàn thành →</div>
         </button>
       </div>
     </div>
@@ -8393,28 +8513,465 @@ function renderKeHoach(){
   if(ki){ ki.focus(); const v=ki.value; ki.value=''; ki.value=v; ki.addEventListener('input',()=>renderKeHoach()); }
 }
 
-// Hoàn thành
-let htSearchQ = ''; // search query cho Hoàn thành
+// ════════════════════════════════════════════════════════════
+// THÀNH PHẨM (trước đây "Hoàn thành") — trung tâm quản lý đơn hàng
+// SAU sản xuất: theo dõi nhập kho, chuẩn bị và xác nhận giao hàng.
+// Không hiển thị tiến độ sản xuất vì đơn đã xong.
+// ════════════════════════════════════════════════════════════
+let htSearchQ = '';               // search query cho tab Đơn hàng đã hoàn thành
+let htFilterStatus = 'all';       // all | today | new | wh_all | shipping | delivered | returned
+let htDoneFrom = '', htDoneTo = ''; // lọc theo ngày hoàn thành
+let htShipFrom = '', htShipTo  = ''; // lọc theo ngày giao (dự kiến/thực tế)
+let htCustomerFilter = 'all';     // lọc theo khách hàng
+let htSelected = new Set();       // các đơn đang chọn để thao tác hàng loạt
+let _htVisibleIds = [];
+
+// Đơn có phải vừa hoàn thành trong 24-48h gần nhất không (ẩn ngay khi người dùng đã xem)
+function htIsFresh(o){
+  if(!o.doneAt) return false;
+  if(o.viewedDoneAt && o.viewedDoneAt>=o.doneAt) return false;
+  return (Date.now()-o.doneAt) < 172800000; // 48h
+}
+function htIsToday(ts){
+  if(!ts) return false;
+  const d=new Date(ts), n=new Date();
+  return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+}
+
+// Trạng thái nghiệp vụ của 1 đơn thành phẩm — 5 mốc: Hoàn thành → Đã nhập
+// kho / Chờ giao → Đã giao, cộng thêm Hoàn trả (nếu có, luôn ưu tiên hiển thị)
+function htStage(o){
+  if(o.returned) return {key:'returned', label:'Hoàn trả', icon:'🔄', color:'#9C2E27', bg:'#FBEAE8', border:'#F3B7B1'};
+  if(o.delivered) return {key:'delivered', label:'Đã giao', icon:'✅', color:'#6D28D9', bg:'#F3E8FF', border:'#D8B4FE'};
+  if(o.whIn) return {key:'shipping', label:'Chờ giao', icon:'🚚', color:'#1D4ED8', bg:'#DBEAFE', border:'#93C5FD'};
+  return {key:'new', label:'Hoàn thành', icon:'🟢', color:'#0C7A54', bg:'#E3F5EE', border:'#86EFAC'};
+}
+
+function htCode(o){ return ddCode(o); }
+
+// Nhảy sang tab Đơn Hàng và cuộn/nổi bật đúng đơn hàng đang xem ở tab
+// "Đơn hàng đã hoàn thành" — cần reset bộ lọc/tìm kiếm ở Đơn Hàng trước để
+// đảm bảo đơn chắc chắn hiển thị (nếu đang lọc dở dang sẽ không thấy được).
+function htGoToOrderInDonHang(id, ev){
+  if(ev) ev.stopPropagation();
+  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddRecvTo=''; ddDueFrom=''; ddDueTo='';
+  goTab('dorDang');
+  setTimeout(()=>{
+    const el = document.querySelector('[data-order-id="'+id+'"]');
+    if(el){
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+      el.classList.add('order-jump-highlight');
+      setTimeout(()=>{ el.classList.remove('order-jump-highlight'); }, 2000);
+    }
+  }, 280);
+}
+
+// Người xác nhận gần nhất — ưu tiên mốc nghiệp vụ mới nhất đã xảy ra
+function htConfirmedBy(o){
+  if(o.delivered) return o.deliveredBy || o.whBy || o.doneBy || '—';
+  if(o.whIn) return o.whBy || o.doneBy || '—';
+  return o.doneBy || '—';
+}
+
+// Ngày giao hiển thị: đã giao thì lấy ngày giao thực tế, chưa thì lấy hạn giao dự kiến
+function htShipDateHTML(o){
+  if(o.delivered) return `${fmtDate(o.deliveredAt)}`;
+  if(o.deliveryDate) return `<span style="color:var(--text4)">${fmtDate(o.deliveryDate)} (dự kiến)</span>`;
+  return '—';
+}
+
+// Mở rộng tìm kiếm: thêm mã QR / mã sản phẩm / số phiếu xuất gắn với đơn
+function htQrTokens(o){
+  return (DB.qrProducts||[]).filter(p=>p.orderId===o.id).map(p=>p.qrCode+' '+(p.productCode||'')).join(' ');
+}
+function htMatchSearch(o, q){
+  if(!q) return true;
+  if(matchSearch(o,q)) return true;
+  const s=_stripDiacritics(q.toLowerCase()).trim();
+  const extra = htQrTokens(o)+' '+(o.exportSlipNo||'');
+  return _stripDiacritics(extra.toLowerCase()).includes(s);
+}
+
+// Sắp xếp thông minh: Đơn vừa hoàn thành lên đầu → sau đó theo ngày hoàn thành mới nhất
+function htSmartSort(list){
+  return [...list].sort((a,b)=>{
+    const af=htIsFresh(a)?0:1, bf=htIsFresh(b)?0:1;
+    if(af!==bf) return af-bf;
+    return (b.doneAt||0)-(a.doneAt||0);
+  });
+}
+
+function htResetFilters(){
+  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htShipFrom=''; htShipTo=''; htCustomerFilter='all';
+  renderHoanThanh();
+}
+function htSetFilter(key){
+  htFilterStatus = (htFilterStatus===key) ? 'all' : key;
+  renderHoanThanh();
+}
+
+function htToggleSelect(id, checked){
+  if(checked) htSelected.add(id); else htSelected.delete(id);
+  renderHoanThanh();
+}
+function htToggleSelectAll(checked){
+  if(checked) _htVisibleIds.forEach(id=>htSelected.add(id));
+  else _htVisibleIds.forEach(id=>htSelected.delete(id));
+  renderHoanThanh();
+}
+function htClearSelection(){ htSelected.clear(); renderHoanThanh(); }
+
+function htToggleMenu(id, ev){
+  if(ev) ev.stopPropagation();
+  const menu = document.getElementById('globalActionMenu');
+  if(!menu) return;
+  const wasOpenForThis = menu.classList.contains('open') && menu.dataset.forId === 'ht-'+id;
+  closeAllActionMenus();
+  if(wasOpenForThis) return;
+  const o = DB.orders.find(x=>x.id===id); if(!o) return;
+  const st = htStage(o);
+  const canStatus = isStaff();
+  const canDel = isAdmin();
+  menu.innerHTML = `
+    <button onclick="closeAllActionMenus();htGoToOrderInDonHang('${o.id}',event)">📋 Xem ở Đơn Hàng</button>
+    ${canStatus&&o.whIn&&!o.delivered?`<button onclick="closeAllActionMenus();htUndoWarehouse('${o.id}',event)">↩️ Bỏ đánh dấu nhập kho</button>`:''}
+    ${canStatus&&o.delivered?`<button onclick="closeAllActionMenus();htUndoDelivered('${o.id}',event)">↩️ Bỏ đánh dấu đã giao</button>`:''}
+    ${canStatus?`<button onclick="closeAllActionMenus();htToggleReturn('${o.id}',event)">${o.returned?'↩️ Bỏ đánh dấu hoàn trả':'🔄 Đánh dấu hoàn trả'}</button>`:''}
+    ${canDel?`<button class="danger" onclick="event.stopPropagation();closeAllActionMenus();deleteOrder('${o.id}')">🗑 Xóa đơn</button>`:''}
+  `;
+  menu.dataset.forId = 'ht-'+id;
+  const btn = ev && ev.target && ev.target.closest('button');
+  if(btn) openActionMenu(menu, btn);
+}
+
+// ── Xác nhận nhập kho ──
+function htMarkWarehouse(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  if(o.status!=='done'){ showToast('Chỉ đơn đã hoàn thành mới nhập kho được', true); return; }
+  if(o.whIn){ showToast('Đơn này đã nhập kho', true); return; }
+  const loc = prompt('Nhập vị trí lưu kho (không bắt buộc, VD: Kho A - Kệ 3):','');
+  if(loc===null) return;
+  o.whIn=true; o.whAt=Date.now(); o.whBy=currentUser?.name||'—'; o.whLocation=loc.trim();
+  log('Nhập kho thành phẩm', `${o.customer||''} · ${htCode(o)}`, id, {}, {});
+  saveOrders();
+  showToast('📦 Đã xác nhận nhập kho');
+  renderHoanThanh();
+}
+function htUndoWarehouse(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  if(o.delivered){ showToast('Đơn đã giao — không thể bỏ đánh dấu nhập kho', true); return; }
+  o.whIn=false; o.whAt=null;
+  log('Bỏ đánh dấu nhập kho', `${o.customer||''} · ${htCode(o)}`, id, {}, {});
+  saveOrders();
+  showToast('Đã bỏ đánh dấu nhập kho');
+  renderHoanThanh();
+}
+
+// ── Xác nhận giao hàng ──
+function htMarkDelivered(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  if(o.status!=='done'){ showToast('Chỉ đơn đã hoàn thành mới giao được', true); return; }
+  if(!o.whIn){ showToast('Đơn chưa nhập kho — hãy nhập kho trước khi giao', true); return; }
+  const slip = prompt('Số phiếu xuất kho (không bắt buộc):', o.exportSlipNo||'');
+  if(slip===null) return;
+  o.delivered=true; o.deliveredAt=Date.now(); o.deliveredBy=currentUser?.name||'—'; o.exportSlipNo=slip.trim();
+  log('Xác nhận giao hàng', `${o.customer||''} · ${htCode(o)}`, id, {}, {});
+  saveOrders();
+  showToast('🚚 Đã xác nhận giao hàng');
+  renderHoanThanh();
+}
+function htUndoDelivered(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  o.delivered=false; o.deliveredAt=null;
+  log('Bỏ đánh dấu đã giao', `${o.customer||''} · ${htCode(o)}`, id, {}, {});
+  saveOrders();
+  showToast('Đã bỏ đánh dấu giao hàng');
+  renderHoanThanh();
+}
+
+// ── Hoàn trả ──
+function htToggleReturn(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  confirm2(o.returned?'Bỏ đánh dấu hoàn trả':'Đánh dấu hoàn trả', `${o.customer||'—'} · ${htCode(o)}`, ()=>{
+    o.returned = !o.returned; o.returnedAt = o.returned?Date.now():null;
+    log(o.returned?'Đánh dấu hoàn trả':'Bỏ đánh dấu hoàn trả', `${o.customer||''} · ${htCode(o)}`, id, {}, {});
+    saveOrders();
+    showToast(o.returned?'🔄 Đã đánh dấu hoàn trả':'Đã bỏ đánh dấu hoàn trả');
+    renderHoanThanh();
+  });
+}
+
+// ── Xem chi tiết (chỉ thông tin quản lý, không có tiến độ SX) ──
+function htViewDetail(id){
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  if(htIsFresh(o)){ o.viewedDoneAt=Date.now(); saveOrders(); }
+  const st = htStage(o);
+  $('htDetailTitle').textContent = `${o.customer||'—'} · ${htCode(o)}`;
+  $('htDetailBody').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      <span class="dd-status-pill" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.icon} ${st.label}</span>
+      ${htIsFresh(o)?'<span class="ht-fresh-pill">🆕 Mới hoàn thành</span>':''}
+    </div>
+    <div><b>Khách hàng:</b> ${o.customer||'—'}</div>
+    <div><b>Sản phẩm:</b> ${o.type||'—'}</div>
+    <div><b>Nguyên liệu:</b> ${ddMaterialLabel(o.material)}</div>
+    <div><b>Quy cách:</b> ${specStr(o)}</div>
+    <div><b>Số lượng:</b> ${qtyLabel(o)}${o.kg?' · ⚖️ '+o.kg+'kg':''}</div>
+    ${o.po?`<div><b>Số PO:</b> ${o.po}</div>`:''}
+    <div class="ht-timeline" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <div class="ht-timeline-row">✅ Hoàn thành: <b>${fmtDateTime(o.doneAt)}</b>${o.doneBy?` · người xác nhận: <b>${o.doneBy}</b>`:''}</div>
+      <div class="ht-timeline-row">📦 Nhập kho: <b>${o.whIn?fmtDateTime(o.whAt):'Chưa nhập kho'}</b>${o.whBy?` · <b>${o.whBy}</b>`:''}${o.whLocation?` · vị trí: <b>${o.whLocation}</b>`:''}</div>
+      <div class="ht-timeline-row">🚚 Giao hàng: <b>${o.delivered?fmtDateTime(o.deliveredAt):'Chưa giao'}</b>${o.deliveredBy?` · <b>${o.deliveredBy}</b>`:''}${o.exportSlipNo?` · phiếu xuất: <b>${o.exportSlipNo}</b>`:''}</div>
+      ${o.returned?`<div class="ht-timeline-row" style="color:var(--red-m)">🔄 Hoàn trả: <b>${fmtDateTime(o.returnedAt)}</b></div>`:''}
+    </div>
+    ${o.note?`<div style="margin-top:8px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${o.note}</div>`:''}
+  `;
+  const pb = $('htDetailPrintBtn');
+  if(pb) pb.onclick = ()=>{ closeModal('htDetailModal'); htPrintOrder(id); };
+  openModal('htDetailModal');
+}
+
+// ── In phiếu 1 đơn thành phẩm ──
+function htPrintOrder(id, ev){
+  if(ev) ev.stopPropagation();
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  const st = htStage(o);
+  const w = window.open('', '_blank', 'width=720,height=920');
+  if(!w){ showToast('Trình duyệt đang chặn cửa sổ in, vui lòng cho phép popup', true); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${htCode(o)}</title>
+  <style>body{font-family:Inter,Arial,sans-serif;padding:28px;color:#151924}
+  h1{font-size:19px;margin:0 0 10px}
+  .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-weight:700;font-size:12px;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;margin-top:6px}
+  td{padding:7px 8px;border-bottom:1px solid #e4e7ee;font-size:13.5px}
+  td.lbl{color:#646c7c;width:170px;font-weight:600}</style></head><body>
+  <h1>PHIẾU ĐƠN HÀNG ĐÃ HOÀN THÀNH — ${htCode(o)}</h1>
+  <div class="pill" style="background:${st.bg};color:${st.color}">${st.icon} ${st.label}</div>
+  <table>
+    <tr><td class="lbl">Khách hàng</td><td>${o.customer||'—'}</td></tr>
+    <tr><td class="lbl">Sản phẩm</td><td>${o.type||'—'}</td></tr>
+    <tr><td class="lbl">Nguyên liệu</td><td>${ddMaterialLabel(o.material)}</td></tr>
+    <tr><td class="lbl">Quy cách</td><td>${specStr(o)}</td></tr>
+    <tr><td class="lbl">Số lượng</td><td>${qtyLabel(o)}${o.kg?' · '+o.kg+'kg':''}</td></tr>
+    <tr><td class="lbl">Ngày hoàn thành</td><td>${fmtDateTime(o.doneAt)}${o.doneBy?' · '+o.doneBy:''}</td></tr>
+    <tr><td class="lbl">Ngày nhập kho</td><td>${o.whIn?fmtDateTime(o.whAt)+(o.whBy?' · '+o.whBy:''):'Chưa nhập kho'}</td></tr>
+    <tr><td class="lbl">Ngày giao</td><td>${o.delivered?fmtDateTime(o.deliveredAt)+(o.deliveredBy?' · '+o.deliveredBy:''):'Chưa giao'}</td></tr>
+    ${o.exportSlipNo?`<tr><td class="lbl">Số phiếu xuất</td><td>${o.exportSlipNo}</td></tr>`:''}
+    ${o.note?`<tr><td class="lbl">Ghi chú</td><td>${o.note}</td></tr>`:''}
+  </table>
+  </body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(()=>w.print(), 300);
+}
+
+// ── Thao tác hàng loạt ──
+function htBulkWarehouse(){
+  if(guardViewer())return;
+  if(!htSelected.size){ showToast('Chưa chọn đơn nào', true); return; }
+  let n=0;
+  DB.orders.forEach(o=>{ if(htSelected.has(o.id) && o.status==='done' && !o.whIn){ o.whIn=true; o.whAt=Date.now(); o.whBy=currentUser?.name||'—'; n++; } });
+  if(n){ log('Nhập kho hàng loạt', `${n} đơn thành phẩm`, null, {}, {}); saveOrders(); showToast(`📦 Đã xác nhận nhập kho ${n} đơn`); }
+  else showToast('Không có đơn nào trong lựa chọn cần nhập kho', true);
+  htSelected.clear();
+  renderHoanThanh();
+}
+function htBulkDeliver(){
+  if(guardViewer())return;
+  if(!htSelected.size){ showToast('Chưa chọn đơn nào', true); return; }
+  let n=0;
+  DB.orders.forEach(o=>{ if(htSelected.has(o.id) && o.whIn && !o.delivered){ o.delivered=true; o.deliveredAt=Date.now(); o.deliveredBy=currentUser?.name||'—'; n++; } });
+  if(n){ log('Xác nhận giao hàng loạt', `${n} đơn thành phẩm`, null, {}, {}); saveOrders(); showToast(`🚚 Đã xác nhận giao ${n} đơn`); }
+  else showToast('Không có đơn nào trong lựa chọn sẵn sàng để giao (cần nhập kho trước)', true);
+  htSelected.clear();
+  renderHoanThanh();
+}
+function htBulkPrint(){
+  if(!htSelected.size){ showToast('Chưa chọn đơn nào', true); return; }
+  const list = DB.orders.filter(o=>htSelected.has(o.id));
+  const w = window.open('', '_blank');
+  if(!w){ showToast('Trình duyệt đang chặn cửa sổ in, vui lòng cho phép popup', true); return; }
+  const rows = list.map(o=>`<tr><td>${htCode(o)}</td><td>${o.customer||'—'}</td><td>${o.type||'—'}</td><td>${ddMaterialLabel(o.material)}</td><td>${specStr(o)}</td><td>${qtyLabel(o)}</td><td>${fmtDate(o.doneAt)}</td><td>${o.whIn?fmtDate(o.whAt):'—'}</td><td>${o.delivered?fmtDate(o.deliveredAt):'—'}</td><td>${htStage(o).label}</td></tr>`).join('');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Danh sách đơn hàng đã hoàn thành</title>
+  <style>body{font-family:Inter,Arial,sans-serif;padding:22px}table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #ccc;padding:6px 8px;font-size:12px;text-align:left}th{background:#f4f6fa}
+  h2{font-size:16px}</style></head><body>
+  <h2>Danh sách đơn hàng đã hoàn thành (${list.length})</h2>
+  <table><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Nguyên liệu</th><th>Quy cách</th><th>SL</th><th>Ngày hoàn thành</th><th>Ngày nhập kho</th><th>Ngày giao</th><th>Trạng thái</th></tr></thead><tbody>${rows}</tbody></table>
+  </body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(()=>w.print(), 300);
+}
+function htBulkExport(){
+  if(!htSelected.size){ showToast('Chưa chọn đơn nào', true); return; }
+  if(typeof XLSX==='undefined'){ showToast('⏳ Đang tải thư viện Excel, thử lại sau...', true); loadSheetJs(); return; }
+  const list = DB.orders.filter(o=>htSelected.has(o.id));
+  const rows = list.map(o=>({
+    'Mã đơn':htCode(o), 'Khách hàng':o.customer||'', 'Sản phẩm':o.type||'', 'Nguyên liệu':ddMaterialLabel(o.material), 'Quy cách':specStr(o),
+    'Số lượng':qtyLabel(o), 'KG':o.kg||'', 'Ngày hoàn thành':fmtDate(o.doneAt), 'Ngày nhập kho':o.whIn?fmtDate(o.whAt):'',
+    'Ngày giao':o.delivered?fmtDate(o.deliveredAt):(o.deliveryDate?fmtDate(o.deliveryDate)+' (dự kiến)':''),
+    'Trạng thái':htStage(o).label, 'Người xác nhận':htConfirmedBy(o), 'Số phiếu xuất':o.exportSlipNo||'', 'Ghi chú':o.note||''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ThanhPham');
+  XLSX.writeFile(wb, `danh-sach-don-hoan-thanh-${Date.now()}.xlsx`);
+}
+
+// ── 1 Card trong danh sách Hoàn thành (ERP/MES style, badge "Mới hoàn thành" ở góc trên phải) ──
+function htRow(o){
+  const st = htStage(o);
+  const fresh = htIsFresh(o);
+  const canStatus = isStaff();
+  const canDel = isAdmin();
+  return `<tr class="${fresh?'ht-fresh':''}" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
+    <td><div class="ord-cust-info"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></td>
+    <td>${o.type||'—'}</td>
+    <td>${ddMaterialLabel(o.material)}</td>
+    <td><span class="spec-chip">${specStr(o)}</span></td>
+    <td>${qtyLabel(o)}${o.kg?`<div style="font-size:10.5px;color:var(--text4);font-weight:600">⚖️ ${o.kg}kg</div>`:''}</td>
+    <td>${fmtDate(o.createdAt)}</td>
+    <td style="color:#0C7A54;font-weight:800">${fmtDateTime(o.doneAt)}</td>
+    <td style="color:var(--brand);font-weight:800">${o.startedAt&&o.doneAt?fmtDuration(o.doneAt-o.startedAt):'—'}</td>
+    <td>${o.whIn?fmtDate(o.whAt):'—'}</td>
+    <td>${o.delivered?fmtDate(o.deliveredAt):(o.deliveryDate?fmtDate(o.deliveryDate)+' (dk)':'—')}</td>
+    <td>${fresh?'<span class="ht-fresh-pill">✅ Mới</span> ':''}<span class="dd-status-pill" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.icon} ${st.label}</span></td>
+    <td>${htConfirmedBy(o)}</td>
+    <td onclick="event.stopPropagation()" style="white-space:nowrap">
+      <button class="dd-act-btn icon-only" title="Xem chi tiết" onclick="htViewDetail('${o.id}')">👁</button>
+      <button class="dd-act-btn icon-only" title="In phiếu" onclick="htPrintOrder('${o.id}',event)">📄</button>
+      ${canStatus&&st.key==='new'?`<button class="dd-act-btn wh" title="Xác nhận nhập kho" onclick="htMarkWarehouse('${o.id}',event)">📦</button>`:''}
+      ${canStatus&&st.key==='shipping'?`<button class="dd-act-btn ship" title="Xác nhận giao hàng" onclick="htMarkDelivered('${o.id}',event)">🚚</button>`:''}
+      <div class="dd-menu-wrap" style="display:inline-block"><button class="dd-act-btn icon-only" title="Thêm" onclick="htToggleMenu('${o.id}',event)">⋮</button></div>
+    </td>
+  </tr>`;
+}
 
 function renderHoanThanh(){
   const htInp = document.getElementById('htSearch');
   if(htInp) htSearchQ = htInp.value;
-  let list = DB.orders.filter(o=>o.status==='done').sort((a,b)=>b.doneAt-a.doneAt);
-  if(htSearchQ) list = list.filter(o=>matchSearch(o,htSearchQ));
+
+  const allDone = DB.orders.filter(o=>o.status==='done');
+  const totalDone   = allDone.length;
+  const doneToday   = allDone.filter(o=>htIsToday(o.doneAt)).length;
+  const waitWh      = allDone.filter(o=>htStage(o).key==='new').length;
+  const inWh        = allDone.filter(o=>o.whIn).length;
+  const waitShip    = allDone.filter(o=>htStage(o).key==='shipping').length;
+  const delivered   = allDone.filter(o=>o.delivered).length;
+  const totalKg     = allDone.reduce((s,o)=>s+(Number(o.kg)||0),0);
+  const totalCustomers = new Set(allDone.map(o=>o.customer).filter(Boolean)).size;
+  const customers = [...new Set(allDone.map(o=>o.customer).filter(Boolean))].sort();
+
+  // Áp bộ lọc
+  let list = allDone;
+  if(htSearchQ) list = list.filter(o=>htMatchSearch(o,htSearchQ));
+  if(htFilterStatus==='today') list = list.filter(o=>htIsToday(o.doneAt));
+  else if(htFilterStatus==='wh_all') list = list.filter(o=>o.whIn);
+  else if(htFilterStatus!=='all') list = list.filter(o=>htStage(o).key===htFilterStatus);
+  if(htDoneFrom||htDoneTo) list = list.filter(o=>ddInRange(o.doneAt, htDoneFrom, htDoneTo));
+  if(htShipFrom||htShipTo) list = list.filter(o=>ddInRange(o.delivered?o.deliveredAt:o.deliveryDate, htShipFrom, htShipTo));
+  if(htCustomerFilter!=='all') list = list.filter(o=>o.customer===htCustomerFilter);
+  list = htSmartSort(list);
+
+  const stats = [
+    {key:'all',       icon:'📦', ic:'#EEF0F3', col:'#556072', n:totalDone, l:'Tổng đơn hoàn thành'},
+    {key:'today',     icon:'📅', ic:'#E3F5EE', col:'#0C7A54', n:doneToday, l:'Hoàn thành hôm nay'},
+    {key:'new',       icon:'⏳', ic:'#FCF1DE', col:'#8A5A0E', n:waitWh,    l:'Chờ nhập kho'},
+    {key:'wh_all',    icon:'📦', ic:'#DBEAFE', col:'#1D4ED8', n:inWh,      l:'Đã nhập kho'},
+    {key:'shipping',  icon:'🚚', ic:'#DBEAFE', col:'#1D4ED8', n:waitShip,  l:'Chờ giao'},
+    {key:'delivered', icon:'✅', ic:'#F3E8FF', col:'#6D28D9', n:delivered, l:'Đã giao'},
+  ];
+
+  const selIds = list.map(o=>o.id);
+  _htVisibleIds = selIds;
+  const allChecked = selIds.length>0 && selIds.every(id=>htSelected.has(id));
 
   $('mc').innerHTML=`
-    <div class="search-wrap" style="margin-bottom:8px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-inp" id="htSearch" type="search" placeholder="🔍 Tìm trong đơn đã hoàn thành..." value="${htSearchQ}" autocomplete="off">
+    <div class="dd-overview">
+      <span><b>${totalDone}</b>đơn thành phẩm</span>
+      <span><b>${totalKg.toLocaleString('vi-VN')}kg</b>tổng sản lượng</span>
+      <span><b>${totalCustomers}</b>khách hàng</span>
+      <span style="color:var(--text4)">🗑 Tự xóa sau 30 ngày</span>
     </div>
-    <div class="kh-sec-hd type-done" style="justify-content:space-between"><span>✅ Hoàn thành (${list.length}${htSearchQ?' kết quả':''})</span><span style="font-size:10.5px;color:var(--text4);font-weight:400">🗑 Tự xóa sau 30 ngày</span></div>
-    ${list.length
-      ? `<div class="card-grid">${list.map(o=>orderCardKH(o,null)).join('')}</div>`
-      : `<div class="empty"><div class="empty-icon">${htSearchQ?'🔍':'📦'}</div>${htSearchQ?`Không tìm thấy "${htSearchQ}"`:'Chưa có đơn hoàn thành'}</div>`}
+
+    <div class="dd-stats">
+      ${stats.map(s=>`<button class="dd-stat${htFilterStatus===s.key?' active':''}" onclick="htSetFilter('${s.key}')">
+        <div class="dd-stat-ic" style="background:${s.ic};color:${s.col}">${s.icon}</div>
+        <div class="dd-stat-txt"><div class="dd-stat-n">${s.n}</div><div class="dd-stat-l">${s.l}</div></div>
+      </button>`).join('')}
+    </div>
+
+    <div class="dd-filters">
+      <div class="dd-filters-row">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-inp" id="htSearch" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, mã sản phẩm, QR, phiếu xuất..." value="${htSearchQ}" autocomplete="off" spellcheck="false">
+          ${htSearchQ?`<button onclick="htSearchQ='';renderHoanThanh()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
+        </div>
+        <div class="dd-fld">
+          <label>Trạng thái</label>
+          <select onchange="htFilterStatus=this.value;renderHoanThanh()">
+            <option value="all" ${htFilterStatus==='all'?'selected':''}>Tất cả</option>
+            <option value="new" ${htFilterStatus==='new'?'selected':''}>Chờ nhập kho</option>
+            <option value="shipping" ${htFilterStatus==='shipping'?'selected':''}>Đã nhập kho / Chờ giao</option>
+            <option value="delivered" ${htFilterStatus==='delivered'?'selected':''}>Đã giao</option>
+            <option value="returned" ${htFilterStatus==='returned'?'selected':''}>Hoàn trả</option>
+          </select>
+        </div>
+        <div class="dd-fld">
+          <label>Khách hàng</label>
+          <select onchange="htCustomerFilter=this.value;renderHoanThanh()">
+            <option value="all">Tất cả</option>
+            ${customers.map(c=>`<option value="${c}" ${htCustomerFilter===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <button class="dd-reset-btn" onclick="htResetFilters()">↺ Reset bộ lọc</button>
+      </div>
+      <div class="dd-filters-row">
+        <div class="dd-fld"><label>Hoàn thành từ</label><input type="date" value="${htDoneFrom}" onchange="htDoneFrom=this.value;renderHoanThanh()"></div>
+        <div class="dd-fld"><label>Hoàn thành đến</label><input type="date" value="${htDoneTo}" onchange="htDoneTo=this.value;renderHoanThanh()"></div>
+        <div class="dd-fld"><label>Ngày giao từ</label><input type="date" value="${htShipFrom}" onchange="htShipFrom=this.value;renderHoanThanh()"></div>
+        <div class="dd-fld"><label>Ngày giao đến</label><input type="date" value="${htShipTo}" onchange="htShipTo=this.value;renderHoanThanh()"></div>
+      </div>
+    </div>
+
+    ${!list.length
+      ? `<div class="ord-empty">${htSearchQ||htFilterStatus!=='all'||htDoneFrom||htShipFrom||htCustomerFilter!=='all'?'🔍 Không tìm thấy đơn thành phẩm phù hợp':'📦 Chưa có đơn nào hoàn thành sản xuất'}</div>`
+      : `<div class="ord-list-toolbar">
+          <span class="ord-list-count">Hiển thị ${list.length} / ${totalDone} đơn thành phẩm</span>
+        </div>
+        <div class="dd-table-wrap"><table class="dd-table" style="min-width:1440px"><thead><tr>
+          <th>Khách hàng</th>
+          <th>Sản phẩm</th>
+          <th>Nguyên liệu</th>
+          <th>Quy cách</th>
+          <th>Số lượng</th>
+          <th>Ngày nhận</th>
+          <th>Hoàn thành lúc</th>
+          <th>Thời gian SX</th>
+          <th>Nhập kho</th>
+          <th>Ngày giao</th>
+          <th>Trạng thái</th>
+          <th>Xác nhận</th>
+          <th>Thao tác</th>
+        </tr></thead><tbody>${list.map(htRow).join('')}</tbody></table></div>`}
   `;
   const hi=document.getElementById('htSearch');
-  if(hi){ hi.focus(); const v=hi.value; hi.value=''; hi.value=v; hi.addEventListener('input',()=>renderHoanThanh()); }
+  if(hi){
+    hi.focus(); const v=hi.value; hi.value=''; hi.value=v;
+    hi.addEventListener('input',function(){htSearchQ=this.value;renderHoanThanh();});
+  }
 }
+
 
 // ════════════════════════════════════════════════════════════
 // BÁO CÁO — tổng quan, biểu đồ trạng thái, xu hướng sản lượng,
@@ -10932,6 +11489,7 @@ function setStatus(id, newStatus){if(guardViewer())return;
   if(newStatus==='running'&&!o.stage) o.stage='dun';
   if(newStatus==='done') o.doneAt=Date.now();
   if(newStatus==='done') o.stage='danhbong';
+  if(newStatus==='done') o.doneBy=currentUser?.name||'—';
   if(newStatus!=='done') delete o.doneAt;
   const lb={pending:'Chờ SX',running:'Đang chạy',done:'Xong'};
   log(lb[newStatus]||newStatus,
@@ -10941,7 +11499,12 @@ function setStatus(id, newStatus){if(guardViewer())return;
     {status:newStatus,customer:o.customer,priority:o.priority});
 
   // UI ngay lập tức
-  renderTab(currentTab); updateBadges();
+  if(newStatus==='done'){
+    goTab('hoanThanh'); // Đơn hoàn thành → nhảy thẳng sang tab Hoàn thành, không còn ở tab Đơn Hàng nữa
+  } else {
+    renderTab(currentTab);
+  }
+  updateBadges();
   goToOrderCard(id); // Nổi bật + cuộn tới đúng thẻ đơn vừa đổi trạng thái, tránh mất dấu khi đơn đổi vị trí/cột
   showToast({pending:'⏳ Chờ sản xuất',running:'⚙️ Đang chạy!',done:'✅ Hoàn thành!'}[newStatus]||'');
 
@@ -12499,6 +13062,17 @@ function captureAttendance(){if(guardViewer())return;
   const ym = curYM();
   captureAndShareElement('attCaptureArea', `Bang_cham_cong_${ym}.png`, `Bảng chấm công tháng ${ym}`);
 }
+
+// ── Menu ⋯/⋮ dùng chung (gắn cuối body, luôn nổi trên cùng, không bị danh sách
+// làm mới đè mất giữa chừng như trước) ──
+(function(){
+  if(!document.getElementById('globalActionMenu')){
+    const gm = document.createElement('div');
+    gm.id = 'globalActionMenu';
+    gm.className = 'dd-menu';
+    document.body.appendChild(gm);
+  }
+})();
 
 function llvCapture(sheetId){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
