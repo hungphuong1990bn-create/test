@@ -2549,6 +2549,11 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .sb-footer{padding:12px 16px;border-top:1px solid var(--border)}
 .sb-online{font-size:11.5px;color:var(--text3);margin-bottom:8px}
 .sb-online b{color:var(--green-m)}
+.sb-scanstats{margin-bottom:10px;padding:8px 9px;border-radius:9px;background:var(--bg);border:1px solid var(--border)}
+.sb-scanstats-hd{font-size:10.5px;font-weight:700;color:var(--text3);margin-bottom:4px}
+.sb-scanstats-total{font-size:16px;font-weight:800;color:var(--brand);display:flex;align-items:baseline;gap:6px}
+.sb-scanstats-total .sb-scanstats-today{font-size:10px;font-weight:600;color:var(--text4)}
+.sb-scanstats-rows{display:flex;gap:9px;margin-top:4px;font-size:10.5px;color:var(--text3);flex-wrap:wrap}
 .sb-logout{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:none;background:var(--red-l);cursor:pointer;width:100%;color:var(--red-m);font-size:13px;font-weight:600;font-family:inherit}
 
 /* ── MAIN ── */
@@ -4011,6 +4016,7 @@ body{letter-spacing:-.1px}
       </button>
     </div>
     <div class="sb-footer">
+      <div class="sb-scanstats" id="sbScanStats" style="display:none"></div>
       <div class="sb-online" id="sbOnline"></div>
       <button class="sb-logout" onclick="doLogout()">
         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -6257,7 +6263,50 @@ function roleBreakdownTxt(list){
 let _clockOffset = 0;
 function nowSrv(){ return Date.now() + _clockOffset; }
 
+// ── Tổng lượt quét mã QR (đơn hàng + chấm công/lịch làm việc), hiển thị ở
+// đầu khung "Đang truy cập" trong sidebar — CHỈ ADMIN xem được, giúp quản lý
+// nắm được mức độ dùng mã QR dán ở xưởng/trên tem sản phẩm mà không cần mở
+// riêng modal tạo mã QR. Có cache 30s để không gọi Firebase liên tục mỗi lần
+// danh sách "Đang truy cập" được vẽ lại (~mỗi 20s heartbeat).
+let _scanStatsLastFetch = 0;
+let _scanStatsCache = null;
+async function renderSidebarScanStats(force){
+  const box = document.getElementById('sbScanStats');
+  if(!box) return;
+  if(!isAdmin() || !fbOk()){ box.style.display='none'; box.innerHTML=''; return; }
+  const now = Date.now();
+  if(!force && _scanStatsCache && (now-_scanStatsLastFetch)<30000){
+    box.style.display='';
+    box.innerHTML = scanStatsSidebarHtml(_scanStatsCache);
+    return;
+  }
+  _scanStatsLastFetch = now;
+  try{
+    const [donhang, chamcong, lichlamviec] = await Promise.all([
+      fetchScanStats('donhang'), fetchScanStats('chamcong'), fetchScanStats('lichlamviec')
+    ]);
+    const stats = {donhang, chamcong, lichlamviec};
+    _scanStatsCache = stats;
+    const box2 = document.getElementById('sbScanStats');
+    if(!box2) return; // sidebar đã đổi trong lúc tải
+    box2.style.display='';
+    box2.innerHTML = scanStatsSidebarHtml(stats);
+  }catch(e){ /* im lặng bỏ qua — không ảnh hưởng phần còn lại của sidebar */ }
+}
+function scanStatsSidebarHtml(s){
+  const tong = (s.donhang?.total||0) + (s.chamcong?.total||0) + (s.lichlamviec?.total||0);
+  const homNay = (s.donhang?.today||0) + (s.chamcong?.today||0) + (s.lichlamviec?.today||0);
+  return `<div class="sb-scanstats-hd">📷 Tổng lượt quét mã QR</div>
+    <div class="sb-scanstats-total">${tong}<span class="sb-scanstats-today">hôm nay ${homNay}</span></div>
+    <div class="sb-scanstats-rows">
+      <span title="Tra cứu đơn hàng">📦 ${s.donhang?.total||0}</span>
+      <span title="Chấm công">🗓️ ${s.chamcong?.total||0}</span>
+      <span title="Lịch làm việc">📅 ${s.lichlamviec?.total||0}</span>
+    </div>`;
+}
+
 function renderPresenceLists(online){
+  renderSidebarScanStats();
   const sb = document.getElementById('sbOnline');
   if(sb){
     sb.innerHTML = online.length>0
@@ -6288,6 +6337,8 @@ function renderPresenceLists(online){
 }
 
 function showFbNotConfigured(){
+  const ss0 = document.getElementById('sbScanStats');
+  if(ss0){ ss0.style.display='none'; ss0.innerHTML=''; }
   const sb0 = document.getElementById('sbOnline');
   if(sb0) sb0.innerHTML = `<div class="sb-online-offline">⚠️ Chưa bật Firebase Sync (Cài đặt) — không thể xem ai đang truy cập</div>`;
   const el0 = document.getElementById('onlineEl');
@@ -9627,11 +9678,16 @@ function parseCongValue(raw){
 // 2h thêm giờ) ⇒ tổng = 2 công + 4 giờ thêm giờ ⇒ hiển thị "2.4" (chưa đủ
 // 8h nên chưa quy đổi). Nếu giờ thêm giờ cộng dồn đủ/vượt 8h thì cứ mỗi 8h
 // được +1 công, phần dư còn lại vẫn hiển thị là số giờ thêm giờ.
-function computeTotal(workerId){
-  const ym = curYM();
-  const rowData = DB.attendance[ym]?.[workerId] || {};
+// Công thức DUY NHẤT tính tổng công từ dữ liệu thô 1 dòng chấm công
+// ({ngày: giá trị nhập}) — dùng chung cho CẢ tab quản lý nhân sự (computeTotal)
+// LẪN trang công khai quét mã QR (pubComputeTotal) để 2 nơi luôn ra cùng 1 kết
+// quả. Trước đây trang công khai dùng công thức cộng dồn khác (chỉ parseFloat
+// đơn giản, không quy đổi giờ làm thêm ≥8h thành công) nên bị lệch tổng công
+// so với tab quản lý nhân sự (VD 28.6 công ở tab quản lý nhưng quét QR lại
+// hiện 27.6 công vì thiếu 1 công quy đổi từ giờ làm thêm).
+function computeCongTotalStr(rowData){
   let cong = 0, ot = 0;
-  Object.values(rowData).forEach(v=>{
+  Object.values(rowData||{}).forEach(v=>{
     const p = parseCongValue(v);
     cong += p.cong;
     ot += p.ot;
@@ -9652,6 +9708,11 @@ function computeTotal(workerId){
   }
   const otDigit = otRest % 1 === 0 ? Math.round(otRest) : otRest;
   return congInt + '.' + otDigit;
+}
+function computeTotal(workerId){
+  const ym = curYM();
+  const rowData = DB.attendance[ym]?.[workerId] || {};
+  return computeCongTotalStr(rowData);
 }
 
 // Tự động theo dõi tháng hiện tại theo thời gian thực: khi hết tháng (sang
@@ -10019,8 +10080,11 @@ function saveNghiPhep(){if(guardViewer())return;
   log('Nghỉ phép',`${worker?worker.name:'?'} · ${loai} · ${from}→${to}`,'','','');
   showToast('✅ Đã lưu đơn nghỉ phép');
   closeNghiPhepForm();
-  const el=document.getElementById('nghiPhepList');
-  if(el) el.innerHTML=renderNghiPhepList();
+  // Render lại TOÀN BỘ tab quản lý nhân sự (không chỉ riêng danh sách đơn
+  // nghỉ phép) — trước đây chỉ cập nhật #nghiPhepList nên thẻ thống kê
+  // "Đơn nghỉ phép" ở đầu trang và cột "Nghỉ phép (tháng)" ở tab Danh sách
+  // NV bị đứng yên, không phản ánh đơn vừa thêm cho tới khi chuyển tab.
+  renderChamCong();
 }
 function deleteNghiPhep(id){if(guardViewer())return;
   confirm2('Xóa đơn','Xác nhận xóa đơn nghỉ phép này?',()=>{
@@ -10028,8 +10092,7 @@ function deleteNghiPhep(id){if(guardViewer())return;
     lsSave();
     syncArrFieldToServer('nghiPhep', '/data/nghiPhep');
     showToast('🗑️ Đã xóa');
-    const el=document.getElementById('nghiPhepList');
-    if(el) el.innerHTML=renderNghiPhepList();
+    renderChamCong();
   });
 }
 function approveNghiPhep(id, status){if(guardViewer())return;
@@ -10039,8 +10102,10 @@ function approveNghiPhep(id, status){if(guardViewer())return;
   lsSave();
   syncArrFieldToServer('nghiPhep', '/data/nghiPhep');
   showToast(status==='Đã duyệt'?'✅ Đã duyệt đơn':'❌ Đã từ chối đơn');
-  const el=document.getElementById('nghiPhepList');
-  if(el) el.innerHTML=renderNghiPhepList();
+  // Render lại toàn bộ tab để tình trạng nghỉ (đã duyệt/từ chối) cập nhật
+  // đồng thời ở mọi nơi hiển thị trong tab quản lý nhân sự, không chỉ riêng
+  // bảng danh sách đơn nghỉ phép.
+  renderChamCong();
 }
 function renderNghiPhepList(){
   const list=(DB.nghiPhep||[]);
@@ -12261,10 +12326,11 @@ async function downloadCcllvQr(){
 }
 
 // Tính tổng công từ dữ liệu thô (không phụ thuộc DB — dùng cho trang công khai)
+// Dùng chung công thức computeCongTotalStr() với tab quản lý nhân sự (xem
+// định nghĩa phía trên, gần hàm computeTotal) để tổng công hiển thị ở trang
+// công khai luôn khớp với tổng công ở bảng chấm công nội bộ.
 function pubComputeTotal(rowData){
-  let total = 0;
-  Object.values(rowData||{}).forEach(v=>{ const n = parseFloat(v); if(!isNaN(n)) total += n; });
-  return total.toFixed(1).replace(/\.0$/,'');
+  return computeCongTotalStr(rowData);
 }
 
 let _pubCcllvTab = 'llv';
