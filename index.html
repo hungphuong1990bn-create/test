@@ -4621,6 +4621,7 @@ body{letter-spacing:-.1px}
       <span style="font-size:11.5px;color:var(--text3);word-break:break-all;flex:1" id="ccllvQrLinkTxt"></span>
     </div>
     <div id="ccllvQrWarn" style="display:none;font-size:11.5px;color:var(--red-m);margin-bottom:10px">⚠️ Chưa bật Firebase Sync (Cài đặt ▸ Cấu hình Firebase Sync) — mã QR sẽ KHÔNG xem được từ điện thoại khác cho tới khi bật đồng bộ.</div>
+    <div id="ccllvQrStats" style="display:flex;gap:8px;margin-bottom:10px"></div>
     <div class="modal-footer" style="flex-wrap:wrap">
       <button class="btn btn-ghost" onclick="closeModal('ccllvQrModal')">Đóng</button>
       <button class="btn btn-ghost" onclick="copyCcllvLink()">🔗 Sao chép liên kết</button>
@@ -12058,6 +12059,48 @@ function pubEsc(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// ── Đếm số lượt quét mã QR công khai (Lịch làm việc / Chấm công / Thông
+// tin đơn hàng) — ghi nhận best-effort lên Firebase RTDB, không yêu cầu
+// đăng nhập, không chặn/ảnh hưởng trải nghiệm người quét nếu lỗi mạng.
+// Lưu tại /data/scanStats/{type}: {total, days:{YYYY-MM-DD:n}, lastAt}
+// type ∈ 'lichlamviec' | 'chamcong' | 'donhang'
+const SCAN_STAT_TYPES = {
+  lichlamviec: 'Lịch làm việc',
+  chamcong: 'Chấm công',
+  donhang: 'Thông tin đơn hàng'
+};
+async function pubTrackScan(type){
+  try{
+    const dbUrl = (new URLSearchParams(location.search).get('db') || fbUrl() || '').replace(/\/$/,'');
+    if(!dbUrl) return;
+    const today = (typeof todayStr==='function') ? todayStr() : new Date().toISOString().slice(0,10);
+    const url = dbUrl + '/data/scanStats/' + type + '.json';
+    let cur = {};
+    try{
+      const r = await fetch(url, {cache:'no-store'});
+      if(r.ok) cur = (await r.json()) || {};
+    }catch(e){ /* dùng cur rỗng nếu không đọc được */ }
+    const days = cur.days || {};
+    days[today] = (days[today]||0) + 1;
+    const payload = { total: (cur.total||0) + 1, days, lastAt: Date.now() };
+    await fetch(url, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  }catch(e){ /* im lặng bỏ qua — không ảnh hưởng trang tra cứu công khai */ }
+}
+
+// Lấy thống kê lượt quét để hiển thị cho quản trị viên (tổng + hôm nay)
+async function fetchScanStats(type){
+  try{
+    const dbUrl = fbUrl();
+    if(!dbUrl) return null;
+    const r = await fetch(dbUrl.replace(/\/$/,'') + '/data/scanStats/' + type + '.json', {cache:'no-store'});
+    if(!r.ok) return null;
+    const d = await r.json();
+    if(!d) return {total:0, today:0};
+    const today = (typeof todayStr==='function') ? todayStr() : new Date().toISOString().slice(0,10);
+    return { total: d.total||0, today: (d.days && d.days[today]) || 0 };
+  }catch(e){ return null; }
+}
+
 // ── Trang tra cứu công khai: hiện khi khách hàng quét mã QR trên tem
 // bằng camera điện thoại thường (không cần cài / đăng nhập app) ─────
 async function renderPublicScan(code){
@@ -12106,6 +12149,8 @@ async function renderPublicScan(code){
     wrap.innerHTML = `<div class="pub-msg">❌ Không tìm thấy thông tin cho mã <b>${pubEsc(code)}</b>.<br>Mã có thể chưa được đồng bộ lên hệ thống, đã bị xoá, hoặc đường truyền lúc tạo mã không ổn định — vui lòng thử lại sau ít phút hoặc liên hệ nhà máy.</div>`;
     return;
   }
+
+  pubTrackScan('donhang');
 
   const p = record;
   const si = (typeof qrStatusInfo==='function') ? qrStatusInfo(p.status) : {label:p.status, cls:''};
@@ -12156,12 +12201,29 @@ function ccllvPublicUrl(){
   return base + '?pub=ccllv' + (db ? '&db=' + encodeURIComponent(db) : '');
 }
 
+function scanStatCardHtml(label, stats){
+  if(!stats) return `<div class="qr-stat-card" style="flex:1;text-align:left;padding:8px 10px"><div style="font-size:11px;color:var(--text4)">${label}</div><div style="font-size:12px;color:var(--text4)">— chưa có dữ liệu —</div></div>`;
+  return `<div class="qr-stat-card" style="flex:1;text-align:left;padding:8px 10px">
+    <div style="font-size:11px;color:var(--text4)">${label}</div>
+    <div style="font-size:18px;font-weight:800;color:var(--brand)">${stats.total}<span style="font-size:11px;font-weight:600;color:var(--text3)"> lượt quét</span></div>
+    <div style="font-size:11px;color:var(--text3)">Hôm nay: ${stats.today}</div>
+  </div>`;
+}
+async function loadCcllvQrStats(){
+  const box = $('ccllvQrStats'); if(!box) return;
+  if(!fbOk()){ box.innerHTML = ''; return; }
+  box.innerHTML = `<div style="font-size:11.5px;color:var(--text4)">Đang tải số lượt quét…</div>`;
+  const [llv, cc] = await Promise.all([fetchScanStats('lichlamviec'), fetchScanStats('chamcong')]);
+  if(!$('ccllvQrStats')) return; // modal đã đóng trong lúc tải
+  box.innerHTML = scanStatCardHtml('📅 Lịch làm việc', llv) + scanStatCardHtml('🗓️ Chấm công', cc);
+}
 async function openCcllvQrModal(){
   if(guardViewer()) return;
   openModal('ccllvQrModal');
   const link = ccllvPublicUrl();
   $('ccllvQrLinkTxt').textContent = link;
   $('ccllvQrWarn').style.display = fbOk() ? 'none' : 'block';
+  loadCcllvQrStats();
   const wrap = $('ccllvQrCanvasWrap');
   wrap.innerHTML = '<span style="font-size:12px;color:var(--text4)">Đang tạo mã QR…</span>';
   await ensureQrLib();
@@ -12206,10 +12268,15 @@ function pubComputeTotal(rowData){
 }
 
 let _pubCcllvTab = 'llv';
+const _pubCcllvTracked = new Set(); // tránh đếm trùng lượt xem cùng 1 tab trong 1 lần mở trang
 function pubCcllvSwitchTab(tab){
   _pubCcllvTab = tab;
   document.querySelectorAll('.pub-ccllv-tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===tab));
   document.querySelectorAll('.pub-ccllv-panel').forEach(el=>el.style.display = (el.dataset.tab===tab) ? '' : 'none');
+  if(!_pubCcllvTracked.has(tab)){
+    _pubCcllvTracked.add(tab);
+    pubTrackScan(tab==='cc' ? 'chamcong' : 'lichlamviec');
+  }
 }
 
 // ── Trang công khai: xem TOÀN BỘ lịch làm việc + bảng chấm công tháng
@@ -12342,6 +12409,10 @@ async function renderPublicCcllv(){
     <div class="pub-ccllv-panel" data-tab="cc" style="display:none">${attHtml}</div>
     <div class="pub-footer">Trang xem chấm công &amp; lịch làm việc — vui lòng liên hệ quản lý nếu có sai lệch</div>
   `;
+  if(!_pubCcllvTracked.has('llv')){
+    _pubCcllvTracked.add('llv');
+    pubTrackScan('lichlamviec');
+  }
 }
 
 function genUniqueQrCode(){
@@ -12553,6 +12624,7 @@ function renderQR(){
       <div class="qr-stat-card" onclick="setQrFilter('error')"><div class="qr-stat-n" style="color:var(--red-m)">${c.error}</div><div class="qr-stat-lbl">QR lỗi</div></div>
     </div>
     ${c.trung>0?`<div class="qr-stat-card" style="text-align:left;margin-bottom:10px;background:var(--red-l)" onclick="void 0"><b style="color:var(--red)">⚠️ ${c.trung} mã QR bị trùng</b> — vui lòng kiểm tra lại (mục Nhật ký thao tác)</div>`:''}
+    ${fbOk()?`<div id="qrDonHangScanStats" style="margin-bottom:10px">${scanStatCardHtml('👀 Lượt khách quét tra cứu Thông tin đơn hàng', null)}</div>`:''}
     <div class="sec-title">Số QR tạo mới theo ngày (14 ngày gần nhất)</div>
     <div style="background:var(--card);border-radius:var(--r);padding:10px;box-shadow:var(--sh);margin-bottom:10px">${qrDailyChart()}</div>
     <div class="qr-actions-row">
@@ -12577,6 +12649,12 @@ function renderQR(){
   `;
   const si=document.getElementById('qrSearchInp');
   if(si){ si.focus(); const v=si.value; si.value=''; si.value=v; si.addEventListener('input',()=>renderQR()); }
+  if(fbOk()){
+    fetchScanStats('donhang').then(stats=>{
+      const box = document.getElementById('qrDonHangScanStats');
+      if(box) box.innerHTML = scanStatCardHtml('👀 Lượt khách quét tra cứu Thông tin đơn hàng', stats);
+    });
+  }
 }
 function qrCardHTML(p){
   const si = qrStatusInfo(p.status);
