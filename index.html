@@ -8812,7 +8812,18 @@ function renderKeHoach(){
   if(khFilterOwner!=='all') list = list.filter(o=>o.createdBy===khFilterOwner);
   if(khCreatedFrom||khCreatedTo) list = list.filter(o=>ddInRange(o.createdAt, khCreatedFrom, khCreatedTo));
   if(khDueFrom||khDueTo) list = list.filter(o=>ddInRange(o.deliveryDate, khDueFrom, khDueTo));
-  list = list.slice().sort(priSort);
+  // Sắp xếp: đơn ĐANG CHẠY lên trên trước (đơn nào chạy trước → xếp trước,
+  // tức thời gian bắt đầu sớm hơn thì lên trên); đơn CHỜ SẢN XUẤT xếp sau
+  // cùng, theo mức ưu tiên — giúp theo dõi luồng sản xuất, tránh rối mắt.
+  const khSort=(a,b)=>{
+    const aRun = a.status==='running'||a.status==='cutting';
+    const bRun = b.status==='running'||b.status==='cutting';
+    if(aRun && !bRun) return -1;
+    if(!aRun && bRun) return 1;
+    if(aRun && bRun) return (a.startedAt||0)-(b.startedAt||0);
+    return priSort(a,b);
+  };
+  list = list.slice().sort(khSort);
 
   const stats = [
     {key:'pending',  icon:'⏳', ic:'#FCF0DE', col:'#C2700A', n:waiting.length,      l:'Chờ sản xuất'},
