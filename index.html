@@ -8361,18 +8361,24 @@ function _stripDiacritics(s){
 }
 function matchSearch(o, q){
   if(!q) return true;
-  const s = _stripDiacritics(q.toLowerCase()).trim();
-  // Kích thước gộp: cho phép gõ "20x30", "20x30x4000", "Φ50", "phi50"
+  const qNorm = _stripDiacritics(q.toLowerCase()).trim();
+  if(!qNorm) return true;
+  // Kích thước gộp: cho phép gõ "20x30", "20x30x4000", "Φ50", "phi50", "fi50"
   const sizeStr = o.isRound && o.phi
-    ? `phi${o.phi} Φ${o.phi} ${o.phi}x${o.length||''}`
+    ? `phi${o.phi} fi${o.phi} Φ${o.phi} ${o.phi}x${o.length||''}`
     : `${o.thickness||''}x${o.width||''}x${o.length||''} ${o.thickness||''}*${o.width||''}`;
   const fields = [
     o.customer, o.po, o.id, o.type, o.note, o.material, o.priority,
     String(o.thickness||''), String(o.width||''), String(o.length||''),
     String(o.phi||''), String(o.qty||''), sizeStr,
     o.isCoil?'cuộn coil':'', String(o.meterPerCoil||''), String(o.totalMeters||'')
-  ];
-  return fields.some(v=>_stripDiacritics(String(v||'').toLowerCase()).includes(s));
+  ].map(v=>_stripDiacritics(String(v||'').toLowerCase()));
+  // Cho phép gõ nhiều từ khoá cách nhau bởi khoảng trắng, mỗi từ chỉ cần khớp
+  // ở MỘT trường bất kỳ (không nhất thiết cùng 1 trường) → ví dụ gõ "fi18 gap1"
+  // hoặc "2x12 cuon" vẫn ra đúng đơn dù kích thước và loại cuộn nằm ở 2 trường khác nhau.
+  const tokens = qNorm.split(/\s+/).filter(Boolean);
+  if(tokens.length<=1) return fields.some(v=>v.includes(qNorm));
+  return tokens.every(t=>fields.some(v=>v.includes(t)));
 }
 
 // ── Màu theo ưu tiên ──
@@ -8863,7 +8869,7 @@ function renderDorDang(){
       <div class="dd-filters-row">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-inp" id="srchInp" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, PO, quy cách..." value="${searchQ}" autocomplete="off" spellcheck="false">
+          <input class="search-inp" id="srchInp" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, PO, quy cách (VD: fi18, 2x12 cuộn)..." value="${searchQ}" autocomplete="off" spellcheck="false">
           ${searchQ?`<button onclick="clearSearch()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
         </div>
         <div class="dd-fld">
@@ -9156,7 +9162,7 @@ function renderKeHoach(){
       <div class="dd-filters-row">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-inp" id="khSearch" type="search" placeholder="🔍 Tìm khách hàng, PO, mã, quy cách, ưu tiên, người phụ trách..." value="${khSearchQ}" autocomplete="off" spellcheck="false">
+          <input class="search-inp" id="khSearch" type="search" placeholder="🔍 Tìm khách hàng, PO, mã, quy cách (VD: fi18, 2x12 cuộn)..." value="${khSearchQ}" autocomplete="off" spellcheck="false">
           ${khSearchQ?`<button onclick="khSearchQ='';renderKeHoach()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
         </div>
         <div class="dd-fld"><label>Khách hàng</label>
@@ -9811,7 +9817,7 @@ function renderHoanThanh(){
       <div class="dd-filters-row">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-inp" id="htSearch" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, mã sản phẩm, QR, phiếu xuất..." value="${htSearchQ}" autocomplete="off" spellcheck="false">
+          <input class="search-inp" id="htSearch" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, mã sản phẩm, QR (VD: fi18, 2x12 cuộn)..." value="${htSearchQ}" autocomplete="off" spellcheck="false">
           ${htSearchQ?`<button onclick="htSearchQ='';renderHoanThanh()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
         </div>
         <div class="dd-fld">
