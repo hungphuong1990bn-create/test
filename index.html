@@ -8251,11 +8251,9 @@ function ddInRange(ts, from, to){
 
 // Sắp xếp thông minh: Đơn mới nhập lên đầu → sau đó theo ngày nhận đơn mới nhất
 function ddSmartSort(list){
-  return [...list].sort((a,b)=>{
-    const an=ddIsNew(a)?0:1, bn=ddIsNew(b)?0:1;
-    if(an!==bn) return an-bn;
-    return (b.createdAt||0)-(a.createdAt||0);
-  });
+  // Đơn mới nhập luôn lên đầu danh sách — sắp xếp theo thời gian tạo giảm dần
+  // để dễ theo dõi đơn nào vừa mới nhập, tránh lẫn với đơn cũ.
+  return [...list].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 }
 
 function ddResetFilters(){
