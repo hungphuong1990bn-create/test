@@ -2718,6 +2718,75 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dash-col-hd-title{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px}
 .dash-col-hd-count{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;min-width:24px;text-align:center}
 .dash-col-body{background:var(--card);flex:1;overflow:hidden}
+
+/* ── PIPELINE SẢN XUẤT: Đùn → Rút → Cắt → Đánh bóng → Kho ── */
+.pipe-wrap{display:flex;align-items:stretch;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.pipe-wrap::-webkit-scrollbar{display:none}
+.pipe-step{flex:1;min-width:80px;border-radius:12px;padding:10px 6px;text-align:center;border:1.5px solid var(--border);cursor:pointer;transition:transform .12s;background:var(--card)}
+.pipe-step:active{transform:scale(.96)}
+.pipe-step-ico{font-size:18px;line-height:1}
+.pipe-step-num{font-size:20px;font-weight:800;line-height:1.3}
+.pipe-step-lbl{font-size:9.5px;font-weight:700;margin-top:1px;color:var(--text3);white-space:nowrap}
+.pipe-arrow{align-self:center;font-size:13px;color:var(--text4);flex-shrink:0;padding:0 1px}
+.pipe-g{background:var(--green-l);border-color:#B9E4D2}
+.pipe-g .pipe-step-lbl{color:#166534}
+.pipe-g .pipe-step-num{color:var(--green)}
+.pipe-y{background:#FEF9E7;border-color:#fde68a}
+.pipe-y .pipe-step-lbl{color:#92400e}
+.pipe-y .pipe-step-num{color:#b45309}
+.pipe-o{background:#FFF1E6;border-color:#fdba74}
+.pipe-o .pipe-step-lbl{color:#9a3412}
+.pipe-o .pipe-step-num{color:#c2410c}
+.pipe-r{background:#FEECEC;border-color:#fca5a5;animation:warn-pulse 2.4s infinite}
+.pipe-r .pipe-step-lbl{color:#991b1b}
+.pipe-r .pipe-step-num{color:#dc2626}
+
+/* ── THANH TIẾN ĐỘ LỚN TOÀN NHÀ MÁY ── */
+.big-progress{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;transition:box-shadow .2s,transform .2s}
+.big-progress:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
+.big-progress-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px;gap:8px;flex-wrap:wrap}
+.big-progress-title{font-size:12.5px;font-weight:800;color:var(--text2);display:flex;align-items:center;gap:6px}
+.big-progress-pct{font-size:22px;font-weight:800;color:var(--brand)}
+.big-progress-bar{height:14px;border-radius:8px;background:var(--bg);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+.big-progress-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--brand),var(--green-m));transition:width .7s cubic-bezier(.4,0,.2,1)}
+.big-progress-sub{font-size:11px;color:var(--text3);margin-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+
+/* ── HÔM NAY CỦA NGƯỜI LAO ĐỘNG ── */
+.worker-today{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:16px;padding:13px 15px;color:#fff;margin-bottom:10px}
+.worker-today-title{font-size:12px;font-weight:800;opacity:.92;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.worker-today-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.worker-today-item{background:rgba(255,255,255,.12);border-radius:10px;padding:9px 6px;text-align:center}
+.worker-today-val{font-size:15px;font-weight:800;line-height:1.2}
+.worker-today-lbl{font-size:9px;opacity:.9;margin-top:3px}
+
+/* ── NHÂN LỰC HÔM NAY (số người lao động / ca / nghỉ) ── */
+@keyframes dashFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.dash-anim{animation:dashFadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.workforce-panel{background:var(--card);border-radius:18px;box-shadow:var(--sh);border:1px solid var(--border);padding:15px 16px;margin-bottom:10px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s}
+.workforce-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--brand3),#0891b2,var(--green-m))}
+.workforce-panel:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
+.workforce-panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px}
+.workforce-panel-title{font-size:13px;font-weight:800;color:var(--text2);display:flex;align-items:center;gap:6px}
+.workforce-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-bottom:12px}
+.wf-big-stat{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:10px 8px;text-align:center;transition:transform .12s}
+.wf-big-stat:active{transform:scale(.97)}
+.wf-big-stat-val{font-size:21px;font-weight:800;color:var(--text);line-height:1.1}
+.wf-big-stat-lbl{font-size:10px;color:var(--text3);font-weight:700;margin-top:4px}
+.wf-shift-chips{display:flex;flex-wrap:wrap;gap:6px}
+.wf-shift-chip{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer;transition:transform .12s}
+.wf-shift-chip:active{transform:scale(.95)}
+.wf-shift-chip-val{background:rgba(255,255,255,.65);border-radius:10px;padding:0 6px;min-width:18px;text-align:center}
+.wf-leave-list{margin-top:12px;padding-top:11px;border-top:1px dashed var(--border)}
+.wf-leave-list-title{font-size:11px;font-weight:800;color:var(--text3);margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.wf-leave-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;background:#ecfeff;border-radius:9px;margin-bottom:5px;font-size:12px}
+.wf-leave-row:last-child{margin-bottom:0}
+.wf-leave-name{font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wf-leave-type{font-size:10.5px;color:#0e7490;font-weight:700;flex-shrink:0}
+.wf-leave-empty{font-size:11.5px;color:var(--text4);padding:2px 0}
+
+/* ── DANH SÁCH CẢNH BÁO THÔNG MINH ── */
+.alert-list{display:flex;flex-direction:column;gap:6px}
+.alert-empty{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--green-l);color:#166534;font-size:12.5px;font-weight:700}
 /* AI Warning Badge */
 .ai-warn{display:flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;margin-top:3px;width:fit-content}
 .ai-warn.red{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5}
@@ -2776,7 +2845,8 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 
 /* ── DASHBOARD ANALYTICS (charts) ── */
 .dash-analytics-grid{display:grid;grid-template-columns:1fr;gap:10px}
-.chart-card{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:14px}
+.chart-card{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:14px;transition:box-shadow .2s,transform .2s}
+.chart-card:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
 .chart-card.span2{grid-column:1/-1}
 .chart-card-title{font-size:12.5px;font-weight:800;color:var(--text2);display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .chart-card-title-txt{display:flex;align-items:center;gap:6px}
@@ -3621,7 +3691,8 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .progress-fill{height:100%;border-radius:3px;background:var(--brand);transition:width .5s}
 
 /* KPI tiến độ (kế hoạch vs thực tế) — thanh ngang nhiều màu kiểu dashboard tham chiếu */
-.kpi-track-card{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:16px 16px 14px}
+.kpi-track-card{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:16px 16px 14px;transition:box-shadow .2s,transform .2s}
+.kpi-track-card:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
 .kpi-track-card-title{font-size:12.5px;font-weight:800;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:14px}
 .kpi-track-row{display:flex;align-items:center;gap:10px;margin-bottom:13px}
 .kpi-track-row:last-child{margin-bottom:0}
@@ -7712,7 +7783,31 @@ function buildDashboardAnalytics(orders){
     .map(([label,value],i)=>({label, value: Math.round(value*10)/10, color: matColors[i%matColors.length]}));
   const totalKgAll = Math.round(orders.reduce((s,o)=>s+(parseFloat(o.kg)||0),0)*10)/10;
 
+  // 5) Donut: phân bố nhân lực theo ca (đang làm) + đang nghỉ
+  const wf = buildWorkforceData();
+  const wfSeg = LLV_SHIFT_ORDER.filter(k=>wf.shiftCounts[k]>0).map(k=>({label:LLV_SHIFT_META[k].label.replace(/^\S+\s/,''), value:wf.shiftCounts[k], color:LLV_SHIFT_META[k].color}));
+  const wfLegend = wfSeg.map(s=>`<div class="chart-legend-row">
+      <span class="chart-legend-dot" style="background:${s.color}"></span>
+      <span class="chart-legend-lbl">${s.label}</span>
+      <span class="chart-legend-val">${s.value}</span>
+      <span class="chart-legend-pct">${wf.totalWorkers?Math.round(s.value/wf.totalWorkers*100):0}%</span>
+    </div>`).join('');
+  const workforceChart = wf.totalWorkers ? `<div class="chart-card">
+      <div class="chart-card-title"><span class="chart-card-title-txt">👥 Phân bố nhân lực theo ca</span><span class="chart-card-sub">${wf.totalWorkers} người</span></div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div class="donut-wrap">
+          ${svgDonut(wfSeg, 120, 17)}
+          <div class="donut-center">
+            <div class="donut-center-val">${wf.totalWorkers}</div>
+            <div class="donut-center-lbl">NGƯỜI</div>
+          </div>
+        </div>
+        <div class="chart-legend">${wfLegend}</div>
+      </div>
+    </div>` : '';
+
   return `<div class="dash-analytics-grid">
+    ${workforceChart}
     <div class="chart-card">
       <div class="chart-card-title"><span class="chart-card-title-txt">🍩 Phân bố trạng thái</span><span class="chart-card-sub">${total} đơn</span></div>
       <div style="display:flex;align-items:center;gap:16px">
@@ -7788,6 +7883,281 @@ function buildKpiTrackPanel(orders){
   </div>`;
 }
 
+// ════════════════════════════════════════════════════════════════
+// DASHBOARD ĐIỀU HÀNH THÔNG MINH — helpers
+// ════════════════════════════════════════════════════════════════
+
+// Mức độ nghiêm trọng của 1 công đoạn dựa trên các đơn đang nằm ở đó:
+// 'g' xanh (ổn) → 'y' vàng (đang dồn) → 'o' cam (cảnh báo) → 'r' đỏ (nghẽn/nguy cấp)
+function pipeSeverityByOrders(list){
+  if(!list.length) return 'g';
+  let hasCrit=false, hasWarn=false;
+  list.forEach(o=>{
+    const ai = aiAnalyzeOrder(o);
+    if(ai.urgencyTag==='overdue'||ai.urgencyTag==='critical') hasCrit=true;
+    else if(ai.urgencyTag==='warning') hasWarn=true;
+  });
+  if(hasCrit) return 'r';
+  if(hasWarn) return 'o';
+  if(list.length>=4) return 'y';
+  return 'g';
+}
+function pipeSeverityByCount(n){
+  if(n===0) return 'g';
+  if(n<=3) return 'g';
+  if(n<=6) return 'y';
+  if(n<=10) return 'o';
+  return 'r';
+}
+
+// Sơ đồ dây chuyền: Đùn → Rút → Cắt → Đánh bóng → Kho
+function buildProductionPipeline(orders){
+  const activeOrders = orders.filter(o=>o.status==='running'||o.status==='cutting');
+  const dunList      = activeOrders.filter(o=>o.status==='running' && (!o.stage||o.stage==='dun'));
+  const rutList      = activeOrders.filter(o=>o.status==='running' && o.stage==='rut');
+  const catList      = activeOrders.filter(o=>o.status==='cutting');
+  const dbongList     = activeOrders.filter(o=>o.status==='running' && o.stage==='danhbong');
+  const khoList       = orders.filter(o=>o.status==='done' && !o.delivered);
+
+  const steps = [
+    {key:'dun',  label:'Đùn',        icon:'🔧', n:dunList.length,  sev:pipeSeverityByOrders(dunList)},
+    {key:'rut',  label:'Rút',        icon:'🔩', n:rutList.length,  sev:pipeSeverityByOrders(rutList)},
+    {key:'cat',  label:'Cắt',        icon:'✂️', n:catList.length,  sev:pipeSeverityByOrders(catList)},
+    {key:'db',   label:'Đánh bóng',  icon:'✨', n:dbongList.length, sev:pipeSeverityByOrders(dbongList)},
+    {key:'kho',  label:'Kho',        icon:'🏬', n:khoList.length,  sev:pipeSeverityByCount(khoList.length)}
+  ];
+  const goStage = k => k==='kho' ? "goTab('hoanThanh')" : "goTab('keHoach')";
+  return `<div class="pipe-wrap">
+    ${steps.map((s,i)=>`${i>0?'<div class="pipe-arrow">➜</div>':''}
+      <div class="pipe-step pipe-${s.sev}" onclick="${goStage(s.key)}" title="${s.label}: ${s.n} đơn">
+        <div class="pipe-step-ico">${s.icon}</div>
+        <div class="pipe-step-num">${s.n}</div>
+        <div class="pipe-step-lbl">${s.label}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+// Danh sách cảnh báo thông minh, gộp từ nhiều nguồn dữ liệu thật của hệ thống
+function buildSmartAlerts(orders){
+  const alerts = []; // {sev:'r'|'o'|'y', icon, text, action}
+  const now = Date.now();
+
+  // 1) Máy hỏng
+  if(typeof MACHINES!=='undefined' && typeof machineStatus==='function'){
+    MACHINES.filter(m=>machineStatus(m.id)==='hong').forEach(m=>{
+      alerts.push({sev:'r', icon:'🛑', text:`<b>${m.name}</b> đang hỏng — cần sửa chữa gấp`, action:"goTab('baoTriMay')"});
+    });
+    // 2) Máy tới hạn/cận hạn bảo trì theo sản lượng (tấn)
+    if(typeof getMaintTonState==='function'){
+      MACHINES.forEach(m=>{
+        const st = getMaintTonState(m.id);
+        if(st && st.level==='due') alerts.push({sev:'o', icon:'🧰', text:`<b>${m.name}</b> đã đạt mốc cần thay ${st.info.partName.toLowerCase()} (${st.tonNow}${st.info.unit})`, action:"goTab('baoTriMay')"});
+        else if(st && st.level==='warn') alerts.push({sev:'y', icon:'🧰', text:`<b>${m.name}</b> sắp tới hạn thay ${st.info.partName.toLowerCase()} (${st.tonNow}${st.info.unit})`, action:"goTab('baoTriMay')"});
+      });
+    }
+  }
+
+  // 3) Công đoạn ùn tắc (nhiều đơn dồn ở 1 công đoạn)
+  const activeOrders = orders.filter(o=>o.status==='running'||o.status==='cutting');
+  const stageGroups = [
+    {label:'Máy Đùn', list: activeOrders.filter(o=>o.status==='running'&&(!o.stage||o.stage==='dun'))},
+    {label:'Máy Rút', list: activeOrders.filter(o=>o.status==='running'&&o.stage==='rut')},
+    {label:'Cắt',      list: activeOrders.filter(o=>o.status==='cutting')},
+    {label:'Đánh bóng',list: activeOrders.filter(o=>o.status==='running'&&o.stage==='danhbong')}
+  ];
+  stageGroups.forEach(g=>{
+    if(g.list.length>=4) alerts.push({sev:'o', icon:'🚧', text:`Công đoạn <b>${g.label}</b> đang dồn <b>${g.list.length} đơn</b> — cân nhắc bổ sung nhân lực/tăng ca`, action:"goTab('keHoach')"});
+  });
+
+  // 4) Đơn quá hạn giao
+  const overdueList = orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<now);
+  if(overdueList.length){
+    alerts.push({sev:'r', icon:'🔥', text:`<b>${overdueList.length} đơn đã quá hạn giao</b>: ${overdueList.slice(0,3).map(o=>o.customer||'—').join(', ')}${overdueList.length>3?'…':''}`, action:"goTab('dorDang')"});
+  }
+
+  // 5) Đơn có nguy cơ trễ (chạy quá lâu / sắp tới hạn), lấy tối đa 4 đơn nổi bật nhất
+  const riskyOrders = activeOrders
+    .map(o=>({o, ai:aiAnalyzeOrder(o)}))
+    .filter(x=>x.ai.urgencyTag==='critical'||x.ai.urgencyTag==='warning')
+    .sort((a,b)=>b.ai.score-a.ai.score)
+    .slice(0,4);
+  riskyOrders.forEach(({o,ai})=>{
+    alerts.push({sev: ai.urgencyTag==='critical'?'r':'o', icon: ai.oneLine?.icon||'⚠️', text:`<b>${o.customer||'—'}</b> · ${ai.oneLine?.msg||'có nguy cơ trễ tiến độ'}`, action:`goToOrderInPlan('${o.id}')`});
+  });
+
+  const order = {r:0,o:1,y:2};
+  alerts.sort((a,b)=>order[a.sev]-order[b.sev]);
+  return alerts.slice(0,8);
+}
+
+function renderSmartAlertsHTML(alerts){
+  if(!alerts.length) return `<div class="alert-empty">✅ Không có cảnh báo nào — mọi thứ đang ổn định</div>`;
+  const cls = s => s==='r'?'critical':s==='o'?'warning':'info';
+  return `<div class="alert-list">
+    ${alerts.map(a=>`<div class="ai-card-warn-row ${cls(a.sev)}" style="margin:0;cursor:pointer" onclick="${a.action}">
+      <span class="ai-card-warn-ico">${a.icon}</span>
+      <span class="ai-card-warn-txt">${a.text}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+// Danh sách đơn hàng ưu tiên xử lý (quá hạn, gấp, chạy lâu) — gộp AI-sort
+function buildPriorityOrders(orders){
+  return orders
+    .filter(o=>o.status!=='done')
+    .map(o=>({o, ai:aiAnalyzeOrder(o)}))
+    .sort((a,b)=>b.ai.score-a.ai.score)
+    .slice(0,6);
+}
+function dashUrgentRow(o, ai){
+  const pc = priColor(o.priority);
+  const s = o.status==='cutting'?'running':o.status;
+  const si = statusInfo(s);
+  const overdue = o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<new Date();
+  const borderColor = ai.urgencyTag==='overdue'||ai.urgencyTag==='critical' ? '#dc2626' : ai.urgencyTag==='warning' ? '#f59e0b' : pc;
+  return `<div class="card" style="padding:9px 12px;margin-bottom:6px;cursor:pointer;border-left:3px solid ${borderColor}" onclick="goToOrderInPlan('${o.id}')">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <b style="font-size:13px">${o.customer||'—'}</b>
+        <span class="pri-chip" style="background:${pc}18;color:${pc};border:1px solid ${pc}40">${o.priority||'—'}</span>
+        <span class="badge ${si.cls}" style="font-size:9.5px;padding:1px 6px;border-radius:10px">${si.label}</span>
+        ${overdue?'<span class="ai-warn red">⚠️ Quá hạn</span>':''}
+      </div>
+      <div style="font-size:11px;color:var(--text3)">${specStr(o)} · ${qtyLabel(o)}</div>
+    </div>
+    ${ai.oneLine?`<div class="ai-warn ${ai.oneLine.level}" style="margin-top:5px">${ai.oneLine.icon} ${ai.oneLine.msg}</div>`:''}
+  </div>`;
+}
+
+// Đề xuất của "AI Quản đốc" — gộp insight sẵn có + gợi ý hành động theo máy/công đoạn
+function buildForemanSuggestions(orders){
+  const sug = [];
+  if(typeof MACHINES!=='undefined' && typeof machineStatus==='function'){
+    MACHINES.filter(m=>machineStatus(m.id)==='hong').forEach(m=>{
+      const sameGroup = MACHINES.find(x=>x.group===m.group && x.id!==m.id && machineStatus(x.id)==='ok');
+      sug.push({icon:'🔀', text: sameGroup
+        ? `<b>${m.name}</b> đang hỏng — đề xuất chuyển đơn sang <b>${sameGroup.name}</b> để không gián đoạn tiến độ`
+        : `<b>${m.name}</b> đang hỏng và chưa có máy cùng nhóm rảnh — cần ưu tiên sửa chữa hoặc điều tiết lịch chạy`});
+    });
+  }
+  const activeOrders = orders.filter(o=>o.status==='running'||o.status==='cutting');
+  const stageGroups = [
+    {label:'Máy Đùn', list: activeOrders.filter(o=>o.status==='running'&&(!o.stage||o.stage==='dun'))},
+    {label:'Máy Rút', list: activeOrders.filter(o=>o.status==='running'&&o.stage==='rut')},
+    {label:'Cắt',      list: activeOrders.filter(o=>o.status==='cutting')},
+    {label:'Đánh bóng',list: activeOrders.filter(o=>o.status==='running'&&o.stage==='danhbong')}
+  ];
+  stageGroups.forEach(g=>{
+    if(g.list.length>=4) sug.push({icon:'👷', text:`Công đoạn <b>${g.label}</b> đang dồn ${g.list.length} đơn — đề xuất bổ sung nhân lực hoặc tăng ca để giải phóng điểm nghẽn`});
+  });
+  const overdueList = orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<Date.now());
+  if(overdueList.length) sug.push({icon:'⏫', text:`Có <b>${overdueList.length} đơn quá hạn</b> — đề xuất ưu tiên xử lý ngay trước các đơn khác`});
+  return sug;
+}
+
+// ── NHÂN LỰC HÔM NAY: tổng người lao động / phân bố theo ca / đang nghỉ ──
+// Gộp dữ liệu từ tất cả các bộ phận trong Lịch làm việc (DB.lichLamViec),
+// dùng đúng logic ca (llvShiftKey) và đúng logic dò nghỉ phép đang hiệu lực
+// (llvActiveLeave) đã có sẵn ở tab Lịch làm việc, để 2 nơi luôn khớp số liệu.
+function buildWorkforceData(){
+  const sheets = DB.lichLamViec || [];
+  let totalWorkers = 0;
+  const shiftCounts = {ca1:0,ca2:0,ca3:0,hc:0,tangca:0,nghi:0,khac:0};
+  const onLeaveMap = new Map();
+  sheets.forEach(sheet=>{
+    (sheet.rows||[]).forEach(r=>{
+      if(!r.name || !r.name.trim()) return;
+      totalWorkers++;
+      const k = (typeof llvShiftKey==='function') ? llvShiftKey(r.time) : 'khac';
+      shiftCounts[k] = (shiftCounts[k]||0)+1;
+      const leaveRec = (typeof llvActiveLeave==='function') ? llvActiveLeave(r.name, null, sheet) : null;
+      if(leaveRec){
+        onLeaveMap.set(r.name.trim().toLowerCase(), {name:r.name, loai:leaveRec.loai, toDate:leaveRec.toDate});
+      }
+    });
+  });
+  const pendingLeave = (DB.nghiPhep||[]).filter(k=>k.status==='Chờ duyệt').length;
+  return { totalWorkers, shiftCounts, onLeaveList:[...onLeaveMap.values()], pendingLeave, sheetsCount: sheets.length };
+}
+
+function buildWorkforceOverviewHtml(){
+  const wf = buildWorkforceData();
+  if(!wf.sheetsCount || !wf.totalWorkers){
+    return `<div class="workforce-panel" style="text-align:center;color:var(--text4);font-size:12.5px;padding:22px 14px">
+      👥 Chưa có dữ liệu nhân lực · vào tab <b style="color:var(--text3)">Lịch làm việc</b> để thêm bộ phận và phân ca
+    </div>`;
+  }
+  const shiftChips = LLV_SHIFT_ORDER.filter(k=>wf.shiftCounts[k]>0).map(k=>{
+    const meta = LLV_SHIFT_META[k];
+    return `<div class="wf-shift-chip" style="background:${meta.bg};color:${meta.color}" onclick="goTab('lichLamViec')">
+      <span>${meta.label}</span><span class="wf-shift-chip-val">${wf.shiftCounts[k]}</span>
+    </div>`;
+  }).join('');
+  const leaveRows = wf.onLeaveList.slice(0,5).map(l=>`
+    <div class="wf-leave-row">
+      <span class="wf-leave-name">${(l.name||'').replace(/</g,'&lt;')}</span>
+      <span class="wf-leave-type">🏖️ ${(l.loai||'Nghỉ').replace(/</g,'&lt;')}${l.toDate?' · đến '+fmtDate(l.toDate):''}</span>
+    </div>`).join('');
+
+  return `<div class="workforce-panel">
+    <div class="workforce-panel-hd">
+      <div class="workforce-panel-title">👥 Nhân lực hôm nay · ${fmtDate(todayStr())}</div>
+      <button class="chip" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;border-radius:20px;font-weight:700;color:var(--text3)" onclick="goTab('lichLamViec')">Xem lịch →</button>
+    </div>
+    <div class="workforce-stats-row">
+      <div class="wf-big-stat" onclick="goTab('lichLamViec')" style="cursor:pointer">
+        <div class="wf-big-stat-val">${wf.totalWorkers}</div>
+        <div class="wf-big-stat-lbl">Tổng người lao động</div>
+      </div>
+      <div class="wf-big-stat" onclick="goTab('lichLamViec')" style="cursor:pointer">
+        <div class="wf-big-stat-val" style="color:#0e7490">${wf.onLeaveList.length}</div>
+        <div class="wf-big-stat-lbl">Đang nghỉ phép</div>
+      </div>
+      <div class="wf-big-stat" onclick="goTab('lichLamViec')" style="cursor:pointer">
+        <div class="wf-big-stat-val" style="color:var(--green-m)">${wf.totalWorkers-wf.onLeaveList.length}</div>
+        <div class="wf-big-stat-lbl">Đang làm việc</div>
+      </div>
+      ${wf.pendingLeave>0?`<div class="wf-big-stat" onclick="goTab('lichLamViec')" style="cursor:pointer">
+        <div class="wf-big-stat-val" style="color:var(--amber-m)">${wf.pendingLeave}</div>
+        <div class="wf-big-stat-lbl">Đơn chờ duyệt</div>
+      </div>`:''}
+    </div>
+    <div class="wf-shift-chips">${shiftChips || '<div class="wf-leave-empty">Chưa phân ca cho nhân viên nào</div>'}</div>
+    ${wf.onLeaveList.length?`<div class="wf-leave-list">
+      <div class="wf-leave-list-title">🏖️ Danh sách đang nghỉ (${wf.onLeaveList.length})</div>
+      ${leaveRows}
+      ${wf.onLeaveList.length>5?`<div style="text-align:center;margin-top:6px"><button class="chip" style="font-size:11px;border:1px solid var(--border);background:var(--bg2);padding:4px 12px;border-radius:20px;cursor:pointer;font-weight:700;color:var(--text3)" onclick="goTab('lichLamViec')">Xem tất cả ${wf.onLeaveList.length} người →</button></div>`:''}
+    </div>`:''}
+  </div>`;
+}
+
+// Panel riêng cho Người lao động: chỉ hiện những gì họ cần biết trong ngày
+function buildWorkerTodayPanel(orders){
+  if(!currentUser || currentUser.role!=='staff') return '';
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  const runningCount = orders.filter(o=>o.status==='running'||o.status==='cutting').length;
+  const doneTodayArr = orders.filter(o=>o.status==='done'&&(o.doneAt||0)>=today0.getTime());
+  const kgToday = doneTodayArr.reduce((s,o)=>s+(parseFloat(o.kg)||0),0).toFixed(1);
+
+  let congTxt = '—';
+  try{
+    const ym = curYM ? curYM() : todayStr().slice(0,7);
+    const day = new Date().getDate();
+    const worker = (DB.workers||[]).find(w=>w.name && currentUser.name && w.name.trim().toLowerCase()===currentUser.name.trim().toLowerCase());
+    const v = worker ? (DB.attendance?.[ym]?.[worker.id]?.[day]) : undefined;
+    congTxt = (v!==undefined && v!=='') ? v+' công' : 'Chưa chấm công';
+  }catch(e){ congTxt = '—'; }
+
+  return `<div class="worker-today">
+    <div class="worker-today-title">👷 Hôm nay của bạn · ${fmtDate(todayStr())}</div>
+    <div class="worker-today-grid">
+      <div class="worker-today-item"><div class="worker-today-val">${congTxt}</div><div class="worker-today-lbl">✅ Ca làm</div></div>
+      <div class="worker-today-item"><div class="worker-today-val">${runningCount} đơn</div><div class="worker-today-lbl">✅ Đơn đang chạy</div></div>
+      <div class="worker-today-item"><div class="worker-today-val">${doneTodayArr.length} đơn · ${kgToday}kg</div><div class="worker-today-lbl">✅ Sản lượng đã làm</div></div>
+    </div>
+  </div>`;
+}
+
 function renderDashboard(){
   const orders = DB.orders;
   const total   = orders.length;
@@ -7798,9 +8168,7 @@ function renderDashboard(){
   const totalKg = orders.reduce((s,o)=>s+(parseFloat(o.kg)||0),0).toFixed(1);
   const now = Date.now();
 
-  const priSort = (a,b)=>parseInt((a.priority||'GẤP 9').replace('GẤP ',''))-parseInt((b.priority||'GẤP 9').replace('GẤP ',''));
-
-  // ══════════ 6 CHỈ SỐ GỌN — hiện ngay khi mở app ══════════
+  // ══════════ CHỈ SỐ TỔNG QUAN ══════════
   const today0 = new Date(); today0.setHours(0,0,0,0);
   const todayOrders   = orders.filter(o=>(o.createdAt||0)>=today0.getTime()).length;
   const runningKg     = orders.filter(o=>o.status==='running'||o.status==='cutting').reduce((s,o)=>s+(parseFloat(o.kg)||0),0).toFixed(1);
@@ -7813,26 +8181,18 @@ function renderDashboard(){
   const canhBao       = overdue + machineWarn + maintTonWarn;
   setTimeout(checkMaintTonAlerts, 300);
 
+  // Tiến độ kế hoạch trong ngày: % đơn tới/qua hạn giao đã hoàn thành đến hôm nay
+  const withDue = orders.filter(o=>o.deliveryDate);
+  const shouldBeDoneNow = withDue.filter(o=>new Date(o.deliveryDate).getTime()<=now).length;
+  const shouldBeDoneAndDone = withDue.filter(o=>new Date(o.deliveryDate).getTime()<=now && o.status==='done').length;
+  const planPct = shouldBeDoneNow ? Math.round(shouldBeDoneAndDone/shouldBeDoneNow*100) : 100;
+
   const insights = aiGetInsights(orders);
-
-  // Cột 1: Đơn mới nhập gần đây (tất cả status, sort mới nhất)
-  const recentAll = orders.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,8);
-
-  // Cột 2: Chờ SX — sort theo độ ưu tiên + thời gian chờ lâu
-  const waitingList = orders.filter(o=>o.status==='pending').sort((a,b)=>{
-    const aiA = aiAnalyzeOrder(a).score, aiB = aiAnalyzeOrder(b).score;
-    return aiB - aiA; // điểm AI cao lên trước
-  });
-
-  // Cột 3: Đang chạy — AI sắp xếp: chạy lâu nhất lên trước
-  const runningList = orders
-    .filter(o=>o.status==='running'||o.status==='cutting')
-    .map(o=>({ o, score: aiAnalyzeOrder(o).score }))
-    .sort((a,b)=>b.score-a.score)
-    .map(x=>x.o);
-
-  // Cột 4: Hoàn thành gần đây
-  const doneList = orders.filter(o=>o.status==='done').sort((a,b)=>b.doneAt-a.doneAt).slice(0,8);
+  const foremanSug = buildForemanSuggestions(orders);
+  const smartAlerts = buildSmartAlerts(orders);
+  const priorityOrders = buildPriorityOrders(orders);
+  const workerPanel = buildWorkerTodayPanel(orders);
+  const workforceHtml = buildWorkforceOverviewHtml();
 
   const notifBanner = ('Notification' in window&&Notification.permission!=='granted')
     ? `<div class="notif-bar"><span>🔔</span><p>Bật thông báo nhận đơn mới tức thì</p><button onclick="requestNotif();this.closest('.notif-bar')?.remove()">Bật</button></div>` : '';
@@ -7841,9 +8201,24 @@ function renderDashboard(){
     ${notifBanner}
     <div id="onlineEl"></div>
 
-    <!-- 4 CHỈ SỐ TỔNG (toàn bộ đơn hàng, không giới hạn theo ngày) -->
-    <div class="sec-title" style="margin-bottom:2px">📦 Tổng quan đơn hàng</div>
-    <div class="stats-grid-4" style="margin-bottom:10px">
+    ${workerPanel}
+
+    <!-- THANH TIẾN ĐỘ SẢN XUẤT TOÀN NHÀ MÁY (HÔM NAY) -->
+    <div class="big-progress dash-anim" style="animation-delay:.02s">
+      <div class="big-progress-top">
+        <div class="big-progress-title">📈 Tiến độ hoàn thành kế hoạch (đến hôm nay)</div>
+        <div class="big-progress-pct">${planPct}%</div>
+      </div>
+      <div class="big-progress-bar"><div class="big-progress-fill" style="width:${Math.max(3,planPct)}%"></div></div>
+      <div class="big-progress-sub">
+        <span>Đã xong <b>${shouldBeDoneAndDone}</b>/${shouldBeDoneNow} đơn tới hạn</span>
+        <span>Hiệu suất đúng hạn: <b style="color:var(--brand)">${hieuSuat}%</b></span>
+      </div>
+    </div>
+
+    <!-- 7 CHỈ SỐ KPI TỔNG QUAN -->
+    <div class="sec-title dash-anim" style="margin-bottom:2px;animation-delay:.05s">📦 KPI tổng quan</div>
+    <div class="stats-grid-4 dash-anim" style="margin-bottom:9px;animation-delay:.06s">
       <div class="stat-card" onclick="goTab('dorDang')">
         <div class="stat-icon-wrap" style="background:#eef2ff">📦</div>
         <div class="stat-right"><div class="stat-num" style="color:#6366f1">${total}</div><div class="stat-lbl">Tổng đơn hàng</div></div>
@@ -7858,52 +8233,62 @@ function renderDashboard(){
       </div>
       <div class="stat-card" onclick="goTab('keHoach')">
         <div class="stat-icon-wrap" style="background:#fef3c7">⏳</div>
-        <div class="stat-right"><div class="stat-num" style="color:var(--amber-m)">${waiting}</div><div class="stat-lbl">Đơn chờ sản xuất</div></div>
+        <div class="stat-right"><div class="stat-num" style="color:var(--amber-m)">${waiting}</div><div class="stat-lbl">Chờ sản xuất</div></div>
       </div>
     </div>
-
-    <!-- 6 CHỈ SỐ GỌN -->
-    <div class="stats-grid-6">
+    <div class="stats-grid-6 dash-anim" style="animation-delay:.09s">
       <div class="stat-card" onclick="goTab('dorDang')">
         <div class="stat-icon-wrap" style="background:#eff6ff">📋</div>
         <div class="stat-right"><div class="stat-num">${todayOrders}</div><div class="stat-lbl">Đơn hàng hôm nay</div></div>
       </div>
-      <div class="stat-card" onclick="goTab('hoanThanh')">
-        <div class="stat-icon-wrap" style="background:var(--green-l)">✅</div>
-        <div class="stat-right"><div class="stat-num" style="color:var(--green-m)">${doneToday}</div><div class="stat-lbl">Đã hoàn thành (hôm nay)</div></div>
+      <div class="stat-card" onclick="goTab('dorDang')">
+        <div class="stat-icon-wrap" style="background:#f0fdf4">⚖️</div>
+        <div class="stat-right"><div class="stat-num" style="color:var(--green-m);font-size:20px">${totalKg}kg</div><div class="stat-lbl">Sản lượng tổng</div></div>
       </div>
       <div class="stat-card" onclick="goTab('dorDang')">
         <div class="stat-icon-wrap" style="background:#fee2e2">⏱️</div>
-        <div class="stat-right"><div class="stat-num" style="color:var(--red-m)">${overdue}</div><div class="stat-lbl">Chậm tiến độ</div></div>
+        <div class="stat-right"><div class="stat-num" style="color:var(--red-m)">${overdue}</div><div class="stat-lbl">Đơn quá hạn</div></div>
       </div>
-      <div class="stat-card" onclick="toggleDashMore(true)">
+      <div class="stat-card" onclick="toggleDashMore()">
         <div class="stat-icon-wrap" style="background:#f5f3ff">🎯</div>
-        <div class="stat-right"><div class="stat-num" style="color:#7c3aed">${hieuSuat}%</div><div class="stat-lbl">Hiệu suất (đúng hạn)</div></div>
+        <div class="stat-right"><div class="stat-num" style="color:#7c3aed">${hieuSuat}%</div><div class="stat-lbl">Hiệu suất đúng hạn</div></div>
       </div>
-      <div class="stat-card" onclick="${canhBao>0?"goTab('dorDang')":"toggleDashMore(true)"}">
+      <div class="stat-card" onclick="${canhBao>0?"goTab('dorDang')":"toggleDashMore()"}">
         <div class="stat-icon-wrap" style="background:${canhBao>0?'#fef3c7':'#f3f4f6'}">${canhBao>0?'⚠️':'🔔'}</div>
         <div class="stat-right"><div class="stat-num" style="color:${canhBao>0?'var(--amber-m)':'var(--text)'}">${canhBao}</div><div class="stat-lbl">Cảnh báo${machineWarn?` · ${machineWarn} máy hỏng`:''}</div></div>
       </div>
     </div>
 
-    <!-- Nút mở rộng: xem biểu đồ & KPI chi tiết (ẩn mặc định cho gọn) -->
-    <div style="text-align:center;margin:10px 0 2px">
-      <button id="dashMoreBtn" onclick="toggleDashMore()" class="chip" style="font-size:12.5px;padding:7px 16px;border:1px solid var(--border);background:var(--card);cursor:pointer;border-radius:20px;font-weight:600;color:var(--text3)">📊 Xem thống kê chi tiết ▾</button>
-    </div>
-    <div id="dashMoreStats" style="display:none">
-      ${overdue?`<div class="warn-banner">⚠️ ${overdue} đơn quá hạn! <button onclick="goTab('dorDang')" style="background:var(--amber-m);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px;font-family:inherit">Xem ngay</button></div>`:''}
+    <!-- NHÂN LỰC HÔM NAY: số người lao động / phân bố theo ca / đang nghỉ -->
+    <div class="sec-title dash-anim" style="margin:12px 0 6px;animation-delay:.12s">👥 Nhân lực hôm nay</div>
+    <div class="dash-anim" style="animation-delay:.14s">${workforceHtml}</div>
 
-      <!-- AI INSIGHTS BANNER -->
-      ${insights.length?`<div class="ai-banner">
-        <div class="ai-banner-title">🤖 AI Phân tích · ${vnTimeHM(new Date())}</div>
-        ${insights.map(i=>`<div class="ai-insight"><span class="ai-insight-icon">${i.icon}</span><span class="ai-insight-text">${i.text}</span></div>`).join('')}
-      </div>`:''}
+    <!-- SƠ ĐỒ DÂY CHUYỀN SẢN XUẤT -->
+    <div class="sec-title dash-anim" style="margin:12px 0 6px;animation-delay:.16s">🏭 Dây chuyền sản xuất</div>
+    <div class="dash-anim" style="animation-delay:.18s">${buildProductionPipeline(orders)}</div>
 
-      <!-- KPI TIẾN ĐỘ KẾ HOẠCH vs THỰC TẾ -->
+    <!-- BẢNG CẢNH BÁO THÔNG MINH -->
+    <div class="sec-title dash-anim" style="margin:12px 0 6px;animation-delay:.2s">🚨 Cảnh báo thông minh</div>
+    <div class="dash-anim" style="animation-delay:.22s">${renderSmartAlertsHTML(smartAlerts)}</div>
+
+    <!-- AI QUẢN ĐỐC -->
+    ${(insights.length||foremanSug.length)?`<div class="ai-banner dash-anim" style="margin-top:10px;animation-delay:.24s">
+      <div class="ai-banner-title">🤖 AI Quản đốc · phân tích &amp; đề xuất · ${vnTimeHM(new Date())}</div>
+      ${insights.map(i=>`<div class="ai-insight"><span class="ai-insight-icon">${i.icon}</span><span class="ai-insight-text">${i.text}</span></div>`).join('')}
+      ${foremanSug.map(s=>`<div class="ai-insight"><span class="ai-insight-icon">${s.icon}</span><span class="ai-insight-text">${s.text}</span></div>`).join('')}
+    </div>`:''}
+
+    <!-- DANH SÁCH ĐƠN HÀNG ƯU TIÊN -->
+    <div class="sec-title dash-anim" style="margin:12px 0 6px;animation-delay:.26s">📌 Đơn hàng ưu tiên xử lý</div>
+    <div class="dash-anim" style="animation-delay:.28s">${priorityOrders.length
+      ? priorityOrders.map(({o,ai})=>dashUrgentRow(o,ai)).join('')
+      : `<div class="alert-empty">✅ Không có đơn nào cần ưu tiên xử lý ngay</div>`}</div>
+
+    <!-- KPI TIẾN ĐỘ KẾ HOẠCH vs THỰC TẾ + BIỂU ĐỒ THỐNG KÊ CHI TIẾT (luôn hiển thị) -->
+    <div id="dashMoreStats" class="dash-anim" style="animation-delay:.3s">
       ${buildKpiTrackPanel(orders)}
 
-      <!-- BIỂU ĐỒ THỐNG KÊ -->
-      <div class="sec-title" style="margin-bottom:2px">📊 Thống kê chi tiết</div>
+      <div class="sec-title" style="margin:12px 0 6px">📊 Thống kê chi tiết</div>
       ${buildDashboardAnalytics(orders)}
 
       <div class="card" style="padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text3);display:flex;flex-wrap:wrap;gap:10px">
@@ -7913,80 +8298,6 @@ function renderDashboard(){
         <span><b>Đã xong (tổng):</b> ${done}</span>
       </div>
     </div>
-
-    <!-- 4 CỘT: scroll ngang mobile, grid desktop -->
-    <div class="sec-title" style="margin-bottom:2px">🗂️ Danh sách đơn hàng</div>
-    <div class="dash-3col">
-
-      <!-- Cột 1: Đơn mới gần đây -->
-      <div class="dash-col">
-        <div class="dash-col-hd" style="background:linear-gradient(135deg,#f8faff,#eff6ff)">
-          <div class="dash-col-hd-title">
-            <span style="width:9px;height:9px;border-radius:50%;background:#6366f1;display:inline-block;flex-shrink:0"></span>
-            🆕 Đơn mới nhất
-          </div>
-          <span class="dash-col-hd-count" style="background:#6366f1;color:#fff">${recentAll.length}</span>
-        </div>
-        <div class="dash-col-body">
-          ${recentAll.length
-            ? recentAll.map(o=>dashMiniCardNew(o)).join('')
-            : '<div class="dash-empty">Chưa có đơn nào</div>'}
-          ${total>8?`<div style="padding:8px 13px;text-align:center"><button onclick="goTab('dorDang')" style="font-size:12px;color:#6366f1;border:1px solid #c7d2fe;background:#eef2ff;border-radius:7px;padding:4px 12px;cursor:pointer;font-family:inherit;font-weight:600">Xem tất cả →</button></div>`:''}
-        </div>
-      </div>
-
-      <!-- Cột 2: Chờ SX (AI sort) -->
-      <div class="dash-col">
-        <div class="dash-col-hd" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)">
-          <div class="dash-col-hd-title">
-            <span style="width:9px;height:9px;border-radius:50%;background:var(--amber-m);display:inline-block;flex-shrink:0"></span>
-            ⏳ Chờ sản xuất
-          </div>
-          <span class="dash-col-hd-count" style="background:var(--amber-m);color:#fff">${waiting}</span>
-        </div>
-        <div class="dash-col-body">
-          ${waitingList.length
-            ? waitingList.slice(0,8).map(o=>dashMiniCard(o,"goTab('keHoach')")).join('')
-            : '<div class="dash-empty">Không có đơn nào</div>'}
-          ${waiting>8?`<div style="padding:8px 13px;text-align:center"><button onclick="goTab('keHoach')" style="font-size:12px;color:var(--brand);border:1px solid #bfdbfe;background:#eff6ff;border-radius:7px;padding:4px 12px;cursor:pointer;font-family:inherit;font-weight:600">Xem tất cả ${waiting} đơn →</button></div>`:''}
-        </div>
-      </div>
-
-      <!-- Cột 3: Đang chạy (AI ưu tiên chạy lâu lên trên) -->
-      <div class="dash-col">
-        <div class="dash-col-hd" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
-          <div class="dash-col-hd-title">
-            <span style="width:9px;height:9px;border-radius:50%;background:var(--brand3);display:inline-block;flex-shrink:0;animation:pulse 1.5s infinite"></span>
-            ⚙️ Đang chạy
-            ${runningList.some(o=>aiAnalyzeOrder(o).warnings.length>0)?'<span style="font-size:9px;background:#dc2626;color:#fff;padding:1px 5px;border-radius:10px;font-weight:700">AI ⚠️</span>':''}
-          </div>
-          <span class="dash-col-hd-count" style="background:var(--brand);color:#fff">${running}</span>
-        </div>
-        <div class="dash-col-body">
-          ${runningList.length
-            ? runningList.map(o=>dashMiniCard(o,"goTab('keHoach')")).join('')
-            : '<div class="dash-empty">Chưa có đơn đang chạy</div>'}
-        </div>
-      </div>
-
-      <!-- Cột 4: Hoàn thành gần đây -->
-      <div class="dash-col">
-        <div class="dash-col-hd" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">
-          <div class="dash-col-hd-title">
-            <span style="width:9px;height:9px;border-radius:50%;background:var(--green-m);display:inline-block;flex-shrink:0"></span>
-            ✅ Hoàn thành
-          </div>
-          <span class="dash-col-hd-count" style="background:var(--green-m);color:#fff">${done}</span>
-        </div>
-        <div class="dash-col-body">
-          ${doneList.length
-            ? doneList.map(o=>dashMiniCard(o,"goTab('hoanThanh')")).join('')
-            : '<div class="dash-empty">Chưa có đơn hoàn thành</div>'}
-          ${done>8?`<div style="padding:8px 13px;text-align:center"><button onclick="goTab('hoanThanh')" style="font-size:12px;color:var(--green);border:1px solid #86efac;background:#f0fdf4;border-radius:7px;padding:4px 12px;cursor:pointer;font-family:inherit;font-weight:600">Xem tất cả ${done} đơn →</button></div>`:''}
-        </div>
-      </div>
-
-    </div>
   `;
 
   // Load online users — dùng chung updateOnline() (ghi heartbeat của chính
@@ -7995,16 +8306,13 @@ function renderDashboard(){
   setTimeout(()=>{ if($('onlineEl')) updateOnline(); },300);
 }
 
-// Bật/tắt khối thống kê chi tiết (biểu đồ, KPI, AI insight) trên Dashboard.
-// force=true → luôn mở (dùng khi bấm vào thẻ Hiệu suất/Cảnh báo để xem chi tiết ngay).
-function toggleDashMore(force){
+// Cuộn tới khối thống kê chi tiết (biểu đồ, KPI, AI insight) trên Dashboard.
+// Khối này giờ luôn hiển thị sẵn (không còn ẩn/hiện) — hàm chỉ dùng để đưa
+// người dùng tới đúng vị trí khi bấm vào thẻ Hiệu suất/Cảnh báo.
+function toggleDashMore(){
   const el = document.getElementById('dashMoreStats');
-  const btn = document.getElementById('dashMoreBtn');
   if(!el) return;
-  const show = force===true ? true : el.style.display==='none';
-  el.style.display = show?'block':'none';
-  if(btn) btn.innerHTML = show? '📊 Ẩn thống kê chi tiết ▴' : '📊 Xem thống kê chi tiết ▾';
-  if(show) el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 let _onlineExpanded = false;
