@@ -7761,18 +7761,7 @@ function buildDashboardAnalytics(orders){
     label:k.replace('GẤP ','G'), value: activeOrders.filter(o=>o.priority===k).length, color: PRI_COLOR[k]
   })).filter(d=>d.value>0);
 
-  // 3) Trend: đơn tạo mới 7 ngày gần nhất
-  const dayNames = ['CN','T2','T3','T4','T5','T6','T7'];
-  const days = [];
-  for(let i=6;i>=0;i--){
-    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i);
-    const next = new Date(d); next.setDate(d.getDate()+1);
-    const cnt = orders.filter(o=>o.createdAt>=d.getTime()&&o.createdAt<next.getTime()).length;
-    days.push({label:dayNames[d.getDay()], value:cnt});
-  }
-  const days7Total = days.reduce((s,d)=>s+d.value,0);
-
-  // 4) Bar: khối lượng theo vật liệu (top 5)
+  // 3) Bar: khối lượng theo vật liệu (top 5)
   const matMap = {};
   orders.forEach(o=>{
     const m = o.material||'Khác';
@@ -7825,11 +7814,6 @@ function buildDashboardAnalytics(orders){
     <div class="chart-card">
       <div class="chart-card-title"><span class="chart-card-title-txt">🚦 Mức ưu tiên đang xử lý</span><span class="chart-card-sub">${activeOrders.length} đơn</span></div>
       ${hBarChartHtml(priData)}
-    </div>
-
-    <div class="chart-card span2">
-      <div class="chart-card-title"><span class="chart-card-title-txt">📈 Đơn hàng mới · 7 ngày qua</span><span class="chart-card-sub">Tổng ${days7Total} đơn</span></div>
-      ${svgTrendChart(days)}
     </div>
 
     <div class="chart-card span2">
@@ -8064,20 +8048,26 @@ function buildWorkforceData(){
   let totalWorkers = 0;
   const shiftCounts = {ca1:0,ca2:0,ca3:0,hc:0,tangca:0,nghi:0,khac:0};
   const onLeaveMap = new Map();
+  const noShiftMap = new Map(); // người có ca = "Nghỉ (không xếp ca)"
   sheets.forEach(sheet=>{
     (sheet.rows||[]).forEach(r=>{
       if(!r.name || !r.name.trim()) return;
       totalWorkers++;
       const k = (typeof llvShiftKey==='function') ? llvShiftKey(r.time) : 'khac';
       shiftCounts[k] = (shiftCounts[k]||0)+1;
+      const key = r.name.trim().toLowerCase();
+      if(k==='nghi') noShiftMap.set(key, {name:r.name});
       const leaveRec = (typeof llvActiveLeave==='function') ? llvActiveLeave(r.name, null, sheet) : null;
       if(leaveRec){
-        onLeaveMap.set(r.name.trim().toLowerCase(), {name:r.name, loai:leaveRec.loai, toDate:leaveRec.toDate});
+        onLeaveMap.set(key, {name:r.name, loai:leaveRec.loai, toDate:leaveRec.toDate});
       }
     });
   });
   const pendingLeave = (DB.nghiPhep||[]).filter(k=>k.status==='Chờ duyệt').length;
-  return { totalWorkers, shiftCounts, onLeaveList:[...onLeaveMap.values()], pendingLeave, sheetsCount: sheets.length };
+  // Đang làm việc = tổng − (đang nghỉ phép ∪ nghỉ không xếp ca), gộp trùng theo tên
+  const offDutySet = new Set([...onLeaveMap.keys(), ...noShiftMap.keys()]);
+  const workingCount = Math.max(0, totalWorkers - offDutySet.size);
+  return { totalWorkers, shiftCounts, onLeaveList:[...onLeaveMap.values()], noShiftCount: noShiftMap.size, offDutyCount: offDutySet.size, workingCount, pendingLeave, sheetsCount: sheets.length };
 }
 
 function buildWorkforceOverviewHtml(){
@@ -8113,8 +8103,8 @@ function buildWorkforceOverviewHtml(){
         <div class="wf-big-stat-val" style="color:#0e7490">${wf.onLeaveList.length}</div>
         <div class="wf-big-stat-lbl">Đang nghỉ phép</div>
       </div>
-      <div class="wf-big-stat" onclick="goTab('lichLamViec')" style="cursor:pointer">
-        <div class="wf-big-stat-val" style="color:var(--green-m)">${wf.totalWorkers-wf.onLeaveList.length}</div>
+      <div class="wf-big-stat" onclick="goTab('lichLamViec')" style="cursor:pointer" title="Tổng − đang nghỉ phép − nghỉ (không xếp ca)">
+        <div class="wf-big-stat-val" style="color:var(--green-m)">${wf.workingCount}</div>
         <div class="wf-big-stat-lbl">Đang làm việc</div>
       </div>
       ${wf.pendingLeave>0?`<div class="wf-big-stat" onclick="goTab('lichLamViec')" style="cursor:pointer">
