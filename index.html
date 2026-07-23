@@ -3677,6 +3677,48 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   .chat-bubble-wrap{right:12px}
 }
 
+/* ── AI Trợ lý (chỉ Admin) ── */
+.ai-bubble-wrap{position:fixed;right:20px;bottom:calc(var(--nav) + var(--safe-b) + 14px + 140px);z-index:640;display:none}
+.ai-bubble-wrap.show{display:flex}
+.ai-bubble-btn{position:relative;width:56px;height:56px;border-radius:50%;border:none;padding:0;cursor:pointer;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s;-webkit-tap-highlight-color:transparent}
+.ai-bubble-btn:active{transform:scale(.92)}
+.ai-bubble-badge{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;padding:0 5px;border-radius:20px;background:var(--red-m);color:#fff;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center;border:2px solid var(--bg)}
+.ai-bubble-badge.show{display:flex}
+.ai-float-window{position:fixed;right:20px;bottom:calc(var(--nav) + var(--safe-b) + 14px + 140px);width:min(380px,92vw);height:min(560px,74vh);background:var(--card);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);display:none;flex-direction:column;overflow:hidden;z-index:650;transform:translateY(16px) scale(.97);opacity:0;pointer-events:none;transition:transform .18s cubic-bezier(.4,0,.2,1),opacity .18s}
+.ai-float-window.open{display:flex;transform:translateY(0) scale(1);opacity:1;pointer-events:auto}
+.ai-float-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;flex-shrink:0}
+.ai-float-header-title{font-size:14px;font-weight:800}
+.ai-float-header-sub{font-size:11px;opacity:.85;margin-top:1px}
+.ai-float-header-actions{display:flex;gap:2px;flex-shrink:0}
+.ai-float-icon-btn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ai-float-icon-btn:active{background:rgba(255,255,255,.32)}
+.ai-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.ai-msg-row{display:flex;gap:8px;max-width:92%}
+.ai-msg-row.me{align-self:flex-end;flex-direction:row-reverse}
+.ai-msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;background:#ede9fe;color:#7c3aed}
+.ai-msg-row.me .ai-msg-av{background:var(--brand);color:#fff}
+.ai-msg-bubble{background:var(--card);padding:9px 12px;border-radius:14px 14px 14px 4px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.ai-msg-row.me .ai-msg-bubble{background:var(--brand);color:#fff;border-radius:14px 14px 4px 14px}
+.ai-result-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.ai-result-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.ai-result-info{font-size:12px;line-height:1.4;min-width:0}
+.ai-result-info b{font-size:12.5px}
+.ai-result-view-btn{flex-shrink:0;border:none;background:var(--brand);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ai-typing{display:flex;gap:4px;padding:9px 12px}
+.ai-typing span{width:6px;height:6px;border-radius:50%;background:var(--text4);animation:aiTypingBounce 1.2s infinite}
+.ai-typing span:nth-child(2){animation-delay:.15s}
+.ai-typing span:nth-child(3){animation-delay:.3s}
+@keyframes aiTypingBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+.ai-inputbar{display:flex;align-items:flex-end;gap:8px;padding:10px;border-top:1px solid var(--border);flex-shrink:0;background:var(--card)}
+.ai-input{flex:1;border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:13.5px;font-family:inherit;resize:none;max-height:110px;background:var(--bg);color:var(--text)}
+.ai-send-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.ai-hint-row{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px 0;flex-shrink:0}
+.ai-hint-chip{font-size:11px;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;border-radius:20px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+@media (max-width:480px){
+  .ai-float-window{right:8px;left:8px;bottom:calc(var(--nav) + var(--safe-b) + 8px);width:auto;height:min(78vh,640px)}
+  .ai-bubble-wrap{right:12px}
+}
+
 /* ── EMPTY STATE ── */
 .empty{text-align:center;padding:40px 20px;color:var(--text4);font-size:13px}
 .empty-icon{font-size:40px;margin-bottom:10px}
@@ -4360,6 +4402,46 @@ body{letter-spacing:-.1px}
       <button class="chat-emoji-tab" id="chatTabSticker" onclick="switchChatEmojiTab('sticker')">🎉 Sticker</button>
     </div>
     <div class="chat-emoji-body" id="chatEmojiBody"></div>
+  </div>
+</div>
+
+<!-- Bong bóng AI Trợ lý — chỉ Admin nhìn thấy -->
+<div class="ai-bubble-wrap" id="aiBubbleWrap">
+  <button class="ai-bubble-btn" id="aiBubbleBtn" onclick="toggleAiChatWindow()" title="AI Trợ lý">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="6" y="7" width="12" height="10" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15.5c.7.6 1.6 1 2.5 1s1.8-.4 2.5-1"/><path d="M3 11h1M20 11h1"/>
+    </svg>
+    <span class="ai-bubble-badge" id="aiBubbleBadge"></span>
+  </button>
+</div>
+
+<!-- Cửa sổ AI Trợ lý nổi (chỉ Admin) -->
+<div class="ai-float-window" id="aiFloatWindow">
+  <div class="ai-float-header">
+    <div>
+      <div class="ai-float-header-title">🤖 AI Trợ lý</div>
+      <div class="ai-float-header-sub">Đổi ưu tiên · Tìm đơn / khách hàng</div>
+    </div>
+    <div class="ai-float-header-actions">
+      <button class="ai-float-icon-btn" onclick="minimizeAiChatWindow()" title="Thu nhỏ">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="ai-float-icon-btn" onclick="closeAiChatWindow()" title="Đóng">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="ai-msgs" id="aiMsgsEl"></div>
+  <div class="ai-hint-row" id="aiHintRow">
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Đưa đơn ')">Đưa đơn … lên gấp 1</span>
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Tìm đơn ')">Tìm đơn …</span>
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Danh sách khách hàng')">Danh sách khách hàng</span>
+  </div>
+  <div class="ai-inputbar">
+    <textarea class="ai-input" id="aiInputEl" rows="1" placeholder="VD: Đưa đơn Á Châu lên gấp 1..." onkeydown="aiInputKeydown(event)" oninput="chatAutoGrow(this)"></textarea>
+    <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiChatMessage()" title="Gửi">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
   </div>
 </div>
 
@@ -5615,6 +5697,17 @@ let _chatLastReadTs = parseInt(localStorage.getItem(CHAT_READ_KEY)||'0');
 let chatWindowOpen = false;     // cửa sổ chat nổi đang mở hay đóng
 let _chatPeekDismissedId = null; // id tin nhắn mà người dùng đã tự tắt preview
 
+// ════════════════════════════════════════════════════════════
+// AI TRỢ LÝ (chỉ Admin) — ra lệnh bằng tiếng Việt tự nhiên để:
+//  1) Nâng/hạ mức ưu tiên đơn hàng theo tên khách hàng
+//  2) Tìm kiếm đơn hàng / khách hàng nhanh, không cần lọc thủ công
+// Toàn bộ lịch sử chat AI chỉ lưu cục bộ (localStorage) trên từng máy,
+// không đồng bộ Firebase vì đây là công cụ thao tác riêng của Admin.
+// ════════════════════════════════════════════════════════════
+const AI_CHAT_KEY = 'sx_ai_chat_v1';
+let aiChatMessages = [];   // [{id,role:'user'|'bot',text,html,ts}]
+let aiChatWindowOpen = false;
+
 function chatCacheLoad(){
   try{ chatMessages = JSON.parse(localStorage.getItem(CHAT_KEY)||'[]'); }catch(e){ chatMessages=[]; }
 }
@@ -5865,6 +5958,266 @@ function sendChatMessage(){
   fbWrite('/chat/messages/'+msg.id, msg, 'PUT').catch(e=>{
     showToast('❌ Lỗi gửi tin nhắn: '+e.message, true);
   });
+}
+
+// ══════════════════ AI TRỢ LÝ — CỬA SỔ CHAT ══════════════════
+function aiCacheLoad(){
+  try{ aiChatMessages = JSON.parse(localStorage.getItem(AI_CHAT_KEY)||'[]'); }catch(e){ aiChatMessages=[]; }
+}
+function aiCacheSave(){
+  try{ localStorage.setItem(AI_CHAT_KEY, JSON.stringify(aiChatMessages.slice(-200))); }catch(e){}
+}
+
+// Hiện/ẩn bong bóng AI: chỉ Admin mới thấy, kể cả trước khi mở cửa sổ
+function updateAiBubble(){
+  const wrap = $('aiBubbleWrap');
+  if(wrap) wrap.classList.toggle('show', isAdmin());
+}
+
+function openAiChatWindow(){
+  if(!isAdmin()) return;
+  aiChatWindowOpen = true;
+  closeSB();
+  if(!aiChatMessages.length) aiCacheLoad();
+  const win = $('aiFloatWindow');
+  if(win) win.classList.add('open');
+  if(!aiChatMessages.length){
+    aiChatMessages.push({id:'a0', role:'bot',
+      text:'Xin chào Admin 👋 Em là AI Trợ lý. Em có thể giúp:\n• Đổi mức ưu tiên đơn hàng theo tên khách — VD: "Đưa đơn Á Châu lên gấp 1"\n• Tìm đơn hàng / khách hàng nhanh — VD: "Tìm đơn phi 18" hoặc "Tìm khách Hoàng Gia"\n• "Danh sách khách hàng" để xem tổng quan các đơn đang chạy theo khách',
+      ts:Date.now()});
+    aiCacheSave();
+  }
+  renderAiMessages();
+  aiScrollBottom();
+}
+function closeAiChatWindow(){
+  aiChatWindowOpen = false;
+  const win = $('aiFloatWindow');
+  if(win) win.classList.remove('open');
+}
+function minimizeAiChatWindow(){ closeAiChatWindow(); }
+function toggleAiChatWindow(){ aiChatWindowOpen ? closeAiChatWindow() : openAiChatWindow(); }
+
+function aiFillPrompt(text){
+  if(!aiChatWindowOpen) openAiChatWindow();
+  const inp = $('aiInputEl');
+  if(!inp) return;
+  inp.value = text;
+  chatAutoGrow(inp);
+  inp.focus();
+  if(inp.setSelectionRange) inp.setSelectionRange(text.length, text.length);
+}
+
+function aiInputKeydown(e){
+  if(e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendAiChatMessage();
+  }
+}
+
+function aiScrollBottom(){
+  const box = $('aiMsgsEl');
+  if(box) setTimeout(()=>{ box.scrollTop = box.scrollHeight; }, 30);
+}
+
+function renderAiMessages(){
+  const box = $('aiMsgsEl');
+  if(!box) return;
+  box.innerHTML = aiChatMessages.map(m=>{
+    const isMe = m.role==='user';
+    const av = isMe ? (userInitials(currentUser?.name||'A')) : '🤖';
+    return `<div class="ai-msg-row ${isMe?'me':''}">
+      <div class="ai-msg-av">${av}</div>
+      <div class="ai-msg-bubble">${chatEsc(m.text||'')}${m.html||''}</div>
+    </div>`;
+  }).join('');
+}
+
+function aiShowTyping(){
+  const box = $('aiMsgsEl');
+  if(!box) return;
+  const el = document.createElement('div');
+  el.className = 'ai-msg-row';
+  el.id = 'aiTypingRow';
+  el.innerHTML = `<div class="ai-msg-av">🤖</div><div class="ai-msg-bubble"><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+function aiHideTyping(){
+  const el = $('aiTypingRow');
+  if(el) el.remove();
+}
+
+// Điều hướng tới đơn hàng từ kết quả AI trả về, rồi đóng cửa sổ AI
+function aiGoToOrder(id){
+  closeAiChatWindow();
+  goToOrderInPlan(id);
+}
+
+function sendAiChatMessage(){
+  if(!isAdmin()) return;
+  const inp = $('aiInputEl');
+  if(!inp) return;
+  const text = (inp.value||'').trim();
+  if(!text) return;
+  aiChatMessages.push({id:'a'+Date.now()+Math.random().toString(36).slice(2,6), role:'user', text, ts:Date.now()});
+  inp.value=''; inp.style.height='auto';
+  renderAiMessages();
+  aiScrollBottom();
+  aiCacheSave();
+  aiShowTyping();
+  setTimeout(()=>{
+    aiHideTyping();
+    const res = processAiCommand(text) || {text:'Em chưa hiểu ý bạn. Hãy thử: "Đưa đơn [tên khách] lên gấp 1/2/3" hoặc "Tìm đơn [từ khoá]".'};
+    aiChatMessages.push({id:'a'+Date.now()+Math.random().toString(36).slice(2,6), role:'bot', text:res.text||'', html:res.html||'', ts:Date.now()});
+    renderAiMessages();
+    aiScrollBottom();
+    aiCacheSave();
+  }, 350);
+}
+
+// ── Bỏ các từ ra lệnh/hư từ, giữ lại phần được cho là TÊN KHÁCH HÀNG /
+// TỪ KHOÁ TÌM KIẾM. So khớp theo từng từ (không phân biệt dấu) để hoạt
+// động tốt dù người dùng gõ trước/sau cụm "gấp N", "tìm", v.v.
+const AI_STOPWORDS = new Set([
+  'hay','vui','long','giup','giups','gium','lam','on','xin','chao','toi','minh',
+  'dua','nang','day','chuyen','de','dat','sua','doi','ha','giam','tang','keo','vao',
+  'don','hang','cua','cho','len','xuong','ve','thanh','ho','ngay','gap','khan',
+  'muc','uu','tien','xem','tim','tra','cuu','tracuu','kiem','kiemtra','search',
+  'danh','sach','khach','tat','ca','tong','quan','1','2','3','duoc','di','nhe'
+]);
+function aiExtractSubject(text, normText){
+  const words = String(text||'').split(/\s+/).filter(Boolean);
+  const normWords = String(normText||'').split(/\s+/).filter(Boolean);
+  const kept = [];
+  for(let i=0;i<words.length;i++){
+    const raw = (normWords[i]||'').replace(/[^a-z0-9]/gi,'');
+    if(!raw) continue;
+    if(AI_STOPWORDS.has(raw)) continue;
+    kept.push(words[i]);
+  }
+  return kept.join(' ').trim().replace(/^["'“”]+|["'“”]+$/g,'');
+}
+
+// ── Ý định 1: đổi mức ưu tiên đơn hàng theo tên khách hàng ──
+function aiHandlePriorityChange(text, normText){
+  const m = normText.match(/\b(?:gap|khan)\s*([1-3])\b/);
+  if(!m) return null;
+  const targetPri = 'GẤP '+m[1];
+  const subject = aiExtractSubject(text, normText);
+  if(!subject){
+    return {text:`Bạn muốn chuyển đơn của khách hàng nào lên ${targetPri}? Hãy gõ ví dụ: "Đưa đơn Á Châu lên ${targetPri}".`};
+  }
+  const qNorm = _stripDiacritics(subject.toLowerCase()).trim();
+  const tokens = qNorm.split(/\s+/).filter(Boolean);
+  const matches = DB.orders.filter(o=>{
+    if(o.status==='done') return false;
+    const custNorm = _stripDiacritics(String(o.customer||'').toLowerCase());
+    return tokens.every(t=>custNorm.includes(t));
+  });
+  if(!matches.length){
+    return {text:`❌ Không tìm thấy đơn nào đang chạy của khách hàng "${subject}". Bạn kiểm tra lại tên khách hàng giúp em nhé.`};
+  }
+  const changed = [];
+  matches.forEach(o=>{
+    if(o.priority===targetPri) return;
+    changed.push({customer:o.customer, id:o.id, po:o.po, from:o.priority||'—', to:targetPri});
+    o.priority = targetPri;
+  });
+  if(!changed.length){
+    return {text:`ℹ️ ${matches.length} đơn của "${subject}" đang chạy đã ở mức ${targetPri} rồi, không cần đổi thêm.`};
+  }
+  changed.forEach(c=>{
+    log('AI Trợ lý - Đổi ưu tiên', `${c.customer} · ${c.from} → ${c.to}`, c.id, {priority:c.from}, {priority:c.to});
+  });
+  addNotif('system', `🤖 AI Trợ lý nâng ưu tiên → ${targetPri}`,
+    `${[...new Set(changed.map(c=>c.customer))].join(', ')} được chuyển sang ${targetPri}`,
+    'keHoach', currentUser?.name);
+  saveOrders();
+  renderTab(currentTab);
+  updateBadges();
+  showToast(`✅ Đã chuyển ${changed.length} đơn sang ${targetPri}`);
+  const html = changed.map(c=>`<div class="ai-result-card">
+      <div class="ai-result-info"><b>${chatEsc(c.customer||'—')}</b>${c.po?' · PO '+chatEsc(c.po):''}<br>${chatEsc(c.from)} → <b style="color:${PRI_COLOR[targetPri]||'#7c3aed'}">${chatEsc(c.to)}</b></div>
+      <button class="ai-result-view-btn" onclick="aiGoToOrder('${c.id}')">Xem</button>
+    </div>`).join('');
+  return {
+    text:`✅ Đã chuyển ${changed.length} đơn của "${subject}" sang ${targetPri}:`,
+    html:`<div class="ai-result-list">${html}</div>`
+  };
+}
+
+// ── Ý định 2: tìm kiếm đơn hàng / khách hàng ──
+function aiHandleSearch(text, normText){
+  if(!/\b(tim|tra cuu|tracuu|kiem tra|kiemtra|kiem|search)\b/.test(normText)) return null;
+  const query = aiExtractSubject(text, normText);
+  if(!query){
+    return {text:'Bạn muốn tìm đơn hàng hoặc khách hàng nào? VD: "Tìm đơn Á Châu" hoặc "Tìm đơn phi 18".'};
+  }
+  const results = DB.orders
+    .filter(o=>matchSearch(o, query))
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
+    .slice(0,15);
+  if(!results.length){
+    return {text:`❌ Không tìm thấy đơn hàng nào khớp với "${query}".`};
+  }
+  const html = results.map(o=>{
+    const pc = priColor(o.priority);
+    return `<div class="ai-result-card">
+      <div class="ai-result-info"><b>${chatEsc(o.customer||'—')}</b>${o.po?' · PO '+chatEsc(o.po):''}<br>
+        <span style="color:${pc}">🚩 ${chatEsc(o.priority||'—')}</span> · ${chatEsc(statusInfo(o.status).label||'')}</div>
+      <button class="ai-result-view-btn" onclick="aiGoToOrder('${o.id}')">Xem</button>
+    </div>`;
+  }).join('');
+  return {
+    text:`🔎 Tìm thấy ${results.length} đơn khớp với "${query}":`,
+    html:`<div class="ai-result-list">${html}</div>`
+  };
+}
+
+// ── Ý định 3: liệt kê khách hàng đang có đơn chạy ──
+function aiHandleCustomerList(normText){
+  if(!/\b(danh sach|danhsach).*khach|khach hang.*danh sach/.test(normText) && normText.trim()!=='khach hang') return null;
+  const active = DB.orders.filter(o=>o.status!=='done');
+  if(!active.length) return {text:'Hiện không có đơn hàng nào đang chạy.'};
+  const byCust = {};
+  active.forEach(o=>{
+    const k = o.customer||'—';
+    if(!byCust[k]) byCust[k] = {count:0, minPri:9};
+    byCust[k].count++;
+    const p = parseInt((o.priority||'GẤP 9').replace('GẤP ',''))||9;
+    if(p<byCust[k].minPri) byCust[k].minPri = p;
+  });
+  const rows = Object.entries(byCust).sort((a,b)=>a[1].minPri-b[1].minPri || b[1].count-a[1].count);
+  const html = rows.map(([cust,info])=>{
+    const pri = 'GẤP '+(info.minPri>3?'3':info.minPri);
+    const pc = priColor(pri);
+    return `<div class="ai-result-card">
+      <div class="ai-result-info"><b>${chatEsc(cust)}</b><br>${info.count} đơn đang chạy · <span style="color:${pc}">ưu tiên cao nhất ${chatEsc(pri)}</span></div>
+      <button class="ai-result-view-btn" onclick="aiFillPrompt('Tìm đơn ${chatEsc(cust)}')">Xem</button>
+    </div>`;
+  }).join('');
+  return {
+    text:`📋 Có ${rows.length} khách hàng đang có đơn chạy:`,
+    html:`<div class="ai-result-list">${html}</div>`
+  };
+}
+
+// ── Bộ định tuyến ý định chính ──
+function processAiCommand(text){
+  if(!isAdmin()) return {text:'Chức năng này chỉ dành cho Admin.'};
+  const normText = _stripDiacritics(String(text||'').toLowerCase()).trim();
+  if(!normText) return null;
+  if(/^(chao|hi|hello|xin chao)\b/.test(normText)){
+    return {text:'Chào Admin 👋 Bạn cần đổi ưu tiên đơn hàng hay tìm kiếm đơn/khách hàng nào?'};
+  }
+  if(/^(giup|help|huong dan|lam sao)\b/.test(normText) || normText==='?'){
+    return {text:'Em có thể giúp:\n• Đổi ưu tiên: "Đưa đơn [tên khách] lên gấp 1/2/3"\n• Tìm kiếm: "Tìm đơn [từ khoá]" (tên khách, PO, kích thước, vật liệu...)\n• "Danh sách khách hàng" để xem tổng quan các khách đang có đơn chạy'};
+  }
+  return aiHandlePriorityChange(text, normText)
+    || aiHandleCustomerList(normText)
+    || aiHandleSearch(text, normText)
+    || null;
 }
 
 // ══════════════════ EMOJI & STICKER PICKER ══════════════════
@@ -7073,6 +7426,7 @@ async function doLogin(){
       // Hiện nút viết TB cho admin
       const wb=$('annWriteBtn');
       if(wb) wb.style.display=isAdmin()?'flex':'none';
+      aiCacheLoad(); updateAiBubble();
       applyRoleNav();
       goTab(defaultTabFor());
     } else {
@@ -7095,6 +7449,8 @@ function doLogout(){
   currentUser=null; currentTab='dashboard';
   closeChatWindow();
   const cbw=$('chatBubbleWrap'); if(cbw) cbw.classList.remove('show');
+  closeAiChatWindow();
+  const abw=$('aiBubbleWrap'); if(abw) abw.classList.remove('show');
   try{ localStorage.removeItem('sx_session_uid'); }catch(e){}
   // Ẩn nút announce khi logout
   const wb=$('annWriteBtn'); if(wb) wb.style.display='none';
@@ -7151,6 +7507,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       // Hiện nút viết TB cho admin
       const wb=$('annWriteBtn');
       if(wb) wb.style.display=isAdmin()?'flex':'none';
+      aiCacheLoad(); updateAiBubble();
       applyRoleNav();
       goTab(defaultTabFor());
     } else {
