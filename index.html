@@ -3245,6 +3245,52 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   .dd-filters-row .dd-fld,.dd-filters-row select{width:100%}
 }
 
+/* ══════════ KẾ HOẠCH SẢN XUẤT — bảng hiện đại + panel chi tiết (đồng bộ Tab Đơn hàng) ══════════ */
+.kh-prog-mini{display:flex;align-items:center;gap:6px;min-width:86px}
+.kh-prog-mini-bar{flex:1;height:6px;border-radius:6px;background:#EEF0F3;overflow:hidden}
+.kh-prog-mini-fill{height:100%;border-radius:6px;transition:width .25s}
+.kh-prog-mini-txt{font-size:11px;font-weight:800;color:var(--text2);white-space:nowrap}
+
+/* Panel chi tiết dạng Drawer: trượt từ bên phải trên Desktop, bottom-sheet trên Mobile */
+.modal.kh-drawer{align-items:stretch;justify-content:flex-end}
+.modal.kh-drawer .modal-box{width:100%;max-width:460px;height:100%;max-height:100dvh;border-radius:0;margin:0;padding:20px 22px 30px;overflow-y:auto;animation:khDrawerIn .22s ease-out both}
+@keyframes khDrawerIn{from{transform:translateX(28px);opacity:0}to{transform:translateX(0);opacity:1}}
+@media(max-width:699px){
+  .modal.kh-drawer{align-items:flex-end;justify-content:center}
+  .modal.kh-drawer .modal-box{height:auto;max-height:92dvh;width:100%;border-radius:20px 20px 0 0}
+}
+.kh-detail-sec{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.kh-detail-sec:first-of-type{margin-top:14px}
+.kh-detail-sec-title{font-size:12.5px;font-weight:800;color:var(--text2);margin-bottom:10px;letter-spacing:.1px}
+.kh-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
+.kh-detail-grid>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.kh-detail-grid>div b{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.2px}
+.kh-detail-grid>div span{font-size:13px;color:var(--text);font-weight:600;overflow-wrap:break-word}
+.kh-alert{font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.kh-alert.danger{background:#FEE2E2;color:#B91C1C;border-left:3px solid #DC2626}
+.kh-alert.warn{background:#FEF3C7;color:#92400E;border-left:3px solid #F59E0B}
+.kh-mat-list{display:flex;flex-direction:column;gap:6px}
+.kh-mat-chip{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px 10px}
+.kh-mat-chip-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:800;font-size:12.5px;color:var(--text);flex:1;overflow-wrap:anywhere}
+.kh-mat-chip-status{font-size:10px;font-weight:700;color:#0C7A54;background:#E3F5EE;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.kh-mat-chip-btn{width:24px;height:24px;border-radius:7px;border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--text3);flex-shrink:0}
+.kh-mat-chip-btn:hover{background:var(--brand);border-color:var(--brand);color:#fff}
+.kh-timeline{display:flex;flex-direction:column}
+.kh-tl-item{display:flex;gap:10px;position:relative;padding-bottom:16px}
+.kh-tl-item:last-child{padding-bottom:0}
+.kh-tl-item:not(:last-child)::before{content:'';position:absolute;left:5px;top:14px;bottom:0;width:2px;background:var(--border)}
+.kh-tl-item.done:not(:last-child)::before{background:var(--green-m)}
+.kh-tl-dot{width:12px;height:12px;border-radius:50%;background:var(--border);flex-shrink:0;margin-top:2px;z-index:1}
+.kh-tl-item.done .kh-tl-dot{background:var(--green-m)}
+.kh-tl-item.active .kh-tl-dot{background:var(--brand);box-shadow:0 0 0 3px rgba(40,86,214,.18)}
+.kh-tl-lbl{font-size:12.5px;font-weight:700;color:var(--text2)}
+.kh-tl-item.done .kh-tl-lbl{color:var(--text)}
+.kh-tl-time{font-size:11px;color:var(--text4);margin-top:1px}
+.kh-log-list{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto}
+.kh-log-item{background:var(--bg2);border-radius:9px;padding:7px 10px}
+.kh-log-top{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:2px}
+.kh-log-txt{font-size:12px;color:var(--text2);font-weight:600}
+
 /* ══════════ ERP/MES CARD LIST — Đơn hàng & Hoàn thành (compact, hiện đại) ══════════ */
 .ord-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px 9px;flex-wrap:wrap}
 .ord-selall{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--text3);user-select:none}
@@ -3880,6 +3926,86 @@ body{letter-spacing:-.1px}
   .main-content,.stat-card,.card,.modal-box{animation:none!important}
   .stat-card:hover,.card:hover{transform:none}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   TAB "KẾ HOẠCH SẢN XUẤT" — bố cục dạng thẻ (card grid), không
+   cần kéo ngang để xem dữ liệu. Responsive: 1 cột mobile,
+   2 cột tablet, 3 cột desktop rộng.
+   ══════════════════════════════════════════════════════════════ */
+.kh-plan-grid{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
+@media(min-width:760px){ .kh-plan-grid{grid-template-columns:1fr 1fr;gap:16px} }
+@media(min-width:1180px){ .kh-plan-grid{grid-template-columns:repeat(3,1fr)} }
+@media(min-width:1520px){ .kh-plan-grid{grid-template-columns:repeat(4,1fr)} }
+
+.kh-plan-card{cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;animation:khCardIn .28s ease-out both}
+.kh-plan-card:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.kh-plan-card.is-overdue{box-shadow:0 0 0 1.5px rgba(214,71,60,.35),var(--sh)}
+@keyframes khCardIn{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+.kh-owner-chip{flex-shrink:0;font-size:10.5px;font-weight:700;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:4px 9px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+
+.kh-meta-row{display:flex;flex-wrap:wrap;gap:6px 10px;padding:2px 14px 6px;font-size:11.5px;color:var(--text3);font-weight:600}
+.kh-meta-row .kh-meta-item{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.kh-meta-row .kh-meta-item b{color:var(--text2);font-weight:800}
+.kh-meta-row .kh-meta-item.danger{color:var(--red-m)}
+.kh-meta-row .kh-meta-item.danger b{color:var(--red-m)}
+.kh-meta-row .kh-meta-item.info{color:var(--brand)}
+.kh-meta-row .kh-meta-item.info b{color:var(--brand)}
+
+/* ── Khu vực thao tác trạng thái: nút bo góc hiện đại, có icon,
+     màu theo trạng thái, hiệu ứng Hover / Ripple / Loading ── */
+.kh-plan-actions{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--border);background:var(--bg2)}
+.kh-abtn{position:relative;overflow:hidden;flex:1 1 150px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:12px;border:1.5px solid transparent;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:.1px;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .1s ease;-webkit-tap-highlight-color:transparent}
+.kh-abtn .kh-abtn-label{display:inline-flex;align-items:center;gap:6px;transition:opacity .15s ease}
+.kh-abtn .kh-abtn-ico{font-size:14px;line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.06))}
+.kh-abtn:active{transform:scale(.97)}
+
+/* Xanh dương — Bắt đầu sản xuất */
+.kh-abtn.start{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:var(--brand2);box-shadow:0 2px 8px rgba(40,86,214,.32),inset 0 1px 0 rgba(255,255,255,.2)}
+.kh-abtn.start:hover{box-shadow:0 4px 14px rgba(40,86,214,.45),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-1px)}
+
+/* Xanh lá — Hoàn thành */
+.kh-abtn.finish{background:linear-gradient(135deg,var(--green-m),var(--green));color:#fff;border-color:var(--green);box-shadow:0 2px 8px rgba(21,150,108,.32),inset 0 1px 0 rgba(255,255,255,.2)}
+.kh-abtn.finish:hover{box-shadow:0 4px 14px rgba(21,150,108,.45),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-1px)}
+
+/* Xám — thao tác phụ (Tiến độ) */
+.kh-abtn.progress{flex:1 1 120px;background:#fff;color:var(--text2);border-color:var(--border)}
+.kh-abtn.progress:hover{background:var(--bg);border-color:var(--text4);color:var(--brand)}
+
+.kh-plan-util{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+.kh-util-icon{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border);background:#fff;color:var(--text3);display:inline-flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:background .15s,color .15s,border-color .15s,transform .1s}
+.kh-util-icon:hover{background:var(--bg);color:var(--brand);border-color:var(--brand3)}
+.kh-util-icon:active{transform:scale(.93)}
+.kh-util-icon.danger:hover{background:var(--red-l);color:var(--red-m);border-color:#fecaca}
+
+/* Ripple */
+.kh-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);transform:scale(0);opacity:1;pointer-events:none;animation:kh-ripple-anim .55s ease-out forwards}
+.kh-abtn.progress .kh-ripple{background:rgba(40,86,214,.18)}
+@keyframes kh-ripple-anim{to{transform:scale(1);opacity:0}}
+
+/* Loading */
+.kh-abtn.is-loading{pointer-events:none;cursor:default}
+.kh-abtn.is-loading .kh-abtn-label{opacity:0}
+.kh-abtn.is-loading .kh-abtn-spin{opacity:1}
+.kh-abtn-spin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s}
+.kh-abtn-spin::before{content:'';width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;animation:kh-spin .6s linear infinite}
+.kh-abtn.progress .kh-abtn-spin::before{border-color:rgba(40,86,214,.25);border-top-color:var(--brand)}
+@keyframes kh-spin{to{transform:rotate(360deg)}}
+
+@media(max-width:480px){
+  .kh-plan-actions{flex-direction:column}
+  .kh-abtn{flex:1 1 auto}
+  .kh-plan-util{margin-left:0;width:100%;justify-content:flex-end}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ĐÓNG BĂNG (sticky) 6 ô KPI trên cùng của Tab Đơn hàng / Kế hoạch
+   SX / Đơn hoàn thành — khi kéo xuống, 6 ô này vẫn cuộn theo và
+   luôn hiển thị cố định ngay dưới thanh header.
+   ══════════════════════════════════════════════════════════════ */
+.dd-stats-sticky{position:sticky;top:0;z-index:14;background:var(--bg);padding:2px 0 6px;margin-top:-2px}
+.dd-stats-sticky .dd-stats{margin-bottom:8px}
+.dd-stats-sticky::after{content:'';position:absolute;left:0;right:0;bottom:0;height:14px;transform:translateY(100%);pointer-events:none;background:linear-gradient(to bottom,rgba(16,24,40,.06),transparent)}
 </style>
 </head>
 <body>
@@ -4566,6 +4692,32 @@ body{letter-spacing:-.1px}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('htDetailModal')">Đóng</button>
       <button class="btn" style="background:var(--brand);color:#fff;flex:1" id="htDetailPrintBtn" onclick="">🖨 In phiếu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Panel chi tiết Kế hoạch sản xuất (Drawer bên phải trên Desktop / bottom-sheet trên Mobile) -->
+<div class="modal kh-drawer" id="khDetailModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="khDetailTitle">Chi tiết kế hoạch sản xuất</div>
+    <div id="khDetailBody" style="font-size:13px;color:var(--text2);line-height:1.6"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('khDetailModal')">Đóng</button>
+      <button class="btn" style="background:#0C7A54;color:#fff" id="khDetailProgressBtn" onclick="">📊 Tiến độ</button>
+      <button class="btn" style="background:var(--brand);color:#fff;flex:1" id="khDetailEditBtn" onclick="">✏️ Chỉnh sửa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nhỏ: hiển thị QR cho 1 mã nguyên liệu (trong panel Kế hoạch SX) -->
+<div class="modal" id="khMatQRModal">
+  <div class="modal-box" style="max-width:320px;text-align:center">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="khMatQRTitle">QR mã nguyên liệu</div>
+    <canvas id="khMatQRCanvas" width="200" height="200" style="margin:0 auto 14px;display:block"></canvas>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('khMatQRModal')">Đóng</button>
     </div>
   </div>
 </div>
@@ -7003,8 +7155,10 @@ function goToOrderInPlan(orderId){
     htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htShipFrom=''; htShipTo=''; htCustomerFilter='all';
     goTab('hoanThanh');
   } else {
-    // Tương tự cho tab Kế hoạch SX: reset filter trạng thái + ô tìm kiếm.
-    _khFilter = 'all';
+    // Tương tự cho tab Kế hoạch SX: reset toàn bộ filter + ô tìm kiếm.
+    khFilterStatus = 'all'; khFilterCustomer = 'all'; khFilterPriority = 'all';
+    khFilterStage = 'all'; khFilterOwner = 'all';
+    khCreatedFrom = ''; khCreatedTo = ''; khDueFrom = ''; khDueTo = '';
     khSearchQ = '';
     goTab('keHoach');
   }
@@ -7063,9 +7217,9 @@ function renderTab(tab){
 }
 
 function statusInfo(s){
-  if(s==='done') return {label:'✅ Xong',cls:'b-done',btnCls:'active-done'};
-  if(s==='running'||s==='cutting') return {label:'⚙️ Đang chạy',cls:'b-run',btnCls:'active-run'};
-  return {label:'⏳ Chờ SX',cls:'b-wait',btnCls:'active-wait'};
+  if(s==='done') return {label:'✅ Hoàn thành',cls:'b-done',btnCls:'active-done'};
+  if(s==='running'||s==='cutting') return {label:'⚙️ Đang sản xuất',cls:'b-run',btnCls:'active-run'};
+  return {label:'⏳ Chờ sản xuất',cls:'b-wait',btnCls:'active-wait'};
 }
 
 // Lấy chữ cái đại diện cho tên khách hàng để hiển thị lên avatar tròn
@@ -7146,9 +7300,9 @@ function orderCard(o, showStatus=true){
     ${renderMaterialCodes(o)}
     ${renderStageTracker(o, canStatus)}
     ${canStatus?`<div class="card-actions">
-      <button class="ca-btn${s==='pending'?' active-wait':''}" onclick="setStatus('${o.id}','pending')">⏳ Chờ SX</button>
-      <button class="ca-btn${s==='running'?' active-run':''}" onclick="setStatus('${o.id}','running')">⚙️ Đang chạy</button>
-      <button class="ca-btn${s==='done'?' active-done':''}" onclick="setStatus('${o.id}','done')">✅ Xong</button>
+      <button class="ca-btn${s==='pending'?' active-wait':''}" onclick="setStatus('${o.id}','pending')" title="Chờ sản xuất">⏳ Chờ sản xuất</button>
+      <button class="ca-btn${s==='running'?' active-run':''}" onclick="setStatus('${o.id}','running')" title="Đang sản xuất">⚙️ Đang sản xuất</button>
+      <button class="ca-btn${s==='done'?' active-done':''}" onclick="setStatus('${o.id}','done')" title="Hoàn thành">✅ Hoàn thành</button>
       <button class="ca-btn" style="color:var(--brand);font-size:11px" onclick="openProgress('${o.id}')">📊</button>
       ${canEdit?`<button class="ca-btn" onclick="editOrder('${o.id}')">✏️</button><button class="ca-btn danger" onclick="deleteOrder('${o.id}')">🗑</button>`:''}
     </div>`:''}
@@ -8398,7 +8552,7 @@ function renderDorDang(){
       <span><b>${totalKg.toLocaleString('vi-VN')}kg</b>tổng sản lượng</span>
     </div>
 
-    <div class="dd-stats">
+    <div class="dd-stats-sticky"><div class="dd-stats">
       ${stats.map(s=>`<button class="dd-stat${filterStatus===s.key?' active':''}" onclick="ddSetStatusFilter('${s.key}')">
         <div class="dd-stat-ic" style="background:${s.ic};color:${s.col}">${s.icon}</div>
         <div class="dd-stat-txt"><div class="dd-stat-n">${s.n}</div><div class="dd-stat-l">${s.l}</div></div>
@@ -8407,7 +8561,7 @@ function renderDorDang(){
         <div class="dd-stat-ic" style="background:#E3F5EE;color:#0C7A54">✅</div>
         <div class="dd-stat-txt"><div class="dd-stat-n">${doneCount}</div><div class="dd-stat-l">Hoàn thành →</div></div>
       </button>
-    </div>
+    </div></div>
 
     <div class="dd-filters">
       <div class="dd-filters-row">
@@ -8505,22 +8659,23 @@ function fmtDateTime(ts){
   return `${time} · ${date}`;
 }
 
-function orderCardKH(o, seq){
+function khPlanCard(o, seq){
   const s=o.status==='cutting'?'running':o.status;
   const pc=PRI_COLOR[o.priority]||'#64748b';
-  const overdue=s!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<new Date();
+  const overdue=khIsOverdue(o);
+  const dueSoon = !overdue && s!=='done' && o.deliveryDate && (new Date(o.deliveryDate)-new Date())<86400000*2;
   const hasTimer=o.startedAt&&s==='running';
   const canStatus=isStaff();
   const canEdit=isAdmin();
   const si=statusInfo(s);
 
-  return `<div class="card kh-card" data-order-id="${o.id}" style="border-left:4px solid ${pc}">
+  return `<div class="card kh-plan-card${overdue?' is-overdue':''}" data-order-id="${o.id}" style="border-left:4px solid ${pc}" onclick="khViewDetail('${o.id}')">
     <div class="card-header kh-hd status-${s}">
       ${seq!=null?`<span class="kh-seq" style="background:linear-gradient(135deg,${pc},${pc}cc)">${seq}</span>`:''}
       <span class="badge kh-badge ${si.cls}">${si.label}</span>
       <span class="spec-tag pri kh-pri" style="background:${pc}1c;color:${pc};border-color:${pc}70">🚩 ${o.priority||'—'}</span>
       ${hasTimer?`<span class="run-clock kh-clock" id="clk-${o.id}">⏱ --:--</span>`:''}
-      ${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:''}
+      ${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:dueSoon?`<span class="kh-overdue" style="background:linear-gradient(135deg,#f59e0b,#d97706)">🟡 Sắp đến hạn</span>`:''}
     </div>
     <div class="card-customer-row">
       <div class="cust-avatar" style="background:linear-gradient(135deg,${pc},${pc}aa)">${custInitial(o.customer)}</div>
@@ -8528,101 +8683,422 @@ function orderCardKH(o, seq){
         <div class="cust-name">${o.customer||'—'}</div>
         ${o.po?`<div class="cust-po">📄 PO: ${o.po}</div>`:''}
       </div>
+      <div class="kh-owner-chip" title="Người phụ trách">👤 ${ddOwner(o)}</div>
     </div>
-    ${o.createdAt?`<div class="card-added"><span class="card-added-ico">🕐</span><span class="card-added-txt">Thêm lúc <b>${fmtDateTime(o.createdAt)}</b></span></div>`:''}
     ${orderSpecGridHTML(o)}
-    ${o.deliveryDate?`<div class="card-due${overdue?' overdue':''}">📅 Hạn giao: ${fmtDate(o.deliveryDate)}</div>`:''}
-    ${s==='done'&&o.doneAt?`<div class="card-due" style="color:var(--green-m)">✅ Hoàn thành: ${fmtDateTime(o.doneAt)}</div>`:''}
-    ${s==='done'&&o.startedAt&&o.doneAt?`<div class="card-due" style="color:var(--text3)">⏱ Thời gian SX: <b style="color:var(--brand)">${fmtDuration(o.doneAt-o.startedAt)}</b></div>`:''}
-    ${s==='running'&&o.startedAt?`<div class="card-due" style="color:var(--brand3)">▶ Bắt đầu: ${fmtDateTime(o.startedAt)}</div>`:''}
+    <div class="kh-meta-row">
+      ${o.createdAt?`<span class="kh-meta-item">🕐 Tạo: <b>${fmtDate(o.createdAt)}</b></span>`:''}
+      ${o.deliveryDate?`<span class="kh-meta-item${overdue?' danger':''}">📅 Hạn giao: <b>${fmtDate(o.deliveryDate)}</b></span>`:''}
+      ${s==='running'&&o.startedAt?`<span class="kh-meta-item info">▶ Bắt đầu: <b>${fmtDateTime(o.startedAt)}</b></span>`:''}
+      ${khStageChip(o)!=='' ? `<span class="kh-meta-item">${khStageChip(o)}</span>` : ''}
+    </div>
     ${o.note?`<div class="card-note">📝 ${o.note}</div>`:''}
     ${renderProgressBar(o)}
     ${renderMaterialCodes(o)}
     ${renderStageTracker(o, canStatus)}
     ${renderAIWarn(o)}
-    ${canStatus?`<div class="card-actions">
-      <div class="ca-status-row">
-        <button class="ca-btn${s==='pending'?' active-wait':''}" onclick="setStatus('${o.id}','pending')" title="Chờ sản xuất"><span class="ca-ico">⏳</span>Chờ SX</button>
-        <button class="ca-btn${s==='running'?' active-run':''}" onclick="setStatus('${o.id}','running')" title="Đang sản xuất"><span class="ca-ico">⚙️</span>Đang chạy</button>
-        <button class="ca-btn${s==='done'?' active-done':''}" onclick="setStatus('${o.id}','done')" title="Hoàn thành"><span class="ca-ico">✅</span>Xong</button>
-      </div>
-      <div class="ca-util-row">
-        <button class="ca-util-btn progress" onclick="openProgress('${o.id}')" title="Xem tiến độ chi tiết">📊 Tiến độ</button>
-        ${canEdit?`<button class="ca-util-btn edit ca-icon-btn" onclick="editOrder('${o.id}')" title="Sửa đơn hàng">✏️</button><button class="ca-util-btn danger ca-icon-btn" onclick="deleteOrder('${o.id}')" title="Xóa đơn hàng">🗑</button>`:''}
+    ${canStatus?`<div class="kh-plan-actions" onclick="event.stopPropagation()">
+      ${s==='pending'?`<button class="kh-abtn start" id="kh-start-${o.id}" onclick="khPlanAction('${o.id}','running',this,event)" title="Bắt đầu sản xuất">
+        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">▶️</span>Bắt đầu sản xuất</span>
+      </button>`:''}
+      ${s==='running'?`<button class="kh-abtn finish" id="kh-done-${o.id}" onclick="khPlanAction('${o.id}','done',this,event)" title="Hoàn thành">
+        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">✅</span>Hoàn thành</span>
+      </button>
+      <button class="kh-abtn progress" onclick="khQuickProgress('${o.id}',event)" title="Cập nhật tiến độ chi tiết">
+        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">📊</span>Tiến độ</span>
+      </button>`:''}
+      <div class="kh-plan-util">
+        <button class="kh-util-icon" title="Xem chi tiết" onclick="khViewDetail('${o.id}')">👁</button>
+        ${canEdit?`<button class="kh-util-icon" title="Sửa đơn hàng" onclick="khEditRow('${o.id}',event)">✏️</button><button class="kh-util-icon danger" title="Xóa đơn hàng" onclick="khDeleteRow('${o.id}',event)">🗑</button>`:''}
       </div>
     </div>`:''}
   </div>`;
 }
 
-let _khFilter = 'all'; // 'all' | 'pending' | 'running' | 'done'
-let khSearchQ = ''; // search query cho Kế hoạch
+// Ripple lan tỏa từ điểm bấm — hiệu ứng phản hồi tức thì khi chạm nút
+function khRipple(ev, btn){
+  if(!ev || !btn) return;
+  const old = btn.querySelector('.kh-ripple'); if(old) old.remove();
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 1.8;
+  const cx = (typeof ev.clientX==='number' && ev.clientX) ? ev.clientX : rect.left+rect.width/2;
+  const cy = (typeof ev.clientY==='number' && ev.clientY) ? ev.clientY : rect.top+rect.height/2;
+  const span = document.createElement('span');
+  span.className = 'kh-ripple';
+  span.style.width = span.style.height = size+'px';
+  span.style.left = (cx-rect.left-size/2)+'px';
+  span.style.top = (cy-rect.top-size/2)+'px';
+  btn.appendChild(span);
+  span.addEventListener('animationend', ()=>span.remove());
+}
 
+// Bấm nút "Bắt đầu sản xuất" / "Hoàn thành" trong Kế hoạch SX:
+// hiệu ứng ripple + loading ngắn, sau đó cập nhật trạng thái Realtime
+// (không cần tải lại trang) thông qua setStatus() có sẵn của hệ thống.
+function khPlanAction(id, newStatus, btn, ev){
+  if(ev) ev.stopPropagation();
+  if(!btn || btn.classList.contains('is-loading')) return;
+  khRipple(ev, btn);
+  btn.classList.add('is-loading');
+  btn.disabled = true;
+  setTimeout(()=>{ setStatus(id, newStatus); }, 360);
+}
+
+// ── State bộ lọc Kế hoạch sản xuất (ERP/MES table, đồng bộ Tab Đơn hàng) ──
+let khSearchQ       = ''; // ô tìm kiếm
+let khFilterStatus  = 'all'; // all | pending | running | overdue | priority
+let khFilterCustomer= 'all';
+let khFilterPriority= 'all';
+let khFilterStage   = 'all';
+let khFilterOwner   = 'all';
+let khCreatedFrom = '', khCreatedTo = '';
+let khDueFrom = '', khDueTo = '';
+
+function khIsOverdue(o){
+  return o.status!=='done' && !!o.deliveryDate && new Date(o.deliveryDate) < new Date(new Date().toDateString());
+}
+function khIsTopPriority(o){
+  return !!o.priority && parseInt(String(o.priority).replace('GẤP ',''))<=3;
+}
+
+// Bấm vào 1 KPI card → bật/tắt lọc theo card đó (bấm lại card đang chọn để bỏ lọc)
 function setKhFilter(f){
-  _khFilter = f;
+  khFilterStatus = (khFilterStatus===f) ? 'all' : f;
   renderKeHoach();
-  // Scroll đến section tương ứng
-  setTimeout(()=>{
-    const id = f==='pending'?'kh-sec-wait':f==='running'?'kh-sec-run':f==='done'?'kh-sec-done':null;
-    if(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
-  }, 80);
+}
+
+function khResetFilters(){
+  khFilterStatus='all'; khFilterCustomer='all'; khFilterPriority='all';
+  khFilterStage='all'; khFilterOwner='all';
+  khCreatedFrom=''; khCreatedTo=''; khDueFrom=''; khDueTo=''; khSearchQ='';
+  renderKeHoach();
+  showToast('↺ Đã đặt lại bộ lọc');
 }
 
 function renderKeHoach(){
   const khInp = document.getElementById('khSearch');
-  if(khInp) khSearchQ = khInp.value;
-
-  const priSort=(a,b)=>parseInt((a.priority||'GẤP 9').replace('GẤP ',''))-parseInt((b.priority||'GẤP 9').replace('GẤP ',''));
-  const allActive = DB.orders.filter(o=>o.status!=='done');
-  const filtered = khSearchQ ? allActive.filter(o=>matchSearch(o,khSearchQ)) : allActive;
-  const running=filtered.filter(o=>o.status==='running'||o.status==='cutting').sort(priSort);
-  const waiting=filtered.filter(o=>o.status==='pending').sort(priSort);
-  // Đơn done → chuyển sang tab "Hoàn thành", KHÔNG hiện ở Kế hoạch
-  const done=[];  // bỏ section done khỏi Kế hoạch SX
-
-  function sec(id, icon, title, list, showSeq, type){
-    const hd=`<div class="kh-sec-hd type-${type}" id="${id}"><span>${icon} ${title}</span><span class="kh-count">${list.length}</span></div>`;
-    if(!list.length) return hd+`<div class="empty" style="padding:16px 0 8px">Không có đơn nào</div>`;
-    return hd+`<div class="card-grid">`+list.map((o,i)=>orderCardKH(o, showSeq?i+1:null)).join('')+`</div>`;
+  let caretPos=null, hadFocus=false;
+  if(khInp){
+    khSearchQ = khInp.value;
+    hadFocus = document.activeElement===khInp;
+    caretPos = khInp.selectionStart;
   }
 
-  // Highlight tab đang chọn
-  const wA=_khFilter==='pending'?'background:var(--amber-l);border-radius:var(--r-sm)':'';
-  const rA=_khFilter==='running'?'background:#dbeafe;border-radius:var(--r-sm)':'';
-  const dA='';
+  const priSort=(a,b)=>parseInt((a.priority||'GẤP 9').replace('GẤP ',''))-parseInt((b.priority||'GẤP 9').replace('GẤP ',''));
+  // Đơn đã hoàn thành (status='done') theo dõi ở tab riêng "Hoàn thành", không hiện ở Kế hoạch
+  const allActive = DB.orders.filter(o=>o.status!=='done');
+  const doneCount = DB.orders.filter(o=>o.status==='done').length;
 
-  // Hiện section nào tùy filter
-  const showWait  = _khFilter==='all'||_khFilter==='pending';
-  const showRun   = _khFilter==='all'||_khFilter==='running';
-  const showDone  = false; // Đơn done có tab riêng
+  const waiting     = allActive.filter(o=>o.status==='pending');
+  const running     = allActive.filter(o=>o.status==='running'||o.status==='cutting');
+  const overdueList = allActive.filter(khIsOverdue);
+  const priorityList= allActive.filter(khIsTopPriority);
+  const totalKg     = allActive.reduce((s,o)=>s+(Number(o.kg)||0),0);
+
+  const owners = [...new Set(allActive.map(o=>o.createdBy).filter(Boolean))]
+    .map(uid=>(DB.users||[]).find(u=>u.id===uid)).filter(Boolean);
+  const customers = [...new Set(allActive.map(o=>o.customer).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+
+  // Áp bộ lọc + tìm kiếm
+  let list = allActive;
+  if(khSearchQ) list = list.filter(o=>matchSearch(o, khSearchQ));
+  if(khFilterStatus==='pending') list = list.filter(o=>o.status==='pending');
+  else if(khFilterStatus==='running') list = list.filter(o=>o.status==='running'||o.status==='cutting');
+  else if(khFilterStatus==='overdue') list = list.filter(khIsOverdue);
+  else if(khFilterStatus==='priority') list = list.filter(khIsTopPriority);
+  if(khFilterCustomer!=='all') list = list.filter(o=>o.customer===khFilterCustomer);
+  if(khFilterPriority!=='all') list = list.filter(o=>o.priority===khFilterPriority);
+  if(khFilterStage!=='all') list = list.filter(o=>(o.stage||'')===khFilterStage);
+  if(khFilterOwner!=='all') list = list.filter(o=>o.createdBy===khFilterOwner);
+  if(khCreatedFrom||khCreatedTo) list = list.filter(o=>ddInRange(o.createdAt, khCreatedFrom, khCreatedTo));
+  if(khDueFrom||khDueTo) list = list.filter(o=>ddInRange(o.deliveryDate, khDueFrom, khDueTo));
+  list = list.slice().sort(priSort);
+
+  const stats = [
+    {key:'pending',  icon:'⏳', ic:'#FCF0DE', col:'#C2700A', n:waiting.length,      l:'Chờ sản xuất'},
+    {key:'running',  icon:'⚙️', ic:'#DBEAFE', col:'#2856D6', n:running.length,      l:'Đang sản xuất'},
+    {key:'priority', icon:'🚩', ic:'#FEE2E2', col:'#DC2626', n:priorityList.length, l:'Đơn ưu tiên'},
+    {key:'overdue',  icon:'⚠️', ic:'#FEE2E2', col:'#DC2626', n:overdueList.length,  l:'Trễ tiến độ'},
+  ];
+
+  const isFiltered = khSearchQ||khFilterStatus!=='all'||khFilterCustomer!=='all'||khFilterPriority!=='all'||khFilterStage!=='all'||khFilterOwner!=='all'||khCreatedFrom||khCreatedTo||khDueFrom||khDueTo;
 
   $('mc').innerHTML=`
-    <div class="dd-toolbar">
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-inp" id="khSearch" type="search" placeholder="🔍 Tìm khách hàng, PO, mã, kích thước, ưu tiên..." value="${khSearchQ}" autocomplete="off">
+    <div class="dd-overview">
+      <span><b>${allActive.length}</b>kế hoạch đang quản lý</span>
+      <span><b>${customers.length}</b>khách hàng</span>
+      <span><b>${totalKg.toLocaleString('vi-VN')}kg</b>tổng khối lượng</span>
+    </div>
+
+    <div class="dd-stats-sticky"><div class="dd-stats">
+      ${stats.map(s=>`<button class="dd-stat${khFilterStatus===s.key?' active':''}" onclick="setKhFilter('${s.key}')">
+        <div class="dd-stat-ic" style="background:${s.ic};color:${s.col}">${s.icon}</div>
+        <div class="dd-stat-txt"><div class="dd-stat-n">${s.n}</div><div class="dd-stat-l">${s.l}</div></div>
+      </button>`).join('')}
+      <button class="dd-stat" title="Xem ở tab Hoàn thành" onclick="goTab('hoanThanh')">
+        <div class="dd-stat-ic" style="background:#E3F5EE;color:#0C7A54">✅</div>
+        <div class="dd-stat-txt"><div class="dd-stat-n">${doneCount}</div><div class="dd-stat-l">Hoàn thành →</div></div>
+      </button>
+      <button class="dd-stat" style="cursor:default" onclick="void(0)">
+        <div class="dd-stat-ic" style="background:#F3E8FF;color:#6D28D9">⚖️</div>
+        <div class="dd-stat-txt"><div class="dd-stat-n">${totalKg.toLocaleString('vi-VN')}kg</div><div class="dd-stat-l">Tổng khối lượng</div></div>
+      </button>
+    </div></div>
+
+    <div class="dd-filters">
+      <div class="dd-filters-row">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-inp" id="khSearch" type="search" placeholder="🔍 Tìm khách hàng, PO, mã, quy cách, ưu tiên, người phụ trách..." value="${khSearchQ}" autocomplete="off" spellcheck="false">
+          ${khSearchQ?`<button onclick="khSearchQ='';renderKeHoach()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
+        </div>
+        <div class="dd-fld"><label>Khách hàng</label>
+          <select onchange="khFilterCustomer=this.value;renderKeHoach()">
+            <option value="all">Tất cả</option>
+            ${customers.map(c=>`<option value="${c.replace(/"/g,'&quot;')}" ${khFilterCustomer===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="dd-fld"><label>Mức ưu tiên</label>
+          <select onchange="khFilterPriority=this.value;renderKeHoach()">
+            <option value="all">Tất cả</option>
+            ${Object.keys(PRI_COLOR).map(p=>`<option value="${p}" ${khFilterPriority===p?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+        <div class="dd-fld"><label>Công đoạn</label>
+          <select onchange="khFilterStage=this.value;renderKeHoach()">
+            <option value="all">Tất cả</option>
+            ${STAGES.map(s=>`<option value="${s.key}" ${khFilterStage===s.key?'selected':''}>${s.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="dd-fld"><label>Người phụ trách</label>
+          <select onchange="khFilterOwner=this.value;renderKeHoach()">
+            <option value="all">Tất cả</option>
+            ${owners.map(u=>`<option value="${u.id}" ${khFilterOwner===u.id?'selected':''}>${u.name}</option>`).join('')}
+          </select>
+        </div>
+        <button class="dd-reset-btn" onclick="khResetFilters()">↺ Reset bộ lọc</button>
       </div>
-      <div class="kh-summary">
-        <button class="kh-sum" style="${wA}" onclick="setKhFilter(_khFilter==='pending'?'all':'pending')">
-          <div class="kh-sum-n wait-c">${waiting.length}</div>
-          <div class="kh-sum-l">⏳ Chờ SX</div>
-        </button>
-        <button class="kh-sum" style="${rA}" onclick="setKhFilter(_khFilter==='running'?'all':'running')">
-          <div class="kh-sum-n run-c">${running.length}</div>
-          <div class="kh-sum-l">⚙️ Đang chạy</div>
-        </button>
-        <button class="kh-sum" onclick="goTab('hoanThanh')" style="cursor:pointer">
-          <div class="kh-sum-n done-c">${DB.orders.filter(o=>o.status==='done').length}</div>
-          <div class="kh-sum-l">✅ Xem đơn đã hoàn thành →</div>
-        </button>
+      <div class="dd-filters-row">
+        <div class="dd-fld"><label>Ngày tạo từ</label><input type="date" value="${khCreatedFrom}" onchange="khCreatedFrom=this.value;renderKeHoach()"></div>
+        <div class="dd-fld"><label>Ngày tạo đến</label><input type="date" value="${khCreatedTo}" onchange="khCreatedTo=this.value;renderKeHoach()"></div>
+        <div class="dd-fld"><label>Hạn giao từ</label><input type="date" value="${khDueFrom}" onchange="khDueFrom=this.value;renderKeHoach()"></div>
+        <div class="dd-fld"><label>Hạn giao đến</label><input type="date" value="${khDueTo}" onchange="khDueTo=this.value;renderKeHoach()"></div>
       </div>
     </div>
-    ${showRun ?sec('kh-sec-run' ,'⚙️','Đang chạy'           ,running,true ,'run' ):''}
-    ${showWait?sec('kh-sec-wait','⏳','Chờ sản xuất'         ,waiting,true ,'wait'):''}
-    <!-- Đơn hoàn thành xem tại tab Hoàn thành -->
+
+    ${!list.length
+      ? `<div class="ord-empty">${isFiltered?'🔍 Không tìm thấy kế hoạch phù hợp':'📋 Chưa có kế hoạch sản xuất nào'}</div>`
+      : `<div class="ord-list-toolbar">
+          <span class="ord-list-count">Hiển thị ${list.length} / ${allActive.length} kế hoạch</span>
+        </div>
+        <div class="kh-plan-grid">${list.map((o,i)=>khPlanCard(o,i+1)).join('')}</div>`}
   `;
-  // Search listener
-  const ki=document.getElementById('khSearch');
-  if(ki){ ki.focus(); const v=ki.value; ki.value=''; ki.value=v; ki.addEventListener('input',()=>renderKeHoach()); }
+  const ni=document.getElementById('khSearch');
+  if(ni){
+    ni.addEventListener('input',function(){khSearchQ=this.value;renderKeHoach();});
+    if(hadFocus){
+      ni.focus();
+      const pos = caretPos!==null ? Math.min(caretPos, ni.value.length) : ni.value.length;
+      try{ ni.setSelectionRange(pos, pos); }catch(e){}
+    }
+  }
+}
+
+// ── 1 dòng bảng Kế hoạch sản xuất (ERP/MES table style, đồng bộ Tab Đơn hàng) ──
+// Tiến độ theo CÔNG ĐOẠN sản xuất hiện tại (0-100%), độc lập với số lượng đã chạy —
+// dùng để cột "Tiến độ" luôn cập nhật ngay khi đổi công đoạn, kể cả khi chưa nhập doneQty.
+function khStageProgressPct(o){
+  const s=o.status==='cutting'?'running':o.status;
+  if(s==='done') return 100;
+  if(s==='pending') return 0;
+  const curIdx=STAGES.findIndex(x=>x.key===o.stage);
+  const activeIdx=curIdx<0?0:curIdx;
+  return Math.round((activeIdx/STAGES.length)*100);
+}
+function khProgressMini(o){
+  const qty=o.qty||0, done=o.doneQty||0;
+  if(o.status==='pending') return '<span style="color:var(--text4);font-size:11.5px">—</span>';
+  const qtyPct = qty ? Math.min(100,Math.round(done/qty*100)) : 0;
+  const stagePct = khStageProgressPct(o);
+  // Lấy giá trị cao hơn giữa 2 cách tính để tiến độ luôn phản ánh đúng nhất
+  // (đổi công đoạn dù chưa cập nhật số lượng vẫn thấy tiến độ nhích lên; và ngược lại).
+  const pct = Math.max(qtyPct, stagePct);
+  const color = pct>=100?'var(--green-m)':pct>=50?'var(--brand3)':'var(--amber-m)';
+  return `<div class="kh-prog-mini"><div class="kh-prog-mini-bar"><div class="kh-prog-mini-fill" style="width:${pct}%;background:${color}"></div></div><span class="kh-prog-mini-txt">${pct}%</span></div>`;
+}
+function khStageChip(o){
+  const s=o.status==='cutting'?'running':o.status;
+  if(s==='pending') return '<span style="color:var(--text4);font-size:11.5px">Chưa bắt đầu</span>';
+  const st=STAGES.find(x=>x.key===o.stage);
+  return st?`<span class="stage-badge">${st.icon} ${st.label}</span>`:'<span style="color:var(--text4);font-size:11.5px">—</span>';
+}
+function khQuickStatus(id, status, ev){ if(ev) ev.stopPropagation(); setStatus(id, status); }
+function khQuickProgress(id, ev){ if(ev) ev.stopPropagation(); openProgress(id); }
+function khEditRow(id, ev){ if(ev) ev.stopPropagation(); editOrder(id); }
+function khDeleteRow(id, ev){ if(ev) ev.stopPropagation(); deleteOrder(id); }
+
+// ── Timeline dạng ERP: Ngày tạo → Bắt đầu → các công đoạn → Hoàn thành ──
+function khTimeline(o){
+  const s = o.status==='cutting'?'running':o.status;
+  const curIdx = STAGES.findIndex(x=>x.key===o.stage);
+  const activeIdx = s==='done' ? STAGES.length : (curIdx<0?-1:curIdx);
+  const items = [
+    {label:'Ngày tạo', ts:o.createdAt, done:!!o.createdAt},
+    {label:'Bắt đầu sản xuất', ts:o.startedAt, done:!!o.startedAt, active: !o.startedAt && s==='pending'},
+  ];
+  STAGES.forEach((st,i)=>{
+    items.push({label:st.label, done: s==='done' || i<activeIdx, active: i===activeIdx && s!=='done'});
+  });
+  items.push({label:'Hoàn thành', ts:o.doneAt, done:s==='done'});
+  return `<div class="kh-timeline">${items.map(it=>`
+    <div class="kh-tl-item ${it.done?'done':''} ${it.active?'active':''}">
+      <div class="kh-tl-dot"></div>
+      <div class="kh-tl-body"><div class="kh-tl-lbl">${it.label}</div>${it.ts?`<div class="kh-tl-time">${fmtDateTime(it.ts)}</div>`:''}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ── Cảnh báo trong panel chi tiết: quá hạn / sắp quá hạn / AI cảnh báo ──
+function khAlerts(o){
+  let html='';
+  if(khIsOverdue(o)){
+    html += `<div class="kh-alert danger">🔴 Đơn hàng đã QUÁ HẠN giao (${fmtDate(o.deliveryDate)})</div>`;
+  } else if(o.status!=='done' && o.deliveryDate && (new Date(o.deliveryDate)-new Date())<86400000*2){
+    html += `<div class="kh-alert warn">🟡 Sắp đến hạn giao (${fmtDate(o.deliveryDate)})</div>`;
+  }
+  html += renderAIWarn(o);
+  return html;
+}
+
+// ── Mã nguyên liệu: mỗi mã là 1 tag, có nút Copy + QR + trạng thái ──
+function khMatCodeTags(o){
+  if(!o.matCodes || !o.matCodes.length) return '<div class="empty" style="padding:6px 0;font-size:12.5px;color:var(--text4)">Chưa có mã nguyên liệu</div>';
+  return `<div class="kh-mat-list">${o.matCodes.map(m=>{
+    const safe = String(m).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="kh-mat-chip">
+      <span class="kh-mat-chip-code">🏷 ${m}</span>
+      <span class="kh-mat-chip-status">Đang dùng</span>
+      <button class="kh-mat-chip-btn" title="Sao chép mã" onclick="khCopyMatCode('${safe}')">📋</button>
+      <button class="kh-mat-chip-btn" title="Xem QR" onclick="khShowMatQR('${safe}')">▦</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+function khCopyMatCode(code){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(()=>showToast('✅ Đã sao chép mã: '+code)).catch(()=>showToast('❌ Không thể sao chép, vui lòng tự chọn và copy', true));
+  }
+}
+function khShowMatQR(code){
+  $('khMatQRTitle').textContent = 'QR mã nguyên liệu: '+code;
+  openModal('khMatQRModal');
+  setTimeout(()=>{
+    const canvas=$('khMatQRCanvas');
+    if(canvas && typeof QRCode!=='undefined'){
+      QRCode.toCanvas(canvas, code, {width:200,margin:1}, function(err){ if(err) console.error(err); });
+    }
+  }, 50);
+}
+
+// ── Nhật ký thao tác riêng của 1 kế hoạch sản xuất ──
+function khOrderLogs(o){
+  const logs = actLog.filter(l=>l.orderId===o.id).slice(0,20);
+  if(!logs.length) return '<div class="empty" style="padding:6px 0;font-size:12.5px;color:var(--text4)">Chưa có nhật ký</div>';
+  return `<div class="kh-log-list">${logs.map(l=>`
+    <div class="kh-log-item">
+      <div class="kh-log-top"><b>${l.user||'—'}</b><span>${vnDateTimeShort(new Date(l.ts))}</span></div>
+      <div class="kh-log-txt">${l.action}${l.detail?' · '+l.detail:''}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ── Khối "Thống kê sản xuất" trong panel chi tiết: số lượng, tiến độ, thời gian chạy ──
+function khProductionStats(o){
+  const s = o.status==='cutting'?'running':o.status;
+  if(s==='pending') return '<div class="empty" style="padding:4px 0;font-size:12.5px;color:var(--text4)">Chưa bắt đầu sản xuất nên chưa có thống kê</div>';
+  const qty=o.qty||0, done=o.doneQty||0;
+  const remain=Math.max(0, qty-done);
+  const qtyPct = qty ? Math.min(100,Math.round(done/qty*100)) : 0;
+  const stagePct = khStageProgressPct(o);
+  const unit = o.isCoil ? 'cuộn' : (o.isRound?'cây':'thanh');
+  const elapsedMs = o.startedAt ? (s==='done'&&o.doneAt ? o.doneAt-o.startedAt : Date.now()-o.startedAt) : 0;
+  const curStage = STAGES.find(x=>x.key===o.stage);
+  return `<div class="kh-detail-grid">
+    <div><b>Đã hoàn thành</b><span>${done}/${qty||0} ${unit} (${qtyPct}%)</span></div>
+    <div><b>Còn lại</b><span>${remain} ${unit}</span></div>
+    <div><b>Tiến độ công đoạn</b><span>${s==='done'?'✓ 100%':stagePct+'%'}</span></div>
+    <div><b>Công đoạn hiện tại</b><span>${s==='done'?'Đã hoàn tất':(curStage?curStage.icon+' '+curStage.label:'—')}</span></div>
+    <div><b>Thời gian đã sản xuất</b><span>${elapsedMs?fmtDuration(elapsedMs):'—'}</span></div>
+    <div><b>Ghi chú tiến độ</b><span>${o.progressNote||'—'}</span></div>
+  </div>`;
+}
+
+// ── Mở Panel chi tiết (Drawer bên phải) cho 1 kế hoạch sản xuất ──
+let _khDetailOpenId = null; // id của kế hoạch đang mở trong panel chi tiết (để biết cần refresh realtime hay không)
+
+// Gọi hàm này ngay sau MỌI thao tác có thể đổi dữ liệu 1 đơn (trạng thái, công đoạn, tiến độ...)
+// để panel chi tiết (nếu đang mở đúng đơn đó) tự vẽ lại NGAY LẬP TỨC — không cần đóng/mở lại hay F5.
+function refreshKhDetailIfOpen(id){
+  const modal = document.getElementById('khDetailModal');
+  if(modal && modal.classList.contains('open') && _khDetailOpenId===id){
+    khViewDetail(id);
+  }
+}
+
+function khViewDetail(id){
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  _khDetailOpenId = id;
+  const meta=ddStatusMeta(o);
+  const pc=PRI_COLOR[o.priority]||'#64748b';
+  $('khDetailTitle').textContent = `${o.customer||'—'} · ${ddCode(o)}`;
+  $('khDetailBody').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+      <span class="dd-status-pill" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span>
+      <span class="ord-pri" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>
+    </div>
+    ${khAlerts(o)}
+    <div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">📦 Thông tin đơn</div>
+      <div class="kh-detail-grid">
+        <div><b>Khách hàng</b><span>${o.customer||'—'}</span></div>
+        <div><b>PO</b><span>${o.po||'—'}</span></div>
+        <div><b>Mã đơn</b><span>${ddCode(o)}</span></div>
+        <div><b>Sản phẩm</b><span>${o.type||'—'}</span></div>
+        <div><b>Nguyên liệu</b><span>${ddMaterialLabel(o.material)}</span></div>
+        <div><b>Quy cách</b><span>${specStr(o)}</span></div>
+        <div><b>Số lượng</b><span>${qtyLabel(o)}</span></div>
+        <div><b>Khối lượng</b><span>${o.kg||0} kg</span></div>
+        <div><b>Mức ưu tiên</b><span>🚩 ${o.priority||'—'}</span></div>
+        <div><b>Người phụ trách</b><span>${ddOwner(o)}</span></div>
+        <div><b>Ngày tạo</b><span>${fmtDateTime(o.createdAt)}</span></div>
+        <div><b>Ngày nhận</b><span>${o.createdAt?fmtDate(o.createdAt):'—'}</span></div>
+        <div><b>Ngày bắt đầu</b><span>${o.startedAt?fmtDateTime(o.startedAt):'—'}</span></div>
+        <div><b>Hạn giao</b><span>${fmtDate(o.deliveryDate)}</span></div>
+      </div>
+      ${o.note?`<div style="margin-top:10px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${o.note}</div>`:''}
+    </div>
+    <div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">🧵 Nguyên liệu đầu vào</div>
+      ${khMatCodeTags(o)}
+    </div>
+    <div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">📊 Tiến độ sản xuất</div>
+      ${renderProgressBar(o)||'<div class="empty" style="padding:4px 0;font-size:12.5px;color:var(--text4)">Chưa bắt đầu sản xuất</div>'}
+      ${renderStageTracker(o, isStaff())}
+    </div>
+    <div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">📈 Thống kê sản xuất</div>
+      ${khProductionStats(o)}
+    </div>
+    <div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">🕐 Timeline</div>
+      ${khTimeline(o)}
+    </div>
+    <div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">📋 Nhật ký</div>
+      ${khOrderLogs(o)}
+    </div>
+  `;
+  const progBtn=$('khDetailProgressBtn'); if(progBtn) progBtn.onclick=()=>{ closeModal('khDetailModal'); openProgress(id); };
+  const editBtn=$('khDetailEditBtn'); if(editBtn) editBtn.onclick=()=>{ closeModal('khDetailModal'); editOrder(id); };
+  openModal('khDetailModal');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -9017,12 +9493,12 @@ function renderHoanThanh(){
       <span style="color:var(--text4)">🗑 Tự xóa sau 30 ngày</span>
     </div>
 
-    <div class="dd-stats">
+    <div class="dd-stats-sticky"><div class="dd-stats">
       ${stats.map(s=>`<button class="dd-stat${htFilterStatus===s.key?' active':''}" onclick="htSetFilter('${s.key}')">
         <div class="dd-stat-ic" style="background:${s.ic};color:${s.col}">${s.icon}</div>
         <div class="dd-stat-txt"><div class="dd-stat-n">${s.n}</div><div class="dd-stat-l">${s.l}</div></div>
       </button>`).join('')}
-    </div>
+    </div></div>
 
     <div class="dd-filters">
       <div class="dd-filters-row">
@@ -11365,6 +11841,7 @@ function saveProgress(){if(guardViewer())return;
   closeModal('progressModal');
   const savedId = _progressOrderId;
   renderTab(currentTab);
+  refreshKhDetailIfOpen(savedId); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
   goToOrderCard(savedId);
   showToast(`✅ Đã lưu: ${doneQty}/${o.qty||0} thanh`);
   saveOrders();
@@ -11480,6 +11957,7 @@ function setStage(id, stage){if(guardViewer())return;
   o.stage = stage;
   log('Cập nhật công đoạn', `${o.customer||''} · ${STAGE_LABEL[stage]||stage}`, id, {stage:old||''}, {stage});
   renderTab(currentTab);
+  refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
   goToOrderCard(id);
   showToast(`🏭 Công đoạn: ${STAGE_LABEL[stage]||stage}`);
   saveOrders();
@@ -11683,7 +12161,7 @@ function setStatus(id, newStatus){if(guardViewer())return;
   if(newStatus==='done') o.stage='danhbong';
   if(newStatus==='done') o.doneBy=currentUser?.name||'—';
   if(newStatus!=='done') delete o.doneAt;
-  const lb={pending:'Chờ SX',running:'Đang chạy',done:'Xong'};
+  const lb={pending:'Chờ sản xuất',running:'Đang sản xuất',done:'Hoàn thành'};
   log(lb[newStatus]||newStatus,
     `${o.customer} · ${o.priority||''} · ${specStr(o)} · ${qtyLabel(o)}`,
     id,
@@ -11697,8 +12175,9 @@ function setStatus(id, newStatus){if(guardViewer())return;
     renderTab(currentTab);
   }
   updateBadges();
+  refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
   goToOrderCard(id); // Nổi bật + cuộn tới đúng thẻ đơn vừa đổi trạng thái, tránh mất dấu khi đơn đổi vị trí/cột
-  showToast({pending:'⏳ Chờ sản xuất',running:'⚙️ Đang chạy!',done:'✅ Hoàn thành!'}[newStatus]||'');
+  showToast({pending:'⏳ Chờ sản xuất',running:'⚙️ Đang sản xuất!',done:'✅ Hoàn thành!'}[newStatus]||'');
 
   // Firebase
   saveOrders();
