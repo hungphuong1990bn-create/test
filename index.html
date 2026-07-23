@@ -4768,7 +4768,7 @@ body{letter-spacing:-.1px}
 </div>
 
 <!-- Panel chi tiết Kế hoạch sản xuất (Drawer bên phải trên Desktop / bottom-sheet trên Mobile) -->
-<div class="modal kh-drawer" id="khDetailModal">
+<div class="modal kh-drawer" id="khDetailModal" onclick="if(event.target===this)closeModal('khDetailModal');">
   <div class="modal-box">
     <div class="modal-handle"></div>
     <div class="modal-title" id="khDetailTitle">Chi tiết kế hoạch sản xuất</div>
