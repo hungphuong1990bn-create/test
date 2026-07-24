@@ -6165,7 +6165,7 @@ async function sendAiChatMessage(){
       try{
         res = await aiCallClaudeAPI(text);
       }catch(e){
-        res = {text:'❌ Không gọi được AI nâng cao: '+e.message+'\n\nBạn kiểm tra lại API key ở Cài đặt ▸ Cấu hình AI Copilot nâng cao nhé.'};
+        res = {text: aiFriendlyApiError(e)};
       }
     } else {
       res = {text:'Em chưa hiểu ý bạn bằng bộ lệnh có sẵn 🤔\nGõ "trợ giúp" để xem các lệnh em hỗ trợ, hoặc bật "AI Copilot nâng cao" ở Cài đặt để em hiểu được cả những câu phức tạp hơn.'};
@@ -6842,6 +6842,36 @@ function aiOrdersToHtml(orders){
   return `<div class="ai-result-list">${html}</div>`;
 }
 
+// Dịch lỗi từ Claude API thành hướng dẫn cụ thể, dễ hiểu cho Admin — phân
+// biệt rõ "sai key" / "hết credit" / "quá tải" thay vì gộp chung 1 câu chung chung.
+function aiFriendlyApiError(e){
+  const status = e && e.aiStatus;
+  const type = e && e.aiErrType;
+  const msg = (e && e.message) || '';
+  if(status===401 || type==='authentication_error'){
+    return `❌ API key không hợp lệ hoặc đã bị thu hồi.\n\nBạn vào Cài đặt ▸ Cấu hình AI Copilot nâng cao, kiểm tra lại đã dán đúng key (dạng "sk-ant-...") chưa, hoặc tạo key mới tại console.anthropic.com ▸ API Keys.`;
+  }
+  if(status===400 && (type==='invalid_request_error') && /credit balance/i.test(msg)){
+    return `❌ Tài khoản Anthropic Console chưa đủ credit để gọi API (key vẫn đúng, không cần đổi).\n\nBạn vào console.anthropic.com ▸ Plans & Billing, thêm phương thức thanh toán và nạp thêm credit, rồi thử lại — không cần sửa gì trong app.`;
+  }
+  if(status===403 || type==='permission_error'){
+    return `❌ Key không có quyền dùng chức năng này (permission_error). Bạn kiểm tra lại phạm vi quyền của key hoặc cài đặt tổ chức trên console.anthropic.com.`;
+  }
+  if(status===404 || type==='not_found_error'){
+    return `❌ Không tìm thấy model được yêu cầu (có thể tài khoản chưa được cấp quyền dùng model này). Bạn kiểm tra danh sách model khả dụng trên console.anthropic.com.`;
+  }
+  if(status===429 || type==='rate_limit_error'){
+    return `⏳ Đang gửi yêu cầu quá nhanh so với hạn mức tài khoản (rate limit). Bạn đợi một chút rồi thử lại nhé.`;
+  }
+  if(status===529 || type==='overloaded_error'){
+    return `⏳ Hệ thống AI đang quá tải tạm thời. Bạn thử lại sau ít phút nhé.`;
+  }
+  if(status===402 || type==='billing_error'){
+    return `❌ Có vấn đề về thanh toán trên tài khoản Anthropic Console. Bạn vào Plans & Billing để kiểm tra/cập nhật phương thức thanh toán rồi mua thêm credit.`;
+  }
+  return `❌ Không gọi được AI nâng cao: ${msg}\n\nBạn kiểm tra lại API key và số dư credit ở console.anthropic.com nhé.`;
+}
+
 // Gọi Claude API thật với vòng lặp function-calling: model có thể gọi nhiều
 // tool liên tiếp (VD: tìm đơn → rồi đổi ưu tiên đơn đó) trước khi trả lời.
 async function aiCallClaudeAPI(userText){
@@ -6869,8 +6899,12 @@ async function aiCallClaudeAPI(userText){
       })
     });
     if(!resp.ok){
-      const errText = await resp.text().catch(()=> '');
-      throw new Error('AI API lỗi ('+resp.status+'): '+errText.slice(0,200));
+      let errBody = null;
+      try{ errBody = await resp.json(); }catch(e){}
+      const apiErr = new Error((errBody && errBody.error && errBody.error.message) || ('HTTP '+resp.status));
+      apiErr.aiStatus = resp.status;
+      apiErr.aiErrType = errBody && errBody.error && errBody.error.type;
+      throw apiErr;
     }
     const data = await resp.json();
     const toolUses = (data.content||[]).filter(b=>b.type==='tool_use');
