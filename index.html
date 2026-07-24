@@ -3197,6 +3197,11 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 @keyframes ver-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .ver-storage-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
 .ver-storage-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--brand3),var(--brand))}
+.ver-sub-actions{display:flex;gap:8px;margin-top:8px}
+.ver-ghost-btn{flex:1;padding:9px 8px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:11.5px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
+.ver-ghost-btn:active{opacity:.75}
+.ver-ghost-btn svg{width:14px;height:14px;stroke-width:2;flex-shrink:0}
+.ver-ghost-btn.danger{border-color:#fecaca;color:var(--red-m,#dc2626);background:#fef2f2}
 
 /* ── FIREBASE SETUP ── */
 .fb-screen{position:fixed;inset:0;background:linear-gradient(160deg,var(--navy),var(--navy2));display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999}
@@ -4267,7 +4272,7 @@ body{letter-spacing:-.1px}
       </button>
       <button class="sb-item" id="sbi-settings" onclick="goTab('settings')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Cài đặt
+        Cài đặt <span class="sb-badge" id="sbVerBadge" style="display:none;background:var(--brand2)" title="Có bản cập nhật mới">🆕</span>
       </button>
     </div>
     <div class="sb-footer">
@@ -4364,6 +4369,7 @@ body{letter-spacing:-.1px}
       <button class="bn" id="bn-settings" onclick="goTab('settings')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Tài khoản
+        <span class="bn-dot" id="bnVerDot"></span>
       </button>
     </nav>
   </div>
@@ -5212,7 +5218,7 @@ function clearDirty(field){
 // cập nhật realtime/polling nào từ thiết bị khác nữa cho tới khi F5 lại trang
 // — đúng lỗi "thêm đơn mới không đồng bộ được sang thiết bị khác".
 function fbSaveField(field, path, isRetry, onSuccess){
-  fbWrite(path, DB[field], 'PUT')
+  return fbWrite(path, DB[field], 'PUT')
     .then(()=>{ setSyncDot('ok'); clearDirty(field); endSave(); if(onSuccess) onSuccess(); })
     .catch(e=>{
       if(!isRetry){
@@ -5328,7 +5334,7 @@ async function mergeAndSaveOrders(retryCount){
   DB.orders.forEach(o=>_knownIds.add(o.id));
   lsSave();
   scheduleUIRefresh(false);
-  fbSaveField('orders', '/data/orders', false, ()=>{ _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders); });
+  return fbSaveField('orders', '/data/orders', false, ()=>{ _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders); });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -5392,7 +5398,7 @@ async function mergeAndSaveUsers(){
   DB.users = merged;
   lsSave();
   scheduleUIRefresh(false);
-  fbSaveField('users', '/data/users', false, ()=>{ _lastSyncedUsersSnapshot = snapshotUsers(DB.users); });
+  return fbSaveField('users', '/data/users', false, ()=>{ _lastSyncedUsersSnapshot = snapshotUsers(DB.users); });
 }
 
 function saveAll(){if(guardViewer())return;
@@ -5448,7 +5454,7 @@ async function mergeAndSaveAttendance(){
   DB.attendance = unflattenAttendance(mergedFlat);
   lsSave();
   scheduleUIRefresh(false);
-  fbSaveField('attendance', '/data/attendance', false, ()=>{ _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); });
+  return fbSaveField('attendance', '/data/attendance', false, ()=>{ _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); });
 }
 
 
@@ -7193,9 +7199,26 @@ async function initAndStartSync(){
       // "nhập đơn/chấm công hôm nay, vào xem lại bị mất".
       const dirty = getDirtyFields();
       if(dirty.length){
-        await Promise.all(dirty.map(f=>
-          fbWrite('/data/'+f, DB[f], 'PUT').then(()=>clearDirty(f)).catch(()=>{})
-        ));
+        // QUAN TRỌNG: KHÔNG được ghi đè thẳng (fbWrite) nhánh orders/users/
+        // attendance bằng bản cục bộ ở đây. Nếu thiết bị này vừa mở lại app
+        // sau một thời gian offline (hoặc bị đóng đột ngột trước khi kịp
+        // đồng bộ), bản cục bộ đang giữ lúc này có thể CŨ HƠN dữ liệu trên
+        // server cho những đơn/tài khoản/chấm công do THIẾT BỊ KHÁC vừa
+        // thêm/sửa trong lúc thiết bị này offline. Ghi đè thẳng sẽ XOÁ MẤT
+        // ngay các thay đổi đó lúc vừa mở app — đúng lỗi "đơn thêm từ hôm
+        // trước bị mất rồi lại có" (nó "có lại" chỉ vì thiết bị kia tự đồng
+        // bộ lại đè lên sau đó, chứ không phải app đã sửa đúng).
+        // → Dùng đúng các hàm merge-theo-từng-mục (mergeAndSaveOrders/Users/
+        // Attendance) đã có sẵn: đọc bản mới nhất từ server làm nền, chỉ áp
+        // đè đúng phần cục bộ, không xoá mất phần của thiết bị khác.
+        await Promise.all(dirty.map(async f=>{
+          try{
+            if(f==='orders'){ beginSave(); await mergeAndSaveOrders(); }
+            else if(f==='users'){ beginSave(); await mergeAndSaveUsers(); }
+            else if(f==='attendance'){ beginSave(); await mergeAndSaveAttendance(); }
+            else { await fbWrite('/data/'+f, DB[f], 'PUT'); clearDirty(f); }
+          }catch(e){}
+        }));
       }
       const data = await fbRead('/data');
       if(data){
@@ -11258,6 +11281,44 @@ function verCheckIconSvg(){
   return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>`;
 }
 
+// Nhận diện gọn trình duyệt & hệ điều hành từ userAgent — chỉ để hiển thị
+// tham khảo trong thẻ "Phiên bản ứng dụng", không dùng để rẽ nhánh logic.
+function getBrowserOsInfo(){
+  const ua = navigator.userAgent || '';
+  let browser = 'Trình duyệt';
+  if(/Edg\//.test(ua)) browser = 'Edge';
+  else if(/OPR\//.test(ua)) browser = 'Opera';
+  else if(/CriOS|Chrome/.test(ua)) browser = 'Chrome';
+  else if(/FxiOS|Firefox/.test(ua)) browser = 'Firefox';
+  else if(/SamsungBrowser/.test(ua)) browser = 'Samsung Internet';
+  else if(/Safari/.test(ua)) browser = 'Safari';
+  let os = 'Không rõ';
+  if(/Android/.test(ua)) os = 'Android';
+  else if(/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+  else if(/Windows/.test(ua)) os = 'Windows';
+  else if(/Mac OS X/.test(ua)) os = 'macOS';
+  else if(/Linux/.test(ua)) os = 'Linux';
+  return `${browser} · ${os}`;
+}
+
+// Đánh dấu lần mở app đầu tiên trên thiết bị này (chỉ set 1 lần, không đổi
+// khi cập nhật phiên bản) để thẻ "Phiên bản ứng dụng" có thể hiện "Đã dùng
+// được X ngày" — giúp phân biệt máy mới cài với máy đã dùng lâu khi cần hỗ trợ.
+const VER_FIRST_OPEN_KEY = 'sx_first_open_ts';
+function getFirstOpenTs(){
+  let ts = localStorage.getItem(VER_FIRST_OPEN_KEY);
+  if(!ts){ ts = Date.now().toString(); try{ localStorage.setItem(VER_FIRST_OPEN_KEY, ts); }catch(e){} }
+  return parseInt(ts, 10);
+}
+function fmtUsedSince(ts){
+  const days = Math.max(0, Math.floor((Date.now()-ts)/86400000));
+  if(days<1) return 'Mới cài hôm nay';
+  if(days===1) return '1 ngày';
+  if(days<30) return `${days} ngày`;
+  const months = Math.floor(days/30);
+  return `${months} tháng${days%30>=1?` ${days%30} ngày`:''}`;
+}
+
 function buildVersionCard(){
   const online   = navigator.onLine;
   const swOn     = typeof _swReg!=='undefined' && !!_swReg;
@@ -11280,6 +11341,8 @@ function buildVersionCard(){
   // mỗi lần deploy (2.5.0 → 2.5.1/2.6.0...). Ưu tiên hiển thị số này; nếu
   // chưa đồng bộ được (offline lần đầu) thì tạm dùng APP_VERSION gõ tay.
   const displayVersion = (vi && vi.version) ? vi.version : APP_VERSION;
+  const deviceTxt = getBrowserOsInfo();
+  const usedTxt = fmtUsedSince(getFirstOpenTs());
   return `
     <div class="ver-top">
       <div class="ver-icon">🏭</div>
@@ -11293,14 +11356,27 @@ function buildVersionCard(){
       <div class="ver-info-row"><span class="ver-info-row-lbl">🌐 Kết nối mạng</span><span class="ver-info-row-val" id="verOnlineVal"><span class="ver-dot ${online?'on':'off'}"></span> ${online?'Online':'Offline'}</span></div>
       <div class="ver-info-row"><span class="ver-info-row-lbl">⚙️ Service Worker</span><span class="ver-info-row-val"><span class="ver-dot ${swOn?'on':'off'}"></span> ${swOn?'Đang hoạt động':'Chưa đăng ký'}</span></div>
       <div class="ver-info-row"><span class="ver-info-row-lbl">📱 Chế độ chạy</span><span class="ver-info-row-val">${isStandalone?'Ứng dụng đã cài (PWA)':'Trình duyệt web'}</span></div>
+      <div class="ver-info-row"><span class="ver-info-row-lbl">💻 Trình duyệt / Thiết bị</span><span class="ver-info-row-val">${deviceTxt}</span></div>
       <div class="ver-info-row"><span class="ver-info-row-lbl">🧩 Bản build (GitHub)</span><span class="ver-info-row-val" id="verBuildInfo">${buildInfoTxt}</span></div>
+      <div class="ver-info-row"><span class="ver-info-row-lbl">📅 Đã dùng trên máy này</span><span class="ver-info-row-val">${usedTxt}</span></div>
       <div class="ver-info-row"><span class="ver-info-row-lbl">🕐 Kiểm tra lần cuối</span><span class="ver-info-row-val" id="verLastCheck">${lastTxt}</span></div>
+      <div class="ver-info-row"><span class="ver-info-row-lbl">📦 Bộ nhớ đệm (cache)</span><span class="ver-info-row-val" id="verCacheEstVal">Đang tính…</span></div>
     </div>
     <div style="margin-top:12px">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>💾 Dữ liệu offline đã lưu</span><span>${storageKB.toFixed(0)} KB</span></div>
       <div class="ver-storage-bar"><div class="ver-storage-fill" style="width:${storagePct}%"></div></div>
     </div>
     <button class="ver-check-btn" id="verCheckBtn" onclick="checkUpdateManual()">${verCheckIconSvg()}<span>Kiểm tra cập nhật ngay</span></button>
+    <div class="ver-sub-actions">
+      <button class="ver-ghost-btn" onclick="copyDiagnosticInfo()" title="Sao chép thông tin để gửi cho bộ phận hỗ trợ">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        <span>Sao chép chẩn đoán</span>
+      </button>
+      <button class="ver-ghost-btn danger" onclick="clearCacheAndReload()" title="Xoá cache trình duyệt và tải lại ứng dụng từ đầu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a2 2 0 012-2h0a2 2 0 012 2v2"/></svg>
+        <span>Xóa cache & tải lại</span>
+      </button>
+    </div>
   `;
 }
 
@@ -11339,6 +11415,74 @@ function updateVerConnDot(){
   window.addEventListener('offline', refresh);
 }
 
+// Dung lượng thật của Cache Storage (file HTML/CSS/JS/ảnh mà Service Worker
+// đã lưu để chạy offline) — khác với localStorage (chỉ chứa dữ liệu đơn hàng…).
+// Dùng navigator.storage.estimate() khi trình duyệt hỗ trợ; nếu không thì
+// đếm số file trong các cache đang mở để vẫn có con số tham khảo.
+async function refreshCacheStorageEstimate(){
+  const el = document.getElementById('verCacheEstVal');
+  if(!el) return;
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      const est = await navigator.storage.estimate();
+      const usedMB = (est.usage||0)/1024/1024;
+      el.textContent = usedMB>=1 ? `${usedMB.toFixed(1)} MB` : `${((est.usage||0)/1024).toFixed(0)} KB`;
+    } else if('caches' in window){
+      const names = await caches.keys();
+      let fileCount = 0;
+      for(const n of names){ const c = await caches.open(n); fileCount += (await c.keys()).length; }
+      el.textContent = `${fileCount} tệp (${names.length} cache)`;
+    } else {
+      el.textContent = 'Không hỗ trợ';
+    }
+  }catch(e){ el.textContent = 'Không xác định'; }
+}
+
+// Gom toàn bộ thông tin trên thẻ "Phiên bản ứng dụng" thành 1 đoạn văn bản
+// gọn để người dùng dán vào tin nhắn khi báo lỗi cho quản trị viên/dev,
+// thay vì phải chụp màn hình hoặc gõ tay lại từng dòng.
+async function copyDiagnosticInfo(){
+  const vi = _versionInfo;
+  const displayVersion = (vi && vi.version) ? vi.version : APP_VERSION;
+  const commitTxt = vi ? (String(vi.commit||'').slice(0,7)||'—') : '—';
+  const swOn = typeof _swReg!=='undefined' && !!_swReg;
+  const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true;
+  const lines = [
+    `SX Đông Phương — Thông tin chẩn đoán`,
+    `Phiên bản: ${displayVersion} (#${commitTxt})`,
+    `Kết nối mạng: ${navigator.onLine?'Online':'Offline'}`,
+    `Service Worker: ${swOn?'Đang hoạt động':'Chưa đăng ký'}`,
+    `Chế độ chạy: ${isStandalone?'Ứng dụng đã cài (PWA)':'Trình duyệt web'}`,
+    `Trình duyệt / Thiết bị: ${getBrowserOsInfo()}`,
+    `Đã dùng trên máy này: ${fmtUsedSince(getFirstOpenTs())}`,
+    `Thời điểm: ${vnDateTimeShort(new Date())}`
+  ];
+  const text = lines.join('\n');
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
+    else { const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+    showToast('📋 Đã sao chép thông tin chẩn đoán');
+  }catch(e){ showToast('⚠️ Không thể sao chép, thử lại sau'); }
+}
+
+// Xoá sạch Cache Storage (bản offline cũ) + huỷ đăng ký Service Worker rồi
+// tải lại trang — dùng khi app bị lỗi hiển thị/kẹt bản cũ mà "Kiểm tra cập
+// nhật" thông thường không khắc phục được. KHÔNG đụng tới dữ liệu đơn hàng
+// (localStorage) hay Firebase Sync, chỉ xoá phần cache kỹ thuật.
+async function clearCacheAndReload(){
+  confirm2('Xóa cache & tải lại', 'Ứng dụng sẽ xoá bộ nhớ đệm offline và tải lại từ đầu. Dữ liệu đơn hàng, chấm công… vẫn được giữ nguyên (đã lưu riêng). Tiếp tục?', async ()=>{
+    try{
+      if('caches' in window){ const names = await caches.keys(); await Promise.all(names.map(n=>caches.delete(n))); }
+      if('serviceWorker' in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.unregister()));
+      }
+    }catch(e){ /* vẫn tải lại dù có lỗi khi dọn cache */ }
+    showToast('🔄 Đang tải lại...');
+    setTimeout(()=>{ window.location.reload(true); }, 400);
+  });
+}
+
 async function checkUpdateManual(){
   const btn=document.getElementById('verCheckBtn');
   const badge=document.getElementById('verBadge');
@@ -11367,6 +11511,7 @@ async function checkUpdateManual(){
     else{ badge.className='ver-status-badge ok'; badge.textContent='✓ Mới nhất'; }
   }
   const lc=document.getElementById('verLastCheck'); if(lc) lc.textContent=vnDateTimeShort(new Date());
+  refreshCacheStorageEstimate();
   if(btn){
     btn.disabled=false; btn.classList.remove('spinning');
     const span=btn.querySelector('span'); if(span) span.textContent='Kiểm tra cập nhật ngay';
@@ -11440,6 +11585,8 @@ function renderSettings(){
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
         Thử chuông & rung
       </button>
+      <div class="sec-title" style="margin-top:8px">📱 Phiên bản ứng dụng</div>
+      <div class="card ver-card" id="verCardWrap">${buildVersionCard()}</div>
       ${admin?`
       <div class="sec-title" style="margin-top:8px">Quản lý tài khoản</div>
       <div class="card" style="padding:0 14px">
@@ -11470,6 +11617,8 @@ function renderSettings(){
       </button>
     </div>
   `;
+  updateVerConnDot();
+  refreshCacheStorageEstimate();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -13954,8 +14103,20 @@ document.addEventListener('visibilitychange', ()=>{
 });
 resetIdleTimer();
 
+// Hiện/ẩn chấm "🆕 có bản mới" ngay trên mục Cài đặt (sidebar desktop
+// + bottom-nav mobile) để người dùng biết có bản cập nhật mà không cần
+// phải bấm vào Cài đặt kiểm tra thủ công. Badge chỉ tắt khi app thực sự
+// tải lại bản mới (safeReload) — vì trước đó app vẫn đang chạy bản cũ.
+function updateVersionBadge(show){
+  const sb = document.getElementById('sbVerBadge');
+  const bn = document.getElementById('bnVerDot');
+  if(sb) sb.style.display = show ? 'inline-flex' : 'none';
+  if(bn) bn.classList.toggle('show', !!show);
+}
+
 // Banner thông báo update — đẹp hơn, có countdown
 function showUpdateBanner(){
+  updateVersionBadge(true);
   if(document.getElementById('updateBanner')) return;
   const b = document.createElement('div');
   b.id = 'updateBanner';
