@@ -1,0 +1,91 @@
+name: Bump App Version
+
+# Tự động chạy mỗi khi có code mới được đẩy lên nhánh chính (deploy lên
+# GitHub Pages). Nhiệm vụ DUY NHẤT của workflow này là tạo/ghi đè file
+# version.json ở gốc repo — đây chính là file mà index.html đọc mỗi
+# 2 phút (hàm checkForNewVersion()) để biết có bản mới hay không, và
+# hiển thị ở Cài đặt ▸ Phiên bản & Cập nhật.
+#
+# Cách cài đặt (làm 1 lần):
+#   1. Trong repo GitHub, tạo thư mục .github/workflows (nếu chưa có)
+#   2. Bỏ file này vào đúng đường dẫn: .github/workflows/bump-version.yml
+#   3. Commit + push lên nhánh chính (main/master) — workflow sẽ tự chạy
+#      từ lần push kế tiếp trở đi.
+#   4. Không cần cấu hình gì thêm: workflow dùng GITHUB_TOKEN có sẵn,
+#      đã được cấp quyền "Read and write permissions" mặc định cho mọi
+#      repo (nếu bị tắt, vào Settings ▸ Actions ▸ General ▸ Workflow
+#      permissions ▸ chọn "Read and write permissions").
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    # Bỏ qua chính commit "chore: bump version" do workflow này tự tạo,
+    # để KHÔNG bị lặp vô hạn (dù GITHUB_TOKEN mặc định đã không tự kích
+    # hoạt lại workflow khác, thêm điều kiện này để chắc chắn 100%).
+    paths-ignore:
+      - 'version.json'
+
+# Cho phép workflow ghi ngược lại vào repo (tạo/commit version.json).
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    # An toàn 2 lớp: nếu commit message có chứa "chore: bump version"
+    # thì dừng ngay, không chạy tiếp (chống lặp vô hạn tuyệt đối).
+    if: "!contains(github.event.head_commit.message, 'chore: bump version')"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tính số phiên bản mới (tăng dần theo kiểu 2.5.1 → 2.5.2)
+        id: bump
+        run: |
+          set -e
+          if [ -f version.json ]; then
+            OLD_VER=$(node -e "try{console.log(require('./version.json').version||'')}catch(e){console.log('')}")
+          else
+            OLD_VER=""
+          fi
+
+          # Nếu chưa từng có version.json, thử lấy APP_VERSION gõ tay
+          # trong index.html làm mốc khởi đầu; nếu không thấy thì bắt
+          # đầu từ 1.0.0.
+          if [ -z "$OLD_VER" ]; then
+            OLD_VER=$(grep -oP "APP_VERSION\s*=\s*'\K[0-9]+\.[0-9]+\.[0-9]+" index.html || echo "1.0.0")
+          fi
+
+          # Tách major.minor.patch rồi tăng patch lên 1.
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD_VER"
+          MAJOR=${MAJOR:-1}; MINOR=${MINOR:-0}; PATCH=${PATCH:-0}
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VER="${MAJOR}.${MINOR}.${NEW_PATCH}"
+
+          echo "old_version=$OLD_VER" >> "$GITHUB_OUTPUT"
+          echo "new_version=$NEW_VER" >> "$GITHUB_OUTPUT"
+          echo "Bumping version: $OLD_VER -> $NEW_VER"
+
+      - name: Ghi version.json (nguồn sự thật cho index.html)
+        run: |
+          cat > version.json <<EOF
+          {
+            "version": "${{ steps.bump.outputs.new_version }}",
+            "build": ${{ github.run_id }},
+            "commit": "${{ github.sha }}",
+            "updatedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          cat version.json
+
+      - name: Commit & push version.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.json
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
+          git push
