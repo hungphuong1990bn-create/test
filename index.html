@@ -4433,8 +4433,11 @@ body{letter-spacing:-.1px}
   </div>
   <div class="ai-msgs" id="aiMsgsEl"></div>
   <div class="ai-hint-row" id="aiHintRow">
-    <span class="ai-hint-chip" onclick="aiFillPrompt('Đưa đơn ')">Đưa đơn … lên gấp 1</span>
-    <span class="ai-hint-chip" onclick="aiFillPrompt('Tìm đơn ')">Tìm đơn …</span>
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Đưa đơn ')">Đổi ưu tiên</span>
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Cho đơn ')">Cho chạy</span>
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Tìm đơn ')">Tìm đơn</span>
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Đơn quá hạn')">Đơn quá hạn</span>
+    <span class="ai-hint-chip" onclick="aiFillPrompt('Báo cáo hôm nay')">Báo cáo hôm nay</span>
     <span class="ai-hint-chip" onclick="aiFillPrompt('Danh sách khách hàng')">Danh sách khách hàng</span>
   </div>
   <div class="ai-inputbar">
@@ -5974,6 +5977,18 @@ function updateAiBubble(){
   if(wrap) wrap.classList.toggle('show', isAdmin());
 }
 
+const AI_WELCOME =
+`Xin chào Admin 👋 Em là AI Trợ lý, có thể giúp:
+• Đổi ưu tiên: "Đưa đơn Á Châu lên gấp 1"
+• Đổi trạng thái: "Cho đơn Á Châu chạy" / "Đơn Á Châu xong rồi"
+• Cập nhật tiến độ: "Đơn Á Châu đã chạy 50 thanh"
+• Ghi chú đơn: "Ghi chú đơn Á Châu: khách đổi màu"
+• Tìm kiếm: "Tìm đơn phi 18" / "Tìm khách Hoàng Gia"
+• "Danh sách khách hàng", "Đơn quá hạn", "Đơn sắp tới hạn"
+• "Báo cáo hôm nay" để xem tổng quan nhanh
+• Gửi thông báo cả nhóm: "Thông báo: nghỉ lễ 2/9"
+Gõ "trợ giúp" bất cứ lúc nào để xem lại danh sách này.`;
+
 function openAiChatWindow(){
   if(!isAdmin()) return;
   aiChatWindowOpen = true;
@@ -5982,9 +5997,7 @@ function openAiChatWindow(){
   const win = $('aiFloatWindow');
   if(win) win.classList.add('open');
   if(!aiChatMessages.length){
-    aiChatMessages.push({id:'a0', role:'bot',
-      text:'Xin chào Admin 👋 Em là AI Trợ lý. Em có thể giúp:\n• Đổi mức ưu tiên đơn hàng theo tên khách — VD: "Đưa đơn Á Châu lên gấp 1"\n• Tìm đơn hàng / khách hàng nhanh — VD: "Tìm đơn phi 18" hoặc "Tìm khách Hoàng Gia"\n• "Danh sách khách hàng" để xem tổng quan các đơn đang chạy theo khách',
-      ts:Date.now()});
+    aiChatMessages.push({id:'a0', role:'bot', text:AI_WELCOME, ts:Date.now()});
     aiCacheSave();
   }
   renderAiMessages();
@@ -6068,7 +6081,10 @@ function sendAiChatMessage(){
   aiShowTyping();
   setTimeout(()=>{
     aiHideTyping();
-    const res = processAiCommand(text) || {text:'Em chưa hiểu ý bạn. Hãy thử: "Đưa đơn [tên khách] lên gấp 1/2/3" hoặc "Tìm đơn [từ khoá]".'};
+    let res;
+    try{ res = processAiCommand(text); }
+    catch(e){ res = {text:'❌ Có lỗi khi xử lý yêu cầu: '+e.message}; }
+    if(!res) res = {text:'Em chưa hiểu ý bạn. Gõ "trợ giúp" để xem các lệnh em hỗ trợ nhé.'};
     aiChatMessages.push({id:'a'+Date.now()+Math.random().toString(36).slice(2,6), role:'bot', text:res.text||'', html:res.html||'', ts:Date.now()});
     renderAiMessages();
     aiScrollBottom();
@@ -6078,13 +6094,16 @@ function sendAiChatMessage(){
 
 // ── Bỏ các từ ra lệnh/hư từ, giữ lại phần được cho là TÊN KHÁCH HÀNG /
 // TỪ KHOÁ TÌM KIẾM. So khớp theo từng từ (không phân biệt dấu) để hoạt
-// động tốt dù người dùng gõ trước/sau cụm "gấp N", "tìm", v.v.
+// động tốt dù người dùng gõ trước/sau các cụm ra lệnh.
 const AI_STOPWORDS = new Set([
-  'hay','vui','long','giup','giups','gium','lam','on','xin','chao','toi','minh',
+  'hay','vui','long','giup','giups','gium','lam','on','xin','chao','toi','minh','ban',
   'dua','nang','day','chuyen','de','dat','sua','doi','ha','giam','tang','keo','vao',
   'don','hang','cua','cho','len','xuong','ve','thanh','ho','ngay','gap','khan',
   'muc','uu','tien','xem','tim','tra','cuu','tracuu','kiem','kiemtra','search',
-  'danh','sach','khach','tat','ca','tong','quan','1','2','3','duoc','di','nhe'
+  'danh','sach','khach','tat','ca','tong','quan','1','2','3','duoc','di','nhe',
+  'bat','dau','chay','dang','san','xuat','hoan','xong','roi','het','ket','thuc',
+  'da','cap','nhat','tien do','tiendo','so','thanhtien','ghi','chu','note',
+  'qua','han','sap','toi','giao','baocao','hom','nay','tinh','hinh','thong','bao'
 ]);
 function aiExtractSubject(text, normText){
   const words = String(text||'').split(/\s+/).filter(Boolean);
@@ -6094,12 +6113,50 @@ function aiExtractSubject(text, normText){
     const raw = (normWords[i]||'').replace(/[^a-z0-9]/gi,'');
     if(!raw) continue;
     if(AI_STOPWORDS.has(raw)) continue;
+    if(/^\d+$/.test(raw)) continue; // bỏ số lẻ (mức ưu tiên, số lượng...)
     kept.push(words[i]);
   }
   return kept.join(' ').trim().replace(/^["'“”]+|["'“”]+$/g,'');
 }
 
-// ── Ý định 1: đổi mức ưu tiên đơn hàng theo tên khách hàng ──
+// ── Tìm đơn theo tên khách hàng (hoặc đúng mã PO/mã đơn nếu gõ chính xác) ──
+// activeOnly=true: chỉ lấy đơn chưa hoàn thành (dùng cho đổi ưu tiên/trạng thái/tiến độ/ghi chú)
+function aiFindOrders(subject, activeOnly){
+  const qNorm = _stripDiacritics(String(subject||'').toLowerCase()).trim();
+  if(!qNorm) return [];
+  // Ưu tiên khớp đúng mã PO / mã đơn (để xử lý khi có nhiều đơn trùng tên khách)
+  const byCode = DB.orders.filter(o=>{
+    if(activeOnly && o.status==='done') return false;
+    return _stripDiacritics(String(ddCode(o)||'').toLowerCase())===qNorm
+        || _stripDiacritics(String(o.po||'').toLowerCase())===qNorm;
+  });
+  if(byCode.length) return byCode;
+  const tokens = qNorm.split(/\s+/).filter(Boolean);
+  return DB.orders.filter(o=>{
+    if(activeOnly && o.status==='done') return false;
+    const custNorm = _stripDiacritics(String(o.customer||'').toLowerCase());
+    return tokens.every(t=>custNorm.includes(t));
+  });
+}
+
+// Danh sách rút gọn khi lệnh khớp nhiều hơn 1 đơn — để Admin chọn lại bằng mã PO/mã đơn
+function aiAmbiguousList(matches, hintVerb){
+  const html = matches.slice(0,10).map(o=>{
+    const pc = priColor(o.priority);
+    return `<div class="ai-result-card">
+      <div class="ai-result-info"><b>${chatEsc(o.customer||'—')}</b> · <code>${chatEsc(ddCode(o))}</code><br>
+        <span style="color:${pc}">🚩 ${chatEsc(o.priority||'—')}</span> · ${chatEsc(statusInfo(o.status).label||'')} · ${chatEsc(specStr(o))}</div>
+      <button class="ai-result-view-btn" onclick="aiGoToOrder('${o.id}')">Xem</button>
+    </div>`;
+  }).join('');
+  return {
+    text:`⚠️ Có ${matches.length} đơn khớp, bạn cho em biết đơn nào bằng cách gõ lại lệnh kèm mã đơn (VD: ${hintVerb||''} ${chatEsc(ddCode(matches[0]))})`,
+    html:`<div class="ai-result-list">${html}</div>`
+  };
+}
+
+// ── Ý định: đổi mức ưu tiên đơn hàng theo tên khách hàng (áp dụng cho TẤT CẢ
+// đơn đang chạy của khách đó — vì đây vốn là thao tác hàng loạt hợp lý) ──
 function aiHandlePriorityChange(text, normText){
   const m = normText.match(/\b(?:gap|khan)\s*([1-3])\b/);
   if(!m) return null;
@@ -6108,13 +6165,7 @@ function aiHandlePriorityChange(text, normText){
   if(!subject){
     return {text:`Bạn muốn chuyển đơn của khách hàng nào lên ${targetPri}? Hãy gõ ví dụ: "Đưa đơn Á Châu lên ${targetPri}".`};
   }
-  const qNorm = _stripDiacritics(subject.toLowerCase()).trim();
-  const tokens = qNorm.split(/\s+/).filter(Boolean);
-  const matches = DB.orders.filter(o=>{
-    if(o.status==='done') return false;
-    const custNorm = _stripDiacritics(String(o.customer||'').toLowerCase());
-    return tokens.every(t=>custNorm.includes(t));
-  });
+  const matches = aiFindOrders(subject, true);
   if(!matches.length){
     return {text:`❌ Không tìm thấy đơn nào đang chạy của khách hàng "${subject}". Bạn kiểm tra lại tên khách hàng giúp em nhé.`};
   }
@@ -6147,35 +6198,88 @@ function aiHandlePriorityChange(text, normText){
   };
 }
 
-// ── Ý định 2: tìm kiếm đơn hàng / khách hàng ──
-function aiHandleSearch(text, normText){
-  if(!/\b(tim|tra cuu|tracuu|kiem tra|kiemtra|kiem|search)\b/.test(normText)) return null;
-  const query = aiExtractSubject(text, normText);
-  if(!query){
-    return {text:'Bạn muốn tìm đơn hàng hoặc khách hàng nào? VD: "Tìm đơn Á Châu" hoặc "Tìm đơn phi 18".'};
+// ── Ý định: đổi trạng thái đơn (đang chạy / hoàn thành / chờ sản xuất) ──
+// Với thao tác này chỉ áp dụng khi khớp DUY NHẤT 1 đơn, tránh đổi nhầm hàng
+// loạt khi khách có nhiều đơn khác nhau đang chạy.
+function aiHandleStatusChange(text, normText){
+  let target = null, verb = '';
+  if(/\b(hoan thanh|da xong|xong roi|xong het|ket thuc)\b/.test(normText)){ target='done'; verb='hoàn thành'; }
+  else if(/\b(bat dau chay|cho chay|dang chay|vao chay|chay ngay|chay lien|chay het)\b/.test(normText)
+     || /\b(cho|bat dau|dang|vao)\b.{0,15}\bchay\b/.test(normText)){ target='running'; verb='cho chạy'; }
+  else if(/\b(cho san xuat lai|tro lai cho|huy chay|dung chay)\b/.test(normText)){ target='pending'; verb='chuyển về chờ'; }
+  if(!target) return null;
+  const subject = aiExtractSubject(text, normText);
+  if(!subject){
+    return {text:`Bạn muốn ${verb} đơn của khách hàng nào? VD: "${verb==='hoàn thành'?'Hoàn thành':'Cho'} đơn Á Châu ${verb==='hoàn thành'?'':'chạy'}".`};
   }
-  const results = DB.orders
-    .filter(o=>matchSearch(o, query))
-    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
-    .slice(0,15);
-  if(!results.length){
-    return {text:`❌ Không tìm thấy đơn hàng nào khớp với "${query}".`};
+  const matches = aiFindOrders(subject, target!=='pending').filter(o=>o.status!==target);
+  if(!matches.length){
+    return {text:`❌ Không tìm thấy đơn phù hợp của "${subject}" để ${verb} (có thể đã ở đúng trạng thái này rồi, hoặc sai tên khách).`};
   }
-  const html = results.map(o=>{
-    const pc = priColor(o.priority);
-    return `<div class="ai-result-card">
-      <div class="ai-result-info"><b>${chatEsc(o.customer||'—')}</b>${o.po?' · PO '+chatEsc(o.po):''}<br>
-        <span style="color:${pc}">🚩 ${chatEsc(o.priority||'—')}</span> · ${chatEsc(statusInfo(o.status).label||'')}</div>
-      <button class="ai-result-view-btn" onclick="aiGoToOrder('${o.id}')">Xem</button>
-    </div>`;
-  }).join('');
-  return {
-    text:`🔎 Tìm thấy ${results.length} đơn khớp với "${query}":`,
-    html:`<div class="ai-result-list">${html}</div>`
-  };
+  if(matches.length>1) return aiAmbiguousList(matches, verb+' đơn');
+  const o = matches[0];
+  const before = statusInfo(o.status).label;
+  setStatus(o.id, target);
+  return {text:`✅ Đã chuyển đơn ${chatEsc(o.customer)} (${chatEsc(ddCode(o))}) từ "${chatEsc(before)}" sang "${chatEsc(statusInfo(target).label)}".`};
 }
 
-// ── Ý định 3: liệt kê khách hàng đang có đơn chạy ──
+// ── Ý định: cập nhật tiến độ (số lượng đã chạy) ──
+function aiHandleProgress(text, normText){
+  const m = normText.match(/\b(?:da chay|chay duoc|chay het|tien do)\D{0,10}(\d+)\b/) || normText.match(/\b(\d+)\s*(?:thanh|cay|cuon)\b/);
+  if(!m) return null;
+  const doneQty = parseInt(m[1], 10);
+  const subject = aiExtractSubject(text, normText);
+  if(!subject){
+    return {text:'Bạn muốn cập nhật tiến độ cho đơn của khách hàng nào? VD: "Đơn Á Châu đã chạy 50 thanh".'};
+  }
+  const matches = aiFindOrders(subject, true);
+  if(!matches.length){
+    return {text:`❌ Không tìm thấy đơn đang chạy của "${subject}".`};
+  }
+  if(matches.length>1) return aiAmbiguousList(matches, 'Cập nhật tiến độ đơn');
+  const o = matches[0];
+  const total = o.qty||0;
+  if(total && doneQty>total){
+    return {text:`❌ Số lượng đã chạy (${doneQty}) không thể lớn hơn tổng đơn (${total}).`};
+  }
+  const oldQty = o.doneQty||0;
+  o.doneQty = doneQty;
+  log('AI Trợ lý - Cập nhật tiến độ', `${o.customer} · Đã chạy: ${doneQty}/${total} `, o.id, {doneQty:oldQty}, {doneQty});
+  saveOrders();
+  renderTab(currentTab);
+  refreshKhDetailIfOpen(o.id);
+  showToast(`✅ Đã lưu tiến độ: ${doneQty}/${total||'?'}`);
+  return {text:`✅ Đã cập nhật tiến độ đơn ${chatEsc(o.customer)} (${chatEsc(ddCode(o))}): ${doneQty}${total?'/'+total:''}.`};
+}
+
+// ── Ý định: ghi chú đơn hàng — cú pháp "Ghi chú đơn [khách]: [nội dung]" ──
+function aiHandleNote(text, normText){
+  if(!/\bghi\s*chu\b|\bnote\b/.test(normText)) return null;
+  const colonIdx = text.indexOf(':');
+  if(colonIdx===-1){
+    return {text:'Bạn ghi chú theo cú pháp: "Ghi chú đơn [tên khách]: [nội dung]".'};
+  }
+  const before = text.slice(0,colonIdx);
+  const noteContent = text.slice(colonIdx+1).trim();
+  const beforeNorm = _stripDiacritics(before.toLowerCase());
+  const subject = aiExtractSubject(before, beforeNorm);
+  if(!subject || !noteContent){
+    return {text:'Bạn ghi chú theo cú pháp: "Ghi chú đơn [tên khách]: [nội dung]".'};
+  }
+  const matches = aiFindOrders(subject, true);
+  if(!matches.length) return {text:`❌ Không tìm thấy đơn đang chạy của "${subject}".`};
+  if(matches.length>1) return aiAmbiguousList(matches, 'Ghi chú đơn');
+  const o = matches[0];
+  const oldNote = o.note||'';
+  o.note = noteContent;
+  log('AI Trợ lý - Ghi chú', `${o.customer} · ${noteContent}`, o.id, {note:oldNote}, {note:noteContent});
+  saveOrders();
+  renderTab(currentTab);
+  showToast('✅ Đã lưu ghi chú');
+  return {text:`✅ Đã ghi chú cho đơn ${chatEsc(o.customer)} (${chatEsc(ddCode(o))}): "${chatEsc(noteContent)}"`};
+}
+
+// ── Ý định: liệt kê khách hàng đang có đơn chạy ──
 function aiHandleCustomerList(normText){
   if(!/\b(danh sach|danhsach).*khach|khach hang.*danh sach/.test(normText) && normText.trim()!=='khach hang') return null;
   const active = DB.orders.filter(o=>o.status!=='done');
@@ -6203,22 +6307,121 @@ function aiHandleCustomerList(normText){
   };
 }
 
-// ── Bộ định tuyến ý định chính ──
+// ── Ý định: báo cáo đơn quá hạn / sắp tới hạn giao ──
+function aiHandleDeadlineReport(normText){
+  const now = new Date();
+  const isOverdueQ = /\b(don|nao).*qua han|qua han giao|tre han/.test(normText) || normText.includes('qua han');
+  const isUpcomingQ = /sap toi han|sap den han|sap giao/.test(normText);
+  if(!isOverdueQ && !isUpcomingQ) return null;
+  let list, title;
+  if(isOverdueQ){
+    list = DB.orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<now);
+    title = `⚠️ Có ${list.length} đơn đã quá hạn giao:`;
+  } else {
+    list = DB.orders.filter(o=>{
+      if(o.status==='done'||!o.deliveryDate) return false;
+      const d=(new Date(o.deliveryDate)-now)/86400000; return d>=0&&d<2;
+    });
+    title = `⏰ Có ${list.length} đơn sắp tới hạn giao (trong 48h):`;
+  }
+  if(!list.length){
+    return {text: isOverdueQ ? '✅ Hiện không có đơn nào quá hạn giao.' : '✅ Không có đơn nào sắp tới hạn trong 48h tới.'};
+  }
+  const html = list.slice(0,15).map(o=>{
+    const pc = priColor(o.priority);
+    return `<div class="ai-result-card">
+      <div class="ai-result-info"><b>${chatEsc(o.customer||'—')}</b> · <code>${chatEsc(ddCode(o))}</code><br>
+        <span style="color:${pc}">🚩 ${chatEsc(o.priority||'—')}</span> · 📅 ${chatEsc(fmtDate(o.deliveryDate))}</div>
+      <button class="ai-result-view-btn" onclick="aiGoToOrder('${o.id}')">Xem</button>
+    </div>`;
+  }).join('');
+  return { text: title, html: `<div class="ai-result-list">${html}</div>` };
+}
+
+// ── Ý định: báo cáo nhanh tình hình hôm nay ──
+function aiHandleQuickReport(normText){
+  if(!/\b(bao cao|tinh hinh).*hom nay|hom nay.*(bao cao|tinh hinh)|tong quan/.test(normText)) return null;
+  const orders = DB.orders;
+  const pending = orders.filter(o=>o.status==='pending').length;
+  const running = orders.filter(o=>o.status==='running'||o.status==='cutting').length;
+  const doneToday = orders.filter(o=>o.status==='done' && o.doneAt && new Date(o.doneAt).toDateString()===new Date().toDateString()).length;
+  const overdue = orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<new Date()).length;
+  const newToday = orders.filter(o=>o.createdAt && new Date(o.createdAt).toDateString()===new Date().toDateString()).length;
+  return {
+    text:`📊 Tổng quan hôm nay:\n• Đơn mới hôm nay: ${newToday}\n• Đang chờ sản xuất: ${pending}\n• Đang chạy: ${running}\n• Hoàn thành hôm nay: ${doneToday}\n• Đang quá hạn giao: ${overdue}${overdue?' ⚠️':' ✅'}`
+  };
+}
+
+// ── Ý định: gửi thông báo cho cả nhóm — cú pháp "Thông báo: nội dung" ──
+function aiHandleBroadcast(text, normText){
+  if(!/^thong bao\b/.test(normText.trim()) && !/^thong bao\s*:/.test(normText.trim())) return null;
+  const colonIdx = text.indexOf(':');
+  const msg = (colonIdx!==-1 ? text.slice(colonIdx+1) : text.replace(/^[^:]*?thông\s*báo/i,'')).trim();
+  if(!msg){
+    return {text:'Bạn gõ theo cú pháp: "Thông báo: nội dung cần gửi cho cả nhóm".'};
+  }
+  addNotif('broadcast','📢 '+currentUser.name, msg, '', currentUser.name);
+  log('Gửi thông báo', msg, '');
+  showToast('✅ Đã gửi thông báo cho cả nhóm');
+  if(fbOk()) fbWrite('/broadcast', {
+    id:'b'+Date.now(), msg, from:currentUser.name,
+    role:currentUser.role, ts:Date.now()
+  }, 'PUT').catch(()=>{});
+  return {text:`📢 Đã gửi thông báo cho cả nhóm: "${chatEsc(msg)}"`};
+}
+
+// ── Ý định: tìm kiếm đơn hàng / khách hàng ──
+function aiHandleSearch(text, normText){
+  if(!/\b(tim|tra cuu|tracuu|kiem tra|kiemtra|kiem|search)\b/.test(normText)) return null;
+  const query = aiExtractSubject(text, normText);
+  if(!query){
+    return {text:'Bạn muốn tìm đơn hàng hoặc khách hàng nào? VD: "Tìm đơn Á Châu" hoặc "Tìm đơn phi 18".'};
+  }
+  const results = DB.orders
+    .filter(o=>matchSearch(o, query))
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
+    .slice(0,15);
+  if(!results.length){
+    return {text:`❌ Không tìm thấy đơn hàng nào khớp với "${query}".`};
+  }
+  const html = results.map(o=>{
+    const pc = priColor(o.priority);
+    return `<div class="ai-result-card">
+      <div class="ai-result-info"><b>${chatEsc(o.customer||'—')}</b>${o.po?' · PO '+chatEsc(o.po):''}<br>
+        <span style="color:${pc}">🚩 ${chatEsc(o.priority||'—')}</span> · ${chatEsc(statusInfo(o.status).label||'')}</div>
+      <button class="ai-result-view-btn" onclick="aiGoToOrder('${o.id}')">Xem</button>
+    </div>`;
+  }).join('');
+  return {
+    text:`🔎 Tìm thấy ${results.length} đơn khớp với "${query}":`,
+    html:`<div class="ai-result-list">${html}</div>`
+  };
+}
+
+// ── Bộ định tuyến ý định chính — thứ tự ưu tiên từ cú pháp đặc thù nhất
+// (ghi chú/thông báo có dấu ":") đến tổng quát nhất (tìm kiếm tự do) ──
 function processAiCommand(text){
   if(!isAdmin()) return {text:'Chức năng này chỉ dành cho Admin.'};
   const normText = _stripDiacritics(String(text||'').toLowerCase()).trim();
   if(!normText) return null;
   if(/^(chao|hi|hello|xin chao)\b/.test(normText)){
-    return {text:'Chào Admin 👋 Bạn cần đổi ưu tiên đơn hàng hay tìm kiếm đơn/khách hàng nào?'};
+    return {text:'Chào Admin 👋 Bạn cần đổi ưu tiên, đổi trạng thái đơn, tra cứu hay báo cáo gì hôm nay?'};
   }
-  if(/^(giup|help|huong dan|lam sao)\b/.test(normText) || normText==='?'){
-    return {text:'Em có thể giúp:\n• Đổi ưu tiên: "Đưa đơn [tên khách] lên gấp 1/2/3"\n• Tìm kiếm: "Tìm đơn [từ khoá]" (tên khách, PO, kích thước, vật liệu...)\n• "Danh sách khách hàng" để xem tổng quan các khách đang có đơn chạy'};
+  if(/^(giup|help|huong dan|lam sao|tro giup)\b/.test(normText) || normText==='?'){
+    return {text: AI_WELCOME};
   }
-  return aiHandlePriorityChange(text, normText)
+  return aiHandleBroadcast(text, normText)
+    || aiHandleNote(text, normText)
+    || aiHandlePriorityChange(text, normText)
+    || aiHandleProgress(text, normText)
+    || aiHandleStatusChange(text, normText)
+    || aiHandleDeadlineReport(normText)
+    || aiHandleQuickReport(normText)
     || aiHandleCustomerList(normText)
     || aiHandleSearch(text, normText)
     || null;
 }
+
 
 // ══════════════════ EMOJI & STICKER PICKER ══════════════════
 const CHAT_EMOJI_LIST = ['😀','😁','😂','🤣','😊','😍','😘','😜','🤔','😎','😇','🥰','😭','😢','😡','😱','😴','🥳','🤗','🙄','😅','😆','😉','😋','😏','😐','😑','😒','😓','😔','😕','😖','🙃','🤩','😬','🤤','😷','🤒','🤕','🤧','🥵','🥶','😵','🤯','🥺','😤','😩','😫','🥱','😈','👿','💀','👻','🤖','😻','🙈','🙉','🙊','👍','👎','👏','🙏','💪','🤝','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💯','🔥','✨','🎉','🎊','⭐','🌟','☀️','🌈','🍀'];
