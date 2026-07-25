@@ -5367,6 +5367,11 @@ function dedupeOrdersByIdKeepNewest(){
 // rác đó trên Firebase (nếu key=id đúng chưa tồn tại thì ghi dữ liệu vào
 // đúng chỗ trước, tránh mất dữ liệu, rồi mới xoá key rác). Tự chạy ngầm,
 // không chặn UI, lỗi mạng thì bỏ qua — lần đọc sau sẽ tự thử lại.
+// Chống chạy chồng lấn: hàm này được gọi từ 3 nơi (đọc lần đầu, applyDataSnapshot,
+// applyFieldChange) gần như cùng lúc mỗi khi /data/orders được xử lý — nếu không
+// chặn, nhiều lượt dọn dẹp giống hệt nhau sẽ chạy song song, nhân đôi số lần ghi
+// và số lần "dội ngược" gây nhấp nháy.
+let _healingLegacyKeys = false;
 async function healOrdersLegacyKeys(rawOrders){
   if(!rawOrders || typeof rawOrders!=='object' || Array.isArray(rawOrders)) return;
   if(!fbOk()) return;
@@ -5377,18 +5382,31 @@ async function healOrdersLegacyKeys(rawOrders){
     return v && typeof v==='object' && v.id && v.id!==k;
   });
   if(!legacyKeys.length) return;
+  if(_healingLegacyKeys) return; // đang có 1 lượt dọn khác chạy rồi → bỏ qua, không chạy chồng lấn
+  _healingLegacyKeys = true;
+  // Tăng _pendingSaves trong suốt quá trình dọn: mọi sự kiện SSE "dội ngược"
+  // (do chính các lệnh ghi/xoá bên dưới gây ra) sẽ bị applySingleOrderChange/
+  // applyFieldChange/applyDataSnapshot tự bỏ qua (vì đều check _pendingSaves>0),
+  // nên KHÔNG còn kích hoạt vẽ lại giao diện liên tục nữa. Sau khi dọn xong,
+  // endSave() sẽ tự đồng bộ lại đúng 1 lần duy nhất.
   console.warn('[healOrdersLegacyKeys] Phát hiện '+legacyKeys.length+' đơn hàng bị lưu trùng key kiểu cũ trên Firebase — đang tự dọn dẹp...');
-  for(const k of legacyKeys){
-    const v = rawOrders[k];
-    try{
-      if(!properIds.has(v.id)){
-        // Bản đúng key=id chưa có → ghi vào đúng chỗ trước để không mất dữ liệu
-        await fbWrite('/data/orders/'+v.id, v, 'PUT');
-        properIds.add(v.id);
-      }
-      await fbWrite('/data/orders/'+k, null, 'DELETE'); // xoá key rác kiểu cũ
-      console.warn('[healOrdersLegacyKeys] Đã xoá key rác /data/orders/'+k+' (đơn hàng id='+v.id+')');
-    }catch(e){ /* lỗi mạng thì bỏ qua, lần load sau tự thử dọn lại */ }
+  beginSave();
+  try{
+    for(const k of legacyKeys){
+      const v = rawOrders[k];
+      try{
+        if(!properIds.has(v.id)){
+          // Bản đúng key=id chưa có → ghi vào đúng chỗ trước để không mất dữ liệu
+          await fbWrite('/data/orders/'+v.id, v, 'PUT');
+          properIds.add(v.id);
+        }
+        await fbWrite('/data/orders/'+k, null, 'DELETE'); // xoá key rác kiểu cũ
+        console.warn('[healOrdersLegacyKeys] Đã xoá key rác /data/orders/'+k+' (đơn hàng id='+v.id+')');
+      }catch(e){ /* lỗi mạng thì bỏ qua, lần load sau tự thử dọn lại */ }
+    }
+  } finally {
+    endSave();
+    _healingLegacyKeys = false;
   }
 }
 
