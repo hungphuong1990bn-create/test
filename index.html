@@ -4668,7 +4668,7 @@ body{letter-spacing:-.1px}
     <div class="field"><div class="field-lbl">Ghi chú</div><input id="ofNote" class="field-inp" placeholder=""></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('orderModal')">Huỷ</button>
-      <button class="btn btn-primary" onclick="saveOrder()">💾 Lưu đơn hàng</button>
+      <button class="btn btn-primary" id="ofSaveBtn" onclick="saveOrder()">💾 Lưu đơn hàng</button>
     </div>
   </div>
 </div>
@@ -7493,7 +7493,20 @@ async function initAndStartSync(){
         }));
       }
       const data = await fbRead('/data');
-      if(data){
+      // SỬA LỖI QUAN TRỌNG: đọc /data lúc khởi động có thể mất một khoảng
+      // thời gian (mạng chậm/wifi xưởng chập chờn). Nếu người dùng thao tác
+      // (xoá đơn, sửa tiến độ, đổi công đoạn, thêm đơn...) NGAY TRONG lúc
+      // đang chờ bản đọc này, saveOrders()/mergeAndSaveOrders() của thao tác
+      // đó đã tăng _pendingSaves và có thể đang ghi lên Firebase. Trước đây
+      // đoạn này GHI ĐÈ THẲNG DB.orders/DB.attendance/... bằng bản vừa đọc
+      // (có thể là bản CŨ, chưa thấy thay đổi vừa rồi) mà KHÔNG kiểm tra
+      // _pendingSaves — nên thao tác vừa làm bị "biến mất" ngay sau đó: y hệt
+      // triệu chứng "xoá không được", "tiến độ không lưu được", hoặc phải
+      // thêm lại đơn (gây trùng đơn 2 lần cùng ngày). Chỉ áp bản đọc này khi
+      // chắc chắn không có lượt ghi cục bộ nào đang dang dở; nếu có, bỏ qua
+      // và để doPoll()/SSE tự đồng bộ lại sau khi lượt ghi đó hoàn tất (xem
+      // endSave()).
+      if(data && _pendingSaves===0){
         if(data.orders){ DB.orders = Array.isArray(data.orders)?data.orders:Object.values(data.orders); }
         if(data.ordersTrash){ DB.ordersTrash = Array.isArray(data.ordersTrash)?data.ordersTrash:Object.values(data.ordersTrash); }
         if(data.users && data.users.length){
@@ -7513,7 +7526,7 @@ async function initAndStartSync(){
         _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
         _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
         _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
-      } else {
+      } else if(!data){
         // Lần đầu: đẩy data lên
         await fbWrite('/data', {orders:DB.orders, ordersTrash:DB.ordersTrash, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri}, 'PUT');
       }
@@ -13912,7 +13925,7 @@ function renderStageTracker(o, clickable){
         const state = i<activeIdx ? 'st-done' : (i===activeIdx&&s!=='done' ? 'st-active' : 'st-todo');
         const canClick = clickable && s!=='done';
         return `${i>0?`<div class="stage-line${i<=activeIdx?' done':''}"></div>`:''}
-        <div class="stage-step ${state}" data-clickable="${canClick?1:0}" ${canClick?`onclick="setStage('${o.id}','${st.key}')"`:''} title="${st.label}">
+        <div class="stage-step ${state}" data-clickable="${canClick?1:0}" ${canClick?`onclick="event.stopPropagation();setStage('${o.id}','${st.key}')"`:''} title="${st.label}">
           <div class="stage-dot">${state==='st-done'?'✓':st.icon}</div>
           <div class="stage-name">${st.label}</div>
         </div>`;
@@ -13999,7 +14012,23 @@ function calcKgAuto(){
   }
 }
 
+let _savingOrder = false;
 function saveOrder(){if(guardViewer())return;
+  // SỬA LỖI: bấm "Lưu đơn hàng" 2 lần liên tiếp thật nhanh (double-click
+  // chuột, hoặc double-tap trên điện thoại/tablet khi mạng/máy hơi chậm)
+  // trước đây gọi saveOrder() 2 lần trước khi modal kịp đóng ở lần đầu →
+  // tạo ra 2 đơn hàng giống hệt nhau cùng lúc. Khoá lại trong lúc xử lý.
+  if(_savingOrder) return;
+  _savingOrder = true;
+  const btn = $('ofSaveBtn'); if(btn) btn.disabled = true;
+  try{
+    _saveOrderImpl();
+  } finally {
+    _savingOrder = false;
+    if(btn) btn.disabled = false;
+  }
+}
+function _saveOrderImpl(){
   const customer=$('ofCust').value.trim();
   if(!customer){ $('orderErr').textContent='Nhập tên khách hàng'; $('orderErr').style.display='block'; return; }
   const isCoil = $('ofIsCoil') ? $('ofIsCoil').checked : false;
