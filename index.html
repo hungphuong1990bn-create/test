@@ -4586,6 +4586,19 @@ body{letter-spacing:-.1px}
   </div>
 </div>
 
+<!-- Trash Modal (Thùng rác — Soft Delete, chỉ Admin) -->
+<div class="modal" id="trashModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🗑 Thùng rác (đơn đã xoá)</div>
+    <div style="font-size:12.5px;color:var(--text4);margin:-6px 0 10px">Đơn hoàn thành tự động chuyển vào đây sau 30 ngày. Có thể khôi phục hoặc xoá vĩnh viễn.</div>
+    <div id="trashList" style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:10px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('trashModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALS -->
 <!-- Order Modal -->
 <div class="modal" id="orderModal">
@@ -5082,7 +5095,7 @@ const STAGE_LABEL = Object.fromEntries(STAGES.map(s=>[s.key, s.label]));
 // ════════════════════════════════════════════════════════════
 let currentUser = null;
 let currentTab  = 'dashboard';
-let DB = { orders:[], attendance:{}, workers:[], kyLuat:[], nghiPhep:[], lichLamViec:[], baoTri:[], qrProducts:[], users:[
+let DB = { orders:[], ordersTrash:[], attendance:{}, workers:[], kyLuat:[], nghiPhep:[], lichLamViec:[], baoTri:[], qrProducts:[], users:[
   {id:'u1',username:'admin',password:'admin123',role:'admin',name:'Quản trị viên',email:'admin@dongphuong.vn',phone:''},
   {id:'u2',username:'nhanvien',password:'nv123',role:'staff',name:'Nhân viên SX',email:'',phone:''}
 ]};
@@ -5153,16 +5166,47 @@ async function fbWrite(path, data, method='PUT'){
   return r.json();
 }
 
+// ── FIREBASE ETag CONDITIONAL WRITE ──────────────────────────
+// Firebase Realtime Database hỗ trợ ETag cho từng path: đọc kèm header
+// 'X-Firebase-ETag: true' sẽ trả về header 'ETag' đại diện cho đúng phiên
+// bản dữ liệu hiện tại tại path đó; ghi kèm header 'if-match: <etag>' chỉ
+// thành công NẾU dữ liệu server chưa đổi kể từ lúc đọc — nếu đã có thiết bị
+// khác ghi đè trong lúc đó, Firebase trả về 412 Precondition Failed thay vì
+// âm thầm để ai ghi sau thắng. Đây là cơ chế dùng để ghi TỪNG ĐƠN riêng lẻ
+// tại /data/orders/{id} (xem writeOrderRecord) — vừa giảm băng thông (chỉ
+// gửi đúng 1 bản ghi thay đổi thay vì cả mảng đơn), vừa phát hiện xung đột
+// ngay tại tầng ghi thay vì phải tải cả nhánh về so sánh mỗi lần lưu.
+async function fbReadETag(path){
+  const r = await fetch(fbUrl()+path+'.json', {headers:{'X-Firebase-ETag':'true'}, cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const etag = r.headers.get('ETag') || '*';
+  const data = await r.json();
+  return {data, etag};
+}
+// method PUT để ghi/cập nhật, DELETE để xoá. Trả {ok:true} nếu ghi thành
+// công, {ok:false, conflict:true} nếu bị 412 (ai đó vừa ghi trước mình).
+async function fbWriteETag(path, data, etag, method){
+  const r = await fetch(fbUrl()+path+'.json', {
+    method: method||'PUT',
+    headers:{'Content-Type':'application/json', 'if-match': etag||'*'},
+    body: method==='DELETE' ? undefined : JSON.stringify(data===undefined?null:data)
+  });
+  if(r.status===412) return {ok:false, conflict:true};
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return {ok:true, etag:r.headers.get('ETag')};
+}
+
 // ════════════════════════════════════════════════════════════
 // LOCAL STORAGE  – cache + fallback
 // ════════════════════════════════════════════════════════════
 function lsSave(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify({orders:DB.orders,users:DB.users,attendance:DB.attendance,workers:DB.workers,kyLuat:DB.kyLuat,nghiPhep:DB.nghiPhep,lichLamViec:DB.lichLamViec,baoTri:DB.baoTri,qrProducts:DB.qrProducts})); }catch(e){}
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({orders:DB.orders,ordersTrash:DB.ordersTrash,users:DB.users,attendance:DB.attendance,workers:DB.workers,kyLuat:DB.kyLuat,nghiPhep:DB.nghiPhep,lichLamViec:DB.lichLamViec,baoTri:DB.baoTri,qrProducts:DB.qrProducts})); }catch(e){}
 }
 function lsLoad(){
   try{
     const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}');
     if(d.orders) DB.orders = d.orders;
+    if(d.ordersTrash) DB.ordersTrash = d.ordersTrash;
     if(d.users && d.users.length) DB.users = d.users;
     if(d.attendance) DB.attendance = d.attendance;
     if(d.workers) DB.workers = d.workers;
@@ -5286,55 +5330,188 @@ function saveOrders(){if(guardViewer())return;
   mergeAndSaveOrders();
 }
 
+// Tên người thực hiện, dùng để điền updatedBy trên từng bản ghi
+function actorName(){ return currentUser ? (currentUser.name||currentUser.username||currentUser.id) : 'system'; }
+
+// Đánh version/updatedAt/updatedBy cho 1 bản ghi vừa sửa cục bộ. Version chỉ
+// tăng khi bản ghi ĐƯỢC GHI LÊN FIREBASE thành công (gọi ngay trước khi gộp,
+// trong mergeAndSaveOrders) — không tăng khi chỉ sửa trên UI mà chưa lưu.
+function stampOrderVersion(o){
+  o.version = (Number(o.version)||0) + 1;
+  o.updatedAt = Date.now();
+  o.updatedBy = actorName();
+}
+
+// Ghi/xoá ĐÚNG 1 đơn tại /data/orders/{id} bằng ETag conditional write, thay
+// vì tải cả nhánh /data/orders về rồi PUT đè cả mảng như trước. Lợi ích:
+//   - Băng thông: mỗi lần lưu chỉ gửi đúng bản ghi vừa đổi (vài trăm byte),
+//     không phải toàn bộ danh sách đơn (có thể vài trăm KB khi nhiều đơn).
+//   - Firebase tự chặn ghi đè mù ở tầng server: nếu giữa lúc mình đọc ETag và
+//     lúc ghi có thiết bị khác vừa ghi ĐÚNG đơn này, PUT/DELETE sẽ bị từ chối
+//     với 412 thay vì âm thầm mất dữ liệu — hàm này đọc lại rồi thử tiếp tối
+//     đa vài lần thay vì phải tải nguyên cả mảng để so sánh như cơ chế cũ.
+// orderOrNull = null nghĩa là xoá đơn (chuyển hẳn khỏi /data/orders, dùng khi
+// soft-delete sang ordersTrash hoặc khôi phục ngược lại).
+async function writeOrderRecord(id, orderOrNull, baseVersion, maxRetry){
+  maxRetry = maxRetry==null ? 4 : maxRetry;
+  for(let attempt=0; attempt<=maxRetry; attempt++){
+    let etag = '*', serverVal;
+    try{
+      const cur = await fbReadETag('/data/orders/'+id);
+      etag = cur.etag; serverVal = cur.data;
+    }catch(e){ /* không lấy được ETag (mạng chập chờn) → vẫn thử ghi bên dưới, Firebase sẽ tự trả 412 nếu có mâu thuẫn với etag mặc định */ }
+
+    // XUNG ĐỘT THẬT: server đang giữ version MỚI HƠN bản mình dựa vào để sửa
+    // (nghĩa là thiết bị khác đã ghi đơn này SAU lần mình đồng bộ gần nhất).
+    // Không ghi đè mù — giữ lại bản có updatedAt thực sự mới hơn.
+    if(orderOrNull && serverVal && typeof serverVal==='object'){
+      const serverVersion = Number(serverVal.version)||0;
+      if(serverVersion > (baseVersion||0)){
+        const serverTime = Number(serverVal.updatedAt)||0;
+        const localTime = Number(orderOrNull.updatedAt)||0;
+        if(serverTime > localTime){
+          log('Xung đột dữ liệu (tự xử lý)',
+            `${serverVal.customer||orderOrNull.customer||'?'} · Giữ bản của ${serverVal.updatedBy||'thiết bị khác'}`,
+            id, null, null);
+          return {ok:true, kept:'server', value:serverVal};
+        }
+      }
+    }
+
+    try{
+      const method = orderOrNull ? 'PUT' : 'DELETE';
+      const res = await fbWriteETag('/data/orders/'+id, orderOrNull, etag, method);
+      if(res.ok) return {ok:true, kept:'local', value:orderOrNull};
+      // 412 — vừa có ai ghi đơn này ngay giữa lúc mình đọc/ghi → đọc lại và
+      // thử lại từ đầu vòng lặp (không tính là lỗi mạng).
+    }catch(e){
+      if(attempt>=maxRetry) throw e;
+      await new Promise(res=>setTimeout(res, 400*(attempt+1)));
+    }
+  }
+  throw new Error('Ghi đơn '+id+' thất bại do xung đột ghi liên tục');
+}
+
 async function mergeAndSaveOrders(retryCount){
   retryCount = retryCount||0;
   const localSnap = snapshotOrders(DB.orders);
-  const changedIds = new Set();
-  Object.keys(localSnap).forEach(id=>{ if(localSnap[id]!==_lastSyncedOrdersSnapshot[id]) changedIds.add(id); });
-  const removedIds = new Set();
-  Object.keys(_lastSyncedOrdersSnapshot).forEach(id=>{ if(!localSnap[id]) removedIds.add(id); });
+  const changedIds = [];
+  Object.keys(localSnap).forEach(id=>{ if(localSnap[id]!==_lastSyncedOrdersSnapshot[id]) changedIds.push(id); });
+  const removedIds = [];
+  Object.keys(_lastSyncedOrdersSnapshot).forEach(id=>{ if(!localSnap[id]) removedIds.push(id); });
 
-  let merged;
+  if(!changedIds.length && !removedIds.length){ endSave(); return; }
+
+  // Ghi version/updatedAt/updatedBy cho ĐÚNG các đơn thiết bị này vừa sửa,
+  // ngay trước khi ghi lên Firebase. baseVersions ghi lại version của đơn đó
+  // tại lần đồng bộ gần nhất (trước khi sửa) — dùng để writeOrderRecord phát
+  // hiện xung đột thật sự (không chỉ đơn giản "ai ghi sau thắng"), tránh dữ
+  // liệu MỚI của thiết bị khác bị dữ liệu CŨ của thiết bị này ghi đè mất.
+  const baseVersions = {};
+  changedIds.forEach(id=>{
+    try{ baseVersions[id] = JSON.parse(_lastSyncedOrdersSnapshot[id]||'null')?.version || 0; }catch(e){ baseVersions[id]=0; }
+    const o = DB.orders.find(x=>x.id===id);
+    if(o) stampOrderVersion(o);
+  });
+
   try{
-    const serverRaw = await fbRead('/data/orders');
-    const serverList = serverRaw ? (Array.isArray(serverRaw)?serverRaw:Object.values(serverRaw)) : [];
-    const mergedMap = {};
-    serverList.forEach(o=>{ if(o && o.id) mergedMap[o.id]=o; }); // nền = bản mới nhất trên server
-    DB.orders.forEach(o=>{
-      if(!o || !o.id) return;
-      // chỉ ghi đè bằng bản cục bộ nếu: (a) đơn này CHÍNH thiết bị này vừa
-      // sửa, hoặc (b) đơn hoàn toàn mới chưa từng có trên server
-      if(changedIds.has(o.id) || !mergedMap[o.id]) mergedMap[o.id]=o;
+    const results = await Promise.all([
+      ...changedIds.map(id=>{
+        const o = DB.orders.find(x=>x.id===id);
+        return writeOrderRecord(id, o||null, baseVersions[id]).then(r=>({id, ...r}));
+      }),
+      ...removedIds.map(id=>writeOrderRecord(id, null, 0).then(r=>({id, ...r})))
+    ]);
+
+    // Nếu writeOrderRecord phát hiện xung đột thật và quyết định giữ bản
+    // server (mới hơn) → cập nhật lại đúng đơn đó trong state cục bộ.
+    let anyServerKept = false;
+    results.forEach(r=>{
+      if(r.kept==='server' && r.value){
+        const idx = DB.orders.findIndex(x=>x.id===r.id);
+        if(idx>=0) DB.orders[idx] = r.value; else DB.orders.push(r.value);
+        anyServerKept = true;
+      }
     });
-    removedIds.forEach(id=>{ delete mergedMap[id]; }); // đơn mình vừa xoá
-    merged = Object.values(mergedMap);
+    if(anyServerKept) showToast('⚠️ Đã tự xử lý xung đột dữ liệu', true);
+
+    _lastHash = hashOrders(DB.orders);
+    DB.orders.forEach(o=>_knownIds.add(o.id));
+    lsSave();
+    if(anyServerKept) scheduleUIRefresh(false);
+    _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
+    setSyncDot('ok'); clearDirty('orders'); endSave();
   }catch(e){
-    // KHÔNG đọc được server (mất mạng/mạng chập chờn) → TUYỆT ĐỐI KHÔNG được
-    // coi DB.orders cục bộ là bản đầy đủ rồi ghi đè lên toàn bộ /data/orders,
-    // vì DB.orders lúc này có thể đã CŨ hơn so với thay đổi của thiết bị khác
-    // cho NHỮNG đơn mình không hề đụng tới (VD thiết bị này đứng im từ sáng ở
-    // Kế hoạch SX, trong lúc đó thiết bị khác vừa bấm "Hoàn thành" 1 đơn khác
-    // hoặc chính đơn này) — ghi đè lúc này sẽ XOÁ MẤT tiến độ mới, đúng lỗi
-    // "đơn vừa hoàn thành buổi sáng, đến trưa quay lại trạng thái Đang chạy/
-    // Chờ SX như ban đầu". Thay vào đó: HOÃN việc ghi, giữ nguyên dấu "dirty"
-    // (đã đánh dấu ở saveOrders) và thử lại sau vài giây cho tới khi đọc được
-    // bản mới nhất từ server để merge an toàn, tối đa vài lần rồi thôi (dấu
-    // dirty vẫn còn nên lần mở app sau sẽ tự đẩy lại — xem initAndStartSync).
+    // Ghi thất bại (mất mạng/xung đột liên tục không dứt) → TUYỆT ĐỐI không
+    // được coi đây là đã lưu xong. Giữ nguyên dấu "dirty" (đã đánh dấu ở
+    // saveOrders) và thử lại sau vài giây, tối đa vài lần rồi thôi (dấu dirty
+    // vẫn còn nên lần mở app sau sẽ tự đẩy lại — xem initAndStartSync).
     endSave();
     if(retryCount < 6){
       setTimeout(()=>{ beginSave(); mergeAndSaveOrders(retryCount+1); }, 3000);
+    } else {
+      setSyncDot('error');
+      showToast('❌ Lỗi sync: '+e.message, true);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// MERGE-BEFORE-WRITE cho /data/ordersTrash (Thùng rác — Soft Delete)
+// ────────────────────────────────────────────────────────────
+// Đơn "xoá" (tự động sau 30 ngày hoặc do người dùng xoá tay) không còn bị xoá
+// cứng khỏi hệ thống — chỉ được CHUYỂN sang nhánh /data/ordersTrash với
+// deleted:true, deletedAt, deletedBy. Nhánh chính /data/orders không hề bị
+// đụng tới về mặt cấu trúc (chỉ bớt đi đúng các id đã chuyển), nên toàn bộ
+// logic hiển thị/lọc/đếm đơn hàng ở các tab khác (Kế hoạch SX, Đơn đang làm,
+// Hoàn thành, Dashboard...) không cần sửa gì — chúng vẫn chỉ đọc DB.orders
+// như trước, và DB.orders vẫn chỉ chứa đơn còn hoạt động.
+// Dùng cùng cơ chế merge-theo-id như mergeAndSaveOrders() để nhiều thiết bị
+// cùng xoá/khôi phục gần như đồng thời không ghi đè mất thùng rác của nhau.
+let _lastSyncedTrashSnapshot = {};
+
+function saveOrdersTrash(){
+  lsSave();
+  if(!fbOk()) return;
+  markDirty('ordersTrash');
+  beginSave();
+  mergeAndSaveOrdersTrash();
+}
+
+async function mergeAndSaveOrdersTrash(retryCount){
+  retryCount = retryCount||0;
+  const localSnap = snapshotOrders(DB.ordersTrash);
+  const changedIds = new Set();
+  Object.keys(localSnap).forEach(id=>{ if(localSnap[id]!==_lastSyncedTrashSnapshot[id]) changedIds.add(id); });
+  const removedIds = new Set();
+  Object.keys(_lastSyncedTrashSnapshot).forEach(id=>{ if(!localSnap[id]) removedIds.add(id); });
+
+  let merged;
+  try{
+    const serverRaw = await fbRead('/data/ordersTrash');
+    const serverList = serverRaw ? (Array.isArray(serverRaw)?serverRaw:Object.values(serverRaw)) : [];
+    const mergedMap = {};
+    serverList.forEach(o=>{ if(o && o.id) mergedMap[o.id]=o; });
+    DB.ordersTrash.forEach(o=>{
+      if(!o || !o.id) return;
+      if(changedIds.has(o.id) || !mergedMap[o.id]) mergedMap[o.id]=o;
+    });
+    removedIds.forEach(id=>{ delete mergedMap[id]; }); // đơn vừa khôi phục / xoá vĩnh viễn
+    merged = Object.values(mergedMap);
+  }catch(e){
+    endSave();
+    if(retryCount < 6){
+      setTimeout(()=>{ beginSave(); mergeAndSaveOrdersTrash(retryCount+1); }, 3000);
     } else {
       setSyncDot('error');
     }
     return;
   }
 
-  DB.orders = merged;
-  _lastHash = hashOrders(DB.orders);
-  DB.orders.forEach(o=>_knownIds.add(o.id));
+  DB.ordersTrash = merged;
   lsSave();
   scheduleUIRefresh(false);
-  return fbSaveField('orders', '/data/orders', false, ()=>{ _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders); });
+  return fbSaveField('ordersTrash', '/data/ordersTrash', false, ()=>{ _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash); });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -5407,8 +5584,8 @@ function saveAll(){if(guardViewer())return;
   if(!fbOk()) return;
   setSyncDot('saving');
   beginSave();
-  fbWrite('/data', {orders:DB.orders, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri, qrProducts:DB.qrProducts}, 'PUT')
-    .then(()=>{ setSyncDot('ok'); ['orders','attendance','workers','kyLuat','nghiPhep','lichLamViec','baoTri','qrProducts'].forEach(clearDirty); endSave(); })
+  fbWrite('/data', {orders:DB.orders, ordersTrash:DB.ordersTrash, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri, qrProducts:DB.qrProducts}, 'PUT')
+    .then(()=>{ setSyncDot('ok'); ['orders','ordersTrash','attendance','workers','kyLuat','nghiPhep','lichLamViec','baoTri','qrProducts'].forEach(clearDirty); endSave(); })
     .catch(e=>{ setSyncDot('error'); showToast('❌ Lỗi: '+e.message, true); endSave(); });
 }
 
@@ -7159,7 +7336,16 @@ function hashOrders(list){
   return (list||[]).map(o=>o.id+'|'+o.status+'|'+(o.doneAt||0)+'|'+(o.startedAt||0)).join(';');
 }
 
-// ── TỰ XÓA ĐƠN HOÀN THÀNH SAU 30 NGÀY ───────────────────────
+// ── TỰ CHUYỂN ĐƠN HOÀN THÀNH SAU 30 NGÀY VÀO THÙNG RÁC (SOFT DELETE) ─────
+// TRƯỚC ĐÂY: hàm này xoá CỨNG — loại thẳng khỏi DB.orders rồi mất vĩnh viễn,
+// không có cách nào lấy lại nếu logic 30-ngày tính nhầm hoặc dữ liệu bị lỗi
+// đồng bộ đúng lúc đó. Đây là 1 phần nguyên nhân khiến người dùng cảm thấy
+// "mất dữ liệu" ngay sau khi Auto Cleanup chạy.
+// BÂY GIỜ: đơn hết hạn chỉ được CHUYỂN sang nhánh riêng /data/ordersTrash
+// (đánh dấu deleted:true, deletedAt, deletedBy) — không mất đi đâu cả. Chỉ
+// Admin mới có quyền xoá vĩnh viễn khỏi Thùng rác (xem permanentlyDeleteOrder).
+// DB.orders vẫn chỉ chứa đơn đang hoạt động như trước nên KHÔNG cần sửa bất
+// kỳ màn hình/tab nào khác đang lọc theo DB.orders.
 function autoCleanDone(){
   const DAYS = 30;
   const cutoff = Date.now() - DAYS * 24 * 60 * 60 * 1000;
@@ -7169,17 +7355,87 @@ function autoCleanDone(){
 
   DB.orders = DB.orders.filter(o=>!(o.status==='done' && o.doneAt && o.doneAt < cutoff));
   const removed = before - DB.orders.length;
+  const now = Date.now();
+
+  // Chuyển vào thùng rác kèm dấu vết đầy đủ để có thể khôi phục/truy vết
+  expired.forEach(o=>{
+    o.version = (Number(o.version)||0) + 1;
+    o.updatedAt = now;
+    o.updatedBy = 'auto-cleanup';
+    DB.ordersTrash.push({
+      ...o,
+      deleted: true,
+      deletedAt: now,
+      deletedBy: 'auto-cleanup',
+      deletedReason: 'Tự động sau 30 ngày hoàn thành'
+    });
+  });
 
   // Ghi nhật ký
   expired.forEach(o=>{
-    log('Tự xóa (30 ngày)',
+    log('Chuyển vào thùng rác (tự động 30 ngày)',
       `${o.customer||'?'} · Hoàn thành: ${fmtDate(o.doneAt)}`,
-      o.id, {customer:o.customer, doneAt:o.doneAt}, null);
+      o.id, {customer:o.customer, doneAt:o.doneAt}, {deleted:true, deletedAt:now});
   });
 
   saveOrders();
-  showToast(`🗑 Đã tự xóa ${removed} đơn hoàn thành quá 30 ngày`);
-  console.log(`[AutoClean] Xóa ${removed} đơn hết hạn`);
+  saveOrdersTrash();
+  showToast(`🗑 Đã chuyển ${removed} đơn hoàn thành quá 30 ngày vào Thùng rác`);
+  console.log(`[AutoClean] Chuyển ${removed} đơn hết hạn vào ordersTrash`);
+}
+
+// ── KHÔI PHỤC ĐƠN TỪ THÙNG RÁC ───────────────────────────────
+function restoreOrderFromTrash(id){
+  const idx = DB.ordersTrash.findIndex(o=>o.id===id);
+  if(idx<0) return;
+  const o = {...DB.ordersTrash[idx]};
+  delete o.deleted; delete o.deletedAt; delete o.deletedBy; delete o.deletedReason;
+  o.version = (Number(o.version)||0) + 1;
+  o.updatedAt = Date.now();
+  o.updatedBy = actorName();
+  DB.ordersTrash = DB.ordersTrash.filter(x=>x.id!==id);
+  DB.orders.push(o);
+  log('Khôi phục từ thùng rác', `${o.customer||'?'}`, o.id, null, {restored:true});
+  saveOrders();
+  saveOrdersTrash();
+  showToast('♻️ Đã khôi phục đơn hàng');
+  renderTab(currentTab);
+}
+
+// ── XOÁ VĨNH VIỄN KHỎI THÙNG RÁC (CHỈ ADMIN) ─────────────────
+function permanentlyDeleteOrder(id){
+  if(!isAdmin()){ showToast('⛔ Chỉ Admin mới được xoá vĩnh viễn', true); return; }
+  const o = DB.ordersTrash.find(x=>x.id===id);
+  if(!o) return;
+  if(!confirm(`Xoá VĨNH VIỄN đơn "${o.customer||o.id}"? Không thể khôi phục sau khi xoá.`)) return;
+  DB.ordersTrash = DB.ordersTrash.filter(x=>x.id!==id);
+  log('Xoá vĩnh viễn khỏi thùng rác', `${o.customer||'?'}`, o.id, {customer:o.customer}, null);
+  saveOrdersTrash();
+  showToast('🗑 Đã xoá vĩnh viễn');
+  renderTrashPanel();
+}
+
+// ── HIỂN THỊ PANEL THÙNG RÁC (chỉ Admin, mở từ Cài đặt) ──────
+function openTrashPanel(){
+  if(!isAdmin()){ showToast('⛔ Chỉ Admin mới xem được Thùng rác', true); return; }
+  renderTrashPanel();
+  openModal('trashModal');
+}
+function renderTrashPanel(){
+  const box = $('trashList'); if(!box) return;
+  const list = [...DB.ordersTrash].sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));
+  if(!list.length){ box.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text4)">Thùng rác trống</div>`; return; }
+  box.innerHTML = list.map(o=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)">
+      <div style="min-width:0">
+        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.customer||'(không tên)'}</div>
+        <div style="font-size:12px;color:var(--text4)">Đã xoá: ${fmtDate(o.deletedAt)} · ${o.deletedReason||o.deletedBy||''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="restoreOrderFromTrash('${o.id}')" style="padding:6px 10px;border-radius:8px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;font-weight:600;font-size:13px">♻️ Khôi phục</button>
+        <button onclick="permanentlyDeleteOrder('${o.id}')" style="padding:6px 10px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-weight:600;font-size:13px">🗑 Xoá vĩnh viễn</button>
+      </div>
+    </div>`).join('');
 }
 
 async function initAndStartSync(){
@@ -7187,6 +7443,21 @@ async function initAndStartSync(){
   lsLoad(); logLoad();
   _lastHash = hashOrders(DB.orders);
   DB.orders.forEach(o=>_knownIds.add(o.id));
+  // FIX QUAN TRỌNG — nguồn gốc lỗi "quay về dữ liệu cũ sau 1 đêm / sau Auto
+  // Cleanup": phải khởi tạo snapshot "đã đồng bộ" ngay từ bản cache cục bộ,
+  // KHÔNG được để rỗng {}. Nếu để rỗng và lần tải /data đầu tiên bên dưới bị
+  // lỗi mạng (throw ở catch), mọi lần saveOrders()/saveUsers()/saveAttendance()
+  // gọi sau đó (kể cả autoCleanDone() chạy ngay cuối hàm này) sẽ so sánh với
+  // snapshot rỗng → COI TOÀN BỘ danh sách cục bộ (có thể đã cũ vài ngày) là
+  // "vừa sửa" → merge ghi đè lên TOÀN BỘ nhánh /data/orders (hoặc users/
+  // attendance) trên Firebase bằng bản cache cũ, xoá sạch mọi thay đổi mà
+  // thiết bị khác đã làm trong lúc đó. Khởi tạo đúng ở đây giúp merge luôn so
+  // sánh với trạng thái đã biết gần nhất (cache), nên chỉ đúng phần người
+  // dùng thực sự vừa đổi trong phiên này mới bị coi là "dirty".
+  _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
+  _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
+  _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
+  _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
 
   if(fbOk()){
     setSyncDot('saving');
@@ -7216,6 +7487,7 @@ async function initAndStartSync(){
             if(f==='orders'){ beginSave(); await mergeAndSaveOrders(); }
             else if(f==='users'){ beginSave(); await mergeAndSaveUsers(); }
             else if(f==='attendance'){ beginSave(); await mergeAndSaveAttendance(); }
+            else if(f==='ordersTrash'){ beginSave(); await mergeAndSaveOrdersTrash(); }
             else { await fbWrite('/data/'+f, DB[f], 'PUT'); clearDirty(f); }
           }catch(e){}
         }));
@@ -7223,6 +7495,7 @@ async function initAndStartSync(){
       const data = await fbRead('/data');
       if(data){
         if(data.orders){ DB.orders = Array.isArray(data.orders)?data.orders:Object.values(data.orders); }
+        if(data.ordersTrash){ DB.ordersTrash = Array.isArray(data.ordersTrash)?data.ordersTrash:Object.values(data.ordersTrash); }
         if(data.users && data.users.length){
           // Giữ lại user cache nếu Firebase chưa có
           DB.users = Array.isArray(data.users)?data.users:Object.values(data.users);
@@ -7239,9 +7512,10 @@ async function initAndStartSync(){
         _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
         _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
         _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
+        _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
       } else {
         // Lần đầu: đẩy data lên
-        await fbWrite('/data', {orders:DB.orders, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri}, 'PUT');
+        await fbWrite('/data', {orders:DB.orders, ordersTrash:DB.ordersTrash, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri}, 'PUT');
       }
       // Load log
       const log = await fbRead('/log');
@@ -7260,6 +7534,8 @@ async function initAndStartSync(){
   autoCleanDone();
   renderTab(currentTab);
   updateBadges();
+  // Kiểm tra backup định kỳ ngay khi vừa mở app (không chặn UI — chạy nền)
+  if(fbOk()) maybeRunAutoBackup();
 }
 
 // Dừng/tiếp tục sync theo visibility để không ảnh hưởng app khác (Zalo, cuộc gọi) & đỡ hao pin/data
@@ -7277,6 +7553,97 @@ document.addEventListener('visibilitychange', ()=>{
 });
 window.addEventListener('online', ()=>{ if(currentUser && fbOk()){ startRealtimeStream(); doPoll(); updateOnline(); } });
 window.addEventListener('offline', ()=>{ setSyncDot('error'); });
+
+// ════════════════════════════════════════════════════════════
+// BACKUP TỰ ĐỘNG ĐỊNH KỲ
+// ────────────────────────────────────────────────────────────
+// Sao lưu toàn bộ /data sang /backups/{yyyy-mm-dd} (ghi đè nếu chạy lại
+// trong cùng ngày), để luôn có bản khôi phục nếu dữ liệu chính bị hỏng/xoá
+// nhầm. App không có server/cron riêng — việc backup được chính thiết bị
+// đang mở app kích hoạt. Dùng ghi có điều kiện (ETag) trên /backupMeta để
+// nhiều thiết bị đang mở app CÙNG LÚC không cùng chạy backup trùng nhau và
+// không ai backup quá dày trong cùng khoảng BACKUP_INTERVAL_MS.
+// ════════════════════════════════════════════════════════════
+const BACKUP_INTERVAL_MS = 24*60*60*1000; // tối thiểu cách nhau 1 ngày/lần
+const BACKUP_KEEP_DAYS = 30;              // chỉ giữ tối đa 30 bản gần nhất
+let _lastBackupAtCache = null;            // hiển thị "gần nhất: ..." ở Cài đặt
+
+function backupDateKey(d){
+  const pad = n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+// Cố "giành quyền" chạy backup bằng ghi có điều kiện lên /backupMeta —
+// nếu chưa tới hạn hoặc vừa có thiết bị khác giành trước (412) thì bỏ qua,
+// tránh backup trùng lặp nhiều lần không cần thiết trong cùng 1 lúc.
+async function claimBackupLock(force){
+  try{
+    const cur = await fbReadETag('/backupMeta');
+    const meta = cur.data || {};
+    _lastBackupAtCache = meta.lastBackupAt || null;
+    if(!force && Date.now() - (Number(meta.lastBackupAt)||0) < BACKUP_INTERVAL_MS) return false;
+    const res = await fbWriteETag('/backupMeta',
+      {lastBackupAt: Date.now(), lastBackupBy: (currentUser&&currentUser.name)||_devId},
+      cur.etag, 'PUT');
+    return !!res.ok;
+  }catch(e){ return false; }
+}
+
+// Xoá bớt backup cũ quá BACKUP_KEEP_DAYS ngày để không phình dung lượng
+// Firebase vô hạn theo thời gian. ?shallow=true chỉ tải DANH SÁCH TÊN KHOÁ
+// (ngày backup), không tải nội dung — rất nhẹ, không tốn băng thông đáng kể.
+async function pruneOldBackups(){
+  try{
+    const r = await fetch(fbUrl()+'/backups.json?shallow=true', {cache:'no-store'});
+    if(!r.ok) return;
+    const keys = await r.json();
+    if(!keys) return;
+    const names = Object.keys(keys).sort(); // "yyyy-mm-dd" sắp đúng thứ tự theo chuỗi
+    const excess = names.length - BACKUP_KEEP_DAYS;
+    if(excess<=0) return;
+    await Promise.all(names.slice(0, excess).map(k=>fbWrite('/backups/'+k, null, 'DELETE').catch(()=>{})));
+  }catch(e){ /* im lặng — không ảnh hưởng hoạt động chính của app */ }
+}
+
+async function runBackupNow(){
+  const data = await fbRead('/data');
+  if(!data) return false;
+  await fbWrite('/backups/'+backupDateKey(new Date()), {ts:Date.now(), data}, 'PUT');
+  _lastBackupAtCache = Date.now();
+  await pruneOldBackups();
+  return true;
+}
+
+// Gọi định kỳ (xem setInterval bên dưới + sau khi khởi động sync) — tự bỏ
+// qua nếu chưa tới hạn hoặc thiết bị khác vừa backup xong.
+async function maybeRunAutoBackup(){
+  if(!fbOk() || !currentUser) return;
+  try{
+    if(!(await claimBackupLock(false))) return;
+    await runBackupNow();
+    console.log('[autoBackup] Đã sao lưu dữ liệu lúc', new Date().toLocaleString());
+  }catch(e){ console.warn('[autoBackup] lỗi khi sao lưu:', e); }
+}
+
+// Nút "Sao lưu dữ liệu ngay" trong Cài đặt (chỉ Admin) — backup ngay lập
+// tức, bỏ qua giới hạn BACKUP_INTERVAL_MS (force=true) nhưng vẫn dùng khoá
+// ETag để tránh đụng độ nếu vô tình bấm ở 2 thiết bị cùng lúc.
+async function manualBackupNow(){
+  if(!isAdmin()){ showToast('⛔ Chỉ Admin mới được sao lưu thủ công', true); return; }
+  if(!fbOk()){ showToast('⚠️ Chưa bật Firebase Sync', true); return; }
+  showToast('💾 Đang sao lưu dữ liệu...');
+  try{
+    if(!(await claimBackupLock(true))){ showToast('⚠️ Thiết bị khác vừa sao lưu, thử lại sau', true); return; }
+    await runBackupNow();
+    showToast('✅ Đã sao lưu dữ liệu thành công');
+    renderTab(currentTab);
+  }catch(e){ showToast('❌ Lỗi sao lưu: '+e.message, true); }
+}
+
+// Kiểm tra định kỳ mỗi giờ xem đã tới hạn backup ngày mới chưa (bản thân
+// maybeRunAutoBackup tự bỏ qua nếu chưa đủ BACKUP_INTERVAL_MS kể từ lần
+// backup gần nhất, nên interval ngắn ở đây không gây backup quá dày).
+setInterval(()=>{ if(!document.hidden) maybeRunAutoBackup(); }, 60*60*1000);
 
 // ── PRESENCE HEARTBEAT ──────────────────────────────────────
 // Trước đây "Đang truy cập" chỉ được ghi lại khi người dùng chuyển tab hoặc
@@ -7338,6 +7705,10 @@ function applyDataSnapshot(data){
     const freshUsers = Array.isArray(data.users)?data.users:Object.values(data.users);
     if(JSON.stringify(freshUsers) !== JSON.stringify(DB.users)){ DB.users = freshUsers; _lastSyncedUsersSnapshot = snapshotUsers(DB.users); changed = true; }
   }
+  if(data.ordersTrash){
+    const freshTrash = Array.isArray(data.ordersTrash)?data.ordersTrash:Object.values(data.ordersTrash);
+    if(JSON.stringify(freshTrash)!==JSON.stringify(DB.ordersTrash)){ DB.ordersTrash = freshTrash; _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash); changed = true; }
+  }
   if(data.attendance && JSON.stringify(data.attendance)!==JSON.stringify(DB.attendance)){ DB.attendance = data.attendance; _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); changed = true; }
   if(data.workers && JSON.stringify(data.workers)!==JSON.stringify(DB.workers)){ DB.workers = data.workers; changed = true; }
   if(data.kyLuat && JSON.stringify(data.kyLuat)!==JSON.stringify(DB.kyLuat)){ DB.kyLuat = data.kyLuat; changed = true; }
@@ -7381,7 +7752,7 @@ let _sseConnected = false;
 // Map các nhánh /data/* mà app tự ghi trực tiếp (saveOrders, saveWorkers…)
 // → xử lý gọn, không cần đọc lại toàn bộ /data
 const _FB_FIELD_MAP = {
-  '/data/orders':'orders', '/data/users':'users', '/data/attendance':'attendance',
+  '/data/orders':'orders', '/data/ordersTrash':'ordersTrash', '/data/users':'users', '/data/attendance':'attendance',
   '/data/workers':'workers', '/data/kyLuat':'kyLuat', '/data/nghiPhep':'nghiPhep',
   '/data/lichLamViec':'lichLamViec', '/data/baoTri':'baoTri', '/data/qrProducts':'qrProducts'
 };
@@ -7396,6 +7767,11 @@ function applyFieldChange(field, val){
     fresh.forEach(o=>{ if(!_knownIds.has(o.id)){ _knownIds.add(o.id); notifyNewOrder(o); } });
     DB.orders = fresh;
     _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
+  } else if(field==='ordersTrash'){
+    const fresh = val ? (Array.isArray(val)?val:Object.values(val)) : [];
+    if(JSON.stringify(fresh)===JSON.stringify(DB.ordersTrash)) return;
+    DB.ordersTrash = fresh;
+    _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
   } else if(field==='users'){
     const fresh = val ? (Array.isArray(val)?val:Object.values(val)) : DB.users;
     if(JSON.stringify(fresh)===JSON.stringify(DB.users)) return;
@@ -7410,11 +7786,40 @@ function applyFieldChange(field, val){
   lsSave(); scheduleUIRefresh(true);
 }
 
+// Áp 1 thay đổi ĐÚNG 1 đơn vào state cục bộ khi Firebase báo realtime về
+// path /data/orders/{id} — thay vì tải lại cả /data/orders (nhẹ hơn nhiều,
+// khớp với cách ghi từng đơn riêng lẻ ở writeOrderRecord/mergeAndSaveOrders).
+// val=null nghĩa là đơn đó vừa bị xoá khỏi /data/orders (chuyển vào thùng
+// rác hoặc bị xoá vĩnh viễn ở thiết bị khác).
+function applySingleOrderChange(id, val){
+  if(_pendingSaves>0) return; // đang ghi dở dang → chờ endSave() tự đồng bộ lại
+  const idx = DB.orders.findIndex(o=>o.id===id);
+  if(val==null){
+    if(idx>=0) DB.orders.splice(idx,1);
+  } else {
+    if(idx>=0) DB.orders[idx] = val;
+    else { DB.orders.push(val); if(!_knownIds.has(id)){ _knownIds.add(id); notifyNewOrder(val); } }
+  }
+  _lastHash = hashOrders(DB.orders);
+  _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
+  lsSave();
+  scheduleUIRefresh(true);
+}
+
 // Xử lý 1 sự kiện thay đổi từ SSE, theo đúng path Firebase báo về
 function handleRealtimeChange(path, val){
   _sseConnected = true;
   stopPolling(); // SSE đang sống → không cần polling song song nữa
   if(path==='/' || path==='/data'){ doPoll(); setSyncDot('ok'); return; }
+  if(path==='/data/orders' || path==='/data/orders/'){
+    // Ai đó vẫn ghi đè NGUYÊN CẢ nhánh (VD lần "đẩy data lên" đầu tiên khi
+    // Firebase còn trống) → xử lý như trước, thay toàn bộ DB.orders.
+    applyFieldChange('orders', val); setSyncDot('ok'); return;
+  }
+  if(path.indexOf('/data/orders/')===0){
+    const id = path.slice('/data/orders/'.length);
+    if(id && id.indexOf('/')===-1){ applySingleOrderChange(id, val); setSyncDot('ok'); return; }
+  }
   const field = _FB_FIELD_MAP[path];
   if(field){ applyFieldChange(field, val); setSyncDot('ok'); return; }
   if(path==='/announce'){ checkAnnounce(); return; }
@@ -11602,6 +12007,14 @@ function renderSettings(){
       <button class="set-btn" onclick="openAnnounce()" style="border-color:#bfdbfe;background:#eff6ff">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
         📢 Viết thông báo cho cả nhóm
+      </button>
+      <button class="set-btn" onclick="openTrashPanel()" style="border-color:#fecaca;background:#fef2f2">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M3 7h18M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+        🗑 Thùng rác${DB.ordersTrash.length?` <span style="color:#b91c1c;font-weight:800">(${DB.ordersTrash.length})</span>`:''}
+      </button>
+      <button class="set-btn" onclick="manualBackupNow()" style="border-color:#bbf7d0;background:#f0fdf4">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+        💾 Sao lưu dữ liệu ngay${_lastBackupAtCache?` <span style="color:#15803d;font-weight:600">(gần nhất: ${fmtDate(_lastBackupAtCache)})</span>`:''}
       </button>
       <button class="set-btn" onclick="clearAnnounce()" style="border-color:#fde68a;background:#fffbeb">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
