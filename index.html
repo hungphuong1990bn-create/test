@@ -5347,6 +5347,51 @@ function dedupeOrdersByIdKeepNewest(){
   }
 }
 
+// ── TỰ SỬA CHỮA GỐC RỄ: dọn các đơn hàng bị lưu "kép" trên Firebase ──────
+// NGUYÊN NHÂN THẬT của lỗi "bấm Hoàn thành (hoặc bất kỳ thao tác nào) thì 1
+// bản chạy sang tab Hoàn thành/cập nhật đúng, còn 1 bản y hệt vẫn kẹt lại ở
+// Kế hoạch SX với trạng thái CŨ": trước đây từng có chỗ ghi đè NGUYÊN CẢ
+// mảng DB.orders lên thẳng nhánh /data (xem saveAll() phía trên — hàm này
+// hiện KHÔNG còn được gọi ở đâu trong code nữa, nhưng dữ liệu nó từng ghi
+// vẫn còn tồn đọng trên Firebase của bạn). Khi ghi 1 mảng JS lên Firebase,
+// Firebase KHÔNG lưu dạng mảng mà tự chuyển thành object với key là CHỈ SỐ
+// ("0","1","2"...). Từ đó, mỗi lần cập nhật 1 đơn, hệ thống (đúng thiết kế)
+// chỉ ghi/đọc đúng 1 key /data/orders/{id} — nhưng hoàn toàn không đụng tới
+// các key số kiểu cũ ("0","1"...) còn sót lại. Hậu quả: CÙNG một đơn hàng
+// tồn tại "kép" trên Firebase — 1 bản ở key số (dữ liệu CŨ, đứng yên mãi
+// mãi vì không ai còn ghi vào key đó) và 1 bản ở key=id (dữ liệu MỚI). Đọc
+// về sẽ thấy đơn đó xuất hiện 2 lần với 2 trạng thái khác nhau — trông y
+// hệt như "tạo đơn trùng lặp".
+// Hàm này chạy mỗi khi đọc lại toàn bộ /data/orders: bất kỳ key nào KHÁC
+// với field .id của chính bản ghi đó là key rác (legacy) → tự xoá thẳng key
+// rác đó trên Firebase (nếu key=id đúng chưa tồn tại thì ghi dữ liệu vào
+// đúng chỗ trước, tránh mất dữ liệu, rồi mới xoá key rác). Tự chạy ngầm,
+// không chặn UI, lỗi mạng thì bỏ qua — lần đọc sau sẽ tự thử lại.
+async function healOrdersLegacyKeys(rawOrders){
+  if(!rawOrders || typeof rawOrders!=='object' || Array.isArray(rawOrders)) return;
+  if(!fbOk()) return;
+  const keys = Object.keys(rawOrders);
+  const properIds = new Set(keys.filter(k=>rawOrders[k] && rawOrders[k].id===k));
+  const legacyKeys = keys.filter(k=>{
+    const v = rawOrders[k];
+    return v && typeof v==='object' && v.id && v.id!==k;
+  });
+  if(!legacyKeys.length) return;
+  console.warn('[healOrdersLegacyKeys] Phát hiện '+legacyKeys.length+' đơn hàng bị lưu trùng key kiểu cũ trên Firebase — đang tự dọn dẹp...');
+  for(const k of legacyKeys){
+    const v = rawOrders[k];
+    try{
+      if(!properIds.has(v.id)){
+        // Bản đúng key=id chưa có → ghi vào đúng chỗ trước để không mất dữ liệu
+        await fbWrite('/data/orders/'+v.id, v, 'PUT');
+        properIds.add(v.id);
+      }
+      await fbWrite('/data/orders/'+k, null, 'DELETE'); // xoá key rác kiểu cũ
+      console.warn('[healOrdersLegacyKeys] Đã xoá key rác /data/orders/'+k+' (đơn hàng id='+v.id+')');
+    }catch(e){ /* lỗi mạng thì bỏ qua, lần load sau tự thử dọn lại */ }
+  }
+}
+
 function saveOrders(){if(guardViewer())return;
   dedupeOrdersByIdKeepNewest();
   lsSave();
@@ -7535,7 +7580,7 @@ async function initAndStartSync(){
       // và để doPoll()/SSE tự đồng bộ lại sau khi lượt ghi đó hoàn tất (xem
       // endSave()).
       if(data && _pendingSaves===0){
-        if(data.orders){ DB.orders = Array.isArray(data.orders)?data.orders:Object.values(data.orders); dedupeOrdersByIdKeepNewest(); }
+        if(data.orders){ DB.orders = Array.isArray(data.orders)?data.orders:Object.values(data.orders); dedupeOrdersByIdKeepNewest(); healOrdersLegacyKeys(data.orders); }
         if(data.ordersTrash){ DB.ordersTrash = Array.isArray(data.ordersTrash)?data.ordersTrash:Object.values(data.ordersTrash); }
         if(data.users && data.users.length){
           // Giữ lại user cache nếu Firebase chưa có
@@ -7734,9 +7779,11 @@ function applyDataSnapshot(data){
       _lastHash = h;
       freshOrders.forEach(o=>{ if(!_knownIds.has(o.id)){ _knownIds.add(o.id); notifyNewOrder(o); } });
       DB.orders = freshOrders;
+      dedupeOrdersByIdKeepNewest(); // lưới an toàn: loại bỏ ngay nếu bản đọc về lỡ có trùng id
       _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
       changed = true;
     }
+    healOrdersLegacyKeys(data.orders); // dọn key rác kiểu cũ trên Firebase nếu có (nguyên nhân gốc gây trùng đơn)
   }
   if(data.users){
     const freshUsers = Array.isArray(data.users)?data.users:Object.values(data.users);
@@ -7804,6 +7851,7 @@ function applyFieldChange(field, val){
     fresh.forEach(o=>{ if(!_knownIds.has(o.id)){ _knownIds.add(o.id); notifyNewOrder(o); } });
     DB.orders = fresh;
     dedupeOrdersByIdKeepNewest(); // lưới an toàn: loại bỏ ngay nếu bản đọc về lỡ có trùng id
+    healOrdersLegacyKeys(val); // dọn key rác kiểu cũ trên Firebase nếu có (nguyên nhân gốc gây trùng đơn)
     _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
   } else if(field==='ordersTrash'){
     const fresh = val ? (Array.isArray(val)?val:Object.values(val)) : [];
