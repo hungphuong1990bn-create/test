@@ -5680,14 +5680,12 @@ function saveAll(){if(guardViewer())return;
     .catch(e=>{ setSyncDot('error'); showToast('❌ Lỗi: '+e.message, true); endSave(); });
 }
 
-// Lưu danh sách thành phẩm QR — cùng cơ chế field-write như saveOrders/saveWorkers
+// Lưu danh sách thành phẩm QR — dùng cơ chế merge-theo-id (mergeAndSaveArrField)
+// thay vì ghi đè nguyên mảng, để tránh 2 thiết bị cùng tạo/xoá QR gần như đồng
+// thời ghi đè mất dữ liệu của nhau (cùng lớp lỗi đã sửa cho các nhánh khác).
 function saveQrProducts(){if(guardViewer())return;
   lsSave();
-  if(!fbOk()) return;
-  setSyncDot('saving');
-  markDirty('qrProducts');
-  beginSave();
-  fbSaveField('qrProducts', '/data/qrProducts', false);
+  syncArrFieldToServer('qrProducts', '/data/qrProducts');
 }
 
 function saveAttendance(){if(guardViewer())return;
@@ -5726,13 +5724,15 @@ async function mergeAndSaveAttendance(){
 }
 
 
+// SỬA: trước đây saveWorkers() ghi đè NGUYÊN CẢ mảng /data/workers bằng
+// fbSaveField (không merge) — 2 admin cùng thêm/xoá công nhân gần như đồng
+// thời trên 2 thiết bị sẽ ghi đè mất thay đổi của nhau, y hệt lỗi gốc đã sửa
+// cho orders/users/attendance/lịch làm việc/kỷ luật/nghỉ phép/bảo trì. Đổi
+// sang dùng chung cơ chế merge-theo-id (mergeAndSaveArrField) như các nhánh
+// còn lại để nhất quán và an toàn khi nhiều người cùng thao tác.
 function saveWorkers(){if(guardViewer())return;
   lsSave();
-  if(!fbOk()) return;
-  setSyncDot('saving');
-  markDirty('workers');
-  beginSave();
-  fbSaveField('workers', '/data/workers', false);
+  syncArrFieldToServer('workers', '/data/workers');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -5757,7 +5757,7 @@ function snapshotArrById(list){
   (list||[]).forEach(o=>{ if(o && o.id) m[o.id] = JSON.stringify(o); });
   return m;
 }
-let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{} };
+let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{}, workers:{}, qrProducts:{} };
 
 async function mergeAndSaveArrField(field, path, onSuccess){
   const localSnap = snapshotArrById(DB[field]);
@@ -7573,12 +7573,22 @@ async function initAndStartSync(){
         // → Dùng đúng các hàm merge-theo-từng-mục (mergeAndSaveOrders/Users/
         // Attendance) đã có sẵn: đọc bản mới nhất từ server làm nền, chỉ áp
         // đè đúng phần cục bộ, không xoá mất phần của thiết bị khác.
+        // Các nhánh dạng "mảng object có id" (workers, qrProducts, lichLamViec,
+        // kyLuat, nghiPhep, baoTri) TRƯỚC ĐÂY rơi vào nhánh else bên dưới và bị
+        // GHI ĐÈ THẲNG cả mảng bằng fbWrite PUT — nếu thiết bị khác đã
+        // thêm/sửa/xoá dòng nào đó trong nhánh này trong lúc thiết bị này
+        // offline, bản ghi đè thẳng sẽ xoá mất thay đổi đó ngay lúc mở app.
+        // Phải dùng đúng mergeAndSaveArrField (đọc bản server mới nhất làm
+        // nền, chỉ áp đè đúng phần cục bộ) giống hệt các nhánh khác.
+        const ARR_FIELD_PATHS = {workers:'/data/workers', qrProducts:'/data/qrProducts',
+          lichLamViec:'/data/lichLamViec', kyLuat:'/data/kyLuat', nghiPhep:'/data/nghiPhep', baoTri:'/data/baoTri'};
         await Promise.all(dirty.map(async f=>{
           try{
             if(f==='orders'){ beginSave(); await mergeAndSaveOrders(); }
             else if(f==='users'){ beginSave(); await mergeAndSaveUsers(); }
             else if(f==='attendance'){ beginSave(); await mergeAndSaveAttendance(); }
             else if(f==='ordersTrash'){ beginSave(); await mergeAndSaveOrdersTrash(); }
+            else if(ARR_FIELD_PATHS[f]){ beginSave(); await mergeAndSaveArrField(f, ARR_FIELD_PATHS[f]); }
             else { await fbWrite('/data/'+f, DB[f], 'PUT'); clearDirty(f); }
           }catch(e){}
         }));
