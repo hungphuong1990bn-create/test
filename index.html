@@ -7547,8 +7547,8 @@ async function initAndStartSync(){
   autoCleanDone();
   renderTab(currentTab);
   updateBadges();
-  // Kiểm tra backup định kỳ ngay khi vừa mở app (không chặn UI — chạy nền)
-  if(fbOk()) maybeRunAutoBackup();
+  // Chức năng sao lưu tự động đã được TẮT theo yêu cầu (xem ghi chú ở khối
+  // BACKUP TỰ ĐỘNG ĐỊNH KỲ bên dưới) — không còn gọi maybeRunAutoBackup() ở đây nữa.
 }
 
 // Dừng/tiếp tục sync theo visibility để không ảnh hưởng app khác (Zalo, cuộc gọi) & đỡ hao pin/data
@@ -7568,14 +7568,18 @@ window.addEventListener('online', ()=>{ if(currentUser && fbOk()){ startRealtime
 window.addEventListener('offline', ()=>{ setSyncDot('error'); });
 
 // ════════════════════════════════════════════════════════════
-// BACKUP TỰ ĐỘNG ĐỊNH KỲ
+// BACKUP TỰ ĐỘNG ĐỊNH KỲ — ĐÃ TẮT THEO YÊU CẦU NGƯỜI DÙNG
 // ────────────────────────────────────────────────────────────
-// Sao lưu toàn bộ /data sang /backups/{yyyy-mm-dd} (ghi đè nếu chạy lại
-// trong cùng ngày), để luôn có bản khôi phục nếu dữ liệu chính bị hỏng/xoá
-// nhầm. App không có server/cron riêng — việc backup được chính thiết bị
-// đang mở app kích hoạt. Dùng ghi có điều kiện (ETag) trên /backupMeta để
-// nhiều thiết bị đang mở app CÙNG LÚC không cùng chạy backup trùng nhau và
-// không ai backup quá dày trong cùng khoảng BACKUP_INTERVAL_MS.
+// Trước đây: sao lưu toàn bộ /data sang /backups/{yyyy-mm-dd} định kỳ, và có
+// nút "Sao lưu dữ liệu ngay" trong Cài đặt. Người dùng lo ngại việc backup
+// này có thể là nguyên nhân gây xung đột dữ liệu (đơn vừa xoá lại quay về)
+// nên đã yêu cầu tắt hẳn. Lưu ý: các hàm bên dưới chỉ ĐỌC /data rồi ghi sang
+// nhánh riêng /backups (không hề ghi ngược lại /data/orders), nên thực chất
+// không phải là nguồn gây ra lỗi "xoá đơn xong lại thấy còn" — xem sửa lỗi
+// đúng nguyên nhân ở findDuplicateOrders()/deleteOrder() bên dưới. Tuy vậy
+// vẫn tắt hẳn theo đúng yêu cầu để người dùng yên tâm không còn bất kỳ thao
+// tác ghi nền nào chạy ngoài ý muốn. Giữ lại các hàm (không xoá code) để dễ
+// bật lại sau này nếu cần, nhưng không còn nơi nào gọi tới chúng nữa.
 // ════════════════════════════════════════════════════════════
 const BACKUP_INTERVAL_MS = 24*60*60*1000; // tối thiểu cách nhau 1 ngày/lần
 const BACKUP_KEEP_DAYS = 30;              // chỉ giữ tối đa 30 bản gần nhất
@@ -7642,21 +7646,13 @@ async function maybeRunAutoBackup(){
 // tức, bỏ qua giới hạn BACKUP_INTERVAL_MS (force=true) nhưng vẫn dùng khoá
 // ETag để tránh đụng độ nếu vô tình bấm ở 2 thiết bị cùng lúc.
 async function manualBackupNow(){
-  if(!isAdmin()){ showToast('⛔ Chỉ Admin mới được sao lưu thủ công', true); return; }
-  if(!fbOk()){ showToast('⚠️ Chưa bật Firebase Sync', true); return; }
-  showToast('💾 Đang sao lưu dữ liệu...');
-  try{
-    if(!(await claimBackupLock(true))){ showToast('⚠️ Thiết bị khác vừa sao lưu, thử lại sau', true); return; }
-    await runBackupNow();
-    showToast('✅ Đã sao lưu dữ liệu thành công');
-    renderTab(currentTab);
-  }catch(e){ showToast('❌ Lỗi sao lưu: '+e.message, true); }
+  // Chức năng sao lưu đã bị tắt theo yêu cầu người dùng — hàm được giữ lại
+  // (không xoá) nhưng không còn nút nào trong Cài đặt gọi tới nữa.
+  showToast('⚠️ Chức năng sao lưu đã tắt', true);
 }
 
-// Kiểm tra định kỳ mỗi giờ xem đã tới hạn backup ngày mới chưa (bản thân
-// maybeRunAutoBackup tự bỏ qua nếu chưa đủ BACKUP_INTERVAL_MS kể từ lần
-// backup gần nhất, nên interval ngắn ở đây không gây backup quá dày).
-setInterval(()=>{ if(!document.hidden) maybeRunAutoBackup(); }, 60*60*1000);
+// Đã tắt: không còn setInterval gọi maybeRunAutoBackup() định kỳ mỗi giờ nữa
+// (xem ghi chú "BACKUP TỰ ĐỘNG ĐỊNH KỲ — ĐÃ TẮT THEO YÊU CẦU NGƯỜI DÙNG" ở trên).
 
 // ── PRESENCE HEARTBEAT ──────────────────────────────────────
 // Trước đây "Đang truy cập" chỉ được ghi lại khi người dùng chuyển tab hoặc
@@ -12025,10 +12021,6 @@ function renderSettings(){
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M3 7h18M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
         🗑 Thùng rác${DB.ordersTrash.length?` <span style="color:#b91c1c;font-weight:800">(${DB.ordersTrash.length})</span>`:''}
       </button>
-      <button class="set-btn" onclick="manualBackupNow()" style="border-color:#bbf7d0;background:#f0fdf4">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
-        💾 Sao lưu dữ liệu ngay${_lastBackupAtCache?` <span style="color:#15803d;font-weight:600">(gần nhất: ${fmtDate(_lastBackupAtCache)})</span>`:''}
-      </button>
       <button class="set-btn" onclick="clearAnnounce()" style="border-color:#fde68a;background:#fffbeb">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         Xóa thông báo đang hiện
@@ -14065,22 +14057,71 @@ function _saveOrderImpl(){
       {status:DB.orders[idx].status,customer});
     showToast('✅ Đã cập nhật đơn hàng');
   } else {
-    const newId=uid();
-    DB.orders.push({id:newId,status:'pending',createdAt:Date.now(),createdBy:currentUser?.id,...data});
-    _knownIds.add(newId);
-    const dimStr = isRound?`Φ${phi}`:`${t}×${w}`;
-    const specStr = isCoil
-      ? `${dimStr}mm · ${qty} cuộn × ${meterPerCoil}m = ${totalMeters}m`
-      : (isRound?`Φ${phi}×${lInput}mm · ${qty} cây`:`${t}×${w}×${lInput}mm · ${qty} thanh`);
-    log('Thêm đơn',`${customer} · ${specStr} · ${data.priority}`,newId,null,{customer,qty,priority:data.priority});
-    showToast('✅ Đã thêm đơn hàng mới');
-    addNotif('order_new','📦 Đơn mới: '+customer,`${specStr} · ${data.priority}`,'keHoach',currentUser?.name);
-    pushNotif('📦 Đơn hàng mới!',`${customer} · ${specStr}`);
+    const doCreate=()=>{
+      const newId=uid();
+      DB.orders.push({id:newId,status:'pending',createdAt:Date.now(),createdBy:currentUser?.id,...data});
+      _knownIds.add(newId);
+      const dimStr = isRound?`Φ${phi}`:`${t}×${w}`;
+      const specStrTxt = isCoil
+        ? `${dimStr}mm · ${qty} cuộn × ${meterPerCoil}m = ${totalMeters}m`
+        : (isRound?`Φ${phi}×${lInput}mm · ${qty} cây`:`${t}×${w}×${lInput}mm · ${qty} thanh`);
+      log('Thêm đơn',`${customer} · ${specStrTxt} · ${data.priority}`,newId,null,{customer,qty,priority:data.priority});
+      showToast('✅ Đã thêm đơn hàng mới');
+      addNotif('order_new','📦 Đơn mới: '+customer,`${specStrTxt} · ${data.priority}`,'keHoach',currentUser?.name);
+      pushNotif('📦 Đơn hàng mới!',`${customer} · ${specStrTxt}`);
+      closeModal('orderModal');
+      renderTab(currentTab);
+      saveOrders();
+    };
+    // Cảnh báo TRƯỚC khi tạo nếu đã có đơn giống hệt (cùng khách, cùng kích
+    // thước, cùng số lượng, tạo trong vòng vài tiếng gần đây) — chặn ngay từ
+    // gốc tình trạng nhập trùng đơn do 2 người/2 thiết bị cùng nhập 1 đơn.
+    const dups=findDuplicateOrders({customer,isRound,isCoil,phi:isRound?phi:0,thickness:t,width:w,length:l,qty,createdAt:Date.now()});
+    if(dups.length){
+      confirm2('⚠️ Có thể bị trùng đơn',
+        `Đã có ${dups.length} đơn giống hệt của "${customer}" (${specStr({isCoil,isRound,phi,thickness:t,width:w,length:l})}, ${qty} ${isRound?'cây':isCoil?'cuộn':'thanh'}) được tạo gần đây. Bạn có chắc muốn tạo thêm đơn mới này không?`,
+        doCreate);
+      return;
+    }
+    doCreate();
+    return;
   }
   closeModal('orderModal');
   renderTab(currentTab);
   saveOrders();
 }
+// ════════════════════════════════════════════════════════════
+// PHÁT HIỆN ĐƠN TRÙNG LẶP (không phải lỗi đồng bộ, mà là 2 đơn KHÁC id nhau
+// nhưng nội dung giống hệt) — ĐÂY MỚI LÀ NGUYÊN NHÂN THẬT của cảm giác "xoá
+// đơn xong lại thấy nó quay lại ngay lập tức" mà người dùng gặp phải (VD:
+// đơn 5x20 của Á Châu bị nhập 2 lần bởi 2 thiết bị/2 người gần như cùng lúc
+// trước khi kịp đồng bộ cho nhau thấy). Khi đó xoá 1 đơn là xoá ĐÚNG đơn đó
+// (đã biến mất vĩnh viễn, xem code writeOrderRecord/mergeAndSaveOrders ở
+// trên — không hề có chỗ nào ghi nó trở lại), nhưng đơn còn lại — id khác,
+// vẫn còn nguyên trên hệ thống — hiển thị giống hệt nên trông như "chưa xoá
+// được / vừa xoá lại có". Sửa tận gốc bằng cách: (1) cảnh báo NGAY khi tạo
+// đơn nếu phát hiện đã có đơn giống hệt còn active, và (2) sau khi xoá 1
+// đơn, chủ động báo & cho xoá luôn nếu vẫn còn bản sao giống hệt.
+function ordersLookDuplicate(a,b){
+  if(!a||!b||a.id===b.id) return false;
+  const norm=s=>(s||'').toString().trim().toLowerCase();
+  if(norm(a.customer)!==norm(b.customer)) return false;
+  if(!!a.isRound!==!!b.isRound) return false;
+  if(!!a.isCoil!==!!b.isCoil) return false;
+  if((a.phi||0)!==(b.phi||0)) return false;
+  if((a.thickness||0)!==(b.thickness||0)) return false;
+  if((a.width||0)!==(b.width||0)) return false;
+  if((a.length||0)!==(b.length||0)) return false;
+  if((a.qty||0)!==(b.qty||0)) return false;
+  // Chỉ coi là trùng khi 2 đơn được TẠO cách nhau dưới 3 tiếng ("cùng giờ
+  // cùng ngày") — tránh báo nhầm 2 đơn hàng lặp lại tự nhiên của cùng 1
+  // khách vào những ngày khác nhau.
+  const ta=Number(a.createdAt)||0, tb=Number(b.createdAt)||0;
+  if(!ta||!tb) return false;
+  return Math.abs(ta-tb) < 3*60*60*1000;
+}
+function findDuplicateOrders(o){ return DB.orders.filter(x=>ordersLookDuplicate(o,x)); }
+
 function deleteOrder(id){if(guardViewer())return;
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   confirm2('Xóa đơn hàng',`Xóa đơn của "${o.customer}"?`,()=>{
@@ -14088,6 +14129,22 @@ function deleteOrder(id){if(guardViewer())return;
     DB.orders=DB.orders.filter(x=>x.id!==id);
     renderTab(currentTab); updateBadges(); showToast('Đã xóa đơn');
     saveOrders();
+    // Đơn vừa xoá đã mất hẳn — kiểm tra xem có bản sao giống hệt nào của nó
+    // còn sót lại không (xem giải thích ở ordersLookDuplicate phía trên).
+    const dups=findDuplicateOrders(o);
+    if(dups.length){
+      setTimeout(()=>{
+        confirm2('⚠️ Vẫn còn đơn giống hệt',
+          `Đơn "${o.customer}" bạn vừa xoá ĐÃ được xoá hẳn. Tuy nhiên hệ thống phát hiện còn ${dups.length} đơn khác giống hệt (cùng khách, cùng kích thước ${specStr(o)}, cùng số lượng, tạo gần cùng giờ) — có thể đây là đơn bạn tưởng "vừa xoá xong lại thấy". Xoá luôn (những) đơn này chứ?`,
+          ()=>{
+            dups.forEach(d=>log('Xóa đơn (trùng lặp)',d.customer,d.id,{customer:d.customer,status:d.status},null));
+            DB.orders=DB.orders.filter(x=>!dups.some(d=>d.id===x.id));
+            renderTab(currentTab); updateBadges();
+            showToast('Đã xóa '+dups.length+' đơn trùng lặp');
+            saveOrders();
+          });
+      },400);
+    }
   });
 }
 // Tự động thăng cấp ưu tiên: khi GẤP N xong hết → nâng GẤP N+1 lên GẤP N
