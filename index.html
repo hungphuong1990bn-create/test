@@ -5537,10 +5537,27 @@ async function mergeAndSaveOrders(retryCount){
     // được coi đây là đã lưu xong. Giữ nguyên dấu "dirty" (đã đánh dấu ở
     // saveOrders) và thử lại sau vài giây, tối đa vài lần rồi thôi (dấu dirty
     // vẫn còn nên lần mở app sau sẽ tự đẩy lại — xem initAndStartSync).
-    endSave();
+    //
+    // FIX RACE CONDITION QUAN TRỌNG: TUYỆT ĐỐI không được gọi endSave() ở
+    // đây trước khi lên lịch retry. Hàm này thường được gọi bằng `await` từ
+    // initAndStartSync() (để đẩy dữ liệu "dirty" từ phiên trước lên TRƯỚC KHI
+    // đọc bản server về). Nếu endSave() gọi ngay tại đây, _pendingSaves rơi
+    // về 0 trong lúc retry còn đang chờ 3s qua setTimeout (không hề được
+    // await) — initAndStartSync() coi như "ghi xong" và tiếp tục đọc /data,
+    // thấy _pendingSaves===0 nên GHI ĐÈ DB.orders bằng bản server (cũ hơn,
+    // chưa có phần dirty), xoá mất đúng phần vừa cố gắng đẩy lên. Tệ hơn:
+    // khi retry chạy 3s sau, DB.orders đã bị ghi đè nên so với snapshot
+    // (cũng đã bị ghi đè theo) KHÔNG còn khác biệt gì → retry lặng lẽ bỏ
+    // cuộc, dữ liệu mất vĩnh viễn — đúng triệu chứng "đơn/tiến độ vừa nhập tự
+    // biến mất, dữ liệu quay về ngày cũ" xảy ra ngay lúc autoCleanDone() chạy
+    // ở cuối initAndStartSync(). CÁCH SỬA: giữ nguyên _pendingSaves (không
+    // endSave() ở nhánh còn retry) để mọi bản đọc /data trong lúc này tiếp
+    // tục bị applyDataSnapshot/doPoll/initAndStartSync bỏ qua cho tới khi
+    // retry thực sự thành công hoặc hết lượt thử (chỉ endSave() lúc đó).
     if(retryCount < 6){
-      setTimeout(()=>{ beginSave(); mergeAndSaveOrders(retryCount+1); }, 3000);
+      setTimeout(()=>{ mergeAndSaveOrders(retryCount+1); }, 3000);
     } else {
+      endSave();
       setSyncDot('error');
       showToast('❌ Lỗi sync: '+e.message, true);
     }
@@ -5590,10 +5607,15 @@ async function mergeAndSaveOrdersTrash(retryCount){
     removedIds.forEach(id=>{ delete mergedMap[id]; }); // đơn vừa khôi phục / xoá vĩnh viễn
     merged = Object.values(mergedMap);
   }catch(e){
-    endSave();
+    // FIX RACE CONDITION (giống mergeAndSaveOrders phía trên): không được
+    // endSave() ở đây trước khi lên lịch retry, nếu không _pendingSaves rơi
+    // về 0 giữa lúc retry còn đang chờ 3s, khiến initAndStartSync()/doPoll()
+    // tưởng đã ghi xong và ghi đè DB.ordersTrash bằng bản server cũ ngay
+    // trong lúc đó — mất đúng các đơn vừa chuyển vào/khôi phục khỏi thùng rác.
     if(retryCount < 6){
-      setTimeout(()=>{ beginSave(); mergeAndSaveOrdersTrash(retryCount+1); }, 3000);
+      setTimeout(()=>{ mergeAndSaveOrdersTrash(retryCount+1); }, 3000);
     } else {
+      endSave();
       setSyncDot('error');
     }
     return;
@@ -7438,6 +7460,19 @@ function hashOrders(list){
 // DB.orders vẫn chỉ chứa đơn đang hoạt động như trước nên KHÔNG cần sửa bất
 // kỳ màn hình/tab nào khác đang lọc theo DB.orders.
 function autoCleanDone(){
+  // LỚP PHÒNG THỦ THỨ 2 (bổ sung theo yêu cầu, ngay tại chính hàm Cleanup):
+  // nếu đúng lúc này vẫn còn lượt ghi/đồng bộ dở dang (_pendingSaves>0 — ví
+  // dụ dữ liệu "dirty" của phiên trước đang retry sau lỗi mạng, xem
+  // mergeAndSaveOrders), nghĩa là KHÔNG CHẮC DB.orders lúc này đã phản ánh
+  // đúng trạng thái mới nhất/đầy đủ. Nếu Cleanup cứ chạy ngay lúc này rồi tự
+  // gọi saveOrders(), nó sẽ vô tình "khoá" lại đúng cái trạng thái chưa chắc
+  // chắn đó. Thay vì vậy, lùi lại và thử lại sau — không bao giờ để Cleanup
+  // thao tác/ghi lại dữ liệu khi hệ thống chưa xác nhận đã đồng bộ xong.
+  if(_pendingSaves > 0){
+    console.warn('[AutoClean] Đang có lượt đồng bộ dở dang, lùi lại Cleanup 2s để tránh thao tác trên dữ liệu chưa chắc chắn...');
+    setTimeout(autoCleanDone, 2000);
+    return;
+  }
   const DAYS = 30;
   const cutoff = Date.now() - DAYS * 24 * 60 * 60 * 1000;
   const before = DB.orders.length;
