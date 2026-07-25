@@ -5320,7 +5320,35 @@ function unflattenAttendance(map){
 }
 let _lastSyncedAttendanceSnapshot = {};
 
+// ── LƯỚI AN TOÀN CHỐNG NHÂN ĐÔI ĐƠN HÀNG ─────────────────────
+// Tab Kế hoạch sản xuất CHỈ ĐƯỢC PHÉP cập nhật đúng 1 bản ghi hiện có theo
+// id (không bao giờ push/add/create bản ghi mới) ở mọi thao tác: Bắt đầu
+// chạy, Chuyển công đoạn, Cập nhật tiến độ, Hoàn thành, Lưu kế hoạch. Hàm
+// này chạy NGAY TRƯỚC MỖI LẦN LƯU như một lưới an toàn cuối cùng: nếu vì
+// bất kỳ lý do gì (đồng bộ lỗi, dữ liệu cũ lẫn vào...) mà DB.orders lỡ có 2
+// bản ghi trùng id, sẽ tự gộp lại thành 1 (giữ bản có updatedAt/version mới
+// nhất) TRƯỚC KHI ghi xuống Database/đồng bộ Realtime — tuyệt đối không để
+// đơn trùng lặp lọt ra ngoài hay hiển thị cho người dùng.
+function dedupeOrdersByIdKeepNewest(){
+  const seen = new Map(); // id -> bản ghi giữ lại
+  let hadDup = false;
+  DB.orders.forEach(o=>{
+    if(!o || !o.id) return;
+    const prev = seen.get(o.id);
+    if(!prev){ seen.set(o.id, o); return; }
+    hadDup = true;
+    const prevScore = (Number(prev.updatedAt)||0)*1000 + (Number(prev.version)||0);
+    const curScore  = (Number(o.updatedAt)||0)*1000 + (Number(o.version)||0);
+    if(curScore >= prevScore) seen.set(o.id, o); // giữ bản mới hơn, bỏ bản cũ
+  });
+  if(hadDup){
+    DB.orders = [...seen.values()];
+    console.warn('[dedupeOrdersByIdKeepNewest] Phát hiện & đã gộp đơn hàng bị trùng id — chỉ giữ lại bản mới nhất của mỗi id.');
+  }
+}
+
 function saveOrders(){if(guardViewer())return;
+  dedupeOrdersByIdKeepNewest();
   lsSave();
   _lastHash = hashOrders(DB.orders); // đánh dấu NGAY: đây là bản mới nhất do chính mình vừa tạo
   if(!fbOk()) return;
@@ -7507,7 +7535,7 @@ async function initAndStartSync(){
       // và để doPoll()/SSE tự đồng bộ lại sau khi lượt ghi đó hoàn tất (xem
       // endSave()).
       if(data && _pendingSaves===0){
-        if(data.orders){ DB.orders = Array.isArray(data.orders)?data.orders:Object.values(data.orders); }
+        if(data.orders){ DB.orders = Array.isArray(data.orders)?data.orders:Object.values(data.orders); dedupeOrdersByIdKeepNewest(); }
         if(data.ordersTrash){ DB.ordersTrash = Array.isArray(data.ordersTrash)?data.ordersTrash:Object.values(data.ordersTrash); }
         if(data.users && data.users.length){
           // Giữ lại user cache nếu Firebase chưa có
@@ -7775,6 +7803,7 @@ function applyFieldChange(field, val){
     _lastHash = h;
     fresh.forEach(o=>{ if(!_knownIds.has(o.id)){ _knownIds.add(o.id); notifyNewOrder(o); } });
     DB.orders = fresh;
+    dedupeOrdersByIdKeepNewest(); // lưới an toàn: loại bỏ ngay nếu bản đọc về lỡ có trùng id
     _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
   } else if(field==='ordersTrash'){
     const fresh = val ? (Array.isArray(val)?val:Object.values(val)) : [];
@@ -7809,6 +7838,7 @@ function applySingleOrderChange(id, val){
     if(idx>=0) DB.orders[idx] = val;
     else { DB.orders.push(val); if(!_knownIds.has(id)){ _knownIds.add(id); notifyNewOrder(val); } }
   }
+  dedupeOrdersByIdKeepNewest(); // lưới an toàn cuối cùng, phòng khi có id trùng lọt vào
   _lastHash = hashOrders(DB.orders);
   _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
   lsSave();
@@ -10576,13 +10606,26 @@ function khRipple(ev, btn){
 // Bấm nút "Bắt đầu sản xuất" / "Hoàn thành" trong Kế hoạch SX:
 // hiệu ứng ripple + loading ngắn, sau đó cập nhật trạng thái Realtime
 // (không cần tải lại trang) thông qua setStatus() có sẵn của hệ thống.
+// Khoá dùng chung cho MỌI thao tác sửa 1 kế hoạch sản xuất (Bắt đầu chạy,
+// Chuyển công đoạn, Cập nhật tiến độ, Hoàn thành...) — đảm bảo đúng 1 đơn
+// (theo id) không bị 2 thao tác chồng nhau xử lý cùng lúc (VD bấm rất nhanh
+// 2 lần, hoặc thao tác từ Thẻ và từ Panel chi tiết cùng lúc). Các thao tác
+// này CHỈ ĐƯỢC PHÉP CẬP NHẬT bản ghi đã có theo id — không bao giờ tạo mới.
+const _planActionLock = new Set();
+function withPlanLock(id, fn){
+  if(_planActionLock.has(id)) return false;
+  _planActionLock.add(id);
+  try{ fn(); } finally { setTimeout(()=>_planActionLock.delete(id), 300); }
+  return true;
+}
+
 function khPlanAction(id, newStatus, btn, ev){
   if(ev) ev.stopPropagation();
   if(!btn || btn.classList.contains('is-loading')) return;
   khRipple(ev, btn);
   btn.classList.add('is-loading');
   btn.disabled = true;
-  setTimeout(()=>{ setStatus(id, newStatus); }, 360);
+  setTimeout(()=>{ withPlanLock(id, ()=>setStatus(id, newStatus)); }, 360);
 }
 
 // ── State bộ lọc Kế hoạch sản xuất (ERP/MES table, đồng bộ Tab Đơn hàng) ──
@@ -10626,8 +10669,12 @@ function renderKeHoach(){
   }
 
   const priSort=(a,b)=>parseInt((a.priority||'GẤP 9').replace('GẤP ',''))-parseInt((b.priority||'GẤP 9').replace('GẤP ',''));
+  // Lưới an toàn khi RENDER: đảm bảo danh sách hiển thị luôn duy nhất theo
+  // id (Map tự loại id trùng, giữ bản xuất hiện sau cùng) — không bao giờ
+  // render 2 thẻ cho cùng 1 đơn dù dữ liệu nguồn có vấn đề gì đi nữa.
+  const _uniqOrders = [...new Map(DB.orders.map(o=>[o.id,o])).values()];
   // Đơn đã hoàn thành (status='done') theo dõi ở tab riêng "Hoàn thành", không hiện ở Kế hoạch
-  const allActive = DB.orders.filter(o=>o.status!=='done');
+  const allActive = _uniqOrders.filter(o=>o.status!=='done');
   const doneCount = DB.orders.filter(o=>o.status==='done').length;
 
   const waiting     = allActive.filter(o=>o.status==='pending');
@@ -13811,26 +13858,31 @@ function pmAddMat(){if(guardViewer())return;
 }
 
 function saveProgress(){if(guardViewer())return;
-  const doneQty = parseInt(document.getElementById('pmDoneQty').value)||0;
-  const note = document.getElementById('pmNote').value.trim();
-  const o = DB.orders.find(x=>x.id===_progressOrderId); if(!o) return;
-  if(doneQty > (o.qty||0)){
-    const e=document.getElementById('progressErr');
-    e.textContent=`Số thanh đã chạy (${doneQty}) không thể lớn hơn tổng đơn (${o.qty||0})`;
-    e.style.display='block'; return;
-  }
-  const old = {doneQty:o.doneQty||0, matCodes:[...(o.matCodes||[])]};
-  o.doneQty = doneQty;
-  o.matCodes = [..._pmMats];
-  o.progressNote = note;
-  log('Cập nhật tiến độ',`${o.customer} · ${o.priority||''} · Đã chạy: ${doneQty}/${o.qty||0} thanh`,_progressOrderId,{doneQty:old.doneQty,matCodes:old.matCodes,note:o.progressNote},{doneQty,matCodes:[..._pmMats],note});
-  closeModal('progressModal');
-  const savedId = _progressOrderId;
-  renderTab(currentTab);
-  refreshKhDetailIfOpen(savedId); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
-  goToOrderCard(savedId);
-  showToast(`✅ Đã lưu: ${doneQty}/${o.qty||0} thanh`);
-  saveOrders();
+  const _pid = _progressOrderId;
+  if(!_pid) return;
+  withPlanLock(_pid, ()=>{
+    const doneQty = parseInt(document.getElementById('pmDoneQty').value)||0;
+    const note = document.getElementById('pmNote').value.trim();
+    // CHỈ CẬP NHẬT đúng đơn hàng hiện có theo id — tuyệt đối không push/tạo
+    // bản ghi mới, không đổi id của đơn.
+    const o = DB.orders.find(x=>x.id===_pid); if(!o) return;
+    if(doneQty > (o.qty||0)){
+      const e=document.getElementById('progressErr');
+      e.textContent=`Số thanh đã chạy (${doneQty}) không thể lớn hơn tổng đơn (${o.qty||0})`;
+      e.style.display='block'; return;
+    }
+    const old = {doneQty:o.doneQty||0, matCodes:[...(o.matCodes||[])]};
+    o.doneQty = doneQty;
+    o.matCodes = [..._pmMats];
+    o.progressNote = note;
+    log('Cập nhật tiến độ',`${o.customer} · ${o.priority||''} · Đã chạy: ${doneQty}/${o.qty||0} thanh`,_pid,{doneQty:old.doneQty,matCodes:old.matCodes,note:o.progressNote},{doneQty,matCodes:[..._pmMats],note});
+    closeModal('progressModal');
+    renderTab(currentTab);
+    refreshKhDetailIfOpen(_pid); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
+    goToOrderCard(_pid);
+    showToast(`✅ Đã lưu: ${doneQty}/${o.qty||0} thanh`);
+    saveOrders(); // ghi Database ngay + đồng bộ Realtime tới tất cả thiết bị
+  });
 }
 
 // Cuộn đúng tới thẻ đơn vừa cập nhật (thay vì nhảy lên đầu trang) và làm nổi bật để dễ nhận ra
@@ -13936,17 +13988,21 @@ function renderStageBadge(o){
 }
 
 function setStage(id, stage){if(guardViewer())return;
-  const o = DB.orders.find(x=>x.id===id); if(!o) return;
-  if(!isStaff()) return;
-  const old = o.stage;
-  if(old===stage) return;
-  o.stage = stage;
-  log('Cập nhật công đoạn', `${o.customer||''} · ${STAGE_LABEL[stage]||stage}`, id, {stage:old||''}, {stage});
-  renderTab(currentTab);
-  refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
-  goToOrderCard(id);
-  showToast(`🏭 Công đoạn: ${STAGE_LABEL[stage]||stage}`);
-  saveOrders();
+  withPlanLock(id, ()=>{
+    // CHỈ CẬP NHẬT bản ghi đơn hàng đã có theo id — KHÔNG tạo bản ghi mới,
+    // KHÔNG đổi id của đơn.
+    const o = DB.orders.find(x=>x.id===id); if(!o) return;
+    if(!isStaff()) return;
+    const old = o.stage;
+    if(old===stage) return;
+    o.stage = stage;
+    log('Cập nhật công đoạn', `${o.customer||''} · ${STAGE_LABEL[stage]||stage}`, id, {stage:old||''}, {stage});
+    renderTab(currentTab);
+    refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
+    goToOrderCard(id);
+    showToast(`🏭 Công đoạn: ${STAGE_LABEL[stage]||stage}`);
+    saveOrders(); // ghi Database + đồng bộ Realtime ngay
+  });
 }
 
 // Khối lượng riêng đồng đỏ (Cu) — dùng để tính KG thanh cái dẹt
@@ -14219,6 +14275,9 @@ function aiAutoPromote(){if(guardViewer())return;
 }
 
 function setStatus(id, newStatus){if(guardViewer())return;
+  // CHỈ CẬP NHẬT đơn hàng đã có theo id (không push/add/create bản ghi mới,
+  // không đổi id) — id truyền vào phải khớp đúng 1 bản ghi hiện có trong
+  // DB.orders, nếu không tìm thấy thì dừng lại, không tự tạo mới.
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   const before=o.status;
   o.status=newStatus;
