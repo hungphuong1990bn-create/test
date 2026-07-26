@@ -1,0 +1,49 @@
+{
+  "name": "quan-ly-sx-dong-phuong",
+  "version": "1.0.0",
+  "description": "Ứng dụng desktop cho hệ thống Quản Lý Sản Xuất Đông Phương",
+  "main": "main.js",
+  "author": "Đông Phương",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.dongphuong.quanlysx",
+    "productName": "Quan Ly SX Dong Phuong",
+    "asar": true,
+    "files": [
+      "main.js",
+      "build/icon.png"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Quan Ly SX Dong Phuong"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "hungphuong1990bn-create",
+        "repo": "test"
+      }
+    ]
+  }
+}
