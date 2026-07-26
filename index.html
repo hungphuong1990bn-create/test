@@ -7448,92 +7448,6 @@ function hashOrders(list){
   return (list||[]).map(o=>o.id+'|'+o.status+'|'+(o.doneAt||0)+'|'+(o.startedAt||0)).join(';');
 }
 
-// ── TỰ CHUYỂN ĐƠN HOÀN THÀNH SAU 30 NGÀY VÀO THÙNG RÁC (SOFT DELETE) ─────
-// TRƯỚC ĐÂY: hàm này xoá CỨNG — loại thẳng khỏi DB.orders rồi mất vĩnh viễn,
-// không có cách nào lấy lại nếu logic 30-ngày tính nhầm hoặc dữ liệu bị lỗi
-// đồng bộ đúng lúc đó. Đây là 1 phần nguyên nhân khiến người dùng cảm thấy
-// "mất dữ liệu" ngay sau khi Auto Cleanup chạy.
-// BÂY GIỜ: đơn hết hạn chỉ được CHUYỂN sang nhánh riêng /data/ordersTrash
-// (đánh dấu deleted:true, deletedAt, deletedBy) — không mất đi đâu cả. Chỉ
-// Admin mới có quyền xoá vĩnh viễn khỏi Thùng rác (xem permanentlyDeleteOrder).
-// DB.orders vẫn chỉ chứa đơn đang hoạt động như trước nên KHÔNG cần sửa bất
-// kỳ màn hình/tab nào khác đang lọc theo DB.orders.
-// ĐÃ CHUYỂN TỪ TỰ ĐỘNG SANG THỦ CÔNG (theo yêu cầu): hàm này KHÔNG còn được
-// gọi ngầm lúc mở app / lúc đồng bộ nữa. Nó chỉ chạy khi Admin chủ động bấm
-// nút "Dọn đơn hoàn thành >30 ngày" trong Cài đặt (xem manualRunCleanup()).
-// Vẫn giữ nguyên toàn bộ lớp phòng thủ cũ + bổ sung thêm để nếu sau này có
-// bật lại tự động thì vẫn an toàn tuyệt đối, không bao giờ đụng vào dữ liệu
-// khi chưa chắc chắn đã đồng bộ xong.
-// isManual=true: gọi từ nút bấm của Admin → luôn phản hồi rõ ràng cho người
-// dùng biết kết quả (kể cả khi không có đơn nào cần dọn, hoặc phải hoãn lại
-// vì đang đồng bộ dở dang), thay vì âm thầm return như bản tự động cũ.
-function autoCleanDone(isManual, _retryLeft){
-  if(_retryLeft==null) _retryLeft = 5; // tối đa ~10s chờ đồng bộ ổn định rồi báo lại, không chờ vô hạn trong im lặng
-  // LỚP PHÒNG THỦ: nếu đúng lúc này vẫn còn lượt ghi/đồng bộ dở dang
-  // (_pendingSaves>0 — ví dụ dữ liệu "dirty" của phiên trước đang retry sau
-  // lỗi mạng, xem mergeAndSaveOrders), nghĩa là KHÔNG CHẮC DB.orders lúc này
-  // đã phản ánh đúng trạng thái mới nhất/đầy đủ. Không bao giờ được thao
-  // tác/ghi lại dữ liệu khi hệ thống chưa xác nhận đã đồng bộ xong.
-  if(_pendingSaves > 0){
-    if(_retryLeft <= 0){
-      if(isManual) showToast('⏳ Đang có dữ liệu chưa đồng bộ xong (mạng chập chờn?) — vui lòng thử lại sau ít phút', true);
-      console.warn('[Cleanup] Bỏ cuộc chờ đồng bộ sau nhiều lần thử, không đụng tới dữ liệu.');
-      return;
-    }
-    console.warn('[Cleanup] Đang có lượt đồng bộ dở dang, lùi lại 2s để tránh thao tác trên dữ liệu chưa chắc chắn...');
-    if(isManual) showToast('⏳ Đang đồng bộ dữ liệu, thử lại sau vài giây...');
-    setTimeout(()=>autoCleanDone(isManual, _retryLeft-1), 2000);
-    return;
-  }
-  const DAYS = 30;
-  const cutoff = Date.now() - DAYS * 24 * 60 * 60 * 1000;
-  const before = DB.orders.length;
-  const expired = DB.orders.filter(o=>o.status==='done' && o.doneAt && o.doneAt < cutoff);
-  if(!expired.length){
-    if(isManual) showToast('✅ Không có đơn hoàn thành nào quá 30 ngày cần dọn');
-    return;
-  }
-
-  DB.orders = DB.orders.filter(o=>!(o.status==='done' && o.doneAt && o.doneAt < cutoff));
-  const removed = before - DB.orders.length;
-  const now = Date.now();
-
-  // Chuyển vào thùng rác kèm dấu vết đầy đủ để có thể khôi phục/truy vết
-  expired.forEach(o=>{
-    o.version = (Number(o.version)||0) + 1;
-    o.updatedAt = now;
-    o.updatedBy = 'manual-cleanup';
-    DB.ordersTrash.push({
-      ...o,
-      deleted: true,
-      deletedAt: now,
-      deletedBy: isManual ? actorName()+' (dọn thủ công)' : 'auto-cleanup',
-      deletedReason: 'Hoàn thành quá 30 ngày (dọn thủ công)'
-    });
-  });
-
-  // Ghi nhật ký
-  expired.forEach(o=>{
-    log('Chuyển vào thùng rác (dọn 30 ngày)',
-      `${o.customer||'?'} · Hoàn thành: ${fmtDate(o.doneAt)}`,
-      o.id, {customer:o.customer, doneAt:o.doneAt}, {deleted:true, deletedAt:now});
-  });
-
-  saveOrders();
-  saveOrdersTrash();
-  showToast(`🗑 Đã chuyển ${removed} đơn hoàn thành quá 30 ngày vào Thùng rác`);
-  console.log(`[Cleanup] Chuyển ${removed} đơn hết hạn vào ordersTrash`);
-}
-
-// Nút bấm thủ công trong Cài đặt (chỉ Admin) — thay thế hoàn toàn cơ chế tự
-// động chạy ngầm trước đây. Có xác nhận trước khi chạy để tránh bấm nhầm.
-function manualRunCleanup(){
-  if(!isAdmin()){ showToast('⛔ Chỉ Admin mới được dọn dẹp', true); return; }
-  confirm2('Dọn đơn hoàn thành >30 ngày',
-    'Các đơn đã hoàn thành quá 30 ngày sẽ được chuyển vào Thùng rác (vẫn khôi phục lại được, không mất vĩnh viễn). Tiếp tục?',
-    ()=>autoCleanDone(true));
-}
-
 // ── KHÔI PHỤC ĐƠN TỪ THÙNG RÁC ───────────────────────────────
 function restoreOrderFromTrash(id){
   const idx = DB.ordersTrash.findIndex(o=>o.id===id);
@@ -11110,7 +11024,6 @@ function renderHoanThanh(){
       <span><b>${totalDone}</b>đơn thành phẩm</span>
       <span><b>${totalKg.toLocaleString('vi-VN')}kg</b>tổng sản lượng</span>
       <span><b>${totalCustomers}</b>khách hàng</span>
-      <span style="color:var(--text4)">🗑 Dọn sau 30 ngày (Admin bấm thủ công)</span>
     </div>
 
     <div class="dd-stats-sticky"><div class="dd-stats">
@@ -11767,8 +11680,6 @@ function renderSettings(){
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
         Thử chuông & rung
       </button>
-      <div class="sec-title" style="margin-top:8px">📱 Phiên bản ứng dụng</div>
-      <div class="card ver-card" id="verCardWrap">${buildVersionCard()}</div>
       ${admin?`
       <div class="sec-title" style="margin-top:8px">Quản lý tài khoản</div>
       <div class="card" style="padding:0 14px">
@@ -11785,15 +11696,6 @@ function renderSettings(){
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
         📢 Viết thông báo cho cả nhóm
       </button>
-      <button class="set-btn" onclick="openTrashPanel()" style="border-color:#fecaca;background:#fef2f2">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M3 7h18M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
-        🗑 Thùng rác${DB.ordersTrash.length?` <span style="color:#b91c1c;font-weight:800">(${DB.ordersTrash.length})</span>`:''}
-      </button>
-      <!-- Dọn dẹp 30 ngày giờ là THỦ CÔNG hoàn toàn — không còn tự chạy ngầm lúc mở app nữa -->
-      <button class="set-btn" onclick="manualRunCleanup()" style="border-color:#e5e7eb;background:#f9fafb">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        🧹 Dọn đơn hoàn thành >30 ngày (thủ công)
-      </button>
       <button class="set-btn" onclick="clearAnnounce()" style="border-color:#fde68a;background:#fffbeb">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         Xóa thông báo đang hiện
@@ -11806,6 +11708,8 @@ function renderSettings(){
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         Đăng xuất
       </button>
+      <div class="sec-title" style="margin-top:8px">📱 Phiên bản ứng dụng</div>
+      <div class="card ver-card" id="verCardWrap">${buildVersionCard()}</div>
     </div>
   `;
   updateVerConnDot();
