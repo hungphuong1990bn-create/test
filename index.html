@@ -2608,27 +2608,13 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .card-added-txt{font-size:10.5px;color:var(--text3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-added-txt b{color:var(--text2);font-weight:800}
 .spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:9px 14px 5px}
-.spec-box{position:relative;border-radius:11px;padding:7px 4px 6px;text-align:center;border:1px solid rgba(15,23,42,.05);box-shadow:0 2px 5px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.6);background:linear-gradient(160deg,#fff,var(--bg))}
-.spec-box-val{font-size:14px;font-weight:800;color:var(--text);line-height:1.15}
+/* Trước đây mỗi ô thông số (Dày/Rộng/Dài/Số thanh/Φ/KG) có 1 màu riêng
+   (xanh dương/tím/cyan/cam/vàng/lục) — nhìn sặc sỡ, rối mắt. Nay đồng bộ
+   CÙNG 1 tông màu trung tính duy nhất cho mọi ô, chỉ phân biệt bằng nhãn
+   chữ bên dưới, để giao diện gọn gàng, hiện đại và chuyên nghiệp hơn. */
+.spec-box{position:relative;border-radius:11px;padding:7px 4px 6px;text-align:center;border:1px solid var(--border);box-shadow:0 1px 3px rgba(15,23,42,.05),inset 0 1px 0 rgba(255,255,255,.6);background:var(--bg2)}
+.spec-box-val{font-size:14px;font-weight:800;color:var(--navy);line-height:1.15;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .spec-box-lbl{font-size:8.5px;color:var(--text4);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px;opacity:.8}
-.spec-box.dim-t{background:linear-gradient(160deg,#eff6ff,#dbeafe);border-color:#bfdbfe}
-.spec-box.dim-t .spec-box-val{color:#1d4ed8}
-.spec-box.dim-t .spec-box-lbl{color:#3b82f6}
-.spec-box.dim-w{background:linear-gradient(160deg,#f5f3ff,#ede9fe);border-color:#ddd6fe}
-.spec-box.dim-w .spec-box-val{color:#6d28d9}
-.spec-box.dim-w .spec-box-lbl{color:#8b5cf6}
-.spec-box.dim-l{background:linear-gradient(160deg,#ecfeff,#cffafe);border-color:#a5f3fc}
-.spec-box.dim-l .spec-box-val{color:#0e7490}
-.spec-box.dim-l .spec-box-lbl{color:#06b6d4}
-.spec-box.dim-qty{background:linear-gradient(160deg,#fff7ed,#ffedd5);border-color:#fed7aa}
-.spec-box.dim-qty .spec-box-val{color:#c2410c}
-.spec-box.dim-qty .spec-box-lbl{color:#ea580c}
-.spec-box.dim-phi{background:linear-gradient(160deg,#fffbeb,#fef3c7);border-color:#fcd34d}
-.spec-box.dim-phi .spec-box-val{color:#b45309}
-.spec-box.dim-phi .spec-box-lbl{color:#d97706}
-.spec-box.dim-kg{background:linear-gradient(160deg,#f0fdf4,#dcfce7);border-color:#86efac}
-.spec-box.dim-kg .spec-box-val{color:#166534}
-.spec-box.dim-kg .spec-box-lbl{color:#16a34a}
 .spec-row{display:flex;gap:6px;padding:2px 14px 6px;flex-wrap:wrap;align-items:center}
 .spec-tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--text2);white-space:nowrap}
 .spec-tag.mat{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
