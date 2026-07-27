@@ -3291,7 +3291,8 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-table tbody tr:hover td{background:var(--bg2)}
 .dd-table tbody tr.is-new td{background:#F5F9FF}
 .dd-table tbody tr.is-new:hover td{background:#EAF2FF}
-.dd-table tbody tr.is-new td:first-child{box-shadow:inset 3px 0 0 var(--brand)}
+.dd-table tbody tr.is-new td:first-child{box-shadow:inset 3px 0 0 var(--brand);position:relative;animation:ddNewRowGlow 2.2s ease-in-out infinite}
+@keyframes ddNewRowGlow{0%,100%{box-shadow:inset 3px 0 0 var(--brand)}50%{box-shadow:inset 3px 0 0 var(--brand),inset 0 0 0 40px rgba(40,86,214,.05)}}
 .dd-table tbody tr.is-overdue td{background:#FFF8F7}
 .dd-table tbody tr.is-overdue:hover td{background:#FEEEEC}
 .dd-code{font-weight:800;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
@@ -3300,6 +3301,16 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-new-pill{font-size:9px;font-weight:800;background:var(--brand);color:#fff;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;white-space:nowrap}
 .dd-status-pill{font-size:11px;font-weight:800;padding:4px 11px;border-radius:20px;white-space:nowrap;display:inline-block;border:1px solid transparent}
 .dd-due{font-weight:700;color:var(--text2)}
+
+/* ── Trạng thái tab "Hoàn thành" — badge hiện đại (icon SVG thay emoji + dòng phụ ngày giờ) ── */
+.ht-status-cell{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.ht-status-pill-modern{display:inline-flex;align-items:center;gap:6px;line-height:1.3}
+.ht-status-ic{display:inline-flex;align-items:center;justify-content:center;line-height:0;flex-shrink:0}
+.ht-status-ic svg{display:block}
+.ht-status-sub{font-size:10px;color:var(--text4);font-weight:700;white-space:nowrap;padding-left:2px;display:flex;align-items:center;gap:3px}
+.ht-fresh-pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;background:var(--green-m);color:#fff;padding:2.5px 8px 2.5px 7px;border-radius:20px;white-space:nowrap;animation:htFreshPulse2 2s ease-in-out infinite}
+.ht-fresh-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#fff;flex-shrink:0}
+@keyframes htFreshPulse2{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(21,150,108,.35)}50%{opacity:.85;box-shadow:0 0 0 4px rgba(21,150,108,0)}}
 .dd-due.overdue{color:var(--red-m)}
 .dd-actions{display:flex;gap:4px;align-items:center}
 .dd-act-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text3);transition:background .1s,color .1s,border-color .1s;flex-shrink:0}
@@ -3388,9 +3399,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .ord-po{font-size:10.5px;color:var(--text4);font-weight:600;flex-shrink:0}
 .ord-badges{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 
-.pill-new,.pill-fresh{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap;border:1px solid transparent;line-height:1.3}
-.pill-new{background:#E7F0FF;color:#2856D6;border-color:#BFD6FF}
+.pill-new,.pill-fresh{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap;border:1px solid transparent;line-height:1.3}
+.pill-new{background:#E7F0FF;color:#2856D6;border-color:#BFD6FF;animation:pillNewGlow 1.8s ease-in-out infinite}
 .pill-fresh{background:#E3F5EE;color:#0C7A54;border-color:#9BE8C4}
+.pill-new .pn-dot{width:5px;height:5px;border-radius:50%;background:#2856D6;flex-shrink:0;animation:pillNewDot 1.8s ease-in-out infinite}
+@keyframes pillNewGlow{0%,100%{box-shadow:0 0 0 0 rgba(40,86,214,.4)}50%{box-shadow:0 0 0 4px rgba(40,86,214,0)}}
+@keyframes pillNewDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.4}}
 
 .ord-main{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px}
 .ord-cust{font-size:14.5px;font-weight:800;color:var(--text);line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -3432,7 +3446,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-table tbody tr.ht-fresh td{background:#F0FDF4}
 .dd-table tbody tr.ht-fresh:hover td{background:#DCFCE7}
 .dd-table tbody tr.ht-fresh td:first-child{box-shadow:inset 3px 0 0 var(--green-m)}
-.ht-fresh-pill{font-size:9px;font-weight:800;background:var(--green-m);color:#fff;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;white-space:nowrap;animation:htFreshPulse 2s ease-in-out infinite}
 
 /* ═══ ĐÓNG BĂNG CỘT khi cuộn ngang ═══
    Tab Đơn hàng (#ddTable): giữ cố định 2 cột đầu "Ưu tiên" + "Khách hàng".
@@ -3458,7 +3471,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   #ddTable th:nth-child(2), #ddTable td:nth-child(2){left:92px;width:140px;min-width:140px;max-width:140px}
   #htTable th:nth-child(1), #htTable td:nth-child(1){width:150px;min-width:150px;max-width:150px}
 }
-@keyframes htFreshPulse{0%,100%{opacity:1}50%{opacity:.6}}
 .ht-timeline{display:flex;flex-direction:column;gap:2px}
 .ht-timeline-row{font-size:11px;color:var(--text3)}
 .ht-timeline-row b{color:var(--text2);font-weight:700}
@@ -10088,7 +10100,7 @@ function ddRow(o, stt){
   const pc = PRI_COLOR[o.priority]||'#64748b';
   const canEdit = isAdmin(), canPlan = isStaff() && o.status==='pending';
   return `<tr class="${isNew?'is-new':''}${overdue?' is-overdue':''}" data-order-id="${o.id}" onclick="ddViewDetail('${o.id}')">
-    <td><span class="ord-pri" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>${isNew?'<span class="pill-new" style="margin-left:5px">🟢 Mới</span>':''}</td>
+    <td><span class="ord-pri" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>${isNew?'<span class="pill-new" style="margin-left:5px" title="Đơn chưa xem chi tiết"><span class="pn-dot"></span>Mới</span>':''}</td>
     <td><div class="ord-cust-info"><span class="ord-stt-badge" title="STT">${stt!=null?stt:''}</span><div class="ord-cust-info-txt"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></div></td>
     <td>${o.type||'—'}</td>
     <td>${ddMaterialLabel(o.material)}</td>
@@ -10785,6 +10797,29 @@ function htStage(o){
   return {key:'new', label:'Hoàn thành', icon:'🟢', color:'#0C7A54', bg:'#E3F5EE', border:'#86EFAC'};
 }
 
+// Icon SVG hiện đại cho badge trạng thái (thay emoji để hiển thị đồng nhất trên
+// mọi thiết bị/hệ điều hành, tránh lỗi icon hiển thị sai/lệch phông emoji)
+function htStageIcon(key){
+  const icons = {
+    new:       '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    shipping:  '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5h11v8.5h-11z"/><path d="M13.5 9.5h3.6l3.4 3.2v2.3h-7z"/><circle cx="6.5" cy="17.5" r="1.7"/><circle cx="17" cy="17.5" r="1.7"/></svg>',
+    delivered: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5l4 4L15.5 6"/><path d="M9.2 12.5l4 4L22.5 6"/></svg>',
+    returned:  '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.2 3.8v5h5"/></svg>',
+  };
+  return icons[key] || '';
+}
+
+// Dòng phụ ngày/giờ hiển thị ngay dưới badge trạng thái — thay thế thông tin
+// trước đây nằm ở 2 cột riêng "Nhập kho" / "Ngày giao" (nay đã gộp vào đây
+// cho gọn, đỡ phải kéo ngang bảng mà vẫn không mất dữ liệu thời gian).
+function htStatusSub(o, st){
+  if(st.key==='returned') return o.returnedAt ? `Lúc ${fmtDateTime(o.returnedAt)}` : '';
+  if(st.key==='delivered') return o.deliveredAt ? `Giao lúc ${fmtDateTime(o.deliveredAt)}` : '';
+  if(st.key==='shipping') return o.whAt ? `Nhập kho ${fmtDateTime(o.whAt)}` : '';
+  if(st.key==='new') return o.deliveryDate ? `Hạn giao ${fmtDate(o.deliveryDate)}` : '';
+  return '';
+}
+
 function htCode(o){ return ddCode(o); }
 
 // Nhảy sang tab Đơn Hàng và cuộn/nổi bật đúng đơn hàng đang xem ở tab
@@ -11046,9 +11081,13 @@ function htRow(o, stt){
     <td>${fmtDate(o.createdAt)}</td>
     <td style="color:#0C7A54;font-weight:800">${fmtDateTime(o.doneAt)}</td>
     <td style="color:var(--brand);font-weight:800">${o.startedAt&&o.doneAt?fmtDuration(o.doneAt-o.startedAt):'—'}</td>
-    <td>${o.whIn?fmtDate(o.whAt):'—'}</td>
-    <td>${o.delivered?fmtDate(o.deliveredAt):(o.deliveryDate?fmtDate(o.deliveryDate)+' (dk)':'—')}</td>
-    <td>${fresh?'<span class="ht-fresh-pill">✅ Mới</span> ':''}<span class="dd-status-pill" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.icon} ${st.label}</span></td>
+    <td>
+      <div class="ht-status-cell">
+        <span class="dd-status-pill ht-status-pill-modern" style="background:${st.bg};color:${st.color};border-color:${st.border}"><span class="ht-status-ic">${htStageIcon(st.key)}</span>${st.label}</span>
+        ${htStatusSub(o,st)?`<div class="ht-status-sub">${htStatusSub(o,st)}</div>`:''}
+        ${fresh?'<span class="ht-fresh-pill">Mới</span>':''}
+      </div>
+    </td>
     <td>${htConfirmedBy(o)}</td>
     <td onclick="event.stopPropagation()" style="white-space:nowrap">
       <button class="dd-act-btn icon-only" title="Xem chi tiết" onclick="htViewDetail('${o.id}')">👁</button>
@@ -11153,7 +11192,7 @@ function renderHoanThanh(){
           <span class="ord-list-count">Hiển thị ${list.length} / ${totalDone} đơn thành phẩm</span>
         </div>
         <div class="dd-scrolltop" id="htScrollTop"><div class="dd-scrolltop-inner" id="htScrollTopInner"></div></div>
-        <div class="dd-table-wrap" id="htTableWrap"><table class="dd-table" id="htTable" style="min-width:1440px"><thead><tr>
+        <div class="dd-table-wrap" id="htTableWrap"><table class="dd-table" id="htTable" style="min-width:1240px"><thead><tr>
           <th>Khách hàng</th>
           <th>Sản phẩm</th>
           <th>Nguyên liệu</th>
@@ -11162,8 +11201,6 @@ function renderHoanThanh(){
           <th>Ngày nhận</th>
           <th>Hoàn thành lúc</th>
           <th>Thời gian SX</th>
-          <th>Nhập kho</th>
-          <th>Ngày giao</th>
           <th>Trạng thái</th>
           <th>Xác nhận</th>
           <th>Thao tác</th>
