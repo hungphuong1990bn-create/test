@@ -3255,14 +3255,54 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-stat-txt{min-width:0}
 .dd-stat-n{font-size:19px;font-weight:900;color:var(--text);line-height:1.15}
 .dd-stat-l{font-size:10.5px;color:var(--text3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dd-filters{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:9px}
-.dd-filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
-.dd-filters-row .search-wrap{flex:1;min-width:200px}
 .dd-fld{display:flex;flex-direction:column;gap:3px}
 .dd-fld label{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 .dd-fld select,.dd-fld input[type=date]{border:1.5px solid var(--border);border-radius:9px;padding:7px 9px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--text);height:33px}
 .dd-reset-btn{border:1.5px solid var(--border);background:#fff;color:var(--text3);border-radius:9px;padding:0 13px;height:33px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
 .dd-reset-btn:hover{background:var(--bg);color:var(--red-m);border-color:var(--red-m)}
+
+/* ═══════════════════════════════════════════════════════════
+   TÌM KIẾM & BỘ LỌC HỢP NHẤT (Search Bubble) — dùng chung cho
+   3 tab Đơn hàng / Kế hoạch SX / Đơn hoàn thành. Thanh gọn luôn
+   nổi (sticky) cùng dải KPI; bấm nút lọc mở Bottom Sheet (Mobile)
+   hoặc Floating Panel (Desktop) chứa đầy đủ các trường lọc.
+   ═══════════════════════════════════════════════════════════ */
+.us-bar{display:flex;gap:8px;align-items:center}
+.us-bar .search-wrap{flex:1;min-width:0}
+.us-filter-btn{position:relative;flex-shrink:0;width:40px;height:40px;border-radius:11px;border:1.5px solid var(--border);background:#fff;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,color .15s,transform .1s,box-shadow .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.us-filter-btn:active{transform:scale(.93)}
+.us-filter-btn.has-active{border-color:var(--brand);color:var(--brand);background:#EEF4FD;box-shadow:0 0 0 3px rgba(11,95,203,.12)}
+.us-badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:var(--red-m);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+
+/* Bộ lọc hợp nhất: đưa z-index vượt trội mọi lớp phủ khác trong app (modal,
+   sidebar, bottom-nav, AI bubble...) để đảm bảo LUÔN hiển thị được trên mọi
+   thiết bị / trình duyệt, kể cả khi có xung đột stacking-context. */
+.us-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:99990;display:none;opacity:0;transition:opacity .2s;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.us-overlay.show{display:block;opacity:1}
+.us-sheet{position:fixed;left:0;right:0;bottom:0;z-index:99991;background:var(--card,#fff);border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(15,23,42,.28);max-height:85vh;max-height:85dvh;display:flex;flex-direction:column;transform:translateY(105%);transition:transform .28s cubic-bezier(.32,.72,0,1);padding-bottom:calc(8px + env(safe-area-inset-bottom,0px) + var(--safe-b,0px));visibility:hidden}
+.us-sheet.show{transform:translateY(0);visibility:visible}
+.us-sheet-handle{width:40px;height:5px;border-radius:6px;background:var(--border);margin:10px auto 0;flex-shrink:0;opacity:.9}
+.us-sheet-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:linear-gradient(180deg,rgba(11,95,203,.05),transparent)}
+.us-sheet-header b{font-size:15.5px;color:var(--text);font-weight:800;letter-spacing:-.1px}
+.us-sheet-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);color:var(--text3);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s,transform .1s}
+.us-sheet-close:active{transform:scale(.9);background:#fde2e2;color:var(--red-m)}
+.us-sheet-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.us-sheet-body .dd-fld{width:100%}
+.us-sheet-body .dd-fld label{font-size:11.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;display:block}
+.us-sheet-body .dd-fld select,.us-sheet-body .dd-fld input[type=date]{width:100%;height:40px;font-size:13.5px;border-radius:10px;border:1.5px solid var(--border);transition:border-color .15s,box-shadow .15s}
+.us-sheet-body .dd-fld select:focus,.us-sheet-body .dd-fld input[type=date]:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,95,203,.12)}
+.us-sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.us-sheet-footer{display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));flex-shrink:0;border-top:1px solid var(--border);background:var(--card,#fff)}
+.us-sheet-footer .dd-reset-btn{flex:1;height:42px;border-radius:11px}
+.us-sheet-apply{flex:2;height:42px;border:none;border-radius:11px;background:var(--brand);color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(11,95,203,.3);transition:transform .1s,box-shadow .15s}
+.us-sheet-apply:active{transform:scale(.97)}
+
+@media (min-width:900px){
+  .us-sheet{left:auto;right:24px;top:64px;bottom:auto;width:410px;max-height:calc(100vh - 100px);border-radius:18px;transform:translateY(-8px) scale(.97);opacity:0;pointer-events:none;transition:transform .18s cubic-bezier(.4,0,.2,1),opacity .18s,visibility .18s;box-shadow:0 20px 60px rgba(15,23,42,.22)}
+  .us-sheet.show{transform:translateY(0) scale(1);opacity:1;pointer-events:auto}
+  .us-sheet-handle{display:none}
+  .us-overlay{background:rgba(15,23,42,.14)}
+}
 .dd-bulkbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;border-radius:12px;padding:9px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;box-shadow:var(--sh2)}
 .dd-bulkbar .dd-bulk-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
 .dd-bulkbar .dd-bulk-btn:hover{background:rgba(255,255,255,.26)}
@@ -3313,8 +3353,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-empty-tbl{padding:44px 20px;text-align:center;color:var(--text4);font-size:13px}
 @media(max-width:700px){
   .dd-stats{grid-template-columns:repeat(2,1fr)}
-  .dd-filters-row{flex-direction:column;align-items:stretch}
-  .dd-filters-row .dd-fld,.dd-filters-row select{width:100%}
 }
 
 /* ══════════ KẾ HOẠCH SẢN XUẤT — bảng hiện đại + panel chi tiết (đồng bộ Tab Đơn hàng) ══════════ */
@@ -3562,125 +3600,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .ann-write-btn{background:#EEF4FD;border:1.5px solid #bfdbfe;border-radius:var(--r-sm);color:var(--brand);padding:5px 9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:none;align-items:center;gap:3px;white-space:nowrap;transition:all .15s;box-shadow:0 1px 4px rgba(11,95,203,.08)}
 .ann-write-btn .ann-btn-text{display:none}
 .ann-write-btn:active{background:var(--bg)}
-
-/* ═══════════════════════════════════════════════════════════
-   CHAT NHÓM — cửa sổ chat nội bộ, gộp mọi tài khoản vào 1 phòng
-   ═══════════════════════════════════════════════════════════ */
-.chat-topbar-btn{position:relative;background:none;border:none;padding:6px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);flex-shrink:0}
-.chat-topbar-btn:active{background:var(--bg)}
-.chat-topbar-dot{position:absolute;top:3px;right:3px;min-width:15px;height:15px;padding:0 3px;border-radius:20px;background:var(--red-m);color:#fff;font-size:9.5px;font-weight:800;display:none;align-items:center;justify-content:center;border:1.5px solid var(--card)}
-.chat-topbar-dot.show{display:flex}
-
-.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - var(--top) - var(--safe-t) - var(--bn-h,64px) - var(--safe-b,0px));margin:-14px -14px 0;background:var(--bg)}
-.chat-members{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
-.chat-member{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;width:52px}
-.chat-member-av{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;position:relative;border:2px solid var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12)}
-.chat-member-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;background:var(--text4);border:2px solid var(--card)}
-.chat-member-dot.on{background:var(--green-m)}
-.chat-member-name{font-size:9.5px;color:var(--text3);font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px}
-
-.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:2px;-webkit-overflow-scrolling:touch}
-.chat-day-sep{text-align:center;font-size:10.5px;font-weight:700;color:var(--text4);margin:14px 0 8px;position:relative}
-.chat-day-sep span{background:var(--bg);padding:0 10px;position:relative;z-index:1}
-.chat-day-sep::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border)}
-.chat-row{display:flex;gap:8px;margin-top:10px;max-width:100%}
-.chat-row.me{flex-direction:row-reverse}
-.chat-row.grouped{margin-top:2px}
-.chat-av{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex-shrink:0;visibility:visible}
-.chat-row.grouped .chat-av{visibility:hidden}
-.chat-bubble-col{display:flex;flex-direction:column;max-width:74%;min-width:0}
-.chat-row.me .chat-bubble-col{align-items:flex-end}
-.chat-sender{font-size:10.5px;font-weight:700;color:var(--brand);margin:0 2px 3px}
-.chat-row.me .chat-sender{display:none}
-.chat-bubble{background:var(--card);color:var(--text);padding:8px 12px;border-radius:16px 16px 16px 4px;font-size:13.5px;line-height:1.45;word-break:break-word;white-space:pre-wrap;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.chat-row.me .chat-bubble{background:var(--brand);color:#fff;border-radius:16px 16px 4px 16px}
-.chat-time{font-size:9.5px;color:var(--text4);margin:3px 2px 0}
-.chat-row.me .chat-time{text-align:right}
-
-.chat-empty{margin:auto;text-align:center;color:var(--text4);padding:40px 20px}
-.chat-empty-icon{font-size:44px;margin-bottom:10px}
-
-.chat-inputbar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;background:var(--card);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(10px + var(--safe-b,0px))}
-.chat-input{flex:1;resize:none;border:1.5px solid var(--border);border-radius:20px;padding:9px 14px;font-size:14px;font-family:inherit;line-height:1.35;max-height:110px;outline:none;transition:border .15s;background:var(--bg);color:var(--text)}
-.chat-input:focus{border-color:var(--brand)}
-.chat-send-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .1s,opacity .15s}
-.chat-send-btn:active{transform:scale(.92)}
-.chat-send-btn:disabled{opacity:.4;cursor:default}
-
-/* ── Reactions (thả tim / cảm xúc) ── */
-.chat-reactions-bar{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
-.chat-row.me .chat-reactions-bar{justify-content:flex-end}
-.chat-reaction-chip{display:flex;align-items:center;gap:3px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1px 6px 1px 5px;font-size:12px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);user-select:none;-webkit-tap-highlight-color:transparent}
-.chat-reaction-chip.mine{border-color:var(--brand)}
-.chat-reaction-chip b{font-weight:700;font-size:10px;color:var(--text3)}
-
-.chat-react-overlay{position:fixed;inset:0;z-index:899}
-.chat-react-picker{position:fixed;z-index:900;background:var(--card);border-radius:26px;box-shadow:0 6px 24px rgba(0,0,0,.22);padding:5px 7px;display:flex;gap:2px;animation:chatReactIn .15s ease}
-@keyframes chatReactIn{from{opacity:0;transform:translateY(6px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
-.chat-react-picker button{font-size:23px;background:none;border:none;cursor:pointer;padding:4px;border-radius:50%;transition:transform .12s;line-height:1}
-.chat-react-picker button:active{transform:scale(1.35)}
-
-.chat-heart-burst{position:fixed;font-size:38px;pointer-events:none;animation:heartBurst .7s ease forwards;z-index:901}
-@keyframes heartBurst{0%{opacity:0;transform:scale(.3) translateY(0)}25%{opacity:1;transform:scale(1.2) translateY(-8px)}100%{opacity:0;transform:scale(1) translateY(-46px)}}
-
-.chat-bubble{position:relative}
-.chat-sticker{font-size:58px!important;line-height:1;background:none!important;box-shadow:none!important;padding:0!important}
-
-/* ── Nút emoji/sticker + bảng chọn ── */
-.chat-emoji-btn{width:34px;height:34px;border-radius:50%;border:none;background:none;color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:19px;transition:background .15s;-webkit-tap-highlight-color:transparent}
-.chat-emoji-btn:active{background:var(--bg)}
-.chat-emoji-btn.active{color:var(--brand)}
-
-.chat-emoji-panel{display:none;flex-direction:column;background:var(--card);border-top:1px solid var(--border);flex-shrink:0;height:220px}
-.chat-emoji-panel.show{display:flex}
-.chat-emoji-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
-.chat-emoji-tab{flex:1;text-align:center;padding:9px 0;font-size:12px;font-weight:700;color:var(--text3);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent}
-.chat-emoji-tab.active{color:var(--brand);border-bottom-color:var(--brand)}
-.chat-emoji-body{flex:1;overflow-y:auto;padding:8px 10px}
-.chat-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px}
-.chat-emoji-grid button{font-size:21px;background:none;border:none;cursor:pointer;padding:4px 0;border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
-.chat-emoji-grid button:active{background:var(--bg)}
-.chat-sticker-cat{font-size:10.5px;font-weight:800;color:var(--text4);margin:8px 1px 5px;text-transform:uppercase;letter-spacing:.3px}
-.chat-sticker-cat:first-child{margin-top:1px}
-.chat-sticker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.chat-sticker-grid button{font-size:32px;background:var(--bg);border:none;cursor:pointer;padding:8px 0;border-radius:14px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:transform .1s,background .1s}
-.chat-sticker-grid button:active{transform:scale(.9);background:var(--border)}
-@media (min-width:900px){
-  .chat-wrap{height:calc(100vh - var(--top) - var(--safe-t))}
-}
-
-/* ═══════════════════════════════════════════════════════════
-   CHAT BUBBLE NỔI — cửa sổ chat dạng bong bóng nổi trên mọi tab
-   ═══════════════════════════════════════════════════════════ */
-.chat-bubble-wrap{position:fixed;right:20px;bottom:calc(var(--nav) + var(--safe-b) + 14px + 70px);z-index:640;display:none;flex-direction:row-reverse;align-items:flex-end;gap:8px}
-.chat-bubble-wrap.show{display:flex}
-.chat-bubble-btn{position:relative;width:56px;height:56px;border-radius:50%;border:none;padding:0;cursor:pointer;background:var(--brand);color:#fff;box-shadow:0 4px 20px rgba(30,64,175,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s;-webkit-tap-highlight-color:transparent}
-.chat-bubble-btn:active{transform:scale(.92)}
-.chat-bubble-avatar{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;overflow:hidden}
-.chat-bubble-avatar svg{width:24px;height:24px}
-.chat-bubble-badge{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;padding:0 5px;border-radius:20px;background:var(--red-m);color:#fff;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center;border:2px solid var(--bg)}
-.chat-bubble-badge.show{display:flex}
-.chat-peek{max-width:220px;background:var(--card);border-radius:16px 16px 4px 16px;box-shadow:0 4px 18px rgba(0,0,0,.16);padding:9px 30px 9px 12px;position:relative;cursor:pointer;animation:chatPeekIn .25s ease;display:none}
-.chat-peek.show{display:block}
-@keyframes chatPeekIn{from{opacity:0;transform:translateY(6px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-.chat-peek-name{font-size:11.5px;font-weight:800;color:var(--brand);margin-bottom:2px}
-.chat-peek-text{font-size:12.5px;color:var(--text);line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.chat-peek-close{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:var(--bg);color:var(--text3);font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
-
-.chat-float-window{position:fixed;right:20px;bottom:calc(var(--nav) + var(--safe-b) + 14px + 70px);width:min(360px,92vw);height:min(520px,72vh);background:var(--card);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);display:none;flex-direction:column;overflow:hidden;z-index:650;transform:translateY(16px) scale(.97);opacity:0;pointer-events:none;transition:transform .18s cubic-bezier(.4,0,.2,1),opacity .18s}
-.chat-float-window.open{display:flex;transform:translateY(0) scale(1);opacity:1;pointer-events:auto}
-.chat-float-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:var(--brand);color:#fff;flex-shrink:0}
-.chat-float-header-title{font-size:14px;font-weight:800}
-.chat-float-header-sub{font-size:11px;opacity:.85;margin-top:1px}
-.chat-float-header-actions{display:flex;gap:2px;flex-shrink:0}
-.chat-float-icon-btn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.chat-float-icon-btn:active{background:rgba(255,255,255,.32)}
-.chat-float-window .chat-members{flex-shrink:0}
-.chat-float-window .chat-msgs{flex:1}
-@media (max-width:520px){
-  .chat-float-window{right:8px;left:8px;bottom:calc(var(--nav) + var(--safe-b) + 8px);width:auto;height:min(78vh,640px)}
-  .chat-bubble-wrap{right:12px}
-}
 
 /* ── AI Trợ lý (chỉ Admin) ── */
 .ai-bubble-wrap{position:fixed;right:20px;bottom:calc(var(--nav) + var(--safe-b) + 14px + 140px);z-index:640;display:none}
@@ -4220,11 +4139,6 @@ body{letter-spacing:-.1px}
       </div>
     </div>
     <div class="sb-nav">
-      <div class="sb-section">Trò chuyện</div>
-      <button class="sb-item" id="sbi-chat" onclick="openChatWindow()">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-        Chat nhóm <span class="sb-badge" id="sbChatBadge" style="display:none">0</span>
-      </button>
       <div class="sb-section">Quản lý sản xuất</div>
       <button class="sb-item" id="sbi-dashboard" onclick="goTab('dashboard')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -4302,10 +4216,6 @@ body{letter-spacing:-.1px}
       <button class="ann-write-btn" id="annWriteBtn" onclick="openAnnounce()" title="Viết thông báo cho cả nhóm">
         📢<span class="ann-btn-text"> Thông báo</span>
       </button>
-      <button class="chat-topbar-btn" id="chatTopbarBtn" onclick="openChatWindow()" title="Chat nhóm">
-        <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-        <span class="chat-topbar-dot" id="chatTopbarDot">0</span>
-      </button>
       <div class="topbar-sync" id="syncDot" title="Trạng thái đồng bộ">
         <span class="sync-dot"></span>
         <span class="sync-text">
@@ -4330,11 +4240,6 @@ body{letter-spacing:-.1px}
       <button class="bn" id="bn-dashboard" onclick="goTab('dashboard')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Home
-      </button>
-      <button class="bn" id="bn-chat" onclick="openChatWindow()">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-        Chat
-        <span class="bn-dot" id="bnChatDot"></span>
       </button>
       <button class="bn" id="bn-dorDang" onclick="goTab('dorDang')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -4375,57 +4280,24 @@ body{letter-spacing:-.1px}
   </div>
 </div>
 
+<!-- Bộ lọc hợp nhất (Search Bubble) — Bottom Sheet (Mobile) / Floating Panel (Desktop),
+     dùng chung cho 3 tab Đơn hàng / Kế hoạch SX / Đơn hoàn thành -->
+<div class="us-overlay" id="usOverlay" onclick="usClose()"></div>
+<div class="us-sheet" id="usSheet">
+  <div class="us-sheet-handle"></div>
+  <div class="us-sheet-header">
+    <b id="usSheetTitle">Bộ lọc</b>
+    <button class="us-sheet-close" onclick="usClose()">✕</button>
+  </div>
+  <div class="us-sheet-body" id="usSheetBody"></div>
+  <div class="us-sheet-footer">
+    <button class="dd-reset-btn" onclick="usResetCurrent()">↺ Đặt lại</button>
+    <button class="us-sheet-apply" onclick="usClose()">Áp dụng</button>
+  </div>
+</div>
+
 <!-- FAB -->
 <button id="fab" onclick="openAddOrder()">+</button>
-
-<!-- Chat bubble nổi — hiện ở mọi tab -->
-<div class="chat-bubble-wrap" id="chatBubbleWrap">
-  <button class="chat-bubble-btn" id="chatBubbleBtn" onclick="openChatWindow()" title="Chat nhóm">
-    <span class="chat-bubble-avatar" id="chatBubbleAvatar">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-    </span>
-    <span class="chat-bubble-badge" id="chatBubbleBadge"></span>
-  </button>
-  <div class="chat-peek" id="chatPeek" onclick="openChatWindow()">
-    <button class="chat-peek-close" onclick="event.stopPropagation();dismissChatPeek()">✕</button>
-    <div class="chat-peek-name" id="chatPeekName"></div>
-    <div class="chat-peek-text" id="chatPeekText"></div>
-  </div>
-</div>
-
-<!-- Cửa sổ chat nổi -->
-<div class="chat-float-window" id="chatFloatWindow">
-  <div class="chat-float-header">
-    <div>
-      <div class="chat-float-header-title">💬 Chat nhóm</div>
-      <div class="chat-float-header-sub" id="chatFloatSub">—</div>
-    </div>
-    <div class="chat-float-header-actions">
-      <button class="chat-float-icon-btn" onclick="minimizeChatWindow()" title="Thu nhỏ">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
-      <button class="chat-float-icon-btn" onclick="closeChatWindow()" title="Đóng">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-  </div>
-  <div class="chat-members" id="chatFloatMembers"></div>
-  <div class="chat-msgs" id="chatFloatMsgsEl"></div>
-  <div class="chat-inputbar">
-    <button class="chat-emoji-btn" id="chatEmojiBtn" onclick="toggleChatEmojiPanel()" title="Emoji & Sticker">😊</button>
-    <textarea class="chat-input" id="chatFloatInputEl" rows="1" placeholder="Nhập tin nhắn..." onkeydown="chatInputKeydown(event)" oninput="chatAutoGrow(this)" onfocus="closeChatEmojiPanel()"></textarea>
-    <button class="chat-send-btn" id="chatFloatSendBtn" onclick="sendChatMessage()" title="Gửi">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-    </button>
-  </div>
-  <div class="chat-emoji-panel" id="chatEmojiPanel">
-    <div class="chat-emoji-tabs">
-      <button class="chat-emoji-tab active" id="chatTabEmoji" onclick="switchChatEmojiTab('emoji')">😀 Emoji</button>
-      <button class="chat-emoji-tab" id="chatTabSticker" onclick="switchChatEmojiTab('sticker')">🎉 Sticker</button>
-    </div>
-    <div class="chat-emoji-body" id="chatEmojiBody"></div>
-  </div>
-</div>
 
 <!-- Bong bóng AI Trợ lý — chỉ Admin nhìn thấy -->
 <div class="ai-bubble-wrap" id="aiBubbleWrap">
@@ -6000,19 +5872,6 @@ function clearAnnounce(){if(guardViewer())return;
 }
 
 // ════════════════════════════════════════════════════════════
-// CHAT NHÓM — mọi tài khoản chat chung 1 phòng, đồng bộ qua Firebase
-// Lưu tại /chat/messages/<id> (ghi từng tin nhắn 1 để nhẹ + tận dụng
-// đúng cơ chế SSE 'put' đang có sẵn, không cần đọc lại toàn bộ mỗi lần).
-// ════════════════════════════════════════════════════════════
-const CHAT_KEY = 'sx_chat_cache_v1';
-const CHAT_READ_KEY = 'sx_chat_last_read_v1';
-let chatMessages = [];          // [{id,uid,name,role,text,ts}]
-let _chatLoaded = false;
-let _chatLastReadTs = parseInt(localStorage.getItem(CHAT_READ_KEY)||'0');
-let chatWindowOpen = false;     // cửa sổ chat nổi đang mở hay đóng
-let _chatPeekDismissedId = null; // id tin nhắn mà người dùng đã tự tắt preview
-
-// ════════════════════════════════════════════════════════════
 // AI TRỢ LÝ (chỉ Admin) — ra lệnh bằng tiếng Việt tự nhiên để:
 //  1) Nâng/hạ mức ưu tiên đơn hàng theo tên khách hàng
 //  2) Tìm kiếm đơn hàng / khách hàng nhanh, không cần lọc thủ công
@@ -6058,255 +5917,13 @@ function aiResolveSubject(text, normText){
   return explicit;
 }
 
-function chatCacheLoad(){
-  try{ chatMessages = JSON.parse(localStorage.getItem(CHAT_KEY)||'[]'); }catch(e){ chatMessages=[]; }
-}
-function chatCacheSave(){
-  try{ localStorage.setItem(CHAT_KEY, JSON.stringify(chatMessages.slice(-300))); }catch(e){}
-}
-
-// Đọc toàn bộ lịch sử 1 lần — dùng khi mở app / mở cửa sổ chat / fallback polling
-async function loadChatHistory(){
-  if(!fbOk()) return;
-  try{
-    const data = await fbRead('/chat/messages');
-    const arr = data ? Object.values(data) : [];
-    arr.sort((a,b)=>a.ts-b.ts);
-    const before = chatMessages.length;
-    chatMessages = arr.slice(-300);
-    chatCacheSave();
-    _chatLoaded = true;
-    if(chatWindowOpen){ renderChatFloatMessages(); markChatRead(); }
-    else if(chatMessages.length>before) updateChatBadge();
-    updateChatBubble();
-  }catch(e){}
-}
-
-// Nhận 1 tin nhắn mới/đã sửa từ SSE (path dạng /chat/messages/<id>)
-function chatApplyIncoming(id, val){
-  if(!val){ // tin bị xoá
-    chatMessages = chatMessages.filter(m=>m.id!==id);
-  } else {
-    const idx = chatMessages.findIndex(m=>m.id===id);
-    if(idx>=0) chatMessages[idx]=val; else chatMessages.push(val);
-    chatMessages.sort((a,b)=>a.ts-b.ts);
-  }
-  chatCacheSave();
-  if(chatWindowOpen){
-    renderChatFloatMessages();
-    markChatRead();
-  } else {
-    updateChatBadge();
-  }
-  updateChatBubble();
-  // Thông báo nếu tin nhắn không phải do chính mình gửi
-  if(val && val.uid!==currentUser?.id && !chatWindowOpen){
-    alertUser('new');
-    showToast('💬 '+val.name+': '+(val.text||'').slice(0,50)+((val.text||'').length>50?'...':''));
-    pushNotif('💬 '+val.name, val.text||'');
-  }
-}
-
-function unreadChatCount(){
-  return chatMessages.filter(m=>m.ts>_chatLastReadTs && m.uid!==currentUser?.id).length;
-}
-
-function markChatRead(){
-  _chatLastReadTs = Date.now();
-  try{ localStorage.setItem(CHAT_READ_KEY, String(_chatLastReadTs)); }catch(e){}
-  updateChatBadge();
-}
-
-function updateChatBadge(){
-  const n = unreadChatCount();
-  const sb = $('sbChatBadge');
-  if(sb){ sb.style.display = n>0?'inline-block':'none'; sb.textContent = n>9?'9+':n; }
-  const td = $('chatTopbarDot');
-  if(td){ td.classList.toggle('show', n>0); td.textContent = n>9?'9+':n; }
-  const bd = $('bnChatDot');
-  if(bd) bd.classList.toggle('show', n>0);
-  const bb = $('chatBubbleBadge');
-  if(bb){ bb.classList.toggle('show', n>0); bb.textContent = n>9?'9+':n; }
-  updateChatBubble();
-}
-
-// ── Bong bóng chat nổi: icon tròn hiện avatar người gửi tin mới nhất
-// + preview tên/nội dung khi có tin chưa đọc, xuất hiện trên MỌI tab ──
-function updateChatBubble(){
-  const wrap = $('chatBubbleWrap');
-  if(wrap) wrap.classList.toggle('show', !!currentUser);
-  const last = chatMessages[chatMessages.length-1];
-  const avEl = $('chatBubbleAvatar');
-  if(avEl){
-    if(last){
-      avEl.textContent = userInitials(last.name);
-      avEl.style.boxShadow = 'inset 0 0 0 2px '+roleColor(last.role||'staff');
-    } else {
-      avEl.innerHTML = '<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>';
-    }
-  }
-  const peek = $('chatPeek');
-  if(!peek) return;
-  const showPeek = !chatWindowOpen && last && last.uid!==currentUser?.id
-    && last.ts>_chatLastReadTs && _chatPeekDismissedId!==last.id;
-  if(showPeek){
-    $('chatPeekName').textContent = last.name;
-    $('chatPeekText').textContent = last.text||'';
-    peek.classList.add('show');
-  } else {
-    peek.classList.remove('show');
-  }
-}
-
-function dismissChatPeek(){
-  const last = chatMessages[chatMessages.length-1];
-  _chatPeekDismissedId = last ? last.id : null;
-  const peek = $('chatPeek');
-  if(peek) peek.classList.remove('show');
-}
-
-// ── Mở / thu nhỏ / đóng cửa sổ chat nổi ──
-function openChatWindow(){
-  chatWindowOpen = true;
-  closeSB();
-  const win = $('chatFloatWindow');
-  if(win) win.classList.add('open');
-  const peek = $('chatPeek');
-  if(peek) peek.classList.remove('show');
-  renderChatFloatMembers();
-  renderChatFloatMessages();
-  chatScrollBottom();
-  markChatRead();
-  if(fbOk()) loadChatHistory();
-}
-function closeChatWindow(){
-  chatWindowOpen = false;
-  const win = $('chatFloatWindow');
-  if(win) win.classList.remove('open');
-  closeChatEmojiPanel();
-  closeChatReactPicker();
-}
-function minimizeChatWindow(){ closeChatWindow(); }
-
-function chatFmtTime(ts){
-  const d = new Date(ts);
-  return vnTimeHM(d);
-}
-function chatFmtDaySep(ts){
-  const d = new Date(ts);
-  const today = new Date();
-  const isToday = d.toDateString()===today.toDateString();
-  const y = new Date(today); y.setDate(y.getDate()-1);
-  const isYesterday = d.toDateString()===y.toDateString();
-  if(isToday) return 'Hôm nay';
-  if(isYesterday) return 'Hôm qua';
-  return vnDateDMY(d);
-}
-
-function renderChatMembers(){
-  const online = new Set((_lastOnlineList||[]).map(u=>u.name));
-  return (DB.users||[]).map(u=>`
-    <div class="chat-member" title="${u.name} · ${roleLabel(u.role)}">
-      <div class="chat-member-av" style="box-shadow:0 0 0 2px ${roleColor(u.role)}">${userInitials(u.name)}<span class="chat-member-dot${online.has(u.name)?' on':''}"></span></div>
-      <div class="chat-member-name">${(u.name||'').split(' ').slice(-1)[0]}</div>
-    </div>`).join('');
-}
-
-function renderChatMessages(){
-  if(!chatMessages.length){
-    return `<div class="chat-empty"><div class="chat-empty-icon">💬</div>Chưa có tin nhắn nào.<br>Hãy bắt đầu trò chuyện với cả nhóm!</div>`;
-  }
-  let html = '';
-  let lastDay = '';
-  let lastUid = '';
-  chatMessages.forEach(m=>{
-    const day = new Date(m.ts).toDateString();
-    if(day!==lastDay){
-      html += `<div class="chat-day-sep"><span>${chatFmtDaySep(m.ts)}</span></div>`;
-      lastDay = day; lastUid='';
-    }
-    const isMe = m.uid===currentUser?.id;
-    const grouped = m.uid===lastUid;
-    const isSticker = m.type==='sticker';
-    const bubbleEvents = `ondblclick="quickHeartReact('${m.id}',event)" onpointerdown="chatBubblePointerDown('${m.id}',event)" onpointerup="chatBubblePointerUp()" onpointerleave="chatBubblePointerUp()" oncontextmenu="event.preventDefault();openChatReactPicker('${m.id}',event)"`;
-    const bubbleHtml = isSticker
-      ? `<div class="chat-bubble chat-sticker" ${bubbleEvents}>${m.text}</div>`
-      : `<div class="chat-bubble" ${bubbleEvents}>${chatEsc(m.text)}</div>`;
-    html += `<div class="chat-row ${isMe?'me':''} ${grouped?'grouped':''}">
-      <div class="chat-av" style="box-shadow:0 0 0 2px ${roleColor(m.role)}">${userInitials(m.name)}</div>
-      <div class="chat-bubble-col">
-        ${!grouped?`<div class="chat-sender">${m.name}</div>`:''}
-        ${bubbleHtml}
-        ${renderChatReactionsBar(m)}
-        <div class="chat-time">${chatFmtTime(m.ts)}</div>
-      </div>
-    </div>`;
-    lastUid = m.uid;
-  });
-  return html;
-}
-
 function chatEsc(s){
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-function renderChatFloatMembers(){
-  const el = $('chatFloatMembers');
-  if(el) el.innerHTML = renderChatMembers();
-  const online = (_lastOnlineList||[]).length;
-  const sub = $('chatFloatSub');
-  if(sub) sub.textContent = online>0 ? online+' đang hoạt động' : (DB.users||[]).length+' thành viên';
-}
-
-function renderChatFloatMessages(){
-  const el = $('chatFloatMsgsEl');
-  if(el) el.innerHTML = renderChatMessages();
-  chatScrollBottom();
-  if(!chatMessages.length && fbOk()) loadChatHistory();
-}
-
-function chatScrollBottom(){
-  setTimeout(()=>{
-    const el = $('chatFloatMsgsEl');
-    if(el) el.scrollTop = el.scrollHeight;
-  }, 30);
 }
 
 function chatAutoGrow(ta){
   ta.style.height='auto';
   ta.style.height = Math.min(110, ta.scrollHeight)+'px';
-}
-
-function chatInputKeydown(e){
-  if(e.key==='Enter' && !e.shiftKey){
-    e.preventDefault();
-    sendChatMessage();
-  }
-}
-
-function sendChatMessage(){
-  const inp = $('chatFloatInputEl');
-  if(!inp) return;
-  const text = (inp.value||'').trim();
-  if(!text || !currentUser) return;
-  if(!fbOk()){ showToast('⚠️ Hãy bật Firebase Sync ở Cài đặt để dùng chat nhóm', true); return; }
-  const msg = {
-    id: 'm'+Date.now()+Math.random().toString(36).slice(2,8),
-    uid: currentUser.id,
-    name: currentUser.name,
-    role: currentUser.role,
-    text,
-    ts: Date.now()
-  };
-  chatMessages.push(msg);
-  chatCacheSave();
-  renderChatFloatMessages();
-  markChatRead();
-  updateChatBubble();
-  inp.value=''; inp.style.height='auto';
-  fbWrite('/chat/messages/'+msg.id, msg, 'PUT').catch(e=>{
-    showToast('❌ Lỗi gửi tin nhắn: '+e.message, true);
-  });
 }
 
 // ══════════════════ AI TRỢ LÝ — CỬA SỔ CHAT ══════════════════
@@ -7260,189 +6877,6 @@ function processAiCommand(text){
 }
 
 
-// ══════════════════ EMOJI & STICKER PICKER ══════════════════
-const CHAT_EMOJI_LIST = ['😀','😁','😂','🤣','😊','😍','😘','😜','🤔','😎','😇','🥰','😭','😢','😡','😱','😴','🥳','🤗','🙄','😅','😆','😉','😋','😏','😐','😑','😒','😓','😔','😕','😖','🙃','🤩','😬','🤤','😷','🤒','🤕','🤧','🥵','🥶','😵','🤯','🥺','😤','😩','😫','🥱','😈','👿','💀','👻','🤖','😻','🙈','🙉','🙊','👍','👎','👏','🙏','💪','🤝','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💯','🔥','✨','🎉','🎊','⭐','🌟','☀️','🌈','🍀'];
-
-const CHAT_STICKER_CATS = [
-  { name:'Yêu thương', items:['❤️','😍','😘','🥰','💋','💑','💐','💝'] },
-  { name:'Vui vẻ',     items:['😂','🤣','😆','🥳','🎉','🕺','💃','🙌'] },
-  { name:'Buồn / Mệt', items:['😭','😢','😞','🥺','😴','😩','😪','💤'] },
-  { name:'Tức giận',   items:['😡','🤬','😤','👿','💢','😠','🙄','😒'] },
-  { name:'Chào / Ok',  items:['👍','🙏','👌','🤝','👋','✋','🫡','✅'] },
-  { name:'Đồ ăn',      items:['🍕','🍔','🍰','☕','🍺','🍜','🍩','🧋'] },
-];
-
-let _chatEmojiTab = 'emoji';
-
-function toggleChatEmojiPanel(){
-  const p = $('chatEmojiPanel');
-  const btn = $('chatEmojiBtn');
-  if(!p) return;
-  const show = !p.classList.contains('show');
-  p.classList.toggle('show', show);
-  if(btn) btn.classList.toggle('active', show);
-  if(show){ renderChatEmojiBody(); }
-  chatScrollBottom();
-}
-
-function closeChatEmojiPanel(){
-  $('chatEmojiPanel')?.classList.remove('show');
-  $('chatEmojiBtn')?.classList.remove('active');
-}
-
-function switchChatEmojiTab(tab){
-  _chatEmojiTab = tab;
-  $('chatTabEmoji')?.classList.toggle('active', tab==='emoji');
-  $('chatTabSticker')?.classList.toggle('active', tab==='sticker');
-  renderChatEmojiBody();
-}
-
-function renderChatEmojiBody(){
-  const el = $('chatEmojiBody');
-  if(!el) return;
-  if(_chatEmojiTab==='emoji'){
-    el.innerHTML = `<div class="chat-emoji-grid">${CHAT_EMOJI_LIST.map(e=>`<button onclick="insertChatEmoji('${e}')">${e}</button>`).join('')}</div>`;
-  } else {
-    el.innerHTML = CHAT_STICKER_CATS.map(cat=>`
-      <div class="chat-sticker-cat">${cat.name}</div>
-      <div class="chat-sticker-grid">${cat.items.map(e=>`<button onclick="sendChatSticker('${e}')">${e}</button>`).join('')}</div>
-    `).join('');
-  }
-}
-
-function insertChatEmoji(e){
-  const inp = $('chatFloatInputEl');
-  if(!inp) return;
-  const start = inp.selectionStart ?? inp.value.length;
-  const end = inp.selectionEnd ?? inp.value.length;
-  inp.value = inp.value.slice(0,start) + e + inp.value.slice(end);
-  inp.focus();
-  inp.selectionStart = inp.selectionEnd = start + e.length;
-  chatAutoGrow(inp);
-}
-
-function sendChatSticker(emoji){
-  if(!currentUser) return;
-  if(!fbOk()){ showToast('⚠️ Hãy bật Firebase Sync ở Cài đặt để dùng chat nhóm', true); return; }
-  const msg = {
-    id: 'm'+Date.now()+Math.random().toString(36).slice(2,8),
-    uid: currentUser.id,
-    name: currentUser.name,
-    role: currentUser.role,
-    text: emoji,
-    type: 'sticker',
-    ts: Date.now()
-  };
-  chatMessages.push(msg);
-  chatCacheSave();
-  renderChatFloatMessages();
-  markChatRead();
-  updateChatBubble();
-  fbWrite('/chat/messages/'+msg.id, msg, 'PUT').catch(e=>{
-    showToast('❌ Lỗi gửi sticker: '+e.message, true);
-  });
-}
-
-// ══════════════════ REACTIONS (thả tim, thích, ...) ══════════════════
-const CHAT_QUICK_REACTS = ['❤️','😆','😮','😢','😡','👍'];
-let _chatLongPressTimer = null;
-
-function chatReactionSummary(reactions){
-  if(!reactions) return [];
-  return Object.keys(reactions)
-    .filter(k=>reactions[k] && reactions[k].length)
-    .map(k=>({emoji:k, count:reactions[k].length, mine: reactions[k].includes(currentUser?.id)}));
-}
-
-function renderChatReactionsBar(m){
-  const list = chatReactionSummary(m.reactions);
-  if(!list.length) return '';
-  return `<div class="chat-reactions-bar">${list.map(r=>
-    `<span class="chat-reaction-chip${r.mine?' mine':''}" onclick="event.stopPropagation();toggleChatReaction('${m.id}','${r.emoji}')">${r.emoji}<b>${r.count}</b></span>`
-  ).join('')}</div>`;
-}
-
-function toggleChatReaction(msgId, emoji){
-  if(!currentUser) return;
-  const msg = chatMessages.find(m=>m.id===msgId);
-  if(!msg) return;
-  if(!msg.reactions) msg.reactions = {};
-  const uid = currentUser.id;
-  const hadSame = (msg.reactions[emoji]||[]).includes(uid);
-  // Mỗi người chỉ giữ 1 cảm xúc / tin nhắn — bỏ cảm xúc cũ của mình trước
-  Object.keys(msg.reactions).forEach(k=>{
-    msg.reactions[k] = (msg.reactions[k]||[]).filter(id=>id!==uid);
-    if(!msg.reactions[k].length) delete msg.reactions[k];
-  });
-  if(!hadSame){
-    if(!msg.reactions[emoji]) msg.reactions[emoji] = [];
-    msg.reactions[emoji].push(uid);
-  }
-  chatCacheSave();
-  renderChatFloatMessages();
-  fbWrite('/chat/messages/'+msg.id, msg, 'PUT').catch(()=>{});
-}
-
-function chatBubblePointerDown(msgId, ev){
-  clearTimeout(_chatLongPressTimer);
-  _chatLongPressTimer = setTimeout(()=>{ openChatReactPicker(msgId, ev); }, 420);
-}
-function chatBubblePointerUp(){
-  clearTimeout(_chatLongPressTimer);
-}
-
-function quickHeartReact(msgId, ev){
-  toggleChatReaction(msgId, '❤️');
-  showChatHeartBurst(ev);
-}
-
-function showChatHeartBurst(ev){
-  const target = ev?.currentTarget || ev?.target;
-  if(!target) return;
-  const rect = target.getBoundingClientRect();
-  const burst = document.createElement('div');
-  burst.className = 'chat-heart-burst';
-  burst.textContent = '❤️';
-  burst.style.left = (rect.left + rect.width/2 - 19) + 'px';
-  burst.style.top = (rect.top - 6) + 'px';
-  document.body.appendChild(burst);
-  setTimeout(()=>burst.remove(), 700);
-}
-
-function openChatReactPicker(msgId, ev){
-  closeChatReactPicker();
-  const target = ev?.currentTarget || ev?.target;
-  if(!target) return;
-  const rect = target.getBoundingClientRect();
-
-  const overlay = document.createElement('div');
-  overlay.className = 'chat-react-overlay';
-  overlay.id = 'chatReactOverlay';
-  overlay.onclick = closeChatReactPicker;
-  document.body.appendChild(overlay);
-
-  const picker = document.createElement('div');
-  picker.className = 'chat-react-picker';
-  picker.id = 'chatReactPicker';
-  picker.innerHTML = CHAT_QUICK_REACTS.map(e=>
-    `<button onclick="event.stopPropagation();toggleChatReaction('${msgId}','${e}');closeChatReactPicker()">${e}</button>`
-  ).join('');
-  document.body.appendChild(picker);
-
-  let left = rect.left + rect.width/2 - picker.offsetWidth/2;
-  let top = rect.top - picker.offsetHeight - 10;
-  if(top < 10) top = rect.bottom + 10;
-  left = Math.max(8, Math.min(left, window.innerWidth - picker.offsetWidth - 8));
-  picker.style.left = left+'px';
-  picker.style.top = top+'px';
-  if(navigator.vibrate) navigator.vibrate(15);
-}
-
-function closeChatReactPicker(){
-  $('chatReactPicker')?.remove();
-  $('chatReactOverlay')?.remove();
-}
-
 // Hash để detect thay đổi
 function hashOrders(list){
   return (list||[]).map(o=>o.id+'|'+o.status+'|'+(o.doneAt||0)+'|'+(o.startedAt||0)).join(';');
@@ -7822,7 +7256,6 @@ async function doPoll(){
     setSyncDot('ok');
     await checkBroadcast();
     await checkAnnounce();
-    await loadChatHistory();
   } catch(e){ setSyncDot('error'); }
 }
 
@@ -7914,12 +7347,6 @@ function handleRealtimeChange(path, val){
   if(field){ applyFieldChange(field, val); setSyncDot('ok'); return; }
   if(path==='/announce'){ checkAnnounce(); return; }
   if(path==='/broadcast'){ checkBroadcast(); return; }
-  if(path.indexOf('/chat/messages')===0){
-    if(path==='/chat/messages'){ loadChatHistory(); return; }
-    const id = path.split('/').pop();
-    chatApplyIncoming(id, val);
-    return;
-  }
   if(path==='/log'){
     fbRead('/log').then(l=>{ if(Array.isArray(l)&&l.length>actLog.length){ actLog=l; logSave(); updateLogBadge(); } }).catch(()=>{});
     return;
@@ -8639,7 +8066,7 @@ async function doLogin(){
         updateOnline();
         // Load announce đang active từ Firebase
         if(fbOk()) checkAnnounce();
-        chatCacheLoad(); updateChatBadge(); if(fbOk()) loadChatHistory();
+
       });
       requestNotif();
       updateBellBadge();
@@ -8667,8 +8094,6 @@ function doLogout(){
   if(fbOk()) navigator.sendBeacon(fbUrl()+'/presence/'+_devId+'.json',JSON.stringify(null));
   clearInterval(_pollTimer); _pollTimer=null;
   currentUser=null; currentTab='dashboard';
-  closeChatWindow();
-  const cbw=$('chatBubbleWrap'); if(cbw) cbw.classList.remove('show');
   closeAiChatWindow();
   const abw=$('aiBubbleWrap'); if(abw) abw.classList.remove('show');
   try{ localStorage.removeItem('sx_session_uid'); }catch(e){}
@@ -8720,7 +8145,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         updateOnline();
         // Load announce đang active từ Firebase
         if(fbOk()) checkAnnounce();
-        chatCacheLoad(); updateChatBadge(); if(fbOk()) loadChatHistory();
+
       });
       requestNotif();
       updateBellBadge();
@@ -10106,6 +9531,243 @@ function ddRow(o, stt){
   </tr>`;
 }
 
+// ════════════════════════════════════════════════════════════
+// TÌM KIẾM & BỘ LỌC HỢP NHẤT (Search Bubble) — 1 component dùng
+// chung cho 3 tab Đơn hàng / Kế hoạch SX / Đơn hoàn thành: thanh
+// tìm kiếm gọn luôn hiển thị (sticky cùng dải KPI) + nút Bộ lọc
+// mở Bottom Sheet (Mobile) / Floating Panel (Desktop) chứa đầy đủ
+// Trạng thái, Khách hàng, Người phụ trách, Ngày nhận, Hạn giao...
+// Toàn bộ vẫn dùng lại NGUYÊN các biến/hàm lọc đã có sẵn của từng
+// tab (searchQ, khSearchQ, htSearchQ...) — chỉ đổi GIAO DIỆN hiển
+// thị, không đổi logic lọc, để không ảnh hưởng dữ liệu/kết quả.
+// ════════════════════════════════════════════════════════════
+function debounce(fn, ms){
+  let t;
+  return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), ms); };
+}
+
+let _usOpenTab = null;
+
+// Đếm số bộ lọc (không tính từ khóa) đang áp dụng — hiện số trên nút Bộ lọc
+function usActiveCount(tab){
+  if(tab==='dorDang') return [filterStatus!=='all', !!(ddRecvFrom||ddRecvTo), !!(ddDueFrom||ddDueTo)].filter(Boolean).length;
+  if(tab==='keHoach') return [khFilterStatus!=='all', khFilterCustomer!=='all', khFilterPriority!=='all', khFilterStage!=='all', khFilterOwner!=='all', !!(khCreatedFrom||khCreatedTo), !!(khDueFrom||khDueTo)].filter(Boolean).length;
+  if(tab==='hoanThanh') return [htFilterStatus!=='all', htCustomerFilter!=='all', !!(htDoneFrom||htDoneTo), !!(htShipFrom||htShipTo)].filter(Boolean).length;
+  return 0;
+}
+
+// Thanh tìm kiếm gọn (Search Bubble) — thay cho khối bộ lọc luôn-mở-rộng cũ.
+// Khi đóng chỉ còn ô tìm kiếm + nút Bộ lọc (có huy hiệu số lượng đang áp dụng).
+function usBarHTML(tab, searchVal, searchId, placeholder){
+  const n = usActiveCount(tab);
+  return `
+  <div class="us-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-inp" id="${searchId}" type="search" placeholder="${placeholder}" value="${searchVal}" autocomplete="off" spellcheck="false">
+      ${searchVal?`<button onclick="usClearSearch('${tab}')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
+    </div>
+    <button class="us-filter-btn${n>0?' has-active':''}" onclick="usOpen('${tab}', this)" title="Bộ lọc">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      ${n>0?`<span class="us-badge">${n}</span>`:''}
+    </button>
+  </div>`;
+}
+
+function usClearSearch(tab){
+  if(tab==='dorDang'){ searchQ=''; renderDorDang(); }
+  else if(tab==='keHoach'){ khSearchQ=''; renderKeHoach(); }
+  else if(tab==='hoanThanh'){ htSearchQ=''; renderHoanThanh(); }
+}
+
+// Gắn debounce (300ms) cho ô tìm kiếm: gõ mượt, nhưng chỉ lọc lại danh sách
+// sau khi ngừng gõ — tăng hiệu năng rõ rệt khi dữ liệu lớn.
+function usAttachSearchInput(inputEl, setter, renderFn, hadFocus, caretPos){
+  if(!inputEl) return;
+  const debouncedRender = debounce(()=>{ renderFn(); }, 300);
+  inputEl.addEventListener('input', function(){ setter(this.value); debouncedRender(); });
+  if(hadFocus){
+    inputEl.focus();
+    const pos = caretPos!==null ? Math.min(caretPos, inputEl.value.length) : inputEl.value.length;
+    try{ inputEl.setSelectionRange(pos, pos); }catch(e){}
+  }
+}
+
+// Nội dung bên trong Bottom Sheet/Floating Panel — mỗi tab có bộ trường khác
+// nhau (dùng lại NGUYÊN onchange/biến đã có), chỉ đổi vị trí hiển thị.
+function usSheetBody(tab){
+  if(tab==='dorDang'){
+    return `
+      <div class="dd-fld"><label>Trạng thái</label>
+        <select onchange="filterStatus=this.value;renderDorDang()">
+          <option value="all">Tất cả</option>
+          <option value="unplanned" ${filterStatus==='unplanned'?'selected':''}>Chưa lập kế hoạch</option>
+          <option value="planned" ${filterStatus==='planned'?'selected':''}>Đã lập kế hoạch</option>
+          <option value="producing" ${filterStatus==='producing'?'selected':''}>Đang sản xuất</option>
+        </select>
+      </div>
+      <div class="us-sheet-grid">
+        <div class="dd-fld"><label>Ngày nhận từ</label><input type="date" value="${ddRecvFrom}" onchange="ddRecvFrom=this.value;renderDorDang()"></div>
+        <div class="dd-fld"><label>Ngày nhận đến</label><input type="date" value="${ddRecvTo}" onchange="ddRecvTo=this.value;renderDorDang()"></div>
+        <div class="dd-fld"><label>Hạn giao từ</label><input type="date" value="${ddDueFrom}" onchange="ddDueFrom=this.value;renderDorDang()"></div>
+        <div class="dd-fld"><label>Hạn giao đến</label><input type="date" value="${ddDueTo}" onchange="ddDueTo=this.value;renderDorDang()"></div>
+      </div>`;
+  }
+  if(tab==='keHoach'){
+    const allActive = DB.orders.filter(o=>o.status!=='done');
+    const owners = [...new Set(allActive.map(o=>o.createdBy).filter(Boolean))].map(uid=>(DB.users||[]).find(u=>u.id===uid)).filter(Boolean);
+    const customers = [...new Set(allActive.map(o=>o.customer).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+    return `
+      <div class="dd-fld"><label>Khách hàng</label>
+        <select onchange="khFilterCustomer=this.value;renderKeHoach()">
+          <option value="all">Tất cả</option>
+          ${customers.map(c=>`<option value="${c.replace(/"/g,'&quot;')}" ${khFilterCustomer===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dd-fld"><label>Mức ưu tiên</label>
+        <select onchange="khFilterPriority=this.value;renderKeHoach()">
+          <option value="all">Tất cả</option>
+          ${Object.keys(PRI_COLOR).map(p=>`<option value="${p}" ${khFilterPriority===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dd-fld"><label>Công đoạn</label>
+        <select onchange="khFilterStage=this.value;renderKeHoach()">
+          <option value="all">Tất cả</option>
+          ${STAGES.map(s=>`<option value="${s.key}" ${khFilterStage===s.key?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dd-fld"><label>Người phụ trách</label>
+        <select onchange="khFilterOwner=this.value;renderKeHoach()">
+          <option value="all">Tất cả</option>
+          ${owners.map(u=>`<option value="${u.id}" ${khFilterOwner===u.id?'selected':''}>${u.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="us-sheet-grid">
+        <div class="dd-fld"><label>Ngày tạo từ</label><input type="date" value="${khCreatedFrom}" onchange="khCreatedFrom=this.value;renderKeHoach()"></div>
+        <div class="dd-fld"><label>Ngày tạo đến</label><input type="date" value="${khCreatedTo}" onchange="khCreatedTo=this.value;renderKeHoach()"></div>
+        <div class="dd-fld"><label>Hạn giao từ</label><input type="date" value="${khDueFrom}" onchange="khDueFrom=this.value;renderKeHoach()"></div>
+        <div class="dd-fld"><label>Hạn giao đến</label><input type="date" value="${khDueTo}" onchange="khDueTo=this.value;renderKeHoach()"></div>
+      </div>`;
+  }
+  if(tab==='hoanThanh'){
+    const allDone = DB.orders.filter(o=>o.status==='done');
+    const customers = [...new Set(allDone.map(o=>o.customer).filter(Boolean))].sort();
+    return `
+      <div class="dd-fld"><label>Trạng thái</label>
+        <select onchange="htFilterStatus=this.value;renderHoanThanh()">
+          <option value="all" ${htFilterStatus==='all'?'selected':''}>Tất cả</option>
+          <option value="new" ${htFilterStatus==='new'?'selected':''}>Chờ nhập kho</option>
+          <option value="shipping" ${htFilterStatus==='shipping'?'selected':''}>Đã nhập kho / Chờ giao</option>
+          <option value="delivered" ${htFilterStatus==='delivered'?'selected':''}>Đã giao</option>
+          <option value="returned" ${htFilterStatus==='returned'?'selected':''}>Hoàn trả</option>
+        </select>
+      </div>
+      <div class="dd-fld"><label>Khách hàng</label>
+        <select onchange="htCustomerFilter=this.value;renderHoanThanh()">
+          <option value="all">Tất cả</option>
+          ${customers.map(c=>`<option value="${c}" ${htCustomerFilter===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="us-sheet-grid">
+        <div class="dd-fld"><label>Hoàn thành từ</label><input type="date" value="${htDoneFrom}" onchange="htDoneFrom=this.value;renderHoanThanh()"></div>
+        <div class="dd-fld"><label>Hoàn thành đến</label><input type="date" value="${htDoneTo}" onchange="htDoneTo=this.value;renderHoanThanh()"></div>
+        <div class="dd-fld"><label>Ngày giao từ</label><input type="date" value="${htShipFrom}" onchange="htShipFrom=this.value;renderHoanThanh()"></div>
+        <div class="dd-fld"><label>Ngày giao đến</label><input type="date" value="${htShipTo}" onchange="htShipTo=this.value;renderHoanThanh()"></div>
+      </div>`;
+  }
+  return '';
+}
+
+function usTitle(tab){
+  return tab==='dorDang' ? '🔍 Bộ lọc — Đơn hàng' : tab==='keHoach' ? '🔍 Bộ lọc — Kế hoạch sản xuất' : '🔍 Bộ lọc — Đơn hoàn thành';
+}
+
+function usResetCurrent(){
+  if(_usOpenTab==='dorDang') ddResetFilters();
+  else if(_usOpenTab==='keHoach') khResetFilters();
+  else if(_usOpenTab==='hoanThanh') htResetFilters();
+  if(_usOpenTab){ $('usSheetBody').innerHTML = usSheetBody(_usOpenTab); }
+}
+
+// Tự khôi phục khung Bottom Sheet/Floating Panel nếu vì lý do gì đó các thẻ
+// #usOverlay/#usSheet bị thiếu trong DOM (an toàn tuyệt đối, tránh trường hợp
+// bấm nút Bộ lọc mà không có phản hồi gì trên một số trình duyệt/thiết bị).
+function usEnsureDom(){
+  let overlay = document.getElementById('usOverlay');
+  let sheet = document.getElementById('usSheet');
+  if(overlay && sheet) return {overlay, sheet};
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.className = 'us-overlay';
+    overlay.id = 'usOverlay';
+    overlay.onclick = usClose;
+    document.body.appendChild(overlay);
+  }
+  if(!sheet){
+    sheet = document.createElement('div');
+    sheet.className = 'us-sheet';
+    sheet.id = 'usSheet';
+    sheet.innerHTML = `
+      <div class="us-sheet-handle"></div>
+      <div class="us-sheet-header">
+        <b id="usSheetTitle">Bộ lọc</b>
+        <button class="us-sheet-close" onclick="usClose()">✕</button>
+      </div>
+      <div class="us-sheet-body" id="usSheetBody"></div>
+      <div class="us-sheet-footer">
+        <button class="dd-reset-btn" onclick="usResetCurrent()">↺ Đặt lại</button>
+        <button class="us-sheet-apply" onclick="usClose()">Áp dụng</button>
+      </div>`;
+    document.body.appendChild(sheet);
+  }
+  return {overlay, sheet};
+}
+function usOpen(tab, btn){
+  try{
+    _usOpenTab = tab;
+    const {overlay, sheet} = usEnsureDom();
+    const titleEl = document.getElementById('usSheetTitle');
+    const bodyEl = document.getElementById('usSheetBody');
+    if(titleEl) titleEl.textContent = usTitle(tab);
+    if(bodyEl) bodyEl.innerHTML = usSheetBody(tab);
+    overlay.classList.add('show');
+    // requestAnimationFrame đảm bảo trình duyệt đã ghi nhận trạng thái ban đầu
+    // (visibility:hidden + transform) trước khi thêm .show, để transition
+    // trượt lên luôn chạy mượt mà thay vì nhảy đột ngột hoặc không hiển thị.
+    requestAnimationFrame(()=>sheet.classList.add('show'));
+    usPositionDesktop(btn);
+    document.body.style.overflow='hidden';
+  }catch(err){
+    console.error('usOpen lỗi:', err);
+  }
+}
+function usClose(){
+  try{
+    _usOpenTab = null;
+    const overlay = document.getElementById('usOverlay');
+    const sheet = document.getElementById('usSheet');
+    if(overlay) overlay.classList.remove('show');
+    if(sheet) sheet.classList.remove('show');
+    document.body.style.overflow='';
+  }catch(err){
+    console.error('usClose lỗi:', err);
+  }
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && _usOpenTab) usClose(); });
+// Định vị Floating Panel ngay dưới nút Bộ lọc trên Desktop (>=900px); trên
+// Mobile dùng CSS cố định dạng Bottom Sheet nên không cần tính vị trí.
+function usPositionDesktop(btn){
+  const sheet = $('usSheet');
+  if(!sheet || window.innerWidth<900 || !btn) return;
+  const r = btn.getBoundingClientRect();
+  const w = sheet.offsetWidth || 400;
+  let left = r.right - w;
+  left = Math.max(12, Math.min(left, window.innerWidth - w - 12));
+  sheet.style.left = left+'px';
+  sheet.style.right = 'auto';
+  sheet.style.top = (r.bottom + 8)+'px';
+}
+
 function renderDorDang(){
   const inpOld = document.getElementById('srchInp');
   let caretPos = null, hadFocus = false;
@@ -10164,32 +9826,8 @@ function renderDorDang(){
         <div class="dd-stat-ic" style="background:#E3F5EE;color:#0C7A54">✅</div>
         <div class="dd-stat-txt"><div class="dd-stat-n">${doneCount}</div><div class="dd-stat-l">Hoàn thành →</div></div>
       </button>
-    </div></div>
-
-    <div class="dd-filters">
-      <div class="dd-filters-row">
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-inp" id="srchInp" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, PO, quy cách (VD: fi18, 2x12 cuộn)..." value="${searchQ}" autocomplete="off" spellcheck="false">
-          ${searchQ?`<button onclick="clearSearch()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
-        </div>
-        <div class="dd-fld">
-          <label>Trạng thái</label>
-          <select onchange="filterStatus=this.value;renderDorDang()">
-            <option value="all">Tất cả</option>
-            <option value="unplanned" ${filterStatus==='unplanned'?'selected':''}>Chưa lập kế hoạch</option>
-            <option value="planned" ${filterStatus==='planned'?'selected':''}>Đã lập kế hoạch</option>
-            <option value="producing" ${filterStatus==='producing'?'selected':''}>Đang sản xuất</option>
-          </select>
-        </div>
-        <button class="dd-reset-btn" onclick="ddResetFilters()">↺ Reset bộ lọc</button>
-      </div>
-      <div class="dd-filters-row">
-        <div class="dd-fld"><label>Ngày nhận từ</label><input type="date" value="${ddRecvFrom}" onchange="ddRecvFrom=this.value;renderDorDang()"></div>
-        <div class="dd-fld"><label>Ngày nhận đến</label><input type="date" value="${ddRecvTo}" onchange="ddRecvTo=this.value;renderDorDang()"></div>
-        <div class="dd-fld"><label>Hạn giao từ</label><input type="date" value="${ddDueFrom}" onchange="ddDueFrom=this.value;renderDorDang()"></div>
-        <div class="dd-fld"><label>Hạn giao đến</label><input type="date" value="${ddDueTo}" onchange="ddDueTo=this.value;renderDorDang()"></div>
-      </div>
+    </div>
+    ${usBarHTML('dorDang', searchQ, 'srchInp', '🔍 Tìm mã đơn, khách hàng, PO, quy cách (VD: fi18, 2x12 cuộn)...')}
     </div>
 
     ${!list.length
@@ -10212,15 +9850,7 @@ function renderDorDang(){
           <th>Thao tác</th>
         </tr></thead><tbody>${list.map((o,i)=>ddRow(o,i+1)).join('')}</tbody></table></div>`}
   `;
-  const ni=document.getElementById('srchInp');
-  if(ni){
-    ni.addEventListener('input',function(){searchQ=this.value;renderDorDang();});
-    if(hadFocus){
-      ni.focus();
-      const pos = caretPos!==null ? Math.min(caretPos, ni.value.length) : ni.value.length;
-      try{ ni.setSelectionRange(pos, pos); }catch(e){}
-    }
-  }
+  usAttachSearchInput(document.getElementById('srchInp'), v=>searchQ=v, renderDorDang, hadFocus, caretPos);
   initTopScroll('ddScrollTop','ddScrollTopInner','ddTableWrap','ddTable');
 }
 
@@ -10503,47 +10133,8 @@ function renderKeHoach(){
         <div class="dd-stat-ic" style="background:#F3E8FF;color:#6D28D9">⚖️</div>
         <div class="dd-stat-txt"><div class="dd-stat-n">${totalKg.toLocaleString('vi-VN')}kg</div><div class="dd-stat-l">Tổng khối lượng</div></div>
       </button>
-    </div></div>
-
-    <div class="dd-filters">
-      <div class="dd-filters-row">
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-inp" id="khSearch" type="search" placeholder="🔍 Tìm khách hàng, PO, mã, quy cách (VD: fi18, 2x12 cuộn)..." value="${khSearchQ}" autocomplete="off" spellcheck="false">
-          ${khSearchQ?`<button onclick="khSearchQ='';renderKeHoach()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
-        </div>
-        <div class="dd-fld"><label>Khách hàng</label>
-          <select onchange="khFilterCustomer=this.value;renderKeHoach()">
-            <option value="all">Tất cả</option>
-            ${customers.map(c=>`<option value="${c.replace(/"/g,'&quot;')}" ${khFilterCustomer===c?'selected':''}>${c}</option>`).join('')}
-          </select>
-        </div>
-        <div class="dd-fld"><label>Mức ưu tiên</label>
-          <select onchange="khFilterPriority=this.value;renderKeHoach()">
-            <option value="all">Tất cả</option>
-            ${Object.keys(PRI_COLOR).map(p=>`<option value="${p}" ${khFilterPriority===p?'selected':''}>${p}</option>`).join('')}
-          </select>
-        </div>
-        <div class="dd-fld"><label>Công đoạn</label>
-          <select onchange="khFilterStage=this.value;renderKeHoach()">
-            <option value="all">Tất cả</option>
-            ${STAGES.map(s=>`<option value="${s.key}" ${khFilterStage===s.key?'selected':''}>${s.label}</option>`).join('')}
-          </select>
-        </div>
-        <div class="dd-fld"><label>Người phụ trách</label>
-          <select onchange="khFilterOwner=this.value;renderKeHoach()">
-            <option value="all">Tất cả</option>
-            ${owners.map(u=>`<option value="${u.id}" ${khFilterOwner===u.id?'selected':''}>${u.name}</option>`).join('')}
-          </select>
-        </div>
-        <button class="dd-reset-btn" onclick="khResetFilters()">↺ Reset bộ lọc</button>
-      </div>
-      <div class="dd-filters-row">
-        <div class="dd-fld"><label>Ngày tạo từ</label><input type="date" value="${khCreatedFrom}" onchange="khCreatedFrom=this.value;renderKeHoach()"></div>
-        <div class="dd-fld"><label>Ngày tạo đến</label><input type="date" value="${khCreatedTo}" onchange="khCreatedTo=this.value;renderKeHoach()"></div>
-        <div class="dd-fld"><label>Hạn giao từ</label><input type="date" value="${khDueFrom}" onchange="khDueFrom=this.value;renderKeHoach()"></div>
-        <div class="dd-fld"><label>Hạn giao đến</label><input type="date" value="${khDueTo}" onchange="khDueTo=this.value;renderKeHoach()"></div>
-      </div>
+    </div>
+    ${usBarHTML('keHoach', khSearchQ, 'khSearch', '🔍 Tìm khách hàng, PO, mã, quy cách (VD: fi18, 2x12 cuộn)...')}
     </div>
 
     ${!list.length
@@ -10553,15 +10144,7 @@ function renderKeHoach(){
         </div>
         <div class="kh-plan-grid">${list.map((o,i)=>khPlanCard(o,i+1)).join('')}</div>`}
   `;
-  const ni=document.getElementById('khSearch');
-  if(ni){
-    ni.addEventListener('input',function(){khSearchQ=this.value;renderKeHoach();});
-    if(hadFocus){
-      ni.focus();
-      const pos = caretPos!==null ? Math.min(caretPos, ni.value.length) : ni.value.length;
-      try{ ni.setSelectionRange(pos, pos); }catch(e){}
-    }
-  }
+  usAttachSearchInput(document.getElementById('khSearch'), v=>khSearchQ=v, renderKeHoach, hadFocus, caretPos);
 }
 
 // ── 1 dòng bảng Kế hoạch sản xuất (ERP/MES table style, đồng bộ Tab Đơn hàng) ──
@@ -11087,7 +10670,12 @@ function htRow(o, stt){
 
 function renderHoanThanh(){
   const htInp = document.getElementById('htSearch');
-  if(htInp) htSearchQ = htInp.value;
+  let caretPos = null, hadFocus = false;
+  if(htInp){
+    htSearchQ = htInp.value;
+    hadFocus = document.activeElement===htInp;
+    caretPos = htInp.selectionStart;
+  }
 
   const allDone = DB.orders.filter(o=>o.status==='done');
   const totalDone   = allDone.length;
@@ -11136,40 +10724,8 @@ function renderHoanThanh(){
         <div class="dd-stat-ic" style="background:${s.ic};color:${s.col}">${s.icon}</div>
         <div class="dd-stat-txt"><div class="dd-stat-n">${s.n}</div><div class="dd-stat-l">${s.l}</div></div>
       </button>`).join('')}
-    </div></div>
-
-    <div class="dd-filters">
-      <div class="dd-filters-row">
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-inp" id="htSearch" type="search" placeholder="🔍 Tìm mã đơn, khách hàng, mã sản phẩm, QR (VD: fi18, 2x12 cuộn)..." value="${htSearchQ}" autocomplete="off" spellcheck="false">
-          ${htSearchQ?`<button onclick="htSearchQ='';renderHoanThanh()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;cursor:pointer;color:var(--text4)">✕</button>`:''}
-        </div>
-        <div class="dd-fld">
-          <label>Trạng thái</label>
-          <select onchange="htFilterStatus=this.value;renderHoanThanh()">
-            <option value="all" ${htFilterStatus==='all'?'selected':''}>Tất cả</option>
-            <option value="new" ${htFilterStatus==='new'?'selected':''}>Chờ nhập kho</option>
-            <option value="shipping" ${htFilterStatus==='shipping'?'selected':''}>Đã nhập kho / Chờ giao</option>
-            <option value="delivered" ${htFilterStatus==='delivered'?'selected':''}>Đã giao</option>
-            <option value="returned" ${htFilterStatus==='returned'?'selected':''}>Hoàn trả</option>
-          </select>
-        </div>
-        <div class="dd-fld">
-          <label>Khách hàng</label>
-          <select onchange="htCustomerFilter=this.value;renderHoanThanh()">
-            <option value="all">Tất cả</option>
-            ${customers.map(c=>`<option value="${c}" ${htCustomerFilter===c?'selected':''}>${c}</option>`).join('')}
-          </select>
-        </div>
-        <button class="dd-reset-btn" onclick="htResetFilters()">↺ Reset bộ lọc</button>
-      </div>
-      <div class="dd-filters-row">
-        <div class="dd-fld"><label>Hoàn thành từ</label><input type="date" value="${htDoneFrom}" onchange="htDoneFrom=this.value;renderHoanThanh()"></div>
-        <div class="dd-fld"><label>Hoàn thành đến</label><input type="date" value="${htDoneTo}" onchange="htDoneTo=this.value;renderHoanThanh()"></div>
-        <div class="dd-fld"><label>Ngày giao từ</label><input type="date" value="${htShipFrom}" onchange="htShipFrom=this.value;renderHoanThanh()"></div>
-        <div class="dd-fld"><label>Ngày giao đến</label><input type="date" value="${htShipTo}" onchange="htShipTo=this.value;renderHoanThanh()"></div>
-      </div>
+    </div>
+    ${usBarHTML('hoanThanh', htSearchQ, 'htSearch', '🔍 Tìm mã đơn, khách hàng, mã sản phẩm, QR (VD: fi18, 2x12 cuộn)...')}
     </div>
 
     ${!list.length
@@ -11192,11 +10748,7 @@ function renderHoanThanh(){
           <th>Thao tác</th>
         </tr></thead><tbody>${list.map((o,i)=>htRow(o,i+1)).join('')}</tbody></table></div>`}
   `;
-  const hi=document.getElementById('htSearch');
-  if(hi){
-    hi.focus(); const v=hi.value; hi.value=''; hi.value=v;
-    hi.addEventListener('input',function(){htSearchQ=this.value;renderHoanThanh();});
-  }
+  usAttachSearchInput(document.getElementById('htSearch'), v=>htSearchQ=v, renderHoanThanh, hadFocus, caretPos);
   initTopScroll('htScrollTop','htScrollTopInner','htTableWrap','htTable');
 }
 
