@@ -2608,12 +2608,17 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .card-added-txt{font-size:10.5px;color:var(--text3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-added-txt b{color:var(--text2);font-weight:800}
 .spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:9px 14px 5px}
+/* Trường hợp chỉ còn 3 ô (VD: hàng Φ/fi đã bỏ ô KG trùng lặp vì bên dưới
+   spec-row đã hiển thị KG rồi) — dùng lưới 3 cột thay vì 4 cột mặc định. */
+.spec-grid.cols-3{grid-template-columns:repeat(3,1fr)}
 /* Trước đây mỗi ô thông số (Dày/Rộng/Dài/Số thanh/Φ/KG) có 1 màu riêng
    (xanh dương/tím/cyan/cam/vàng/lục) — nhìn sặc sỡ, rối mắt. Nay đồng bộ
    CÙNG 1 tông màu trung tính duy nhất cho mọi ô, chỉ phân biệt bằng nhãn
    chữ bên dưới, để giao diện gọn gàng, hiện đại và chuyên nghiệp hơn. */
 .spec-box{position:relative;border-radius:11px;padding:7px 4px 6px;text-align:center;border:1px solid var(--border);box-shadow:0 1px 3px rgba(15,23,42,.05),inset 0 1px 0 rgba(255,255,255,.6);background:var(--bg2)}
-.spec-box-val{font-size:14px;font-weight:800;color:var(--navy);line-height:1.15;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+/* Chữ số thông số (Dày/Rộng/Dài/Số thanh/Φ) in đậm nét rộng hơn, cỡ lớn
+   hơn 1 chút để trông hiện đại, chắc chắn, dễ đọc hơn ở khoảng cách xa. */
+.spec-box-val{font-size:15.5px;font-weight:900;color:var(--navy);line-height:1.15;letter-spacing:.2px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;-webkit-text-stroke:.25px currentColor}
 .spec-box-lbl{font-size:8.5px;color:var(--text4);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px;opacity:.8}
 .spec-row{display:flex;gap:6px;padding:2px 14px 6px;flex-wrap:wrap;align-items:center}
 .spec-tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--text2);white-space:nowrap}
@@ -3757,7 +3762,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   .card-customer{font-size:16px}
   .spec-grid{grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 16px 6px}
   .spec-box{padding:8px 6px;border-radius:10px}
-  .spec-box-val{font-size:16px}
+  .spec-box-val{font-size:17.5px;letter-spacing:.3px}
   .spec-box-lbl{font-size:10px}
   .spec-row{padding:4px 16px 8px;gap:8px}
   .spec-tag{font-size:13px;padding:4px 12px}
@@ -8308,13 +8313,16 @@ function custInitial(name){
 
 function orderSpecGridHTML(o){
   if(o.isCoil){
-    const dimVal = (o.isRound&&o.phi) ? `Φ${o.phi}` : `${o.thickness||'?'}×${o.width||'?'}`;
-    const dimLbl = (o.isRound&&o.phi) ? 'Đường kính' : 'Dày×Rộng (mm)';
-    return `<div class="spec-grid">
-           <div class="spec-box dim-t"><div class="spec-box-val" style="font-size:14px">${dimVal}</div><div class="spec-box-lbl">${dimLbl}</div></div>
+    const isFi = o.isRound&&o.phi;
+    const dimVal = isFi ? `Φ${o.phi}` : `${o.thickness||'?'}×${o.width||'?'}`;
+    const dimLbl = isFi ? 'Đường kính' : 'Dày×Rộng (mm)';
+    // Khi hiển thị fi (Φ): bỏ ô KG trong lưới vì bên dưới spec-row đã có
+    // KG rồi — tránh lặp số kg trên cùng 1 hàng, nhìn rối mắt.
+    return `<div class="spec-grid${isFi?' cols-3':''}">
+           <div class="spec-box dim-t"><div class="spec-box-val" style="font-size:${isFi?'16px':'14px'}">${dimVal}</div><div class="spec-box-lbl">${dimLbl}</div></div>
            <div class="spec-box dim-l"><div class="spec-box-val">${o.meterPerCoil||'?'}m</div><div class="spec-box-lbl">Mét/cuộn</div></div>
            <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số cuộn</div></div>
-           <div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>
+           ${isFi?'':`<div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>`}
          </div>
          <div class="spec-row">
            <span class="spec-tag mat">${o.material||'—'}</span>
@@ -8324,11 +8332,12 @@ function orderSpecGridHTML(o){
          </div>`;
   }
   if(o.isRound&&o.phi){
-    return `<div class="spec-grid">
-           <div class="spec-box dim-phi"><div class="spec-box-val" style="font-size:16px">Φ${o.phi}</div><div class="spec-box-lbl">Đường kính</div></div>
+    // Ô KG trong lưới đã bỏ (chỉ còn 3 ô: Φ / Dài / Số cây) vì KG đã có
+    // sẵn ở spec-row bên dưới — tránh hiển thị trùng số kg trên cùng hàng.
+    return `<div class="spec-grid cols-3">
+           <div class="spec-box dim-phi"><div class="spec-box-val" style="font-size:17px">Φ${o.phi}</div><div class="spec-box-lbl">Đường kính</div></div>
            <div class="spec-box dim-l"><div class="spec-box-val">${o.length||'?'}mm</div><div class="spec-box-lbl">Dài (mm)</div></div>
            <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số cây</div></div>
-           <div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>
          </div>
          <div class="spec-row">
            <span class="spec-tag mat">${o.material||'—'}</span>
