@@ -1,0 +1,13 @@
+{
+	"appId": "com.dongphuong.quanlysx",
+	"appName": "Quan Ly SX Dong Phuong",
+	"webDir": "www",
+	"server": {
+		"url": "https://hungphuong1990bn-create.github.io/test/",
+		"cleartext": false,
+		"androidScheme": "https"
+	},
+	"android": {
+		"allowMixedContent": false
+	}
+}
