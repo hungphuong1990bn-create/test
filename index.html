@@ -14340,6 +14340,95 @@ function showUpdateBanner(){
   }, 1000);
 }
 
+// 4. NATIVE APP (ANDROID) — kiểm tra bản .apk mới trên GitHub Releases.
+// Khác với 2 mục trên (vốn tự cập nhật NỘI DUNG web qua GitHub Pages),
+// mục này kiểm tra bản CÁI VỎ Android (icon/tên/URL...) — thứ không tự
+// cập nhật được, người dùng phải tự tải .apk mới về cài đè. Đoạn này chỉ
+// chạy khi app đang mở TRONG vỏ Android (Capacitor), không chạy khi mở
+// bằng trình duyệt thường hay bản desktop (Electron không có Capacitor).
+(function(){
+  const REPO = 'hungphuong1990bn-create/test';
+  const TAG_PREFIX = 'android-v';
+  const CHECK_EVERY_MS = 4*60*60*1000; // tối đa 1 lần/4 tiếng, đỡ tốn API quota
+  const LS_KEY = 'sx_native_ver_check_at';
+
+  function isAndroidNativeApp(){
+    return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.getPlatform && window.Capacitor.getPlatform()==='android');
+  }
+  function verParts(v){ return (v||'').replace(/^v/i,'').split('.').map(n=>parseInt(n,10)||0); }
+  function verIsNewer(a,b){ // a mới hơn b?
+    const pa=verParts(a), pb=verParts(b);
+    for(let i=0;i<Math.max(pa.length,pb.length);i++){
+      const x=pa[i]||0, y=pb[i]||0;
+      if(x>y) return true;
+      if(x<y) return false;
+    }
+    return false;
+  }
+
+  async function checkNativeAppUpdate(){
+    if(!isAndroidNativeApp()) return;
+    const lastCheck = parseInt(localStorage.getItem(LS_KEY)||'0',10);
+    if(Date.now()-lastCheck < CHECK_EVERY_MS) return;
+    try{
+      const { App } = window.Capacitor.Plugins;
+      if(!App) return;
+      const info = await App.getInfo(); // {version, build, id, name}
+      const currentVer = info.version || '0';
+
+      const ctrl = new AbortController();
+      const timeout = setTimeout(()=>ctrl.abort(), 8000);
+      const res = await fetch(`https://api.github.com/repos/${REPO}/releases`, {signal: ctrl.signal});
+      clearTimeout(timeout);
+      localStorage.setItem(LS_KEY, String(Date.now()));
+      if(!res.ok) return;
+      const releases = await res.json();
+      const rel = (Array.isArray(releases)?releases:[]).find(r => r.tag_name && r.tag_name.startsWith(TAG_PREFIX) && !r.draft);
+      if(!rel) return;
+      const remoteVer = rel.tag_name.slice(TAG_PREFIX.length);
+      if(!verIsNewer(remoteVer, currentVer)) return;
+
+      const asset = (rel.assets||[]).find(a => /\.apk$/i.test(a.name));
+      const downloadUrl = asset ? asset.browser_download_url : rel.html_url;
+      showNativeUpdateBanner(remoteVer, downloadUrl);
+    }catch(e){ /* im lặng bỏ qua lỗi mạng, thử lại lần sau */ }
+  }
+
+  window.showNativeUpdateBanner = function(remoteVer, downloadUrl){
+    if(document.getElementById('nativeUpdateBanner')) return;
+    const b = document.createElement('div');
+    b.id = 'nativeUpdateBanner';
+    b.style.cssText = [
+      'position:fixed','top:calc(var(--top)+var(--safe-t)+10px)',
+      'left:50%','transform:translateX(-50%)',
+      'background:var(--navy)',
+      'color:#fff','padding:11px 16px','border-radius:14px',
+      'font-size:13px','font-weight:600','z-index:9999',
+      'display:flex','align-items:center','gap:10px',
+      'box-shadow:0 4px 24px rgba(0,0,0,.5)',
+      'border:1px solid rgba(255,255,255,.1)',
+      'animation:ann-slide .4s cubic-bezier(.34,1.56,.64,1)',
+      'max-width:92vw'
+    ].join(';');
+    b.innerHTML = `<span style="font-size:16px">📲</span>
+      <span>Có bản app mới ${remoteVer}!</span>
+      <button id="nativeUpdBtn" style="background:var(--brand2);color:#fff;border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;white-space:nowrap">Tải về ngay</button>
+      <button id="nativeUpdClose" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">✕</button>`;
+    document.body.appendChild(b);
+    b.querySelector('#nativeUpdBtn').onclick = async ()=>{
+      try{
+        const { Browser } = window.Capacitor.Plugins;
+        if(Browser) await Browser.open({ url: downloadUrl });
+        else window.open(downloadUrl, '_blank');
+      }catch(e){ window.open(downloadUrl, '_blank'); }
+    };
+    b.querySelector('#nativeUpdClose').onclick = ()=> b.remove();
+  };
+
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkNativeAppUpdate(); });
+  setTimeout(checkNativeAppUpdate, 6000);
+})();
+
 // ════════════════════════════════════════════════════════════════════
 // MODULE QR — QUẢN LÝ THÀNH PHẨM BẰNG MÃ QR (Giai đoạn 1)
 // Tạo QR khi hoàn thành, quét QR, lịch sử công đoạn (timeline), in tem.
