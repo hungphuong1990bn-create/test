@@ -3405,7 +3405,9 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .ord-val-dur{color:var(--brand);font-weight:800}
 
 /* ── Khách hàng / Quy cách nổi bật trong bảng & Ngày nhận kèm giờ ── */
-.ord-cust-info{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ord-cust-info{display:flex;flex-direction:row;align-items:center;gap:7px;min-width:0}
+.ord-stt-badge{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--bg2);color:var(--text4);font-size:10px;font-weight:800;border:1px solid var(--border)}
+.ord-cust-info-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
 .ord-cust-name{font-weight:800;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;letter-spacing:.1px}
 .ord-po-sub{font-size:10px;color:var(--text4);font-weight:700}
 .spec-chip{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:900;font-size:13px;color:#0B0E14;background:#F0F1F4;border:1px solid #DEE1E8;padding:5px 12px;border-radius:8px;white-space:nowrap;letter-spacing:.3px}
@@ -8787,6 +8789,7 @@ function goTab(tab){
     if(nav&&btn){ const bLeft=btn.offsetLeft; const bW=btn.offsetWidth; const nW=nav.offsetWidth; nav.scrollTo({left:bLeft-(nW/2-bW/2),behavior:'smooth'}); }
   },50);
   renderTab(tab);
+  updateBadges();
   if(tab==='nhatKy'){ actLog.forEach(l=>l.read=true); logSave(); updateLogBadge(); }
   if(fbOk()) updateOnline();
 }
@@ -8844,7 +8847,7 @@ function toggleSB(){ $('sidebar').classList.toggle('open'); $('sbOverlay').class
 function closeSB(){ $('sidebar').classList.remove('open'); $('sbOverlay').classList.remove('active'); }
 
 function updateBadges(){
-  const n=DB.orders.filter(o=>o.status!=='done').length;
+  const n=DB.orders.filter(ddIsNew).length;
   const sb=$('sbBadge'); if(sb){sb.style.display=n>0?'inline-block':'none';sb.textContent=n>9?'9+':n;}
   const bd=$('bnDot'); if(bd) bd.classList.toggle('show',n>0);
   updateBtmBadge();
@@ -9063,8 +9066,9 @@ function aiGetInsights(orders){
     });
   }
 
-  // Quá hạn giao
-  const overdue=orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<now);
+  // Quá hạn giao — dùng CHUNG ddOverdue() (so với đầu ngày, không phải so
+  // với giờ hiện tại) để khớp đúng với số liệu ở tab Đơn Hàng/Kế hoạch SX
+  const overdue=orders.filter(ddOverdue);
   if(overdue.length){
     insights.push({icon:'🔥',level:'critical',
       text:`<b>${overdue.length} đơn quá hạn giao hàng</b>: ${overdue.slice(0,3).map(o=>`<b>${o.customer}</b>`).join(', ')}`});
@@ -9391,10 +9395,11 @@ function buildSmartAlerts(orders){
     if(g.list.length>=4) alerts.push({sev:'o', icon:'🚧', text:`Công đoạn <b>${g.label}</b> đang dồn <b>${g.list.length} đơn</b> — cân nhắc bổ sung nhân lực/tăng ca`, action:"goTab('keHoach')"});
   });
 
-  // 4) Đơn quá hạn giao
-  const overdueList = orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<now);
+  // 4) Đơn quá hạn giao — dùng CHUNG ddOverdue() để khớp đúng với số liệu
+  // ở tab Đơn Hàng/Kế hoạch SX, và trỏ sang Kế hoạch SX kèm bộ lọc "Trễ tiến độ"
+  const overdueList = orders.filter(ddOverdue);
   if(overdueList.length){
-    alerts.push({sev:'r', icon:'🔥', text:`<b>${overdueList.length} đơn đã quá hạn giao</b>: ${overdueList.slice(0,3).map(o=>o.customer||'—').join(', ')}${overdueList.length>3?'…':''}`, action:"goTab('dorDang')"});
+    alerts.push({sev:'r', icon:'🔥', text:`<b>${overdueList.length} đơn đã quá hạn giao</b>: ${overdueList.slice(0,3).map(o=>o.customer||'—').join(', ')}${overdueList.length>3?'…':''}`, action:"goToKeHoachFilter('overdue')"});
   }
 
   // 5) Đơn có nguy cơ trễ (chạy quá lâu / sắp tới hạn), lấy tối đa 4 đơn nổi bật nhất
@@ -9435,7 +9440,7 @@ function dashUrgentRow(o, ai){
   const pc = priColor(o.priority);
   const s = o.status==='cutting'?'running':o.status;
   const si = statusInfo(s);
-  const overdue = o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<new Date();
+  const overdue = ddOverdue(o);
   const borderColor = ai.urgencyTag==='overdue'||ai.urgencyTag==='critical' ? '#dc2626' : ai.urgencyTag==='warning' ? '#f59e0b' : pc;
   return `<div class="card" style="padding:9px 12px;margin-bottom:6px;cursor:pointer;border-left:3px solid ${borderColor}" onclick="goToOrderInPlan('${o.id}')">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
@@ -9472,7 +9477,7 @@ function buildForemanSuggestions(orders){
   stageGroups.forEach(g=>{
     if(g.list.length>=4) sug.push({icon:'👷', text:`Công đoạn <b>${g.label}</b> đang dồn ${g.list.length} đơn — đề xuất bổ sung nhân lực hoặc tăng ca để giải phóng điểm nghẽn`});
   });
-  const overdueList = orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<Date.now());
+  const overdueList = orders.filter(ddOverdue);
   if(overdueList.length) sug.push({icon:'⏫', text:`Có <b>${overdueList.length} đơn quá hạn</b> — đề xuất ưu tiên xử lý ngay trước các đơn khác`});
   return sug;
 }
@@ -9592,7 +9597,7 @@ function renderDashboard(){
   const waiting = orders.filter(o=>o.status==='pending').length;
   const running = orders.filter(o=>o.status==='running'||o.status==='cutting').length;
   const done    = orders.filter(o=>o.status==='done').length;
-  const overdue = orders.filter(o=>o.status!=='done'&&o.deliveryDate&&new Date(o.deliveryDate)<new Date()).length;
+  const overdue = orders.filter(ddOverdue).length;
   const totalKg = orders.reduce((s,o)=>s+(parseFloat(o.kg)||0),0).toFixed(1);
   const now = Date.now();
 
@@ -9609,10 +9614,15 @@ function renderDashboard(){
   const canhBao       = overdue + machineWarn + maintTonWarn;
   setTimeout(checkMaintTonAlerts, 300);
 
-  // Tiến độ kế hoạch trong ngày: % đơn tới/qua hạn giao đã hoàn thành đến hôm nay
+  // Tiến độ kế hoạch trong ngày: % đơn có hạn giao TỪ HÔM NAY TRỞ VỀ TRƯỚC
+  // đã hoàn thành. Dùng mốc "hết ngày hôm nay" (không phải giờ hiện tại) để
+  // 1 đơn có hạn giao đúng hôm nay được tính suốt cả ngày (không bị tính
+  // "trễ hạn" chỉ vì đã qua nửa đêm) — khớp với cách tính quá hạn dùng
+  // chung ddOverdue() ở các tab khác.
+  const todayEndTs = new Date(new Date().toDateString()).getTime() + 86400000;
   const withDue = orders.filter(o=>o.deliveryDate);
-  const shouldBeDoneNow = withDue.filter(o=>new Date(o.deliveryDate).getTime()<=now).length;
-  const shouldBeDoneAndDone = withDue.filter(o=>new Date(o.deliveryDate).getTime()<=now && o.status==='done').length;
+  const shouldBeDoneNow = withDue.filter(o=>new Date(o.deliveryDate).getTime()<todayEndTs).length;
+  const shouldBeDoneAndDone = withDue.filter(o=>new Date(o.deliveryDate).getTime()<todayEndTs && o.status==='done').length;
   const planPct = shouldBeDoneNow ? Math.round(shouldBeDoneAndDone/shouldBeDoneNow*100) : 100;
 
   const insights = aiGetInsights(orders);
@@ -9647,33 +9657,33 @@ function renderDashboard(){
     <!-- 7 CHỈ SỐ KPI TỔNG QUAN -->
     <div class="sec-title dash-anim" style="margin-bottom:2px;animation-delay:.05s">📦 KPI tổng quan</div>
     <div class="stats-grid-4 dash-anim" style="margin-bottom:9px;animation-delay:.06s">
-      <div class="stat-card" onclick="goTab('dorDang')">
+      <div class="stat-card" onclick="goToDorDangAll()">
         <div class="stat-icon-wrap" style="background:#eef2ff">📦</div>
         <div class="stat-right"><div class="stat-num" style="color:#6366f1">${total}</div><div class="stat-lbl">Tổng đơn hàng</div></div>
       </div>
-      <div class="stat-card" onclick="goTab('keHoach')">
+      <div class="stat-card" onclick="goToKeHoachFilter('running')">
         <div class="stat-icon-wrap" style="background:#dbeafe">⚙️</div>
         <div class="stat-right"><div class="stat-num" style="color:var(--brand3)">${running}</div><div class="stat-lbl">Đang sản xuất</div></div>
       </div>
-      <div class="stat-card" onclick="goTab('hoanThanh')">
+      <div class="stat-card" onclick="goToHoanThanhAll()">
         <div class="stat-icon-wrap" style="background:var(--green-l)">✅</div>
         <div class="stat-right"><div class="stat-num" style="color:var(--green-m)">${done}</div><div class="stat-lbl">Tổng hoàn thành</div></div>
       </div>
-      <div class="stat-card" onclick="goTab('keHoach')">
+      <div class="stat-card" onclick="goToKeHoachFilter('pending')">
         <div class="stat-icon-wrap" style="background:#fef3c7">⏳</div>
         <div class="stat-right"><div class="stat-num" style="color:var(--amber-m)">${waiting}</div><div class="stat-lbl">Chờ sản xuất</div></div>
       </div>
     </div>
     <div class="stats-grid-6 dash-anim" style="animation-delay:.09s">
-      <div class="stat-card" onclick="goTab('dorDang')">
+      <div class="stat-card" onclick="goToDorDangToday()">
         <div class="stat-icon-wrap" style="background:#eff6ff">📋</div>
         <div class="stat-right"><div class="stat-num">${todayOrders}</div><div class="stat-lbl">Đơn hàng hôm nay</div></div>
       </div>
-      <div class="stat-card" onclick="goTab('dorDang')">
+      <div class="stat-card" onclick="goToDorDangAll()">
         <div class="stat-icon-wrap" style="background:#f0fdf4">⚖️</div>
         <div class="stat-right"><div class="stat-num" style="color:var(--green-m);font-size:20px">${totalKg}kg</div><div class="stat-lbl">Sản lượng tổng</div></div>
       </div>
-      <div class="stat-card" onclick="goTab('dorDang')">
+      <div class="stat-card" onclick="goToKeHoachFilter('overdue')">
         <div class="stat-icon-wrap" style="background:#fee2e2">⏱️</div>
         <div class="stat-right"><div class="stat-num" style="color:var(--red-m)">${overdue}</div><div class="stat-lbl">Đơn quá hạn</div></div>
       </div>
@@ -9681,7 +9691,7 @@ function renderDashboard(){
         <div class="stat-icon-wrap" style="background:#f5f3ff">🎯</div>
         <div class="stat-right"><div class="stat-num" style="color:#7c3aed">${hieuSuat}%</div><div class="stat-lbl">Hiệu suất đúng hạn</div></div>
       </div>
-      <div class="stat-card" onclick="${canhBao>0?"goTab('dorDang')":"toggleDashMore()"}">
+      <div class="stat-card" onclick="scrollToSmartAlerts()">
         <div class="stat-icon-wrap" style="background:${canhBao>0?'#fef3c7':'#f3f4f6'}">${canhBao>0?'⚠️':'🔔'}</div>
         <div class="stat-right"><div class="stat-num" style="color:${canhBao>0?'var(--amber-m)':'var(--text)'}">${canhBao}</div><div class="stat-lbl">Cảnh báo${machineWarn?` · ${machineWarn} máy hỏng`:''}</div></div>
       </div>
@@ -9696,7 +9706,7 @@ function renderDashboard(){
     <div class="dash-anim" style="animation-delay:.18s">${buildProductionPipeline(orders)}</div>
 
     <!-- BẢNG CẢNH BÁO THÔNG MINH -->
-    <div class="sec-title dash-anim" style="margin:12px 0 6px;animation-delay:.2s">🚨 Cảnh báo thông minh</div>
+    <div id="dashSmartAlerts" class="sec-title dash-anim" style="margin:12px 0 6px;animation-delay:.2s">🚨 Cảnh báo thông minh</div>
     <div class="dash-anim" style="animation-delay:.22s">${renderSmartAlertsHTML(smartAlerts)}</div>
 
     <!-- AI QUẢN ĐỐC -->
@@ -9739,6 +9749,17 @@ function renderDashboard(){
 // người dùng tới đúng vị trí khi bấm vào thẻ Hiệu suất/Cảnh báo.
 function toggleDashMore(){
   const el = document.getElementById('dashMoreStats');
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Thẻ KPI "Cảnh báo" trên Tổng quan → cuộn thẳng tới khối "🚨 Cảnh báo
+// thông minh" ngay trên Dashboard, vì cảnh báo gồm nhiều loại khác nhau
+// (máy hỏng, bảo trì, đơn quá hạn, công đoạn ùn tắc...) — mỗi cảnh báo
+// trong danh sách đó đã tự trỏ đúng tới đúng tab/đơn liên quan khi bấm vào,
+// nên không nên nhảy đại sang 1 tab cố định như trước.
+function scrollToSmartAlerts(){
+  const el = document.getElementById('dashSmartAlerts');
   if(!el) return;
   el.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -9993,7 +10014,7 @@ function ddEditRow(id, ev){
 // ── Xem chi tiết đơn (chỉ thông tin quản lý, không có tiến độ SX) ──
 function ddViewDetail(id){
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
-  if(ddIsNew(o)){ o.viewedNewAt=Date.now(); saveOrders(); }
+  if(ddIsNew(o)){ o.viewedNewAt=Date.now(); saveOrders(); updateBadges(); }
   const meta = ddStatusMeta(o), overdue = ddOverdue(o);
   $('ddDetailTitle').textContent = `${o.customer||'—'} · ${ddCode(o)}`;
   $('ddDetailBody').innerHTML = `
@@ -10060,7 +10081,7 @@ function ddPrintOrder(id, ev){
 
 
 // ── 1 Dòng trong bảng Đơn hàng (ERP/MES table style, giống ảnh mẫu) ──
-function ddRow(o){
+function ddRow(o, stt){
   const meta = ddStatusMeta(o);
   const isNew = ddIsNew(o);
   const overdue = ddOverdue(o);
@@ -10068,7 +10089,7 @@ function ddRow(o){
   const canEdit = isAdmin(), canPlan = isStaff() && o.status==='pending';
   return `<tr class="${isNew?'is-new':''}${overdue?' is-overdue':''}" data-order-id="${o.id}" onclick="ddViewDetail('${o.id}')">
     <td><span class="ord-pri" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span>${isNew?'<span class="pill-new" style="margin-left:5px">🟢 Mới</span>':''}</td>
-    <td><div class="ord-cust-info"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></td>
+    <td><div class="ord-cust-info"><span class="ord-stt-badge" title="STT">${stt!=null?stt:''}</span><div class="ord-cust-info-txt"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></div></td>
     <td>${o.type||'—'}</td>
     <td>${ddMaterialLabel(o.material)}</td>
     <td><span class="spec-chip">${specStr(o)}</span></td>
@@ -10191,7 +10212,7 @@ function renderDorDang(){
           <th>Trạng thái</th>
           <th>Người phụ trách</th>
           <th>Thao tác</th>
-        </tr></thead><tbody>${list.map(ddRow).join('')}</tbody></table></div>`}
+        </tr></thead><tbody>${list.map((o,i)=>ddRow(o,i+1)).join('')}</tbody></table></div>`}
   `;
   const ni=document.getElementById('srchInp');
   if(ni){
@@ -10362,6 +10383,35 @@ function khIsTopPriority(o){
 function setKhFilter(f){
   khFilterStatus = (khFilterStatus===f) ? 'all' : f;
   renderKeHoach();
+}
+
+// Nhảy từ Tổng quan (Dashboard) sang tab Kế hoạch SX và áp đúng bộ lọc
+// tương ứng (Chờ SX / Đang SX / Trễ tiến độ / Ưu tiên) — để các thẻ KPI trên
+// Tổng quan trỏ thẳng tới ĐÚNG danh sách đơn hàng liên quan, không phải chỉ
+// mở tab rồi để người dùng tự lọc lại.
+function goToKeHoachFilter(f){
+  khFilterStatus = f;
+  goTab('keHoach');
+}
+
+// Nhảy sang tab Đơn Hàng, bỏ hết bộ lọc đang áp dụng (dùng cho thẻ KPI
+// "Tổng đơn hàng" / "Sản lượng tổng" trên Tổng quan — chỉ set biến bộ lọc,
+// KHÔNG tự render ở đây vì goTab()->renderTab() sẽ render lại ngay sau).
+function goToDorDangAll(){
+  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddRecvTo=''; ddDueFrom=''; ddDueTo='';
+  goTab('dorDang');
+}
+// Nhảy sang tab Đơn hoàn thành, bỏ hết bộ lọc đang áp dụng (dùng cho thẻ KPI
+// "Tổng hoàn thành" trên Tổng quan)
+function goToHoanThanhAll(){
+  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htShipFrom=''; htShipTo=''; htCustomerFilter='all';
+  goTab('hoanThanh');
+}
+// Nhảy sang tab Đơn Hàng và lọc đúng các đơn được TẠO trong hôm nay (dùng
+// cho thẻ KPI "Đơn hàng hôm nay" trên Tổng quan)
+function goToDorDangToday(){
+  filterStatus = 'all'; searchQ=''; ddRecvFrom=todayStr(); ddRecvTo=todayStr(); ddDueFrom=''; ddDueTo='';
+  goTab('dorDang');
 }
 
 function khResetFilters(){
@@ -10812,6 +10862,7 @@ function htToggleMenu(id, ev){
     ${canStatus&&o.whIn&&!o.delivered?`<button onclick="closeAllActionMenus();htUndoWarehouse('${o.id}',event)">↩️ Bỏ đánh dấu nhập kho</button>`:''}
     ${canStatus&&o.delivered?`<button onclick="closeAllActionMenus();htUndoDelivered('${o.id}',event)">↩️ Bỏ đánh dấu đã giao</button>`:''}
     ${canStatus?`<button onclick="closeAllActionMenus();htToggleReturn('${o.id}',event)">${o.returned?'↩️ Bỏ đánh dấu hoàn trả':'🔄 Đánh dấu hoàn trả'}</button>`:''}
+    ${canDel?`<button onclick="closeAllActionMenus();htRevertToPending('${o.id}',event)">↩️ Đưa về Chưa sản xuất (SX nhầm)</button>`:''}
     ${canDel?`<button class="danger" onclick="event.stopPropagation();closeAllActionMenus();deleteOrder('${o.id}')">🗑 Xóa đơn</button>`:''}
   `;
   menu.dataset.forId = 'ht-'+id;
@@ -10886,6 +10937,35 @@ function htToggleReturn(id, ev){
   });
 }
 
+// ── Đưa đơn đã Hoàn thành về lại "Chưa sản xuất" (pending) ──
+// Dùng khi nhân viên bấm nhầm nút "Hoàn thành" ở tab Kế hoạch SX. Chỉ Admin
+// mới có quyền này. Xóa sạch toàn bộ dữ liệu đã ghi nhận lúc hoàn thành/nhập
+// kho/giao hàng (doneAt, whIn, delivered...) để đơn quay lại đúng trạng thái
+// "Chưa sản xuất" như chưa từng chạy, tránh còn sót dữ liệu rác gây nhầm lẫn.
+function htRevertToPending(id, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer())return;
+  if(!isAdmin()){ showToast('Chỉ quản trị viên mới có quyền đưa đơn về Chưa sản xuất', true); return; }
+  const o=DB.orders.find(x=>x.id===id); if(!o) return;
+  confirm2('Đưa đơn về "Chưa sản xuất"?',
+    `${o.customer||'—'} · ${htCode(o)} — Toàn bộ dữ liệu hoàn thành/nhập kho/giao hàng của đơn này sẽ bị xóa và đơn quay về trạng thái Chờ sản xuất. Dùng khi nhân viên bấm nhầm nút "Hoàn thành".`,
+    ()=>{
+      const before={status:o.status,doneAt:o.doneAt,whIn:o.whIn,delivered:o.delivered};
+      o.status='pending';
+      delete o.doneAt; delete o.doneBy;
+      delete o.startedAt; delete o.stage;
+      delete o.whIn; delete o.whAt; delete o.whBy; delete o.whLocation;
+      delete o.delivered; delete o.deliveredAt; delete o.deliveredBy; delete o.exportSlipNo;
+      delete o.returned; delete o.returnedAt;
+      delete o.viewedDoneAt;
+      log('Đưa về Chưa sản xuất', `${o.customer||''} · ${htCode(o)} · (Admin sửa lỗi bấm nhầm)`, id, before, {status:'pending'});
+      saveOrders();
+      showToast('↩️ Đã đưa đơn về Chưa sản xuất');
+      updateBadges();
+      goTab('keHoach');
+    });
+}
+
 // ── Xem chi tiết (chỉ thông tin quản lý, không có tiến độ SX) ──
 function htViewDetail(id){
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
@@ -10952,13 +11032,13 @@ function htPrintOrder(id, ev){
 // ── Thao tác hàng loạt ──
 
 // ── 1 Card trong danh sách Hoàn thành (ERP/MES style, badge "Mới hoàn thành" ở góc trên phải) ──
-function htRow(o){
+function htRow(o, stt){
   const st = htStage(o);
   const fresh = htIsFresh(o);
   const canStatus = isStaff();
   const canDel = isAdmin();
   return `<tr class="${fresh?'ht-fresh':''}" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
-    <td><div class="ord-cust-info"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></td>
+    <td><div class="ord-cust-info"><span class="ord-stt-badge" title="STT">${stt!=null?stt:''}</span><div class="ord-cust-info-txt"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></div></td>
     <td>${o.type||'—'}</td>
     <td>${ddMaterialLabel(o.material)}</td>
     <td><span class="spec-chip">${specStr(o)}</span></td>
@@ -11087,7 +11167,7 @@ function renderHoanThanh(){
           <th>Trạng thái</th>
           <th>Xác nhận</th>
           <th>Thao tác</th>
-        </tr></thead><tbody>${list.map(htRow).join('')}</tbody></table></div>`}
+        </tr></thead><tbody>${list.map((o,i)=>htRow(o,i+1)).join('')}</tbody></table></div>`}
   `;
   const hi=document.getElementById('htSearch');
   if(hi){
@@ -12568,24 +12648,20 @@ function llvParsePeriod(text){
   return {from:dates[0], to:dates[dates.length-1]};
 }
 
-// ── Tự động dò đơn nghỉ phép đã duyệt đang hiệu lực trong khoảng ngày của
-// LỊCH LÀM VIỆC (không phải "hôm nay" theo máy) cho 1 nhân viên.
-// Khớp theo tên (không phân biệt hoa/thường) với DB.nghiPhep.
-// Chỉ tính đơn có trạng thái "Đã duyệt" và khoảng Từ ngày→Đến ngày của đơn có
-// giao nhau với khoảng ngày áp dụng của lịch làm việc (sheet.period). Nếu lịch
-// không ghi rõ ngày áp dụng (hoặc không dò được), fallback về so với hôm nay
-// như trước đây. Nhờ vậy khi đơn nghỉ hết hiệu lực (vd nghỉ đến 24/7, lịch
-// đang xem là 25/7) badge sẽ tự động biến mất mà không cần sửa tay.
+// ── Tự động dò đơn nghỉ phép đã duyệt đang hiệu lực NGAY HÔM NAY cho 1 nhân
+// viên. Khớp theo tên (không phân biệt hoa/thường) với DB.nghiPhep.
+// Chỉ tính đơn có trạng thái "Đã duyệt" và HÔM NAY nằm trong khoảng Từ
+// ngày→Đến ngày của đơn. Luôn so với ngày hiện tại (không phải khoảng ngày
+// áp dụng của cả lịch làm việc) — nhờ vậy khi đơn nghỉ hết hiệu lực (VD nghỉ
+// từ 23 đến hết 26/7) thì sang ngày 27/7 badge "🏖️ Tình trạng nghỉ" sẽ TỰ
+// ĐỘNG biến mất, không cần sửa tay.
 // Nhân viên vẫn được giữ nguyên ở ca đã phân (không bị chuyển sang nhóm "Nghỉ").
 function llvActiveLeave(name, list, sheet){
   const nm = (name||'').trim().toLowerCase();
   if(!nm) return null;
   const src = list || DB.nghiPhep || [];
-  const period = sheet ? llvParsePeriod(sheet.period) : null;
   const today = todayStr();
-  const rangeFrom = period ? period.from : today;
-  const rangeTo = period ? period.to : today;
-  const hit = src.find(k => k.status==='Đã duyệt' && (k.workerName||'').trim().toLowerCase()===nm && (k.fromDate||'')<=rangeTo && rangeFrom<=(k.toDate||''));
+  const hit = src.find(k => k.status==='Đã duyệt' && (k.workerName||'').trim().toLowerCase()===nm && (k.fromDate||'')<=today && today<=(k.toDate||''));
   return hit || null;
 }
 function llvLeaveBadgeHtml(rec){
