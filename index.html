@@ -2650,6 +2650,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .ns-table{border-collapse:collapse;width:100%;font-size:12px}
 .ns-table th{background:var(--bg);border:1px solid var(--border);padding:7px 8px;text-align:left;font-weight:700;color:var(--text3);font-size:11.5px}
 .ns-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
+.ns-table tbody tr:hover td{background:var(--bg)}
 .ns-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
 .card-actions{border-top:1px solid var(--border);background:var(--bg2);padding:8px 9px}
 /* Thanh trạng thái kiểu segmented-control: gọn trong 1 khối bo tròn, tab
@@ -4634,18 +4635,30 @@ body{letter-spacing:-.1px}
     </div>
     <div class="field"><div class="field-lbl">Địa chỉ</div><input id="wpDiaChi" class="field-inp" placeholder="Địa chỉ thường trú"></div>
     <div class="modal-row">
-      <div class="field"><div class="field-lbl">Chức vụ</div><input id="wpChucVu" class="field-inp" list="wpChucVuList" placeholder="Công nhân, Tổ trưởng..."></div>
-      <div class="field"><div class="field-lbl">Bộ phận / Tổ</div><input id="wpBoPhan" class="field-inp" placeholder="Tổ cắt, Tổ đóng gói..."></div>
+      <div class="field"><div class="field-lbl">Chức vụ</div>
+        <select id="wpChucVu" class="field-inp">
+          <option value="">-- Chọn chức vụ --</option>
+          <option value="Công nhân">Công nhân</option>
+          <option value="Tổ trưởng">Tổ trưởng</option>
+          <option value="Trưởng ca">Trưởng ca</option>
+          <option value="Quản đốc">Quản đốc</option>
+          <option value="Kế toán">Kế toán</option>
+          <option value="Bảo vệ">Bảo vệ</option>
+          <option value="Lái xe">Lái xe</option>
+          <option value="Kỹ thuật/Bảo trì">Kỹ thuật/Bảo trì</option>
+        </select>
+      </div>
+      <div class="field"><div class="field-lbl">Bộ phận / Tổ</div>
+        <select id="wpBoPhan" class="field-inp">
+          <option value="">-- Chọn bộ phận --</option>
+          <option value="Thanh Cái">Thanh Cái</option>
+          <option value="Lò">Lò</option>
+          <option value="Kéo">Kéo</option>
+          <option value="Kho">Kho</option>
+          <option value="Băm ép">Băm ép</option>
+        </select>
+      </div>
     </div>
-    <datalist id="wpChucVuList">
-      <option value="Công nhân"></option>
-      <option value="Tổ trưởng"></option>
-      <option value="Quản đốc"></option>
-      <option value="Kế toán"></option>
-      <option value="Bảo vệ"></option>
-      <option value="Lái xe"></option>
-      <option value="Kỹ thuật/Bảo trì"></option>
-    </datalist>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Ngày vào làm</div><input id="wpNgayVaoLam" class="field-inp" type="date"></div>
       <div class="field"><div class="field-lbl">Loại hợp đồng</div>
@@ -11547,10 +11560,24 @@ function deleteWorker(id){if(guardViewer())return;
   });
 }
 
+// Gán giá trị cho <select>, tự thêm option tạm nếu giá trị cũ (đã lưu trước đó)
+// không nằm trong danh sách chuẩn — để không bị mất/trống dữ liệu cũ.
+function setSelectKeepCustom(selectId, value){
+  const el = document.getElementById(selectId);
+  if(!el) return;
+  value = value || '';
+  if(value && !Array.from(el.options).some(o=>o.value===value)){
+    const opt = document.createElement('option');
+    opt.value = value; opt.textContent = value + ' (cũ)';
+    el.appendChild(opt);
+  }
+  el.value = value;
+}
+
 // ─── Hồ sơ nhân viên đầy đủ (mở modal sửa chi tiết) ───
 function openWorkerProfile(id){
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
-  const viewer = isViewer();
+  const viewer = !isAdmin(); // chỉ Admin được sửa hồ sơ, còn lại (Nhân viên, Xem) chỉ xem
   $('wpId').value = w.id;
   $('wpName').value = w.name||'';
   $('wpMaNV').value = w.maNV||'';
@@ -11559,8 +11586,8 @@ function openWorkerProfile(id){
   $('wpSdt').value = w.sdt||'';
   $('wpCccd').value = w.cccd||'';
   $('wpDiaChi').value = w.diaChi||'';
-  $('wpChucVu').value = w.chucVu||'';
-  $('wpBoPhan').value = w.boPhan||'';
+  setSelectKeepCustom('wpChucVu', w.chucVu||'');
+  setSelectKeepCustom('wpBoPhan', w.boPhan||'');
   $('wpNgayVaoLam').value = w.ngayVaoLam||'';
   $('wpLoaiHopDong').value = w.loaiHopDong||'';
   $('wpLuongCoBan').value = w.luongCoBan||'';
@@ -11574,7 +11601,9 @@ function openWorkerProfile(id){
   if(saveBtn) saveBtn.style.display = viewer ? 'none' : '';
   openModal('workerProfileModal');
 }
-function saveWorkerProfile(){if(guardViewer())return;
+function saveWorkerProfile(){
+  if(guardViewer())return;
+  if(!isAdmin()){ showToast('🔒 Chỉ Admin mới có quyền sửa hồ sơ nhân viên', true); return; }
   const id = $('wpId').value;
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
   w.name = $('wpName').value.trim();
@@ -11849,7 +11878,7 @@ function renderWorkerTableRows(list){
     const klW = (DB.kyLuat||[]).filter(k=>k.workerId===w.id && (k.date||'').startsWith(ym)).length;
     const npW = (DB.nghiPhep||[]).filter(k=>k.workerId===w.id && (k.fromDate||'').startsWith(ym)).length;
     const st = w.trangThai || 'Đang làm';
-    return `<tr>
+    return `<tr onclick="if(event.target.closest('button,a'))return; openWorkerProfile('${w.id}')" style="cursor:pointer" title="Bấm để xem hồ sơ chi tiết">
       <td style="text-align:center;color:var(--text3)">${i+1}</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
@@ -11869,7 +11898,7 @@ function renderWorkerTableRows(list){
       <td style="text-align:center">${klW>0?`<span class="ns-badge" style="background:#fee2e2;color:#dc2626">${klW}</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
       <td style="text-align:center">${npW>0?`<span class="ns-badge" style="background:#dbeafe;color:var(--brand)">${npW}</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
       <td style="text-align:center;white-space:nowrap">
-        <button class="icon-btn" title="${viewer?'Xem hồ sơ':'Sửa hồ sơ'}" onclick="openWorkerProfile('${w.id}')" style="font-size:12px">${viewer?'👁':'✏️'}</button>
+        <button class="icon-btn" title="${admin?'Sửa hồ sơ':'Xem hồ sơ'}" onclick="openWorkerProfile('${w.id}')" style="font-size:12px">${admin?'✏️':'👁'}</button>
         ${admin?`<button class="icon-btn del" onclick="deleteWorker('${w.id}')" title="Xóa" style="font-size:12px">🗑</button>`:''}
       </td>
     </tr>`;
