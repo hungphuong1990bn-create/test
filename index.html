@@ -2495,6 +2495,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 #sbi-hoanThanh svg{color:var(--green-m);background:var(--green-l)}
 #sbi-baoCao svg{color:var(--cyan-m);background:var(--cyan-l)}
 #sbi-nhatKy svg{color:var(--slate-m);background:var(--slate-l)}
+#sbi-nhanSu svg{color:var(--brand-m,var(--brand));background:var(--brand-l,var(--green-l))}
 #sbi-chamCong svg{color:var(--pink-m);background:var(--pink-l)}
 #sbi-lichLamViec svg{color:var(--amber-m);background:var(--amber-l)}
 #sbi-baoTriMay svg{color:var(--red-m);background:var(--red-l)}
@@ -4171,13 +4172,17 @@ body{letter-spacing:-.1px}
         Quản lý mã QR
       </button>
       <div class="sb-section">Nhân sự</div>
-      <button class="sb-item" id="sbi-chamCong" onclick="goTab('chamCong')">
+      <button class="sb-item" id="sbi-nhanSu" onclick="goTab('nhanSu')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         Quản lý nhân sự
       </button>
       <button class="sb-item" id="sbi-lichLamViec" onclick="goTab('lichLamViec')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Lịch làm việc
+      </button>
+      <button class="sb-item" id="sbi-chamCong" onclick="goTab('chamCong')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/><path d="M9 16l1.5 1.5L15 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Chấm công
       </button>
       <div class="sb-section">Thiết bị</div>
       <button class="sb-item" id="sbi-baoTriMay" onclick="goTab('baoTriMay')">
@@ -4266,6 +4271,10 @@ body{letter-spacing:-.1px}
       <button class="bn" id="bn-qrCode" onclick="goTab('qrCode')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
         Mã QR
+      </button>
+      <button class="bn" id="bn-nhanSu" onclick="goTab('nhanSu')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Nhân sự
       </button>
       <button class="bn" id="bn-chamCong" onclick="goTab('chamCong')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/><path d="M9 16l1.5 1.5L15 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -4594,6 +4603,79 @@ body{letter-spacing:-.1px}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('btmModal')">Huỷ</button>
       <button class="btn btn-primary" onclick="btmSaveRecord()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hồ sơ nhân viên đầy đủ (dùng chung cho Thêm / Sửa từ tab Quản lý nhân sự) -->
+<div class="modal" id="workerProfileModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="workerProfileTitle">✏️ Sửa hồ sơ nhân viên</div>
+    <input type="hidden" id="wpId">
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Họ và tên *</div><input id="wpName" class="field-inp" placeholder="Nguyễn Văn A"></div>
+      <div class="field"><div class="field-lbl">Mã nhân viên</div><input id="wpMaNV" class="field-inp" placeholder="NV001"></div>
+    </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Giới tính</div>
+        <select id="wpGioiTinh" class="field-inp">
+          <option value="">-- Chọn --</option>
+          <option value="Nam">Nam</option>
+          <option value="Nữ">Nữ</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+      <div class="field"><div class="field-lbl">Ngày sinh</div><input id="wpNgaySinh" class="field-inp" type="date"></div>
+    </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Số điện thoại</div><input id="wpSdt" class="field-inp" type="tel" placeholder="09xxxxxxxx"></div>
+      <div class="field"><div class="field-lbl">CCCD/CMND</div><input id="wpCccd" class="field-inp" placeholder="Số CCCD"></div>
+    </div>
+    <div class="field"><div class="field-lbl">Địa chỉ</div><input id="wpDiaChi" class="field-inp" placeholder="Địa chỉ thường trú"></div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Chức vụ</div><input id="wpChucVu" class="field-inp" list="wpChucVuList" placeholder="Công nhân, Tổ trưởng..."></div>
+      <div class="field"><div class="field-lbl">Bộ phận / Tổ</div><input id="wpBoPhan" class="field-inp" placeholder="Tổ cắt, Tổ đóng gói..."></div>
+    </div>
+    <datalist id="wpChucVuList">
+      <option value="Công nhân"></option>
+      <option value="Tổ trưởng"></option>
+      <option value="Quản đốc"></option>
+      <option value="Kế toán"></option>
+      <option value="Bảo vệ"></option>
+      <option value="Lái xe"></option>
+      <option value="Kỹ thuật/Bảo trì"></option>
+    </datalist>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Ngày vào làm</div><input id="wpNgayVaoLam" class="field-inp" type="date"></div>
+      <div class="field"><div class="field-lbl">Loại hợp đồng</div>
+        <select id="wpLoaiHopDong" class="field-inp">
+          <option value="">-- Chọn --</option>
+          <option value="Thử việc">Thử việc</option>
+          <option value="Chính thức">Chính thức</option>
+          <option value="Thời vụ">Thời vụ</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Lương cơ bản (VNĐ)</div><input id="wpLuongCoBan" class="field-inp" type="number" placeholder="VD: 6000000"></div>
+      <div class="field"><div class="field-lbl">Trạng thái</div>
+        <select id="wpTrangThai" class="field-inp">
+          <option value="Đang làm">🟢 Đang làm</option>
+          <option value="Tạm nghỉ">🟡 Tạm nghỉ</option>
+          <option value="Đã nghỉ việc">⚪ Đã nghỉ việc</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Ngân hàng</div><input id="wpNganHang" class="field-inp" placeholder="VD: Vietcombank"></div>
+      <div class="field"><div class="field-lbl">Số tài khoản</div><input id="wpSoTaiKhoan" class="field-inp" placeholder="Số tài khoản ngân hàng"></div>
+    </div>
+    <div class="field"><div class="field-lbl">Ghi chú thêm</div><textarea id="wpGhiChu" class="field-inp" style="min-height:55px;resize:vertical" placeholder="Ghi chú khác (nếu có)"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('workerProfileModal')">Đóng</button>
+      <button class="btn btn-primary" id="wpSaveBtn" onclick="saveWorkerProfile()">💾 Lưu hồ sơ</button>
     </div>
   </div>
 </div>
@@ -6439,7 +6521,7 @@ function aiHandleLeaveList(normText){
   if(!list.length) return {text: wantPending ? '✅ Không có đơn nghỉ phép nào đang chờ duyệt.' : '✅ Hôm nay không có ai nghỉ phép.'};
   const html = list.slice(0,15).map(k=>`<div class="ai-result-card">
       <div class="ai-result-info"><b>${chatEsc(k.workerName||'—')}</b><br>${chatEsc(k.loai||'Nghỉ phép')} · ${chatEsc(k.fromDate||'')} → ${chatEsc(k.toDate||'')}${k.lydo?' · '+chatEsc(k.lydo):''}</div>
-      <button class="ai-result-view-btn" onclick="closeAiChatWindow();goTab('chamCong')">Xem</button>
+      <button class="ai-result-view-btn" onclick="closeAiChatWindow();goTab('nhanSu')">Xem</button>
     </div>`).join('');
   return { text: title, html: `<div class="ai-result-list">${html}</div>` };
 }
@@ -6451,7 +6533,8 @@ const AI_NAV_MAP = [
   {tab:'keHoach', re:/\bmo\b.*(ke hoach)/},
   {tab:'hoanThanh', re:/\bmo\b.*(don hoan thanh|hoan thanh)/},
   {tab:'baoCao', re:/\bmo\b.*(bao cao)/},
-  {tab:'chamCong', re:/\bmo\b.*(cham cong|nhan su)/},
+  {tab:'nhanSu', re:/\bmo\b.*(nhan su|danh sach nhan vien|ky luat|nghi phep)/},
+  {tab:'chamCong', re:/\bmo\b.*(cham cong)/},
   {tab:'baoTriMay', re:/\bmo\b.*(bao tri|may moc)/},
   {tab:'lichLamViec', re:/\bmo\b.*(lich lam viec|lich phan cong)/},
   {tab:'nhatKy', re:/\bmo\b.*(nhat ky)/},
@@ -6461,7 +6544,7 @@ const AI_NAV_MAP = [
 function aiHandleNavigate(normText){
   const hit = AI_NAV_MAP.find(x=>x.re.test(normText));
   if(!hit) return null;
-  const titles = {dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',chamCong:'Quản lý nhân sự',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
+  const titles = {dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
   closeAiChatWindow();
   goTab(hit.tab);
   return {text:`✅ Đã mở "${titles[hit.tab]||hit.tab}" cho bạn.`};
@@ -6651,7 +6734,7 @@ const AI_TOOLS = [
   { name:'broadcast_notification', description:'Gửi thông báo cho cả nhóm/toàn hệ thống.',
     input_schema:{type:'object', properties:{ message:{type:'string'} }, required:['message']} },
   { name:'navigate_tab', description:'Mở 1 màn hình/tab trong ứng dụng.',
-    input_schema:{type:'object', properties:{ tab:{type:'string', enum:['dashboard','dorDang','keHoach','hoanThanh','baoCao','chamCong','baoTriMay','lichLamViec','nhatKy','settings','qrCode']} }, required:['tab']} },
+    input_schema:{type:'object', properties:{ tab:{type:'string', enum:['dashboard','dorDang','keHoach','hoanThanh','baoCao','nhanSu','chamCong','baoTriMay','lichLamViec','nhatKy','settings','qrCode']} }, required:['tab']} },
   { name:'list_customers_with_active_orders', description:'Liệt kê các khách hàng đang có đơn chạy.', input_schema:{type:'object', properties:{}} },
 ];
 
@@ -7504,7 +7587,7 @@ function fmtOnlineDuration(startTs){
 const TAB_LABEL = {
   dashboard:'Tổng quan', dorDang:'Đơn Hàng', keHoach:'Kế hoạch SX',
   hoanThanh:'Đơn hoàn thành', baoCao:'Báo cáo', nhatKy:'Nhật ký thao tác',
-  chamCong:'Quản lý nhân sự', baoTriMay:'Bảo trì máy', lichLamViec:'Lịch làm việc', settings:'Cài đặt'
+  nhanSu:'Quản lý nhân sự', chamCong:'Chấm công', baoTriMay:'Bảo trì máy', lichLamViec:'Lịch làm việc', settings:'Cài đặt'
 };
 function roleIcon(role){ return role==='admin'?'👑':role==='staff'?'⚙️':'👁'; }
 function roleLabel(role){ return role==='admin'?'Quản trị viên':role==='staff'?'Nhân viên SX':'Chỉ xem'; }
@@ -8203,7 +8286,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',chamCong:'Quản lý nhân sự',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
   $('pageTitle').textContent=titles[tab]||tab;
   // FAB: admin mới thấy nút thêm đơn
   // FAB: admin thấy nút + ở tất cả các tab
@@ -8292,7 +8375,7 @@ function updateBtmBadge(){
 // RENDER
 // ════════════════════════════════════════════════════════════
 function renderTab(tab){
-  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
+  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
   if(fns[tab]) fns[tab]();
 }
 
@@ -11408,13 +11491,40 @@ function shiftAttMonth(delta){
   renderChamCong();
 }
 
+// Render lại đúng tab đang mở (Chấm công hoặc Quản lý nhân sự) sau khi danh
+// sách người lao động thay đổi — 2 tab dùng CHUNG 1 nguồn dữ liệu DB.workers
+// nên luôn phải đồng bộ với nhau dù thao tác được thực hiện ở tab nào.
+function refreshWorkerViews(){
+  if(currentTab==='nhanSu') renderNhanSu();
+  else renderChamCong();
+}
+
+// Sinh mã nhân viên tự động dạng NV001, NV002... dựa trên mã lớn nhất đang có
+// (không dùng số thứ tự trong mảng vì nhân viên có thể bị xóa giữa chừng).
+function nextWorkerCode(){
+  let maxN = 0;
+  (DB.workers||[]).forEach(w=>{
+    const mt = /^NV(\d+)$/.exec(w.maNV||'');
+    if(mt) maxN = Math.max(maxN, parseInt(mt[1],10));
+  });
+  return 'NV' + String(maxN+1).padStart(3,'0');
+}
+
 function addWorker(){if(guardViewer())return;
   const id = uid();
-  DB.workers.push({id, name:''});
+  const fromNhanSu = (currentTab==='nhanSu');
+  DB.workers.push({
+    id, name:'', maNV: nextWorkerCode(), gioiTinh:'', ngaySinh:'', sdt:'', cccd:'',
+    diaChi:'', chucVu:'', boPhan:'', ngayVaoLam: todayStr(), loaiHopDong:'',
+    luongCoBan:'', nganHang:'', soTaiKhoan:'', trangThai:'Đang làm', ghiChu:''
+  });
   saveWorkers();
   log('Thêm người lao động', `Đã thêm 1 người lao động mới vào bảng chấm công (chưa đặt tên)`, '', null, {workerId:id});
-  renderChamCong();
-  setTimeout(()=>{ const el=document.getElementById('wkName_'+id); if(el){ el.focus(); } }, 30);
+  refreshWorkerViews();
+  setTimeout(()=>{
+    if(fromNhanSu){ openWorkerProfile(id); }
+    else { const el=document.getElementById('wkName_'+id); if(el){ el.focus(); } }
+  }, 30);
 }
 function renameWorker(id, name){if(guardViewer())return;
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
@@ -11427,14 +11537,67 @@ function renameWorker(id, name){if(guardViewer())return;
 }
 function deleteWorker(id){if(guardViewer())return;
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
-  confirm2('Xóa người lao động', `Xóa "${w.name||'(chưa có tên)'}" khỏi bảng chấm công? (Dữ liệu công đã chấm của người này cũng sẽ bị xóa)`, ()=>{
+  confirm2('Xóa người lao động', `Xóa "${w.name||'(chưa có tên)'}" khỏi hệ thống? (Dữ liệu công đã chấm của người này cũng sẽ bị xóa)`, ()=>{
     DB.workers = DB.workers.filter(x=>x.id!==id);
     Object.keys(DB.attendance).forEach(ym=>{ if(DB.attendance[ym]) delete DB.attendance[ym][id]; });
     saveWorkers(); saveAttendance();
     log('Xóa người lao động', `${w.name||'(chưa có tên)'} · đã xóa toàn bộ dữ liệu công của người này`, '', {workerId:id,name:w.name}, null);
-    renderChamCong();
+    refreshWorkerViews();
     showToast('Đã xóa');
   });
+}
+
+// ─── Hồ sơ nhân viên đầy đủ (mở modal sửa chi tiết) ───
+function openWorkerProfile(id){
+  const w = DB.workers.find(x=>x.id===id); if(!w) return;
+  const viewer = isViewer();
+  $('wpId').value = w.id;
+  $('wpName').value = w.name||'';
+  $('wpMaNV').value = w.maNV||'';
+  $('wpGioiTinh').value = w.gioiTinh||'';
+  $('wpNgaySinh').value = w.ngaySinh||'';
+  $('wpSdt').value = w.sdt||'';
+  $('wpCccd').value = w.cccd||'';
+  $('wpDiaChi').value = w.diaChi||'';
+  $('wpChucVu').value = w.chucVu||'';
+  $('wpBoPhan').value = w.boPhan||'';
+  $('wpNgayVaoLam').value = w.ngayVaoLam||'';
+  $('wpLoaiHopDong').value = w.loaiHopDong||'';
+  $('wpLuongCoBan').value = w.luongCoBan||'';
+  $('wpNganHang').value = w.nganHang||'';
+  $('wpSoTaiKhoan').value = w.soTaiKhoan||'';
+  $('wpTrangThai').value = w.trangThai||'Đang làm';
+  $('wpGhiChu').value = w.ghiChu||'';
+  document.getElementById('workerProfileTitle').textContent = viewer ? '👁 Hồ sơ nhân viên' : '✏️ Sửa hồ sơ nhân viên';
+  document.querySelectorAll('#workerProfileModal input, #workerProfileModal select, #workerProfileModal textarea').forEach(el=>{ el.disabled = viewer; });
+  const saveBtn = document.getElementById('wpSaveBtn');
+  if(saveBtn) saveBtn.style.display = viewer ? 'none' : '';
+  openModal('workerProfileModal');
+}
+function saveWorkerProfile(){if(guardViewer())return;
+  const id = $('wpId').value;
+  const w = DB.workers.find(x=>x.id===id); if(!w) return;
+  w.name = $('wpName').value.trim();
+  w.maNV = $('wpMaNV').value.trim();
+  w.gioiTinh = $('wpGioiTinh').value;
+  w.ngaySinh = $('wpNgaySinh').value;
+  w.sdt = $('wpSdt').value.trim();
+  w.cccd = $('wpCccd').value.trim();
+  w.diaChi = $('wpDiaChi').value.trim();
+  w.chucVu = $('wpChucVu').value.trim();
+  w.boPhan = $('wpBoPhan').value.trim();
+  w.ngayVaoLam = $('wpNgayVaoLam').value;
+  w.loaiHopDong = $('wpLoaiHopDong').value;
+  w.luongCoBan = $('wpLuongCoBan').value;
+  w.nganHang = $('wpNganHang').value.trim();
+  w.soTaiKhoan = $('wpSoTaiKhoan').value.trim();
+  w.trangThai = $('wpTrangThai').value;
+  w.ghiChu = $('wpGhiChu').value.trim();
+  saveWorkers();
+  log('Sửa hồ sơ nhân viên', `${w.name||'(chưa có tên)'} · ${w.chucVu||''} ${w.boPhan?('· '+w.boPhan):''}`, '', null, {workerId:id});
+  closeModal('workerProfileModal');
+  showToast('✅ Đã lưu hồ sơ nhân viên');
+  refreshWorkerViews();
 }
 
 function setCell(workerId, day, value){if(guardViewer())return;
@@ -11538,6 +11701,7 @@ function maintainAttMonth(){
     if(!DB.attendance[realYM]) DB.attendance[realYM] = {};
     _attYM = realYM;
     if(currentTab==='chamCong') renderChamCong();
+    else if(currentTab==='nhanSu') renderNhanSu();
   }
 }
 setInterval(maintainAttMonth, 30000);
@@ -11569,15 +11733,6 @@ function saveAllAttendance(ymParam, silent){if(guardViewer())return;
 }
 
 // ─── state cho sub-tab nhân sự ───
-let _nsTab = 'chamcong';
-function goNsTab(t){
-  _nsTab = t;
-  document.querySelectorAll('.ns-tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===t));
-  document.querySelectorAll('.ns-panel').forEach(el=>el.classList.toggle('active', el.dataset.tab===t));
-  const bar = document.getElementById('nsTabBar');
-  if(bar) bar.scrollIntoView({behavior:'smooth', block:'start'});
-}
-
 function renderChamCong(){
   const ym = curYM();
   const [y,m] = ym.split('-').map(Number);
@@ -11587,22 +11742,177 @@ function renderChamCong(){
   const monthData = DB.attendance[ym] || {};
   const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
   const workers = DB.workers;
-  // Tính tổng lương thưởng sơ bộ (nếu có trường luong)
+  const totalCong = workers.reduce((s,w)=>s + parseCongValNum(computeTotal(w.id)), 0);
+
+  $('mc').innerHTML = `
+    <!-- ── HEADER + THÁNG ── -->
+    <div class="card" style="padding:12px 14px;margin-bottom:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Bảng chấm công tháng ${m}/${y}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--green);margin-top:2px">${totalCong.toFixed(1)} <span style="font-size:12px;font-weight:600;color:var(--text3)">tổng công · ${workers.length} người lao động</span></div>
+        </div>
+        <button class="chip" style="font-size:11.5px;padding:6px 12px;font-weight:700" onclick="goTab('nhanSu')" title="Xem hồ sơ, nghỉ phép, kỷ luật...">👥 Quản lý nhân sự →</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="chip" onclick="shiftAttMonth(-1)">←</button>
+        <input type="month" class="field-inp" style="width:auto;flex:1;min-width:130px" value="${ym}" onchange="changeAttMonth(this.value)">
+        <button class="chip" onclick="shiftAttMonth(1)">→</button>
+        <button class="chip" onclick="changeAttMonth(todayStr().slice(0,7))">Tháng này</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        ${viewer?'':`
+        <button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="saveAllAttendance()">💾 Lưu chấm công</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A4')">🖨️ In A4</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A3')">🖨️ In A3</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="captureAttendance()">📷 Chụp ảnh gửi nhóm</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportAttendanceExcel()">⬇️ Xuất Excel</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="openCcllvQrModal()">🏷 Tạo mã QR xem Chấm công &amp; Lịch làm việc</button>
+        ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="addWorker()">➕ Thêm người lao động</button>`:''}
+        `}
+      </div>
+    </div>
+    <div class="card" style="padding:8px;overflow-x:auto;margin-top:8px">
+      <div id="attCaptureArea" style="background:#fff;padding:6px">
+      <div style="text-align:center;font-weight:700;font-size:14px;margin-bottom:6px;text-transform:uppercase">Bảng chấm công tháng ${m}/${y}</div>
+      <table id="attTable" style="border-collapse:collapse;font-size:11.5px;white-space:nowrap">
+        <thead>
+          <tr>
+            <th style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;min-width:24px">STT</th>
+            <th style="position:sticky;left:24px;background:var(--card);border:1px solid var(--border);padding:5px 8px;min-width:140px;text-align:left">Họ và tên</th>
+            ${dayCols.map(day=>`<th style="border:1px solid var(--border);padding:4px 2px;min-width:32px;text-align:center">
+              <div style="font-size:12px;font-weight:700">${day}</div>
+              <div style="font-weight:700;color:${weekdayVN(y,m,day)==='CN'?'var(--red-m)':'var(--brand2)'};font-size:9.5px;margin-top:1px">${weekdayVN(y,m,day)}</div>
+            </th>`).join('')}
+            <th style="border:1px solid var(--border);padding:5px 6px;min-width:50px;background:var(--green-l);color:var(--green)">Tổng công</th>
+            ${admin?'<th style="border:1px solid var(--border);padding:5px 6px;min-width:30px"></th>':''}
+          </tr>
+        </thead>
+        <tbody>
+          ${workers.map((w,i)=>{
+            const rowData = monthData[w.id] || {};
+            return `<tr>
+              <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;text-align:center">${i+1}</td>
+              <td style="position:sticky;left:24px;background:var(--card);border:1px solid var(--border);padding:2px 4px">
+                <input id="wkName_${w.id}" value="${w.name||''}" placeholder="Tên người lao động" ${admin?'':'readonly'} onchange="renameWorker('${w.id}', this.value)" style="width:130px;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px 2px;outline:none;color:var(--text)">
+              </td>
+              ${dayCols.map(day=>{
+                const v = rowData[day]!==undefined ? rowData[day] : '';
+                return `<td style="border:1px solid var(--border);padding:0">
+                  <input id="cell_${w.id}_${day}" value="${v}" inputmode="decimal" ${viewer?'readonly':''} onchange="setCell('${w.id}', ${day}, this.value)" style="width:30px;height:30px;border:none;background:transparent;text-align:center;font-size:11.5px;font-family:inherit;outline:none;color:var(--text)${viewer?';cursor:default':''}">
+                </td>`;
+              }).join('')}
+              <td id="wkTotal_${w.id}" style="border:1px solid var(--border);padding:5px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${computeTotal(w.id)}</td>
+              ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="deleteWorker('${w.id}')" style="font-size:12px">🗑</button></td>`:''}
+            </tr>`;
+          }).join('')}
+          ${workers.length===0?`<tr><td colspan="${3+nDays}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có người lao động nào${admin?' · bấm "➕ Thêm người lao động" để bắt đầu':''}</td></tr>`:''}
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3);line-height:1.6">
+      <b>Ghi chú cách chấm:</b> Đủ ngày công = <b>1</b> · Nửa ngày công = <b>0.5</b> · Không công = <b>0</b> · Làm thêm giờ ví dụ 2 tiếng ghi <b>1.2</b> (1 công 8h, .2 là 2h thêm). Đủ 8 giờ thêm giờ = +1 công.
+    </div>
+  `;
+}
+
+// ─── state cho sub-tab Quản lý nhân sự (hồ sơ / nghỉ phép / kỷ luật / thống kê) ───
+let _nsTab = 'danhsach';
+function goNsTab(t){
+  _nsTab = t;
+  document.querySelectorAll('.ns-tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===t));
+  document.querySelectorAll('.ns-panel').forEach(el=>el.classList.toggle('active', el.dataset.tab===t));
+  const bar = document.getElementById('nsTabBar');
+  if(bar) bar.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// Bộ lọc bảng "Danh sách nhân viên" (tìm kiếm + trạng thái) — lọc cục bộ,
+// chỉ vẽ lại phần <tbody> để không mất focus ô đang gõ.
+let _nsWorkerSearch = '';
+let _nsWorkerStatusFilter = 'all';
+const NS_STATUS_COLOR = {'Đang làm':'#16a34a','Tạm nghỉ':'#f59e0b','Đã nghỉ việc':'#6b7280'};
+const NS_STATUS_BG    = {'Đang làm':'#dcfce7','Tạm nghỉ':'#fef3c7','Đã nghỉ việc':'#f1f5f9'};
+
+function workerInitials(name){
+  const parts = (name||'?').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '?';
+  return parts.length>1 ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase() : parts[0][0].toUpperCase();
+}
+
+function renderWorkerTableRows(list){
+  const ym = curYM();
+  const admin = isAdmin();
+  const viewer = isViewer();
+  if(!list.length) return `<tr><td colspan="11" style="padding:22px;text-align:center;color:var(--text4);font-size:13px">Không tìm thấy nhân viên phù hợp</td></tr>`;
+  return list.map((w,i)=>{
+    const klW = (DB.kyLuat||[]).filter(k=>k.workerId===w.id && (k.date||'').startsWith(ym)).length;
+    const npW = (DB.nghiPhep||[]).filter(k=>k.workerId===w.id && (k.fromDate||'').startsWith(ym)).length;
+    const st = w.trangThai || 'Đang làm';
+    return `<tr>
+      <td style="text-align:center;color:var(--text3)">${i+1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${workerInitials(w.name)}</div>
+          <div>
+            <div style="font-weight:700;font-size:13px">${(w.name||'(Chưa đặt tên)').replace(/</g,'&lt;')}</div>
+            <div style="font-size:11px;color:var(--text4)">${w.maNV?('Mã NV: '+w.maNV):('ID: '+w.id)}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:12.5px">${(w.chucVu||'—').toString().replace(/</g,'&lt;')}</td>
+      <td style="font-size:12.5px">${(w.boPhan||'—').toString().replace(/</g,'&lt;')}</td>
+      <td style="font-size:12.5px;white-space:nowrap">${w.sdt?`<a href="tel:${w.sdt}" style="color:var(--brand);text-decoration:none">${(''+w.sdt).replace(/</g,'&lt;')}</a>`:'—'}</td>
+      <td style="text-align:center;font-size:12px;white-space:nowrap">${w.ngayVaoLam||'—'}</td>
+      <td style="text-align:center"><span class="ns-badge" style="background:${NS_STATUS_BG[st]||'#f1f5f9'};color:${NS_STATUS_COLOR[st]||'#6b7280'}">${st}</span></td>
+      <td style="text-align:center;font-weight:700;color:var(--green)">${computeTotal(w.id)}</td>
+      <td style="text-align:center">${klW>0?`<span class="ns-badge" style="background:#fee2e2;color:#dc2626">${klW}</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
+      <td style="text-align:center">${npW>0?`<span class="ns-badge" style="background:#dbeafe;color:var(--brand)">${npW}</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <button class="icon-btn" title="${viewer?'Xem hồ sơ':'Sửa hồ sơ'}" onclick="openWorkerProfile('${w.id}')" style="font-size:12px">${viewer?'👁':'✏️'}</button>
+        ${admin?`<button class="icon-btn del" onclick="deleteWorker('${w.id}')" title="Xóa" style="font-size:12px">🗑</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function nsApplyWorkerFilter(searchVal, statusVal){
+  if(searchVal!==undefined) _nsWorkerSearch = searchVal;
+  if(statusVal!==undefined) _nsWorkerStatusFilter = statusVal;
+  const q = _nsWorkerSearch.trim().toLowerCase();
+  let list = DB.workers;
+  if(_nsWorkerStatusFilter!=='all') list = list.filter(w=>(w.trangThai||'Đang làm')===_nsWorkerStatusFilter);
+  if(q) list = list.filter(w=>{
+    const hay = [w.name,w.maNV,w.chucVu,w.boPhan,w.sdt,w.cccd].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  const body = document.getElementById('nsWorkerTableBody');
+  if(body) body.innerHTML = renderWorkerTableRows(list);
+}
+
+function renderNhanSu(){
+  const ym = curYM();
+  const [y,m] = ym.split('-').map(Number);
+  const nDays = daysInMonth(ym);
+  const admin = isAdmin();
+  const monthData = DB.attendance[ym] || {};
+  const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
+  const workers = DB.workers;
   const totalCong = workers.reduce((s,w)=>s + parseCongValNum(computeTotal(w.id)), 0);
   const klCount = (DB.kyLuat||[]).filter(k=>{
     const d = k.date||'';
     return d.startsWith(ym);
   }).length;
-  // Tổng nghỉ phép tháng
   const nghiPhepCount = (DB.nghiPhep||[]).filter(k=>{ const d=k.fromDate||''; return d.startsWith(ym); }).length;
+  const dangLamCount = workers.filter(w=>(w.trangThai||'Đang làm')==='Đang làm').length;
 
   $('mc').innerHTML = `
     <!-- ── HEADER + STATS ── -->
     <div class="card" style="padding:12px 14px;margin-bottom:0">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tổng quan tháng ${m}/${y}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tổng quan nhân sự · Tháng ${m}/${y}</div>
       <div class="ns-stat-grid">
         <div class="ns-stat" onclick="goNsTab('danhsach')" title="Xem danh sách nhân viên"><div class="ns-stat-val">${workers.length}</div><div class="ns-stat-lbl">Người lao động</div></div>
-        <div class="ns-stat" onclick="goNsTab('chamcong')" title="Xem bảng chấm công"><div class="ns-stat-val" style="color:var(--green)">${totalCong.toFixed(1)}</div><div class="ns-stat-lbl">Tổng công tháng</div></div>
+        <div class="ns-stat" onclick="goTab('chamCong')" title="Xem bảng chấm công" style="cursor:pointer"><div class="ns-stat-val" style="color:var(--green)">${totalCong.toFixed(1)}</div><div class="ns-stat-lbl">Tổng công tháng</div></div>
         <div class="ns-stat" onclick="goNsTab('nghiphep')" title="Xem đơn nghỉ phép"><div class="ns-stat-val" style="color:var(--amber)">${nghiPhepCount}</div><div class="ns-stat-lbl">Đơn nghỉ phép</div></div>
         <div class="ns-stat" onclick="goNsTab('kyluat')" title="Xem hồ sơ kỷ luật"><div class="ns-stat-val" style="color:var(--red-m)">${klCount}</div><div class="ns-stat-lbl">Vi phạm KL</div></div>
       </div>
@@ -11610,113 +11920,46 @@ function renderChamCong(){
 
     <!-- ── SUB-TABS ── -->
     <div class="ns-tabs" id="nsTabBar">
-      <button class="ns-tab${_nsTab==='chamcong'?' active':''}" data-tab="chamcong" onclick="goNsTab('chamcong')">🗓️ Chấm công</button>
       <button class="ns-tab${_nsTab==='danhsach'?' active':''}" data-tab="danhsach" onclick="goNsTab('danhsach')">👥 Danh sách NV</button>
       <button class="ns-tab${_nsTab==='nghiphep'?' active':''}" data-tab="nghiphep" onclick="goNsTab('nghiphep')">🏖️ Nghỉ phép</button>
       <button class="ns-tab${_nsTab==='kyluat'?' active':''}" data-tab="kyluat" onclick="goNsTab('kyluat')">⚠️ Kỷ luật</button>
       <button class="ns-tab${_nsTab==='thongke'?' active':''}" data-tab="thongke" onclick="goNsTab('thongke')">📊 Thống kê</button>
+      <button class="ns-tab" onclick="goTab('chamCong')" title="Sang tab Chấm công" style="margin-left:auto;color:var(--brand)">🗓️ Chấm công →</button>
     </div>
 
-    <!-- ══════════ PANEL: CHẤM CÔNG ══════════ -->
-    <div class="ns-panel${_nsTab==='chamcong'?' active':''}" data-tab="chamcong">
-      <div class="card" style="padding:12px 14px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <button class="chip" onclick="shiftAttMonth(-1)">←</button>
-          <input type="month" class="field-inp" style="width:auto;flex:1;min-width:130px" value="${ym}" onchange="changeAttMonth(this.value)">
-          <button class="chip" onclick="shiftAttMonth(1)">→</button>
-          <button class="chip" onclick="changeAttMonth(todayStr().slice(0,7))">Tháng này</button>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          ${viewer?'':`
-          <button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="saveAllAttendance()">💾 Lưu chấm công</button>
-          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A4')">🖨️ In A4</button>
-          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A3')">🖨️ In A3</button>
-          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="captureAttendance()">📷 Chụp ảnh gửi nhóm</button>
-          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportAttendanceExcel()">⬇️ Xuất Excel</button>
-          <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="openCcllvQrModal()">🏷 Tạo mã QR xem Chấm công &amp; Lịch làm việc</button>
-          ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="addWorker()">➕ Thêm người lao động</button>`:''}
-          `}
-        </div>
-      </div>
-      <div class="card" style="padding:8px;overflow-x:auto;margin-top:0">
-        <div id="attCaptureArea" style="background:#fff;padding:6px">
-        <div style="text-align:center;font-weight:700;font-size:14px;margin-bottom:6px;text-transform:uppercase">Bảng chấm công tháng ${m}/${y}</div>
-        <table id="attTable" style="border-collapse:collapse;font-size:11.5px;white-space:nowrap">
-          <thead>
-            <tr>
-              <th style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;min-width:24px">STT</th>
-              <th style="position:sticky;left:24px;background:var(--card);border:1px solid var(--border);padding:5px 8px;min-width:140px;text-align:left">Họ và tên</th>
-              ${dayCols.map(day=>`<th style="border:1px solid var(--border);padding:4px 2px;min-width:32px;text-align:center">
-                <div style="font-size:12px;font-weight:700">${day}</div>
-                <div style="font-weight:700;color:${weekdayVN(y,m,day)==='CN'?'var(--red-m)':'var(--brand2)'};font-size:9.5px;margin-top:1px">${weekdayVN(y,m,day)}</div>
-              </th>`).join('')}
-              <th style="border:1px solid var(--border);padding:5px 6px;min-width:50px;background:var(--green-l);color:var(--green)">Tổng công</th>
-              ${admin?'<th style="border:1px solid var(--border);padding:5px 6px;min-width:30px"></th>':''}
-            </tr>
-          </thead>
-          <tbody>
-            ${workers.map((w,i)=>{
-              const rowData = monthData[w.id] || {};
-              return `<tr>
-                <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;text-align:center">${i+1}</td>
-                <td style="position:sticky;left:24px;background:var(--card);border:1px solid var(--border);padding:2px 4px">
-                  <input id="wkName_${w.id}" value="${w.name||''}" placeholder="Tên người lao động" ${admin?'':'readonly'} onchange="renameWorker('${w.id}', this.value)" style="width:130px;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px 2px;outline:none;color:var(--text)">
-                </td>
-                ${dayCols.map(day=>{
-                  const v = rowData[day]!==undefined ? rowData[day] : '';
-                  return `<td style="border:1px solid var(--border);padding:0">
-                    <input id="cell_${w.id}_${day}" value="${v}" inputmode="decimal" ${viewer?'readonly':''} onchange="setCell('${w.id}', ${day}, this.value)" style="width:30px;height:30px;border:none;background:transparent;text-align:center;font-size:11.5px;font-family:inherit;outline:none;color:var(--text)${viewer?';cursor:default':''}">
-                  </td>`;
-                }).join('')}
-                <td id="wkTotal_${w.id}" style="border:1px solid var(--border);padding:5px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${computeTotal(w.id)}</td>
-                ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="deleteWorker('${w.id}')" style="font-size:12px">🗑</button></td>`:''}
-              </tr>`;
-            }).join('')}
-            ${workers.length===0?`<tr><td colspan="${3+nDays}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có người lao động nào${admin?' · bấm "➕ Thêm người lao động" để bắt đầu':''}</td></tr>`:''}
-          </tbody>
-        </table>
-        </div>
-      </div>
-      <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3);line-height:1.6">
-        <b>Ghi chú cách chấm:</b> Đủ ngày công = <b>1</b> · Nửa ngày công = <b>0.5</b> · Không công = <b>0</b> · Làm thêm giờ ví dụ 2 tiếng ghi <b>1.2</b> (1 công 8h, .2 là 2h thêm). Đủ 8 giờ thêm giờ = +1 công.
-      </div>
-    </div>
-
-    <!-- ══════════ PANEL: DANH SÁCH NHÂN VIÊN ══════════ -->
+    <!-- ══════════ PANEL: DANH SÁCH NHÂN VIÊN (đầy đủ, chuyên nghiệp) ══════════ -->
     <div class="ns-panel${_nsTab==='danhsach'?' active':''}" data-tab="danhsach">
       <div class="card" style="padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          <div style="font-weight:700;font-size:15px;color:var(--brand)">👥 Danh sách người lao động</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <div style="font-weight:700;font-size:15px;color:var(--brand)">👥 Danh sách nhân viên <span style="font-weight:500;font-size:12px;color:var(--text4)">(${dangLamCount} đang làm việc)</span></div>
           ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700;border:none;cursor:pointer" onclick="addWorker()">➕ Thêm nhân viên</button>`:''}
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <input id="nsWorkerSearch" class="field-inp" style="flex:1;min-width:200px" placeholder="🔍 Tìm theo tên, mã NV, chức vụ, bộ phận, SĐT..." value="${(_nsWorkerSearch||'').replace(/"/g,'&quot;')}" oninput="nsApplyWorkerFilter(this.value, undefined)">
+          <select id="nsWorkerStatusFilter" class="field-inp" style="width:auto" onchange="nsApplyWorkerFilter(undefined, this.value)">
+            <option value="all" ${_nsWorkerStatusFilter==='all'?'selected':''}>Tất cả trạng thái</option>
+            <option value="Đang làm" ${_nsWorkerStatusFilter==='Đang làm'?'selected':''}>🟢 Đang làm</option>
+            <option value="Tạm nghỉ" ${_nsWorkerStatusFilter==='Tạm nghỉ'?'selected':''}>🟡 Tạm nghỉ</option>
+            <option value="Đã nghỉ việc" ${_nsWorkerStatusFilter==='Đã nghỉ việc'?'selected':''}>⚪ Đã nghỉ việc</option>
+          </select>
+        </div>
         ${workers.length===0
-          ? `<div style="text-align:center;color:var(--text4);padding:24px;font-size:13px">Chưa có nhân viên nào trong hệ thống</div>`
-          : `<div style="overflow-x:auto"><table class="ns-table" style="min-width:520px">
+          ? `<div style="text-align:center;color:var(--text4);padding:24px;font-size:13px">Chưa có nhân viên nào trong hệ thống${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</div>`
+          : `<div style="overflow-x:auto"><table class="ns-table" style="min-width:980px" id="nsWorkerTable">
           <thead><tr>
             <th style="width:36px">STT</th>
-            <th>Họ và tên</th>
+            <th style="min-width:170px">Nhân viên</th>
+            <th>Chức vụ</th>
+            <th>Bộ phận</th>
+            <th>SĐT</th>
+            <th style="text-align:center">Ngày vào làm</th>
+            <th style="text-align:center">Trạng thái</th>
             <th style="text-align:center">Tổng công tháng ${m}/${y}</th>
-            <th style="text-align:center">Kỷ luật (tháng)</th>
-            <th style="text-align:center">Nghỉ phép (tháng)</th>
-            ${admin?'<th style="width:36px"></th>':''}
+            <th style="text-align:center">Kỷ luật</th>
+            <th style="text-align:center">Nghỉ phép</th>
+            <th style="width:70px"></th>
           </tr></thead>
-          <tbody>
-            ${workers.map((w,i)=>{
-              const klW = (DB.kyLuat||[]).filter(k=>k.workerId===w.id && (k.date||'').startsWith(ym)).length;
-              const npW = (DB.nghiPhep||[]).filter(k=>k.workerId===w.id && (k.fromDate||'').startsWith(ym)).length;
-              return `<tr>
-                <td style="text-align:center;color:var(--text3)">${i+1}</td>
-                <td>
-                  <div style="font-weight:700;font-size:13px">${(w.name||'(Chưa đặt tên)').replace(/</g,'&lt;')}</div>
-                  <div style="font-size:11px;color:var(--text4)">ID: ${w.id}</div>
-                </td>
-                <td style="text-align:center;font-weight:700;color:var(--green)">${computeTotal(w.id)}</td>
-                <td style="text-align:center">${klW>0?`<span class="ns-badge" style="background:#fee2e2;color:#dc2626">${klW} vi phạm</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
-                <td style="text-align:center">${npW>0?`<span class="ns-badge" style="background:#dbeafe;color:var(--brand)">${npW} đơn</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
-                ${admin?`<td style="text-align:center"><button class="icon-btn del" onclick="deleteWorker('${w.id}')" title="Xóa">🗑</button></td>`:''}
-              </tr>`;
-            }).join('')}
-          </tbody>
+          <tbody id="nsWorkerTableBody">${renderWorkerTableRows(workers)}</tbody>
         </table></div>`}
       </div>
     </div>
@@ -11889,7 +12132,7 @@ function saveNghiPhep(){if(guardViewer())return;
   // nghỉ phép) — trước đây chỉ cập nhật #nghiPhepList nên thẻ thống kê
   // "Đơn nghỉ phép" ở đầu trang và cột "Nghỉ phép (tháng)" ở tab Danh sách
   // NV bị đứng yên, không phản ánh đơn vừa thêm cho tới khi chuyển tab.
-  renderChamCong();
+  renderNhanSu();
 }
 function deleteNghiPhep(id){if(guardViewer())return;
   confirm2('Xóa đơn','Xác nhận xóa đơn nghỉ phép này?',()=>{
@@ -11897,7 +12140,7 @@ function deleteNghiPhep(id){if(guardViewer())return;
     lsSave();
     syncArrFieldToServer('nghiPhep', '/data/nghiPhep');
     showToast('🗑️ Đã xóa');
-    renderChamCong();
+    renderNhanSu();
   });
 }
 function approveNghiPhep(id, status){if(guardViewer())return;
@@ -11910,7 +12153,7 @@ function approveNghiPhep(id, status){if(guardViewer())return;
   // Render lại toàn bộ tab để tình trạng nghỉ (đã duyệt/từ chối) cập nhật
   // đồng thời ở mọi nơi hiển thị trong tab quản lý nhân sự, không chỉ riêng
   // bảng danh sách đơn nghỉ phép.
-  renderChamCong();
+  renderNhanSu();
 }
 function renderNghiPhepList(){
   const list=(DB.nghiPhep||[]);
