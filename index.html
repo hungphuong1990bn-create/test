@@ -2428,9 +2428,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .pub-kh-sum-card.warn .pub-kh-sum-n{color:#b45309}
 .pub-kh-sum-card.danger .pub-kh-sum-n{color:#b91c1c}
 .pub-kh-sum-lbl{font-size:9.5px;color:var(--text3);font-weight:600;margin-top:2px;line-height:1.25}
-.pub-kh-tabs{display:flex;gap:8px;margin-bottom:10px}
-.pub-kh-tab{flex:1;text-align:center;padding:9px 6px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text3);font-weight:700;font-size:12.5px;cursor:pointer;transition:all .15s}
-.pub-kh-tab.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:var(--sh)}
 .pub-kh-toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .pub-kh-search{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:var(--card);color:var(--text)}
 .pub-kh-search:focus{border-color:var(--brand2)}
@@ -2442,17 +2439,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .pub-kh-cat-count{font-size:10.5px;font-weight:600;color:var(--text4);background:var(--bg2);padding:2px 8px;border-radius:10px}
 .pub-kh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
 .pub-kh-chip-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;color:var(--text);text-align:center;box-shadow:var(--sh)}
-.pub-kh-qty-list{display:flex;flex-direction:column;gap:8px}
-.pub-kh-qty-item{background:var(--card);border-radius:12px;box-shadow:var(--sh);padding:11px 13px;display:flex;align-items:center;gap:10px}
-.pub-kh-qty-info{flex:1;min-width:0}
-.pub-kh-qty-size{font-size:14px;font-weight:800;color:var(--text)}
-.pub-kh-qty-meta{font-size:11px;color:var(--text3);margin-top:2px}
-.pub-kh-qty-side{text-align:right;flex-shrink:0}
-.pub-kh-qty-num{font-size:17px;font-weight:800}
-.pub-kh-qty-badge{display:inline-block;margin-top:3px;padding:2px 8px;border-radius:10px;font-size:9.5px;font-weight:800;white-space:nowrap}
-.pub-kh-qty-badge.ok{background:var(--green-l);color:var(--green)}
-.pub-kh-qty-badge.warn{background:var(--amber-l);color:#b45309}
-.pub-kh-qty-badge.danger{background:var(--red-l);color:#b91c1c}
 .pub-kh-empty{text-align:center;color:var(--text4);font-size:13px;padding:36px 12px}
 .pub-kh-updated{text-align:center;font-size:10.5px;color:var(--text4);margin-bottom:12px}
 
@@ -15356,14 +15342,7 @@ async function renderPublicCcllv(){
 // không cần đăng nhập — xem trực tiếp danh mục kích thước khuôn và số
 // lượng khuôn tồn kho, đọc dữ liệu trực tiếp từ Firebase RTDB.
 // ════════════════════════════════════════════════════════════
-let _pubKh = { catalog:[], qty:[], tab:'catalog', search:'', catFilter:'all', typeFilter:'all' };
-
-function khuonStatusOfPub(qty){
-  const q = Number(qty)||0;
-  if(q<=0) return {cls:'danger', label:'⛔ Hết hàng'};
-  if(q<=1) return {cls:'warn', label:'⚠️ Sắp hết'};
-  return {cls:'ok', label:'✅ Có sẵn'};
-}
+let _pubKh = { catalog:[], search:'', catFilter:'all' };
 
 async function renderPublicKhuon(){
   $('loginScreen').classList.remove('active');
@@ -15377,21 +15356,19 @@ async function renderPublicKhuon(){
     return;
   }
 
-  let catalog=[], qty=[], errMsg=null;
+  // Chỉ tải danh mục khuôn (khuonCatalog) — không tải kho khuôn/số lượng
+  // (khuonQty) nữa, để trang không bị lỗi "không hiển thị" nếu rules
+  // Firebase chỉ cho phép đọc công khai nhánh khuonCatalog.
+  let catalog=[], errMsg=null;
   try{
-    const [rc, rq] = await Promise.all([
-      fetch(dbUrl + '/data/khuonCatalog.json?print=pretty', {cache:'no-store'}),
-      fetch(dbUrl + '/data/khuonQty.json?print=pretty', {cache:'no-store'})
-    ]);
-    if(!rc.ok || !rq.ok){
-      const bad = [rc,rq].map(r=>r.status).find(s=>s===401||s===403);
-      errMsg = bad
-        ? `⚠️ Không kết nối được tới máy chủ dữ liệu (mã lỗi HTTP ${bad}).<br>Có thể quy tắc bảo mật (Rules) của Firebase đang chặn truy cập công khai.`
+    const rc = await fetch(dbUrl + '/data/khuonCatalog.json?print=pretty', {cache:'no-store'});
+    if(!rc.ok){
+      errMsg = (rc.status===401||rc.status===403)
+        ? `⚠️ Không kết nối được tới máy chủ dữ liệu (mã lỗi HTTP ${rc.status}).<br>Có thể quy tắc bảo mật (Rules) của Firebase đang chặn truy cập công khai.`
         : `⚠️ Không kết nối được tới máy chủ dữ liệu.<br>Vui lòng thử lại sau ít phút hoặc liên hệ nhà máy.`;
     } else {
-      const dc = await rc.json(), dq = await rq.json();
+      const dc = await rc.json();
       catalog = Array.isArray(dc) ? dc.filter(Boolean) : Object.values(dc||{}).filter(Boolean);
-      qty = Array.isArray(dq) ? dq.filter(Boolean) : Object.values(dq||{}).filter(Boolean);
     }
   }catch(e){
     errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
@@ -15402,27 +15379,16 @@ async function renderPublicKhuon(){
     return;
   }
 
-  _pubKh = { catalog, qty, tab:'catalog', search:'', catFilter:'all', typeFilter:'all' };
-
-  const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
-  const lowStock = qty.filter(r=>Number(r.qty)<=1 && Number(r.qty)>0).length;
-  const outStock = qty.filter(r=>Number(r.qty)<=0).length;
-  const warnCls = outStock ? 'danger' : (lowStock ? 'warn' : '');
+  _pubKh = { catalog, search:'', catFilter:'all' };
 
   wrap.innerHTML = `
     <div class="pub-header">
       <div class="pub-header-logo"><img src="${DP_LOGO_DATAURL}" alt="Logo Đông Phương" class="pub-header-logo-img"><span>CÔNG TY CP CÔNG THƯƠNG ĐÔNG PHƯƠNG</span></div>
       <div class="pub-header-title">🧩 Tổng hợp Khuôn</div>
-      <div class="pub-header-code">Danh mục kích thước &amp; kho khuôn — cập nhật trực tiếp từ hệ thống</div>
+      <div class="pub-header-code">Danh mục kích thước khuôn — cập nhật trực tiếp từ hệ thống</div>
     </div>
-    <div class="pub-kh-summary">
+    <div class="pub-kh-summary" style="grid-template-columns:1fr">
       <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${catalog.length}</div><div class="pub-kh-sum-lbl">Kích thước trong danh mục</div></div>
-      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${totalQty}</div><div class="pub-kh-sum-lbl">Tổng số khuôn hiện có</div></div>
-      <div class="pub-kh-sum-card ${warnCls}"><div class="pub-kh-sum-n">${lowStock+outStock}</div><div class="pub-kh-sum-lbl">Sắp hết / hết hàng</div></div>
-    </div>
-    <div class="pub-kh-tabs">
-      <button class="pub-kh-tab active" id="pubKhTabBtn-catalog" onclick="pubKhSwitchTab('catalog')">📋 Danh mục khuôn</button>
-      <button class="pub-kh-tab" id="pubKhTabBtn-qty" onclick="pubKhSwitchTab('qty')">📦 Kho khuôn (số lượng)</button>
     </div>
     <div id="pubKhBody"></div>
     <div class="pub-kh-updated">Cập nhật lúc ${fmtDateTime(Date.now())}</div>
@@ -15436,21 +15402,15 @@ async function renderPublicKhuon(){
   }
 }
 
-function pubKhSwitchTab(tab){
-  _pubKh.tab = tab; _pubKh.search=''; _pubKh.catFilter='all'; _pubKh.typeFilter='all';
-  document.querySelectorAll('.pub-kh-tab').forEach(el=>el.classList.toggle('active', el.id==='pubKhTabBtn-'+tab));
-  pubKhRenderBody();
-}
 function pubKhSetSearch(val){ _pubKh.search = (val||'').toLowerCase(); pubKhRenderBody(); }
 function pubKhSetCat(c){ _pubKh.catFilter = c; pubKhRenderBody(); }
-function pubKhSetType(t){ _pubKh.typeFilter = t; pubKhRenderBody(); }
 
 function pubKhRenderBody(){
   const body = $('pubKhBody'); if(!body) return;
   const active = document.activeElement;
   const wasSearchFocused = active && active.classList && active.classList.contains('pub-kh-search');
   const caret = wasSearchFocused ? active.selectionStart : null;
-  if(_pubKh.tab==='catalog') pubKhRenderCatalog(body); else pubKhRenderQty(body);
+  pubKhRenderCatalog(body);
   if(wasSearchFocused){
     const inp = body.querySelector('.pub-kh-search');
     if(inp){ inp.focus(); if(caret!=null) inp.setSelectionRange(caret, caret); }
@@ -15482,56 +15442,6 @@ function pubKhRenderCatalog(body){
         <div class="pub-kh-cat-title">${pubEsc(g)} <span class="pub-kh-cat-count">${groups[g].length} kích thước</span></div>
         <div class="pub-kh-grid">
           ${groups[g].map(it=>`<div class="pub-kh-chip-item">${pubEsc(it.size)}</div>`).join('')}
-        </div>
-      `).join('')
-    }
-  `;
-}
-
-function pubKhRenderQty(body){
-  const { qty } = _pubKh;
-  const q = _pubKh.search;
-  const cats = [...new Set(qty.map(x=>x.category))].sort();
-  const types = [...new Set(qty.map(x=>x.loai).filter(Boolean))].sort();
-  let list = qty.filter(x=>
-    (_pubKh.catFilter==='all' || x.category===_pubKh.catFilter) &&
-    (_pubKh.typeFilter==='all' || x.loai===_pubKh.typeFilter) &&
-    (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q))
-  );
-  const groups = {};
-  list.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
-  const groupNames = Object.keys(groups).sort();
-
-  body.innerHTML = `
-    <div class="pub-kh-toolbar">
-      <input class="pub-kh-search" placeholder="🔎 Tìm kích thước, nhóm khuôn..." value="${pubEsc(_pubKh.search)}" oninput="pubKhSetSearch(this.value)">
-      ${types.length>1?`<div class="pub-kh-chips">
-        <button class="pub-kh-chip ${_pubKh.typeFilter==='all'?'active':''}" onclick="pubKhSetType('all')">Tất cả loại</button>
-        ${types.map(t=>`<button class="pub-kh-chip ${_pubKh.typeFilter===t?'active':''}" onclick="pubKhSetType('${t.replace(/'/g,"\\'")}')">${pubEsc(t)}</button>`).join('')}
-      </div>`:''}
-      <div class="pub-kh-chips">
-        <button class="pub-kh-chip ${_pubKh.catFilter==='all'?'active':''}" onclick="pubKhSetCat('all')">Tất cả nhóm (${qty.length})</button>
-        ${cats.map(c=>`<button class="pub-kh-chip ${_pubKh.catFilter===c?'active':''}" onclick="pubKhSetCat('${c.replace(/'/g,"\\'")}')">${pubEsc(c)} (${qty.filter(x=>x.category===c).length})</button>`).join('')}
-      </div>
-    </div>
-    ${groupNames.length===0 ? `<div class="pub-kh-empty">📦 Không tìm thấy mục khuôn nào phù hợp</div>` :
-      groupNames.map(g=>`
-        <div class="pub-kh-cat-title">${pubEsc(g)} <span class="pub-kh-cat-count">${groups[g].length} mục</span></div>
-        <div class="pub-kh-qty-list">
-          ${groups[g].map(it=>{
-            const st = khuonStatusOfPub(it.qty);
-            const numColor = st.cls==='danger' ? '#b91c1c' : (st.cls==='warn' ? '#b45309' : 'var(--brand)');
-            return `<div class="pub-kh-qty-item">
-              <div class="pub-kh-qty-info">
-                <div class="pub-kh-qty-size">${pubEsc(it.size)}</div>
-                <div class="pub-kh-qty-meta">${it.loai?`🏷 ${pubEsc(it.loai)}`:''}${it.ngayMua?` · Mua: ${pubEsc(it.ngayMua)}`:''}</div>
-              </div>
-              <div class="pub-kh-qty-side">
-                <div class="pub-kh-qty-num" style="color:${numColor}">${Number(it.qty)||0}</div>
-                <div class="pub-kh-qty-badge ${st.cls}">${st.label}</div>
-              </div>
-            </div>`;
-          }).join('')}
         </div>
       `).join('')
     }
