@@ -7302,10 +7302,24 @@ async function initAndStartSync(){
         if(data.nghiPhep){ DB.nghiPhep = data.nghiPhep; }
         if(data.lichLamViec){ DB.lichLamViec = data.lichLamViec; }
         if(data.baoTri){ DB.baoTri = data.baoTri; }
+        // SỬA LỖI: trang công khai Tổng hợp Khuôn đọc thẳng
+        // /data/khuonCatalog + /data/khuonQty từ Firebase. Trước đây khi
+        // Firebase chưa có 2 nhánh này, app chỉ âm thầm dùng dữ liệu mẫu
+        // CỤC BỘ (KHUON_CATALOG_SEED/KHUON_QTY_SEED) mà KHÔNG đẩy lên
+        // server — khiến trang công khai luôn thấy "0 kích thước" dù trên
+        // app admin vẫn thấy đầy đủ danh mục. Giờ nếu server chưa có (hoặc
+        // rỗng), tự động đẩy dữ liệu mẫu cục bộ lên Firebase ngay khi kết
+        // nối được, để trang công khai đọc được.
         if(data.khuonCatalog && data.khuonCatalog.length){ DB.khuonCatalog = Array.isArray(data.khuonCatalog)?data.khuonCatalog:Object.values(data.khuonCatalog); }
-        else if(!DB.khuonCatalog || !DB.khuonCatalog.length){ DB.khuonCatalog = KHUON_CATALOG_SEED.map(x=>({...x})); }
+        else {
+          if(!DB.khuonCatalog || !DB.khuonCatalog.length) DB.khuonCatalog = KHUON_CATALOG_SEED.map(x=>({...x}));
+          syncArrFieldToServer('khuonCatalog', '/data/khuonCatalog');
+        }
         if(data.khuonQty && data.khuonQty.length){ DB.khuonQty = Array.isArray(data.khuonQty)?data.khuonQty:Object.values(data.khuonQty); }
-        else if(!DB.khuonQty || !DB.khuonQty.length){ DB.khuonQty = KHUON_QTY_SEED.map(x=>({...x})); }
+        else {
+          if(!DB.khuonQty || !DB.khuonQty.length) DB.khuonQty = KHUON_QTY_SEED.map(x=>({...x}));
+          syncArrFieldToServer('khuonQty', '/data/khuonQty');
+        }
         lsSave();
         _lastHash = hashOrders(DB.orders);
         DB.orders.forEach(o=>_knownIds.add(o.id));
@@ -7314,8 +7328,9 @@ async function initAndStartSync(){
         _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
         _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
       } else if(!data){
-        // Lần đầu: đẩy data lên
-        await fbWrite('/data', {orders:DB.orders, ordersTrash:DB.ordersTrash, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri}, 'PUT');
+        // Lần đầu: đẩy data lên (kèm cả khuonCatalog/khuonQty/qrProducts —
+        // trước đây thiếu 2 nhánh khuôn nên trang công khai luôn rỗng)
+        await fbWrite('/data', {orders:DB.orders, ordersTrash:DB.ordersTrash, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri, qrProducts:DB.qrProducts, khuonCatalog:DB.khuonCatalog, khuonQty:DB.khuonQty}, 'PUT');
       }
       // Load log
       const log = await fbRead('/log');
