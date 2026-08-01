@@ -2421,6 +2421,41 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .pub-msg{text-align:center;color:var(--text3);padding:60px 20px;font-size:14px}
 .pub-footer{text-align:center;font-size:11px;color:var(--text4);margin-top:10px}
 
+/* ── Trang công khai: Tổng hợp Khuôn (khách quét QR xem danh mục & kho khuôn) ── */
+.pub-kh-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pub-kh-sum-card{background:var(--card);border-radius:var(--r-sm);box-shadow:var(--sh);padding:10px 8px;text-align:center}
+.pub-kh-sum-n{font-size:18px;font-weight:800;color:var(--brand)}
+.pub-kh-sum-card.warn .pub-kh-sum-n{color:#b45309}
+.pub-kh-sum-card.danger .pub-kh-sum-n{color:#b91c1c}
+.pub-kh-sum-lbl{font-size:9.5px;color:var(--text3);font-weight:600;margin-top:2px;line-height:1.25}
+.pub-kh-tabs{display:flex;gap:8px;margin-bottom:10px}
+.pub-kh-tab{flex:1;text-align:center;padding:9px 6px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text3);font-weight:700;font-size:12.5px;cursor:pointer;transition:all .15s}
+.pub-kh-tab.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:var(--sh)}
+.pub-kh-toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.pub-kh-search{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:var(--card);color:var(--text)}
+.pub-kh-search:focus{border-color:var(--brand2)}
+.pub-kh-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.pub-kh-chip{flex-shrink:0;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:var(--card);color:var(--text3);font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.pub-kh-chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.pub-kh-cat-title{font-size:12.5px;font-weight:800;color:var(--text2);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.pub-kh-cat-title:first-child{margin-top:0}
+.pub-kh-cat-count{font-size:10.5px;font-weight:600;color:var(--text4);background:var(--bg2);padding:2px 8px;border-radius:10px}
+.pub-kh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.pub-kh-chip-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;color:var(--text);text-align:center;box-shadow:var(--sh)}
+.pub-kh-qty-list{display:flex;flex-direction:column;gap:8px}
+.pub-kh-qty-item{background:var(--card);border-radius:12px;box-shadow:var(--sh);padding:11px 13px;display:flex;align-items:center;gap:10px}
+.pub-kh-qty-info{flex:1;min-width:0}
+.pub-kh-qty-size{font-size:14px;font-weight:800;color:var(--text)}
+.pub-kh-qty-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.pub-kh-qty-side{text-align:right;flex-shrink:0}
+.pub-kh-qty-num{font-size:17px;font-weight:800}
+.pub-kh-qty-badge{display:inline-block;margin-top:3px;padding:2px 8px;border-radius:10px;font-size:9.5px;font-weight:800;white-space:nowrap}
+.pub-kh-qty-badge.ok{background:var(--green-l);color:var(--green)}
+.pub-kh-qty-badge.warn{background:var(--amber-l);color:#b45309}
+.pub-kh-qty-badge.danger{background:var(--red-l);color:#b91c1c}
+.pub-kh-empty{text-align:center;color:var(--text4);font-size:13px;padding:36px 12px}
+.pub-kh-updated{text-align:center;font-size:10.5px;color:var(--text4);margin-bottom:12px}
+
 /* ── LOGIN ── */
 #loginScreen{background:linear-gradient(160deg,var(--navy),var(--navy2));align-items:center;justify-content:center;padding:24px}
 .login-card{background:#fff;border-radius:var(--r-lg);padding:34px 24px 24px;width:100%;max-width:368px;box-shadow:0 24px 48px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06)}
@@ -3024,6 +3059,42 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .btm-hist-row{font-size:12px;color:var(--text2);margin-top:3px}
 .btm-hist-row b{color:var(--text);font-weight:600}
 .btm-hist-actions{display:flex;gap:6px;margin-top:8px}
+
+/* ── QUẢN LÝ KHUÔN ── */
+.khm-tabs{display:flex;gap:8px;background:var(--bg2);padding:4px;border-radius:12px;margin-bottom:12px}
+.khm-tab-btn{flex:1;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text3);padding:9px 6px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s}
+.khm-tab-btn.active{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.khm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.khm-stat-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px}
+.khm-stat-num{font-size:19px;font-weight:800;color:var(--text)}
+.khm-stat-lbl{font-size:10.5px;color:var(--text4);margin-top:2px}
+.khm-stat-card.warn .khm-stat-num{color:#b45309}
+.khm-stat-card.danger .khm-stat-num{color:#b91c1c}
+.khm-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.khm-search{flex:1;min-width:150px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:inherit;background:#fff}
+.khm-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.khm-chip{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:11.5px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap}
+.khm-chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.khm-add-btn{padding:9px 14px;border-radius:var(--r-sm);border:none;background:var(--brand);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.khm-cat-section{margin-bottom:16px}
+.khm-cat-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 8px;display:flex;align-items:center;gap:6px;justify-content:space-between}
+.khm-cat-count{font-size:10.5px;font-weight:600;color:var(--text4);background:var(--bg2);padding:1px 8px;border-radius:20px}
+.khm-item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.khm-item-chip{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;font-size:12.5px;font-weight:700;color:var(--text);position:relative;cursor:default}
+.khm-item-chip .khm-item-edit{position:absolute;top:2px;right:3px;font-size:10px;opacity:.55;cursor:pointer;padding:2px}
+.khm-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);background:#fff}
+.khm-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px}
+.khm-table th{background:var(--bg2);color:var(--text3);font-weight:700;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.khm-table td{padding:9px 10px;border-top:1px solid var(--border);white-space:nowrap}
+.khm-table tr:hover td{background:var(--bg)}
+.khm-status-pill{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px}
+.khm-status-pill.ok{background:#dcfce7;color:#166534}
+.khm-status-pill.warn{background:#fef3c7;color:#92400e}
+.khm-status-pill.danger{background:#fee2e2;color:#b91c1c}
+.khm-row-actions{display:flex;gap:4px}
+.khm-icon-btn{border:none;background:var(--bg2);color:var(--text3);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px}
+.khm-icon-btn.danger{color:#b91c1c}
+.khm-locked-note{font-size:11.5px;color:var(--text4);background:var(--bg2);padding:8px 12px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 
 /* ── MODALS ── */
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;display:none;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(3px)}
@@ -4190,6 +4261,10 @@ body{letter-spacing:-.1px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
         Bảo trì máy <span class="sb-badge" id="sbBtmBadge" style="display:none">0</span>
       </button>
+      <button class="sb-item" id="sbi-khuon" onclick="goTab('khuon')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Quản lý Khuôn <span class="sb-badge" id="sbKhuonBadge" style="display:none">0</span>
+      </button>
       <div class="sb-section">Tài khoản</div>
       <button class="sb-item" id="sbi-nhatKy" onclick="goTab('nhatKy')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -4608,6 +4683,64 @@ body{letter-spacing:-.1px}
   </div>
 </div>
 
+<!-- Quản lý Khuôn — Thêm/Sửa mục Tổng hợp Khuôn (chỉ Admin) -->
+<div class="modal" id="khCatModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="khCatModalTitle">Thêm kích thước khuôn</div>
+    <div id="khCatErr" class="modal-err"></div>
+    <div class="field">
+      <div class="field-lbl">Nhóm khuôn *</div>
+      <input id="khCatGroup" class="field-inp" list="khCatGroupList" placeholder="VD: Đồng thanh dẹt">
+      <datalist id="khCatGroupList"></datalist>
+    </div>
+    <div class="field">
+      <div class="field-lbl">Kích thước / Chủng loại *</div>
+      <input id="khCatSize" class="field-inp" placeholder="VD: 10x60 hoặc Φ 20">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('khCatModal')">Huỷ</button>
+      <button class="btn btn-primary" onclick="khCatSave()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quản lý Khuôn — Thêm/Sửa mục Số lượng Khuôn (chỉ Admin) -->
+<div class="modal" id="khQtyModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="khQtyModalTitle">Thêm khuôn vào kho</div>
+    <div id="khQtyErr" class="modal-err"></div>
+    <div class="modal-row">
+      <div class="field">
+        <div class="field-lbl">Loại khuôn *</div>
+        <select id="khQtyLoai" class="field-inp">
+          <option value="Đùn">Đùn</option>
+          <option value="Kéo">Kéo (Rút)</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-lbl">Nhóm khuôn *</div>
+        <input id="khQtyGroup" class="field-inp" list="khQtyGroupList" placeholder="VD: Đồng thanh dẹt">
+        <datalist id="khQtyGroupList"></datalist>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-lbl">Kích thước / Chủng loại *</div>
+      <input id="khQtySize" class="field-inp" placeholder="VD: 10x60 hoặc Φ 20">
+    </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Số lượng *</div><input id="khQtyNum" class="field-inp" type="number" min="0" placeholder="0"></div>
+      <div class="field"><div class="field-lbl">Ngày mua</div><input id="khQtyDate" class="field-inp" type="date"></div>
+    </div>
+    <div class="field"><div class="field-lbl">Ghi chú</div><input id="khQtyNote" class="field-inp" placeholder=""></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('khQtyModal')">Huỷ</button>
+      <button class="btn btn-primary" onclick="khQtySave()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
 <!-- Hồ sơ nhân viên đầy đủ (dùng chung cho Thêm / Sửa từ tab Quản lý nhân sự) -->
 <div class="modal" id="workerProfileModal">
   <div class="modal-box">
@@ -4951,6 +5084,34 @@ body{letter-spacing:-.1px}
   </div>
 </div>
 
+<!-- Modal: mã QR công khai TỔNG HỢP KHUÔN (khách hàng & mọi người quét bằng
+     camera điện thoại thường, không cần cài app / đăng nhập, xem được toàn
+     bộ danh mục khuôn + số lượng khuôn tồn kho, cập nhật trực tiếp) -->
+<div class="modal" id="khuonQrModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏷 Mã QR tổng hợp Khuôn</div>
+    <div style="font-size:12.5px;color:var(--text3);margin-bottom:12px">
+      In hoặc dán mã này ở khu vực xưởng khuôn, kho khuôn… Khách hàng và mọi người chỉ cần dùng camera điện thoại quét là xem được toàn bộ <b>danh mục kích thước khuôn</b> và <b>số lượng khuôn tồn kho</b> mới nhất — không cần cài app, không cần đăng nhập.
+    </div>
+    <div style="display:flex;justify-content:center;padding:10px 0">
+      <div id="khuonQrCanvasWrap" style="background:#fff;padding:12px;border-radius:12px;box-shadow:var(--sh)">
+        <span style="font-size:12px;color:var(--text4)">Đang tạo mã QR…</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:10px;padding:8px 10px;margin-bottom:10px">
+      <span style="font-size:11.5px;color:var(--text3);word-break:break-all;flex:1" id="khuonQrLinkTxt"></span>
+    </div>
+    <div id="khuonQrWarn" style="display:none;font-size:11.5px;color:var(--red-m);margin-bottom:10px">⚠️ Chưa bật Firebase Sync (Cài đặt ▸ Cấu hình Firebase Sync) — mã QR sẽ KHÔNG xem được từ điện thoại khác cho tới khi bật đồng bộ.</div>
+    <div id="khuonQrStats" style="display:flex;gap:8px;margin-bottom:10px"></div>
+    <div class="modal-footer" style="flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="closeModal('khuonQrModal')">Đóng</button>
+      <button class="btn btn-ghost" onclick="copyKhuonLink()">🔗 Sao chép liên kết</button>
+      <button class="btn btn-primary" onclick="downloadKhuonQr()">⬇️ Tải ảnh mã QR</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: chi tiết 1 mã QR (kết quả quét / xem trong danh sách) -->
 <div class="modal" id="qrDetailModal">
   <div class="modal-box" style="max-height:88vh;overflow-y:auto">
@@ -5037,6 +5198,17 @@ const MACHINES = [
 ];
 const BTM_TYPE_LABEL = {hong:'🔴 Hỏng đột xuất', baotri:'🟡 Bảo trì định kỳ', kiemtra:'🔵 Kiểm tra định kỳ'};
 
+// ════════════════════════════════════════════════════════════
+// DỮ LIỆU MẶC ĐỊNH — QUẢN LÝ KHUÔN (Tổng hợp khuôn / Số lượng khuôn)
+// Dùng để khởi tạo lần đầu (khi Firebase/local storage chưa có dữ liệu).
+// Sau khi Admin thêm/sửa, dữ liệu thật sẽ được lưu vào DB.khuonCatalog /
+// DB.khuonQty và đồng bộ lên Firebase — mảng SEED dưới đây không đổi.
+// ════════════════════════════════════════════════════════════
+const KHUON_CATALOG_SEED = [{"id":"ks1","category":"Đồng thanh dẹt","size":"2x7"},{"id":"ks2","category":"Đồng thanh dẹt","size":"5x142"},{"id":"ks3","category":"Đồng thanh dẹt","size":"10x60"},{"id":"ks4","category":"Phi tròn","size":"Φ 6"},{"id":"ks5","category":"Phi tròn","size":"Φ 32"},{"id":"ks6","category":"Điện cực","size":"10x10"},{"id":"ks7","category":"Điện cực","size":"30x150"},{"id":"ks8","category":"Bo cạnh","size":"3x15"},{"id":"ks9","category":"Bo cạnh","size":"6.35x127"},{"id":"ks10","category":"Yêu cầu & chuẩn","size":"5.5x28(2 rãnh)"},{"id":"ks11","category":"Yêu cầu & chuẩn","size":"1.6x6.6"},{"id":"ks12","category":"Đồng thanh dẹt","size":"2x7.5"},{"id":"ks13","category":"Đồng thanh dẹt","size":"5x150"},{"id":"ks14","category":"Đồng thanh dẹt","size":"10x62"},{"id":"ks15","category":"Phi tròn","size":"Φ 8"},{"id":"ks16","category":"Phi tròn","size":"Φ 35"},{"id":"ks17","category":"Điện cực","size":"10x15"},{"id":"ks18","category":"Điện cực","size":"35x35"},{"id":"ks19","category":"Bo cạnh","size":"3x16"},{"id":"ks20","category":"Bo cạnh","size":"6x110"},{"id":"ks21","category":"Yêu cầu & chuẩn","size":"5.5x28(3 rãnh)"},{"id":"ks22","category":"Yêu cầu & chuẩn","size":"1.6x8.5"},{"id":"ks23","category":"Đồng thanh dẹt","size":"2x8"},{"id":"ks24","category":"Đồng thanh dẹt","size":"6x12"},{"id":"ks25","category":"Đồng thanh dẹt","size":"10x63"},{"id":"ks26","category":"Phi tròn","size":"Φ 9.8"},{"id":"ks27","category":"Phi tròn","size":"Φ 36"},{"id":"ks28","category":"Điện cực","size":"15x15"},{"id":"ks29","category":"Điện cực","size":"35x40"},{"id":"ks30","category":"Bo cạnh","size":"3x20"},{"id":"ks31","category":"Bo cạnh","size":"6.35x145"},{"id":"ks32","category":"Yêu cầu & chuẩn","size":"5.5x20"},{"id":"ks33","category":"Yêu cầu & chuẩn","size":"1.7x11.8"},{"id":"ks34","category":"Đồng thanh dẹt","size":"2x10"},{"id":"ks35","category":"Đồng thanh dẹt","size":"6x15"},{"id":"ks36","category":"Đồng thanh dẹt","size":"10x65"},{"id":"ks37","category":"Phi tròn","size":"Φ 10"},{"id":"ks38","category":"Phi tròn","size":"Φ 40"},{"id":"ks39","category":"Điện cực","size":"15x20"},{"id":"ks40","category":"Điện cực","size":"35x42"},{"id":"ks41","category":"Bo cạnh","size":"3x25"},{"id":"ks42","category":"Bo cạnh","size":"76.2x9.52"},{"id":"ks43","category":"Yêu cầu & chuẩn","size":"7.1x7.1"},{"id":"ks44","category":"Yêu cầu & chuẩn","size":"1.7x4"},{"id":"ks45","category":"Đồng thanh dẹt","size":"2x12"},{"id":"ks46","category":"Đồng thanh dẹt","size":"6x19"},{"id":"ks47","category":"Đồng thanh dẹt","size":"10x70"},{"id":"ks48","category":"Phi tròn","size":"Φ 12"},{"id":"ks49","category":"Phi tròn","size":"Φ 41"},{"id":"ks50","category":"Điện cực","size":"15x25"},{"id":"ks51","category":"Điện cực","size":"35x45"},{"id":"ks52","category":"Bo cạnh","size":"3x30"},{"id":"ks53","category":"Bo cạnh","size":"8x20"},{"id":"ks54","category":"Yêu cầu & chuẩn","size":"19.7x114"},{"id":"ks55","category":"Yêu cầu & chuẩn","size":"1.7x4.3"},{"id":"ks56","category":"Đồng thanh dẹt","size":"2x15"},{"id":"ks57","category":"Đồng thanh dẹt","size":"6x20"},{"id":"ks58","category":"Đồng thanh dẹt","size":"10x75"},{"id":"ks59","category":"Phi tròn","size":"Φ 13"},{"id":"ks60","category":"Phi tròn","size":"Φ 42"},{"id":"ks61","category":"Điện cực","size":"15x30"},{"id":"ks62","category":"Điện cực","size":"35x50"},{"id":"ks63","category":"Bo cạnh","size":"3x40"},{"id":"ks64","category":"Bo cạnh","size":"8x25"},{"id":"ks65","category":"Yêu cầu & chuẩn","size":"19.9x115"},{"id":"ks66","category":"Yêu cầu & chuẩn","size":"1.7x6"},{"id":"ks67","category":"Đồng thanh dẹt","size":"2x20"},{"id":"ks68","category":"Đồng thanh dẹt","size":"6x25"},{"id":"ks69","category":"Đồng thanh dẹt","size":"10x80"},{"id":"ks70","category":"Phi tròn","size":"Φ 13.5"},{"id":"ks71","category":"Phi tròn","size":"Φ 45"},{"id":"ks72","category":"Điện cực","size":"15x50"},{"id":"ks73","category":"Điện cực","size":"35x55"},{"id":"ks74","category":"Bo cạnh","size":"3x45"},{"id":"ks75","category":"Bo cạnh","size":"8x30"},{"id":"ks76","category":"Yêu cầu & chuẩn","size":"10.2x62.2"},{"id":"ks77","category":"Yêu cầu & chuẩn","size":"1.8x7.1"},{"id":"ks78","category":"Đồng thanh dẹt","size":"2x25"},{"id":"ks79","category":"Đồng thanh dẹt","size":"6x30"},{"id":"ks80","category":"Đồng thanh dẹt","size":"10x85"},{"id":"ks81","category":"Phi tròn","size":"Φ 14"},{"id":"ks82","category":"Phi tròn","size":"Φ 48"},{"id":"ks83","category":"Điện cực","size":"20x20"},{"id":"ks84","category":"Điện cực","size":"35x60"},{"id":"ks85","category":"Bo cạnh","size":"3x50"},{"id":"ks86","category":"Bo cạnh","size":"8x40"},{"id":"ks87","category":"Yêu cầu & chuẩn","size":"7x70.4(1r)"},{"id":"ks88","category":"Yêu cầu & chuẩn","size":"1.9x5.6"},{"id":"ks89","category":"Đồng thanh dẹt","size":"3x7"},{"id":"ks90","category":"Đồng thanh dẹt","size":"6x35"},{"id":"ks91","category":"Đồng thanh dẹt","size":"10x90"},{"id":"ks92","category":"Phi tròn","size":"Φ 15"},{"id":"ks93","category":"Phi tròn","size":"Φ 50"},{"id":"ks94","category":"Điện cực","size":"20x25"},{"id":"ks95","category":"Điện cực","size":"35x70"},{"id":"ks96","category":"Bo cạnh","size":"3x60"},{"id":"ks97","category":"Bo cạnh","size":"8x50"},{"id":"ks98","category":"Yêu cầu & chuẩn","size":"9.63x67.25"},{"id":"ks99","category":"Yêu cầu & chuẩn","size":"1.9x8"},{"id":"ks100","category":"Đồng thanh dẹt","size":"3x10"},{"id":"ks101","category":"Đồng thanh dẹt","size":"6.35x38.1"},{"id":"ks102","category":"Đồng thanh dẹt","size":"10x95"},{"id":"ks103","category":"Phi tròn","size":"Φ 16"},{"id":"ks104","category":"Phi tròn","size":"Φ 51"},{"id":"ks105","category":"Điện cực","size":"20x30"},{"id":"ks106","category":"Điện cực","size":"35x80"},{"id":"ks107","category":"Bo cạnh","size":"3x80"},{"id":"ks108","category":"Bo cạnh","size":"8x60"},{"id":"ks109","category":"Yêu cầu & chuẩn","size":"3.28x37.98"},{"id":"ks110","category":"Yêu cầu & chuẩn","size":"1.9x9.2"},{"id":"ks111","category":"Đồng thanh dẹt","size":"3x12"},{"id":"ks112","category":"Đồng thanh dẹt","size":"6x40"},{"id":"ks113","category":"Đồng thanh dẹt","size":"10x100"},{"id":"ks114","category":"Phi tròn","size":"Φ 17"},{"id":"ks115","category":"Phi tròn","size":"Φ 60"},{"id":"ks116","category":"Điện cực","size":"20x35"},{"id":"ks117","category":"Điện cực","size":"35x100"},{"id":"ks118","category":"Bo cạnh","size":"3x100"},{"id":"ks119","category":"Bo cạnh","size":"8x75"},{"id":"ks120","category":"Yêu cầu & chuẩn","size":"6.35x50.8"},{"id":"ks121","category":"Yêu cầu & chuẩn","size":"2x12.5"},{"id":"ks122","category":"Đồng thanh dẹt","size":"3x15"},{"id":"ks123","category":"Đồng thanh dẹt","size":"6x47.5"},{"id":"ks124","category":"Đồng thanh dẹt","size":"10x110"},{"id":"ks125","category":"Phi tròn","size":"Φ 18"},{"id":"ks126","category":"Phi tròn","size":"Φ 61"},{"id":"ks127","category":"Điện cực","size":"20x40"},{"id":"ks128","category":"Điện cực","size":"35x120"},{"id":"ks129","category":"Bo cạnh","size":"3x110"},{"id":"ks130","category":"Bo cạnh","size":"8x80"},{"id":"ks131","category":"Yêu cầu & chuẩn","size":"58x70T"},{"id":"ks132","category":"Yêu cầu & chuẩn","size":"2x15"},{"id":"ks133","category":"Đồng thanh dẹt","size":"3.18x15"},{"id":"ks134","category":"Đồng thanh dẹt","size":"6x50"},{"id":"ks135","category":"Đồng thanh dẹt","size":"10x115"},{"id":"ks136","category":"Phi tròn","size":"Φ 18.5"},{"id":"ks137","category":"Phi tròn","size":"Φ 62"},{"id":"ks138","category":"Điện cực","size":"20x45"},{"id":"ks139","category":"Điện cực","size":"37x43"},{"id":"ks140","category":"Bo cạnh","size":"3x140"},{"id":"ks141","category":"Bo cạnh","size":"8x100"},{"id":"ks142","category":"Yêu cầu & chuẩn","size":"6.35x177.8"},{"id":"ks143","category":"Yêu cầu & chuẩn","size":"2x5"},{"id":"ks144","category":"Đồng thanh dẹt","size":"3x16"},{"id":"ks145","category":"Đồng thanh dẹt","size":"6x55"},{"id":"ks146","category":"Đồng thanh dẹt","size":"10x120"},{"id":"ks147","category":"Phi tròn","size":"Φ 20"},{"id":"ks148","category":"Phi tròn","size":"Φ 65"},{"id":"ks149","category":"Điện cực","size":"20x50"},{"id":"ks150","category":"Điện cực","size":"40x40"},{"id":"ks151","category":"Bo cạnh","size":"3x145"},{"id":"ks152","category":"Bo cạnh","size":"8x110"},{"id":"ks153","category":"Yêu cầu & chuẩn","size":"19.8x117.5"},{"id":"ks154","category":"Yêu cầu & chuẩn","size":"3.5x8.5"},{"id":"ks155","category":"Đồng thanh dẹt","size":"3x19"},{"id":"ks156","category":"Đồng thanh dẹt","size":"6x60"},{"id":"ks157","category":"Đồng thanh dẹt","size":"10x125"},{"id":"ks158","category":"Phi tròn","size":"Φ 21"},{"id":"ks159","category":"Phi tròn","size":"Φ 66"},{"id":"ks160","category":"Điện cực","size":"20x60"},{"id":"ks161","category":"Điện cực","size":"40x45"},{"id":"ks162","category":"Bo cạnh","size":"3x150"},{"id":"ks163","category":"Bo cạnh","size":"8x120"},{"id":"ks164","category":"Yêu cầu & chuẩn","size":"6-10x40V"},{"id":"ks165","category":"Yêu cầu & chuẩn","size":"3x10"},{"id":"ks166","category":"Đồng thanh dẹt","size":"3x20"},{"id":"ks167","category":"Đồng thanh dẹt","size":"6.4x63.5"},{"id":"ks168","category":"Đồng thanh dẹt","size":"10x130"},{"id":"ks169","category":"Phi tròn","size":"Φ 22"},{"id":"ks170","category":"Phi tròn","size":"Φ 71"},{"id":"ks171","category":"Điện cực","size":"20x70"},{"id":"ks172","category":"Điện cực","size":"40x50"},{"id":"ks173","category":"Bo cạnh","size":"4x20"},{"id":"ks174","category":"Bo cạnh","size":"8x150"},{"id":"ks175","category":"Yêu cầu & chuẩn","size":"4.33x28(1r)"},{"id":"ks176","category":"Yêu cầu & chuẩn","size":"3x11.5"},{"id":"ks177","category":"Đồng thanh dẹt","size":"3x25"},{"id":"ks178","category":"Đồng thanh dẹt","size":"6x80"},{"id":"ks179","category":"Đồng thanh dẹt","size":"10x150"},{"id":"ks180","category":"Phi tròn","size":"Φ 25"},{"id":"ks181","category":"Phi tròn","size":"Φ 72"},{"id":"ks182","category":"Điện cực","size":"20x80"},{"id":"ks183","category":"Điện cực","size":"40x60"},{"id":"ks184","category":"Bo cạnh","size":"4x25"},{"id":"ks185","category":"Bo cạnh","size":"8x160"},{"id":"ks186","category":"Yêu cầu & chuẩn","size":"10x125R4"},{"id":"ks187","category":"Yêu cầu & chuẩn","size":"3x12"},{"id":"ks188","category":"Đồng thanh dẹt","size":"3x24"},{"id":"ks189","category":"Đồng thanh dẹt","size":"6x100"},{"id":"ks190","category":"Đồng thanh dẹt","size":"10x160"},{"id":"ks191","category":"Phi tròn","size":"Φ 27"},{"id":"ks192","category":"Phi tròn","size":"Φ 80"},{"id":"ks193","category":"Điện cực","size":"20x100"},{"id":"ks194","category":"Điện cực","size":"40x65"},{"id":"ks195","category":"Bo cạnh","size":"4x30"},{"id":"ks196","category":"Bo cạnh","size":"9.52x76.2"},{"id":"ks197","category":"Yêu cầu & chuẩn","size":"12x65R2"},{"id":"ks198","category":"Yêu cầu & chuẩn","size":"3x12.5"},{"id":"ks199","category":"Đồng thanh dẹt","size":"3x30"},{"id":"ks200","category":"Đồng thanh dẹt","size":"6.5x100"},{"id":"ks201","category":"Đồng thanh dẹt","size":"10x175"},{"id":"ks202","category":"Phi tròn","size":"Φ 30"},{"id":"ks203","category":"Phi tròn","size":"Φ 100"},{"id":"ks204","category":"Điện cực","size":"25x25"},{"id":"ks205","category":"Điện cực","size":"40x70"},{"id":"ks206","category":"Bo cạnh","size":"4x35"},{"id":"ks207","category":"Bo cạnh","size":"10x20"},{"id":"ks208","category":"Yêu cầu & chuẩn","size":"12x65R5"},{"id":"ks209","category":"Yêu cầu & chuẩn","size":"3x9"},{"id":"ks210","category":"Đồng thanh dẹt","size":"3x34"},{"id":"ks211","category":"Đồng thanh dẹt","size":"6x110"},{"id":"ks212","category":"Đồng thanh dẹt","size":"10x200"},{"id":"ks213","category":"Điện cực","size":"25x30"},{"id":"ks214","category":"Điện cực","size":"40x80"},{"id":"ks215","category":"Bo cạnh","size":"4x40"},{"id":"ks216","category":"Bo cạnh","size":"10x30"},{"id":"ks217","category":"Yêu cầu & chuẩn","size":"12x60R2"},{"id":"ks218","category":"Yêu cầu & chuẩn","size":"3.5x12"},{"id":"ks219","category":"Đồng thanh dẹt","size":"3x35"},{"id":"ks220","category":"Đồng thanh dẹt","size":"6x120"},{"id":"ks221","category":"Đồng thanh dẹt","size":"10x227.6"},{"id":"ks222","category":"Điện cực","size":"25x35"},{"id":"ks223","category":"Điện cực","size":"40x100"},{"id":"ks224","category":"Bo cạnh","size":"4x50"},{"id":"ks225","category":"Bo cạnh","size":"10x40"},{"id":"ks226","category":"Yêu cầu & chuẩn","size":"6/9x35"},{"id":"ks227","category":"Yêu cầu & chuẩn","size":"3.5x12.5"},{"id":"ks228","category":"Đồng thanh dẹt","size":"3x40"},{"id":"ks229","category":"Đồng thanh dẹt","size":"6x125"},{"id":"ks230","category":"Đồng thanh dẹt","size":"12x30"},{"id":"ks231","category":"Điện cực","size":"25x40"},{"id":"ks232","category":"Điện cực","size":"40x150"},{"id":"ks233","category":"Bo cạnh","size":"4x60"},{"id":"ks234","category":"Bo cạnh","size":"10x50"},{"id":"ks235","category":"Yêu cầu & chuẩn","size":"10x60R4"},{"id":"ks236","category":"Yêu cầu & chuẩn","size":"3.5x20"},{"id":"ks237","category":"Đồng thanh dẹt","size":"3x45"},{"id":"ks238","category":"Đồng thanh dẹt","size":"6x150"},{"id":"ks239","category":"Đồng thanh dẹt","size":"12x35"},{"id":"ks240","category":"Điện cực","size":"25x45"},{"id":"ks241","category":"Điện cực","size":"45x45"},{"id":"ks242","category":"Bo cạnh","size":"5x15"},{"id":"ks243","category":"Bo cạnh","size":"10x60"},{"id":"ks244","category":"Yêu cầu & chuẩn","size":"12x100R5"},{"id":"ks245","category":"Yêu cầu & chuẩn","size":"6x55"},{"id":"ks246","category":"Đồng thanh dẹt","size":"3x50"},{"id":"ks247","category":"Đồng thanh dẹt","size":"6x160"},{"id":"ks248","category":"Đồng thanh dẹt","size":"12x40"},{"id":"ks249","category":"Điện cực","size":"25x50"},{"id":"ks250","category":"Điện cực","size":"45x50"},{"id":"ks251","category":"Bo cạnh","size":"5x20"},{"id":"ks252","category":"Bo cạnh","size":"10x70"},{"id":"ks253","category":"Yêu cầu & chuẩn","size":"8/12x51"},{"id":"ks254","category":"Yêu cầu & chuẩn","size":"15x40"},{"id":"ks255","category":"Đồng thanh dẹt","size":"3x150"},{"id":"ks256","category":"Đồng thanh dẹt","size":"6x170"},{"id":"ks257","category":"Đồng thanh dẹt","size":"12x50"},{"id":"ks258","category":"Điện cực","size":"25x60"},{"id":"ks259","category":"Điện cực","size":"45x60"},{"id":"ks260","category":"Bo cạnh","size":"5x25"},{"id":"ks261","category":"Bo cạnh","size":"10x75"},{"id":"ks262","category":"Yêu cầu & chuẩn","size":"10x20/40/8(T)"},{"id":"ks263","category":"Yêu cầu & chuẩn","size":"15x50"},{"id":"ks264","category":"Đồng thanh dẹt","size":"3.4x28"},{"id":"ks265","category":"Đồng thanh dẹt","size":"6x200"},{"id":"ks266","category":"Đồng thanh dẹt","size":"12x60"},{"id":"ks267","category":"Điện cực","size":"25x80"},{"id":"ks268","category":"Điện cực","size":"45x70"},{"id":"ks269","category":"Bo cạnh","size":"5x30"},{"id":"ks270","category":"Bo cạnh","size":"10x80"},{"id":"ks271","category":"Yêu cầu & chuẩn","size":"30x30/10(V)"},{"id":"ks272","category":"Yêu cầu & chuẩn","size":"15x55"},{"id":"ks273","category":"Đồng thanh dẹt","size":"4x15"},{"id":"ks274","category":"Đồng thanh dẹt","size":"7x42"},{"id":"ks275","category":"Đồng thanh dẹt","size":"12x75"},{"id":"ks276","category":"Điện cực","size":"25x100"},{"id":"ks277","category":"Điện cực","size":"48x100"},{"id":"ks278","category":"Bo cạnh","size":"5x40"},{"id":"ks279","category":"Bo cạnh","size":"10x100"},{"id":"ks280","category":"Yêu cầu & chuẩn","size":"40x40/10(V)"},{"id":"ks281","category":"Yêu cầu & chuẩn","size":"10x50"},{"id":"ks282","category":"Đồng thanh dẹt","size":"4x20"},{"id":"ks283","category":"Đồng thanh dẹt","size":"7.2x77"},{"id":"ks284","category":"Đồng thanh dẹt","size":"12x80"},{"id":"ks285","category":"Điện cực","size":"25x110"},{"id":"ks286","category":"Điện cực","size":"49x113"},{"id":"ks287","category":"Bo cạnh","size":"5x50"},{"id":"ks288","category":"Bo cạnh","size":"10x110"},{"id":"ks289","category":"Yêu cầu & chuẩn","size":"9/23x100"},{"id":"ks290","category":"Đồng thanh dẹt","size":"4x25"},{"id":"ks291","category":"Đồng thanh dẹt","size":"7.2x102.5"},{"id":"ks292","category":"Đồng thanh dẹt","size":"12x90"},{"id":"ks293","category":"Điện cực","size":"25x120"},{"id":"ks294","category":"Điện cực","size":"50x50"},{"id":"ks295","category":"Bo cạnh","size":"5x60"},{"id":"ks296","category":"Bo cạnh","size":"10x120"},{"id":"ks297","category":"Yêu cầu & chuẩn","size":"35x60T"},{"id":"ks298","category":"Đồng thanh dẹt","size":"4x30"},{"id":"ks299","category":"Đồng thanh dẹt","size":"8x15"},{"id":"ks300","category":"Đồng thanh dẹt","size":"12x100"},{"id":"ks301","category":"Điện cực","size":"25x130"},{"id":"ks302","category":"Điện cực","size":"50x60"},{"id":"ks303","category":"Bo cạnh","size":"5x80"},{"id":"ks304","category":"Bo cạnh","size":"10x125"},{"id":"ks305","category":"Yêu cầu & chuẩn","size":"30x40H"},{"id":"ks306","category":"Đồng thanh dẹt","size":"4x35"},{"id":"ks307","category":"Đồng thanh dẹt","size":"8x20"},{"id":"ks308","category":"Đồng thanh dẹt","size":"12x120"},{"id":"ks309","category":"Điện cực","size":"25x150"},{"id":"ks310","category":"Điện cực","size":"50x70"},{"id":"ks311","category":"Bo cạnh","size":"5x100"},{"id":"ks312","category":"Bo cạnh","size":"10x150"},{"id":"ks313","category":"Yêu cầu & chuẩn","size":"13.5x50"},{"id":"ks314","category":"Đồng thanh dẹt","size":"4x40"},{"id":"ks315","category":"Đồng thanh dẹt","size":"8x25"},{"id":"ks316","category":"Đồng thanh dẹt","size":"12x150"},{"id":"ks317","category":"Điện cực","size":"25x160"},{"id":"ks318","category":"Điện cực","size":"50x90"},{"id":"ks319","category":"Bo cạnh","size":"5x110"},{"id":"ks320","category":"Bo cạnh","size":"10x160"},{"id":"ks321","category":"Yêu cầu & chuẩn","size":"13.8x36.5"},{"id":"ks322","category":"Đồng thanh dẹt","size":"4x50"},{"id":"ks323","category":"Đồng thanh dẹt","size":"8x30"},{"id":"ks324","category":"Đồng thanh dẹt","size":"12x200"},{"id":"ks325","category":"Điện cực","size":"30x30"},{"id":"ks326","category":"Điện cực","size":"50x120"},{"id":"ks327","category":"Bo cạnh","size":"5x140"},{"id":"ks328","category":"Bo cạnh","size":"12x50"},{"id":"ks329","category":"Yêu cầu & chuẩn","size":"22,5x46x59"},{"id":"ks330","category":"Đồng thanh dẹt","size":"4x60"},{"id":"ks331","category":"Đồng thanh dẹt","size":"8x35"},{"id":"ks332","category":"Đồng thanh dẹt","size":"14x140"},{"id":"ks333","category":"Điện cực","size":"30x35"},{"id":"ks334","category":"Điện cực","size":"50x160"},{"id":"ks335","category":"Bo cạnh","size":"5x150"},{"id":"ks336","category":"Bo cạnh","size":"12x60"},{"id":"ks337","category":"Yêu cầu & chuẩn","size":"30x38,5x209"},{"id":"ks338","category":"Đồng thanh dẹt","size":"4x122"},{"id":"ks339","category":"Đồng thanh dẹt","size":"8x40"},{"id":"ks340","category":"Đồng thanh dẹt","size":"15x40"},{"id":"ks341","category":"Điện cực","size":"30x40"},{"id":"ks342","category":"Điện cực","size":"60x60"},{"id":"ks343","category":"Bo cạnh","size":"6x12"},{"id":"ks344","category":"Bo cạnh","size":"12x65R6"},{"id":"ks345","category":"Yêu cầu & chuẩn","size":"30x38x190"},{"id":"ks346","category":"Đồng thanh dẹt","size":"4x150"},{"id":"ks347","category":"Đồng thanh dẹt","size":"8x50"},{"id":"ks348","category":"Đồng thanh dẹt","size":"15x55"},{"id":"ks349","category":"Điện cực","size":"30x50"},{"id":"ks350","category":"Điện cực","size":"65x65"},{"id":"ks351","category":"Bo cạnh","size":"6x20"},{"id":"ks352","category":"Bo cạnh","size":"12x70"},{"id":"ks353","category":"Đồng thanh dẹt","size":"5x15"},{"id":"ks354","category":"Đồng thanh dẹt","size":"8x60"},{"id":"ks355","category":"Đồng thanh dẹt","size":"15x60"},{"id":"ks356","category":"Điện cực","size":"30x60"},{"id":"ks357","category":"Điện cực","size":"60x100"},{"id":"ks358","category":"Bo cạnh","size":"6x25"},{"id":"ks359","category":"Bo cạnh","size":"12x80"},{"id":"ks360","category":"Đồng thanh dẹt","size":"5x20"},{"id":"ks361","category":"Đồng thanh dẹt","size":"8x75"},{"id":"ks362","category":"Đồng thanh dẹt","size":"15x80"},{"id":"ks363","category":"Điện cực","size":"30x70"},{"id":"ks364","category":"Điện cực","size":"60x150"},{"id":"ks365","category":"Bo cạnh","size":"6x30"},{"id":"ks366","category":"Bo cạnh","size":"12x100"},{"id":"ks367","category":"Đồng thanh dẹt","size":"5x22"},{"id":"ks368","category":"Đồng thanh dẹt","size":"8x80"},{"id":"ks369","category":"Đồng thanh dẹt","size":"15x100"},{"id":"ks370","category":"Điện cực","size":"30x80"},{"id":"ks371","category":"Điện cực","size":"70x70"},{"id":"ks372","category":"Bo cạnh","size":"6x40"},{"id":"ks373","category":"Bo cạnh","size":"12x120/R6"},{"id":"ks374","category":"Đồng thanh dẹt","size":"5x25"},{"id":"ks375","category":"Đồng thanh dẹt","size":"8x100"},{"id":"ks376","category":"Đồng thanh dẹt","size":"15x120"},{"id":"ks377","category":"Điện cực","size":"30x100"},{"id":"ks378","category":"Điện cực","size":"80x80"},{"id":"ks379","category":"Bo cạnh","size":"6x50"},{"id":"ks380","category":"Bo cạnh","size":"12x125"},{"id":"ks381","category":"Đồng thanh dẹt","size":"5x30"},{"id":"ks382","category":"Đồng thanh dẹt","size":"8x110"},{"id":"ks383","category":"Đồng thanh dẹt","size":"15x125"},{"id":"ks384","category":"Bo cạnh","size":"6x60"},{"id":"ks385","category":"Bo cạnh","size":"12x150"},{"id":"ks386","category":"Đồng thanh dẹt","size":"5x35"},{"id":"ks387","category":"Đồng thanh dẹt","size":"8x120"},{"id":"ks388","category":"Đồng thanh dẹt","size":"15x150"},{"id":"ks389","category":"Bo cạnh","size":"6.35x76.2"},{"id":"ks390","category":"Bo cạnh","size":"14x140/R7"},{"id":"ks391","category":"Đồng thanh dẹt","size":"5x36"},{"id":"ks392","category":"Đồng thanh dẹt","size":"8x125"},{"id":"ks393","category":"Đồng thanh dẹt","size":"15x200"},{"id":"ks394","category":"Bo cạnh","size":"6x80"},{"id":"ks395","category":"Bo cạnh","size":"15x150R7.5"},{"id":"ks396","category":"Đồng thanh dẹt","size":"5x40"},{"id":"ks397","category":"Đồng thanh dẹt","size":"8x150"},{"id":"ks398","category":"Đồng thanh dẹt","size":"16.5x60"},{"id":"ks399","category":"Bo cạnh","size":"6x100"},{"id":"ks400","category":"Bo cạnh","size":"20x120"},{"id":"ks401","category":"Đồng thanh dẹt","size":"5x45.5"},{"id":"ks402","category":"Đồng thanh dẹt","size":"8x160"},{"id":"ks403","category":"Đồng thanh dẹt","size":"18x120"},{"id":"ks404","category":"Bo cạnh","size":"6.35x101.6"},{"id":"ks405","category":"Bo cạnh","size":"20x150"},{"id":"ks406","category":"Đồng thanh dẹt","size":"5x50"},{"id":"ks407","category":"Đồng thanh dẹt","size":"8x200"},{"id":"ks408","category":"Đồng thanh dẹt","size":"20x120"},{"id":"ks409","category":"Đồng thanh dẹt","size":"5x60"},{"id":"ks410","category":"Đồng thanh dẹt","size":"9.5x114"},{"id":"ks411","category":"Đồng thanh dẹt","size":"20x150"},{"id":"ks412","category":"Đồng thanh dẹt","size":"5x63"},{"id":"ks413","category":"Đồng thanh dẹt","size":"10x20"},{"id":"ks414","category":"Đồng thanh dẹt","size":"20x200"},{"id":"ks415","category":"Đồng thanh dẹt","size":"5x65"},{"id":"ks416","category":"Đồng thanh dẹt","size":"10x25"},{"id":"ks417","category":"Đồng thanh dẹt","size":"5x70"},{"id":"ks418","category":"Đồng thanh dẹt","size":"10x30"},{"id":"ks419","category":"Đồng thanh dẹt","size":"5x75"},{"id":"ks420","category":"Đồng thanh dẹt","size":"10x35"},{"id":"ks421","category":"Đồng thanh dẹt","size":"5x80"},{"id":"ks422","category":"Đồng thanh dẹt","size":"10x40"},{"id":"ks423","category":"Đồng thanh dẹt","size":"5x100"},{"id":"ks424","category":"Đồng thanh dẹt","size":"10x45"},{"id":"ks425","category":"Đồng thanh dẹt","size":"5x120"},{"id":"ks426","category":"Đồng thanh dẹt","size":"10x50"},{"id":"ks427","category":"Đồng thanh dẹt","size":"5x125"},{"id":"ks428","category":"Đồng thanh dẹt","size":"10x55"}];
+const KHUON_QTY_SEED = [{"id":"kq1","loai":"Đùn","category":"Đồng thanh dẹt","size":"3*45","qty":2,"ngayMua":"2025-06-28"},{"id":"kq2","loai":"Đùn","category":"Đồng thanh dẹt","size":"6*15","qty":2,"ngayMua":"2025-06-28"},{"id":"kq3","loai":"Đùn","category":"Đồng thanh dẹt","size":"6*55 (Chuẩn)","qty":2,"ngayMua":"2025-06-28"},{"id":"kq4","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*50 (Chuẩn)","qty":2,"ngayMua":"2025-06-28"},{"id":"kq5","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*95","qty":2,"ngayMua":"2025-06-28"},{"id":"kq6","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*115","qty":2,"ngayMua":"2025-06-28"},{"id":"kq7","loai":"Đùn","category":"Đồng thanh dẹt","size":"15*40 (Chuẩn)","qty":2,"ngayMua":"2025-06-28"},{"id":"kq8","loai":"Đùn","category":"Đồng thanh dẹt","size":"15*50 (Chuẩn)","qty":2,"ngayMua":"2025-06-28"},{"id":"kq9","loai":"Đùn","category":"Đồng thanh dẹt","size":"15*55 (Chuẩn)","qty":2,"ngayMua":"2025-06-28"},{"id":"kq10","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*125","qty":2,"ngayMua":"2025-07-14"},{"id":"kq11","loai":"Đùn","category":"Đồng thanh dẹt","size":"6*120","qty":2,"ngayMua":"2025-07-14"},{"id":"kq12","loai":"Đùn","category":"Đồng thanh dẹt","size":"8*120","qty":2,"ngayMua":"2025-07-14"},{"id":"kq13","loai":"Đùn","category":"Đồng thanh dẹt","size":"8*150","qty":2,"ngayMua":"2025-07-14"},{"id":"kq14","loai":"Đùn","category":"Đồng thanh dẹt","size":"8*160","qty":2,"ngayMua":"2025-07-14"},{"id":"kq15","loai":"Đùn","category":"Đồng thanh dẹt","size":"12*150","qty":2,"ngayMua":"2025-07-14"},{"id":"kq16","loai":"Đùn","category":"Đồng thanh dẹt","size":"15*150","qty":2,"ngayMua":"2025-07-14"},{"id":"kq17","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*125","qty":2,"ngayMua":"2025-08-29"},{"id":"kq18","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*120","qty":2,"ngayMua":"2025-08-29"},{"id":"kq19","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*125","qty":2,"ngayMua":"2025-08-29"},{"id":"kq20","loai":"Đùn","category":"Đồng thanh dẹt","size":"25*160","qty":2,"ngayMua":"2025-08-29"},{"id":"kq21","loai":"Đùn","category":"Đồng thanh dẹt","size":"49*113","qty":2,"ngayMua":"2025-08-29"},{"id":"kq22","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*65","qty":1,"ngayMua":"2025-09-23"},{"id":"kq23","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*65","qty":2,"ngayMua":"2025-11-12"},{"id":"kq24","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*125","qty":2,"ngayMua":"2025-11-12"},{"id":"kq25","loai":"Đùn","category":"Đồng thanh dẹt","size":"8*50","qty":2,"ngayMua":"2025-11-12"},{"id":"kq26","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*80","qty":2,"ngayMua":"2025-11-12"},{"id":"kq27","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*120","qty":2,"ngayMua":"2025-11-12"},{"id":"kq28","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*120","qty":2,"ngayMua":"2025-11-12"},{"id":"kq29","loai":"Đùn","category":"Đồng thanh dẹt","size":"10*100","qty":2,"ngayMua":"2025-11-12"},{"id":"kq30","loai":"Đùn","category":"Đồng thanh dẹt","size":"6*40","qty":2,"ngayMua":"2025-11-12"},{"id":"kq31","loai":"Đùn","category":"Đồng thanh dẹt","size":"3*40","qty":2,"ngayMua":"2025-11-12"},{"id":"kq32","loai":"Đùn","category":"Đồng thanh dẹt","size":"3*50","qty":2,"ngayMua":"2025-11-12"},{"id":"kq33","loai":"Đùn","category":"Đồng thanh dẹt","size":"6*50","qty":2,"ngayMua":"2025-11-12"},{"id":"kq34","loai":"Đùn","category":"Đồng thanh dẹt","size":"3*15","qty":2,"ngayMua":"2025-11-12"},{"id":"kq35","loai":"Đùn","category":"Đồng thanh dẹt","size":"3*60","qty":2,"ngayMua":"2025-11-12"},{"id":"kq36","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*125","qty":2,"ngayMua":"2025-11-12"},{"id":"kq37","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*140","qty":2,"ngayMua":"2025-11-12"},{"id":"kq38","loai":"Đùn","category":"Đồng thanh dẹt","size":"3*140","qty":2,"ngayMua":"2025-11-12"},{"id":"kq39","loai":"Đùn","category":"Đồng thanh dẹt","size":"4*40","qty":2,"ngayMua":"2025-11-12"},{"id":"kq40","loai":"Đùn","category":"Đồng thanh dẹt","size":"6*30","qty":2,"ngayMua":"2025-11-12"},{"id":"kq41","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*20","qty":2,"ngayMua":"2025-11-12"},{"id":"kq42","loai":"Đùn","category":"Đồng thanh dẹt","size":"4*20","qty":2,"ngayMua":"2025-11-12"},{"id":"kq43","loai":"Đùn","category":"Đồng thanh dẹt","size":"3*30","qty":2,"ngayMua":"2025-11-12"},{"id":"kq44","loai":"Đùn","category":"Đồng thanh dẹt","size":"5*150","qty":2,"ngayMua":"2025-11-12"},{"id":"kq45","loai":"Đùn","category":"Phi tròn","size":"fi9,8","qty":1,"ngayMua":"19/12*2025"},{"id":"kq46","loai":"Đùn","category":"Phi tròn","size":"fi17","qty":1,"ngayMua":"19/12*2025"},{"id":"kq47","loai":"Đùn","category":"Phi tròn","size":"fi18,5","qty":1,"ngayMua":"19/12*2025"},{"id":"kq48","loai":"Đùn","category":"Điện cực","size":"20*45 (Chuẩn)","qty":2,"ngayMua":"2025-06-28"},{"id":"kq49","loai":"Đùn","category":"Điện cực","size":"20*70 (Chuẩn)","qty":2,"ngayMua":"2025-06-28"},{"id":"kq50","loai":"Đùn","category":"Điện cực","size":"50*70","qty":1,"ngayMua":"2026-01-31"},{"id":"kq51","loai":"Đùn","category":"Bo cạnh","size":"12*125bc","qty":2,"ngayMua":"2025-09-16"},{"id":"kq52","loai":"Đùn","category":"Bo cạnh","size":"8*75bc","qty":2,"ngayMua":"2025-09-16"},{"id":"kq53","loai":"Đùn","category":"Bo cạnh","size":"6,35*101,6","qty":2,"ngayMua":"2025-11-12"},{"id":"kq54","loai":"Đùn","category":"Bo cạnh","size":"bc15*150","qty":2,"ngayMua":"2025-11-12"},{"id":"kq55","loai":"Đùn","category":"Bo cạnh","size":"3*110","qty":2,"ngayMua":"2025-11-13"},{"id":"kq56","loai":"Đùn","category":"Bo cạnh","size":"3*100","qty":2,"ngayMua":"2025-11-13"},{"id":"kq57","loai":"Đùn","category":"Bo cạnh","size":"3*80","qty":2,"ngayMua":"2025-11-13"},{"id":"kq58","loai":"Đùn","category":"Bo cạnh","size":"3*60","qty":2,"ngayMua":"2025-11-13"},{"id":"kq59","loai":"Đùn","category":"Bo cạnh","size":"5*110","qty":2,"ngayMua":"2025-11-13"},{"id":"kq60","loai":"Đùn","category":"Bo cạnh","size":"12*80","qty":1,"ngayMua":"2026-01-31"},{"id":"kq61","loai":"Đùn","category":"Bo cạnh","size":"12*70","qty":1,"ngayMua":"2026-01-31"},{"id":"kq62","loai":"Đùn","category":"Bo cạnh","size":"3*60","qty":1,"ngayMua":"2026-01-31"},{"id":"kq63","loai":"Đùn","category":"Bo cạnh","size":"3*150","qty":2,"ngayMua":"2026-04-08"},{"id":"kq64","loai":"Đùn","category":"Bo cạnh","size":"5*150","qty":2,"ngayMua":"2026-04-08"},{"id":"kq65","loai":"Đùn","category":"Bo cạnh","size":"6,35*145","qty":2,"ngayMua":"2026-04-24"},{"id":"kq66","loai":"Đùn","category":"Bo cạnh","size":"3*145","qty":2,"ngayMua":"2026-04-24"},{"id":"kq67","loai":"Đùn","category":"Khuôn đặc biệt","size":"30*40 ( khuôn đặc biệt) 1 chuẩn 2 khuôn dương","qty":3,"ngayMua":"2025-07-07"},{"id":"kq68","loai":"Đùn","category":"Khuôn đặc biệt","size":"30*40H Chuẩn","qty":1,"ngayMua":"2025-09-23"},{"id":"kq69","loai":"Đùn","category":"Khuôn đặc biệt","size":"35*60T Chuẩn","qty":1,"ngayMua":"2025-09-23"},{"id":"kq70","loai":"Đùn","category":"Khuôn đặc biệt","size":"13,5*50","qty":1,"ngayMua":null},{"id":"kq71","loai":"Đùn","category":"Khuôn đặc biệt","size":"10/15*50","qty":1,"ngayMua":null},{"id":"kq72","loai":"Đùn","category":"Khuôn đặc biệt","size":"6/30*50","qty":1,"ngayMua":"2026-03-15"},{"id":"kq73","loai":"Đùn","category":"Khuôn đặc biệt","size":"8*30*60","qty":1,"ngayMua":"2026-03-15"},{"id":"kq74","loai":"Đùn","category":"Khuôn đặc biệt","size":"6/30*80","qty":1,"ngayMua":"2026-03-15"},{"id":"kq75","loai":"Đùn","category":"Khuôn đặc biệt","size":"13,8*36,5","qty":2,"ngayMua":"2026-04-24"},{"id":"kq76","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*45","qty":1,"ngayMua":"2025-06-28"},{"id":"kq77","loai":"Kéo","category":"Đồng thanh dẹt","size":"6*15","qty":1,"ngayMua":"2025-06-28"},{"id":"kq78","loai":"Kéo","category":"Đồng thanh dẹt","size":"5*125","qty":1,"ngayMua":"2025-06-28"},{"id":"kq79","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*95","qty":1,"ngayMua":"2025-06-28"},{"id":"kq80","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*100","qty":1,"ngayMua":"2025-06-28"},{"id":"kq81","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*115","qty":1,"ngayMua":"2025-06-28"},{"id":"kq82","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*120","qty":1,"ngayMua":"2025-06-28"},{"id":"kq83","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*150","qty":1,"ngayMua":"2025-06-28"},{"id":"kq84","loai":"Kéo","category":"Đồng thanh dẹt","size":"15*150","qty":1,"ngayMua":"2025-06-28"},{"id":"kq85","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*65","qty":1,"ngayMua":"2025-09-23"},{"id":"kq86","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*120","qty":1,"ngayMua":"2025-11-12"},{"id":"kq87","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*100","qty":1,"ngayMua":"2025-11-12"},{"id":"kq88","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*150","qty":1,"ngayMua":"2025-11-12"},{"id":"kq89","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*125","qty":1,"ngayMua":"2025-11-12"},{"id":"kq90","loai":"Kéo","category":"Đồng thanh dẹt","size":"5*140","qty":2,"ngayMua":"2025-11-25"},{"id":"kq91","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*140","qty":2,"ngayMua":"2025-11-25"},{"id":"kq92","loai":"Kéo","category":"Đồng thanh dẹt","size":"5*120","qty":1,"ngayMua":"2025-11-12"},{"id":"kq93","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*15","qty":1,"ngayMua":"2025-11-12"},{"id":"kq94","loai":"Kéo","category":"Đồng thanh dẹt","size":"6*30","qty":1,"ngayMua":"2025-11-12"},{"id":"kq95","loai":"Kéo","category":"Đồng thanh dẹt","size":"4*40","qty":1,"ngayMua":"2025-11-12"},{"id":"kq96","loai":"Kéo","category":"Đồng thanh dẹt","size":"9,5*114","qty":1,"ngayMua":"2025-11-12"},{"id":"kq97","loai":"Kéo","category":"Đồng thanh dẹt","size":"4*20","qty":1,"ngayMua":"2025-11-12"},{"id":"kq98","loai":"Kéo","category":"Đồng thanh dẹt","size":"5*20","qty":1,"ngayMua":"2025-11-12"},{"id":"kq99","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*40","qty":1,"ngayMua":"2025-11-12"},{"id":"kq100","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*30","qty":1,"ngayMua":"2025-11-12"},{"id":"kq101","loai":"Kéo","category":"Đồng thanh dẹt","size":"6*40","qty":1,"ngayMua":"2025-11-12"},{"id":"kq102","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*60","qty":1,"ngayMua":"2025-11-12"},{"id":"kq103","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*80","qty":1,"ngayMua":"2025-11-12"},{"id":"kq104","loai":"Kéo","category":"Đồng thanh dẹt","size":"5*125","qty":1,"ngayMua":"2025-11-12"},{"id":"kq105","loai":"Kéo","category":"Đồng thanh dẹt","size":"25*160","qty":1,"ngayMua":"2025-11-12"},{"id":"kq106","loai":"Kéo","category":"Đồng thanh dẹt","size":"8*50","qty":1,"ngayMua":"2025-11-12"},{"id":"kq107","loai":"Kéo","category":"Đồng thanh dẹt","size":"6*50","qty":1,"ngayMua":"2025-11-12"},{"id":"kq108","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*50","qty":1,"ngayMua":"2025-11-12"},{"id":"kq109","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*100","qty":1,"ngayMua":"2026-01-15"},{"id":"kq110","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*120","qty":1,"ngayMua":"2026-01-15"},{"id":"kq111","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*80","qty":1,"ngayMua":"2026-01-15"},{"id":"kq112","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*50","qty":1,"ngayMua":"2026-01-15"},{"id":"kq113","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*150","qty":1,"ngayMua":"2026-01-15"},{"id":"kq114","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*60","qty":1,"ngayMua":"2026-01-15"},{"id":"kq115","loai":"Kéo","category":"Đồng thanh dẹt","size":"5*50","qty":1,"ngayMua":"2026-01-15"},{"id":"kq116","loai":"Kéo","category":"Đồng thanh dẹt","size":"10*40","qty":1,"ngayMua":"2026-01-15"},{"id":"kq117","loai":"Kéo","category":"Đồng thanh dẹt","size":"3*150","qty":2,"ngayMua":"2026-12-13"},{"id":"kq118","loai":"Kéo","category":"Đồng thanh dẹt","size":"5*150","qty":2,"ngayMua":"2026-12-13"},{"id":"kq119","loai":"Kéo","category":"Đồng thanh dẹt","size":"18*120","qty":1,"ngayMua":"2026-02-27"},{"id":"kq120","loai":"Kéo","category":"Phi tròn","size":"fi9,8","qty":1,"ngayMua":"2025-12-19"},{"id":"kq121","loai":"Kéo","category":"Phi tròn","size":"fi17","qty":1,"ngayMua":"2025-12-19"},{"id":"kq122","loai":"Kéo","category":"Phi tròn","size":"fi18,5","qty":1,"ngayMua":"2025-12-19"},{"id":"kq123","loai":"Kéo","category":"Điện cực","size":"50*70","qty":1,"ngayMua":"2026-01-31"},{"id":"kq124","loai":"Kéo","category":"Bo cạnh","size":"8*75bc","qty":1,"ngayMua":"2025-09-16"},{"id":"kq125","loai":"Kéo","category":"Bo cạnh","size":"12*125bc","qty":1,"ngayMua":"2025-09-16"},{"id":"kq126","loai":"Kéo","category":"Bo cạnh","size":"bc15*150","qty":1,"ngayMua":"2025-11-12"},{"id":"kq127","loai":"Kéo","category":"Bo cạnh","size":"3*60","qty":2,"ngayMua":"2026-12-13"},{"id":"kq128","loai":"Kéo","category":"Bo cạnh","size":"3*80","qty":2,"ngayMua":"2026-12-13"},{"id":"kq129","loai":"Kéo","category":"Bo cạnh","size":"3*100","qty":2,"ngayMua":"2026-12-13"},{"id":"kq130","loai":"Kéo","category":"Bo cạnh","size":"3*110","qty":2,"ngayMua":"2026-12-13"},{"id":"kq131","loai":"Kéo","category":"Bo cạnh","size":"5*110","qty":2,"ngayMua":"2026-12-13"},{"id":"kq132","loai":"Kéo","category":"Bo cạnh","size":"12*70","qty":1,"ngayMua":"2026-01-31"},{"id":"kq133","loai":"Kéo","category":"Bo cạnh","size":"12*80","qty":1,"ngayMua":"2026-01-31"},{"id":"kq134","loai":"Kéo","category":"Bo cạnh","size":"3*60","qty":1,"ngayMua":"2026-01-31"},{"id":"kq135","loai":"Kéo","category":"Bo cạnh","size":"3*150","qty":1,"ngayMua":"2026-04-08"},{"id":"kq136","loai":"Kéo","category":"Bo cạnh","size":"5*150","qty":1,"ngayMua":"2026-04-08"},{"id":"kq137","loai":"Kéo","category":"Bo cạnh","size":"6,35*145","qty":1,"ngayMua":"2026-04-24"},{"id":"kq138","loai":"Kéo","category":"Bo cạnh","size":"3*145","qty":1,"ngayMua":"2026-04-24"},{"id":"kq139","loai":"Kéo","category":"Khuôn đặc biệt","size":"30*40","qty":1,"ngayMua":"2025-07-07"},{"id":"kq140","loai":"Kéo","category":"Khuôn đặc biệt","size":"13,8*36,5","qty":1,"ngayMua":"2026-04-24"}];
+const KHUON_CATALOG_CATS = ['Đồng thanh dẹt','Phi tròn','Điện cực','Bo cạnh','Yêu cầu & chuẩn'];
+const KHUON_QTY_CATS = ['Đồng thanh dẹt','Phi tròn','Điện cực','Bo cạnh','Khuôn đặc biệt','Khuôn chạy bọc giấy'];
+
 // ── AI cảnh báo bảo trì theo SẢN LƯỢNG (tấn) ─────────────────────────────
 // Vành nước (tang) của Máy đùn: cảnh báo khi chạy được 100–150 tấn kể từ
 // ngày thay gần nhất. Dầu máy rút (Máy rút 100 & Máy rút 50): cảnh báo khi
@@ -5067,7 +5239,7 @@ const STAGE_LABEL = Object.fromEntries(STAGES.map(s=>[s.key, s.label]));
 // ════════════════════════════════════════════════════════════
 let currentUser = null;
 let currentTab  = 'dashboard';
-let DB = { orders:[], ordersTrash:[], attendance:{}, workers:[], kyLuat:[], nghiPhep:[], lichLamViec:[], baoTri:[], qrProducts:[], users:[
+let DB = { orders:[], ordersTrash:[], attendance:{}, workers:[], kyLuat:[], nghiPhep:[], lichLamViec:[], baoTri:[], qrProducts:[], khuonCatalog:[], khuonQty:[], users:[
   {id:'u1',username:'admin',password:'admin123',role:'admin',name:'Quản trị viên',email:'admin@dongphuong.vn',phone:''},
   {id:'u2',username:'nhanvien',password:'nv123',role:'staff',name:'Nhân viên SX',email:'',phone:''}
 ]};
@@ -5173,7 +5345,7 @@ async function fbWriteETag(path, data, etag, method){
 // LOCAL STORAGE  – cache + fallback
 // ════════════════════════════════════════════════════════════
 function lsSave(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify({orders:DB.orders,ordersTrash:DB.ordersTrash,users:DB.users,attendance:DB.attendance,workers:DB.workers,kyLuat:DB.kyLuat,nghiPhep:DB.nghiPhep,lichLamViec:DB.lichLamViec,baoTri:DB.baoTri,qrProducts:DB.qrProducts})); }catch(e){}
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({orders:DB.orders,ordersTrash:DB.ordersTrash,users:DB.users,attendance:DB.attendance,workers:DB.workers,kyLuat:DB.kyLuat,nghiPhep:DB.nghiPhep,lichLamViec:DB.lichLamViec,baoTri:DB.baoTri,qrProducts:DB.qrProducts,khuonCatalog:DB.khuonCatalog,khuonQty:DB.khuonQty})); }catch(e){}
 }
 function lsLoad(){
   try{
@@ -5188,6 +5360,8 @@ function lsLoad(){
     if(d.lichLamViec) DB.lichLamViec = d.lichLamViec;
     if(d.baoTri) DB.baoTri = d.baoTri;
     if(d.qrProducts) DB.qrProducts = d.qrProducts;
+    if(d.khuonCatalog && d.khuonCatalog.length) DB.khuonCatalog = d.khuonCatalog;
+    if(d.khuonQty && d.khuonQty.length) DB.khuonQty = d.khuonQty;
   }catch(e){}
 }
 function logLoad(){
@@ -5752,7 +5926,7 @@ function snapshotArrById(list){
   (list||[]).forEach(o=>{ if(o && o.id) m[o.id] = JSON.stringify(o); });
   return m;
 }
-let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{}, workers:{}, qrProducts:{} };
+let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{}, workers:{}, qrProducts:{}, khuonCatalog:{}, khuonQty:{} };
 
 async function mergeAndSaveArrField(field, path, onSuccess){
   const localSnap = snapshotArrById(DB[field]);
@@ -5807,6 +5981,16 @@ function saveLichLamViec(){if(guardViewer())return;
 function saveBaoTri(){if(guardViewer())return;
   lsSave();
   syncArrFieldToServer('baoTri', '/data/baoTri');
+}
+
+function saveKhuonCatalog(){if(guardNotAdmin())return;
+  lsSave();
+  syncArrFieldToServer('khuonCatalog', '/data/khuonCatalog');
+}
+
+function saveKhuonQty(){if(guardNotAdmin())return;
+  lsSave();
+  syncArrFieldToServer('khuonQty', '/data/khuonQty');
 }
 
 function saveLog(){
@@ -7041,6 +7225,8 @@ function renderTrashPanel(){
 async function initAndStartSync(){
   // Load cache trước
   lsLoad(); logLoad();
+  if(!DB.khuonCatalog || !DB.khuonCatalog.length) DB.khuonCatalog = KHUON_CATALOG_SEED.map(x=>({...x}));
+  if(!DB.khuonQty || !DB.khuonQty.length) DB.khuonQty = KHUON_QTY_SEED.map(x=>({...x}));
   _lastHash = hashOrders(DB.orders);
   DB.orders.forEach(o=>_knownIds.add(o.id));
   // FIX QUAN TRỌNG — nguồn gốc lỗi "quay về dữ liệu cũ sau 1 đêm / sau Auto
@@ -7090,7 +7276,8 @@ async function initAndStartSync(){
         // Phải dùng đúng mergeAndSaveArrField (đọc bản server mới nhất làm
         // nền, chỉ áp đè đúng phần cục bộ) giống hệt các nhánh khác.
         const ARR_FIELD_PATHS = {workers:'/data/workers', qrProducts:'/data/qrProducts',
-          lichLamViec:'/data/lichLamViec', kyLuat:'/data/kyLuat', nghiPhep:'/data/nghiPhep', baoTri:'/data/baoTri'};
+          lichLamViec:'/data/lichLamViec', kyLuat:'/data/kyLuat', nghiPhep:'/data/nghiPhep', baoTri:'/data/baoTri',
+          khuonCatalog:'/data/khuonCatalog', khuonQty:'/data/khuonQty'};
         await Promise.all(dirty.map(async f=>{
           try{
             if(f==='orders'){ beginSave(); await mergeAndSaveOrders(); }
@@ -7129,6 +7316,10 @@ async function initAndStartSync(){
         if(data.nghiPhep){ DB.nghiPhep = data.nghiPhep; }
         if(data.lichLamViec){ DB.lichLamViec = data.lichLamViec; }
         if(data.baoTri){ DB.baoTri = data.baoTri; }
+        if(data.khuonCatalog && data.khuonCatalog.length){ DB.khuonCatalog = Array.isArray(data.khuonCatalog)?data.khuonCatalog:Object.values(data.khuonCatalog); }
+        else if(!DB.khuonCatalog || !DB.khuonCatalog.length){ DB.khuonCatalog = KHUON_CATALOG_SEED.map(x=>({...x})); }
+        if(data.khuonQty && data.khuonQty.length){ DB.khuonQty = Array.isArray(data.khuonQty)?data.khuonQty:Object.values(data.khuonQty); }
+        else if(!DB.khuonQty || !DB.khuonQty.length){ DB.khuonQty = KHUON_QTY_SEED.map(x=>({...x})); }
         lsSave();
         _lastHash = hashOrders(DB.orders);
         DB.orders.forEach(o=>_knownIds.add(o.id));
@@ -7338,6 +7529,8 @@ function applyDataSnapshot(data){
   if(data.nghiPhep && JSON.stringify(data.nghiPhep)!==JSON.stringify(DB.nghiPhep)){ DB.nghiPhep = data.nghiPhep; changed = true; }
   if(data.lichLamViec && JSON.stringify(data.lichLamViec)!==JSON.stringify(DB.lichLamViec)){ DB.lichLamViec = data.lichLamViec; changed = true; }
   if(data.baoTri && JSON.stringify(data.baoTri)!==JSON.stringify(DB.baoTri)){ DB.baoTri = data.baoTri; changed = true; }
+  if(data.khuonCatalog && JSON.stringify(data.khuonCatalog)!==JSON.stringify(DB.khuonCatalog)){ DB.khuonCatalog = data.khuonCatalog; changed = true; }
+  if(data.khuonQty && JSON.stringify(data.khuonQty)!==JSON.stringify(DB.khuonQty)){ DB.khuonQty = data.khuonQty; changed = true; }
   if(data.qrProducts){
     const freshQr = Array.isArray(data.qrProducts)?data.qrProducts:Object.values(data.qrProducts);
     if(JSON.stringify(freshQr)!==JSON.stringify(DB.qrProducts)){ DB.qrProducts = freshQr; changed = true; }
@@ -8013,6 +8206,14 @@ function guardViewer(){
   return true;
 }
 
+// Chốt chặn riêng cho khu vực Quản lý Khuôn (Tổng hợp khuôn / Số lượng khuôn):
+// CHỈ ADMIN mới được thêm/sửa/xóa, kể cả tài khoản "staff" cũng chỉ được xem.
+function guardNotAdmin(){
+  if(isAdmin()) return false;
+  showToast('🔒 Chỉ Quản trị viên (Admin) mới có quyền thêm/sửa/xóa dữ liệu Khuôn', true);
+  return true;
+}
+
 // ════════════════════════════════════════════════════════════
 // BẢO MẬT MẬT KHẨU
 // ────────────────────────────────────────────────────────────
@@ -8224,6 +8425,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     renderPublicCcllv();
     return;
   }
+  // Link QR xem Tổng hợp Khuôn (dán tại xưởng khuôn/kho khuôn) — khách
+  // hàng và mọi người quét bằng camera điện thoại thường, hiện thẳng
+  // trang công khai, không yêu cầu đăng nhập.
+  if(_pubParam==='khuon'){
+    renderPublicKhuon();
+    return;
+  }
   $('lp').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
   $('lu').addEventListener('keydown',e=>{ if(e.key==='Enter') $('lp').focus(); });
   // Restore session nếu đã đăng nhập trước đó
@@ -8299,7 +8507,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
   $('pageTitle').textContent=titles[tab]||tab;
   // FAB: admin mới thấy nút thêm đơn
   // FAB: admin thấy nút + ở tất cả các tab
@@ -8376,6 +8584,7 @@ function updateBadges(){
   const sb=$('sbBadge'); if(sb){sb.style.display=n>0?'inline-block':'none';sb.textContent=n>9?'9+':n;}
   const bd=$('bnDot'); if(bd) bd.classList.toggle('show',n>0);
   updateBtmBadge();
+  updateKhuonBadge();
 }
 
 function updateBtmBadge(){
@@ -8384,11 +8593,18 @@ function updateBtmBadge(){
   if(b){ b.style.display = n>0?'inline-block':'none'; b.textContent = n>9?'9+':n; }
 }
 
+// Badge số lượng khuôn sắp hết/hết hàng (số lượng <=1) — nhắc Admin bổ sung khuôn
+function updateKhuonBadge(){
+  const n = (DB.khuonQty||[]).filter(r=>Number(r.qty)<=1).length;
+  const b = $('sbKhuonBadge');
+  if(b){ b.style.display = n>0?'inline-block':'none'; b.textContent = n>9?'9+':n; }
+}
+
 // ════════════════════════════════════════════════════════════
 // RENDER
 // ════════════════════════════════════════════════════════════
 function renderTab(tab){
-  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
+  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
   if(fns[tab]) fns[tab]();
 }
 
@@ -13194,6 +13410,273 @@ function btmDeleteRecord(id){if(guardViewer())return;
 }
 
 // ════════════════════════════════════════════════════════════
+// QUẢN LÝ KHUÔN (Tổng hợp Khuôn / Số lượng Khuôn) — Khu vực Thiết bị
+// Chỉ ADMIN được thêm/sửa/xóa (guardNotAdmin ở mọi hàm ghi dữ liệu).
+// Staff/Viewer chỉ xem, tìm kiếm, lọc.
+// ════════════════════════════════════════════════════════════
+let _khTab = 'catalog';       // 'catalog' | 'qty'
+let _khSearch = '';
+let _khCatFilter = 'all';     // lọc theo nhóm ở tab Tổng hợp Khuôn
+let _khQtyFilter = 'all';     // lọc theo nhóm ở tab Số lượng Khuôn
+let _khQtyTypeFilter = 'all'; // lọc theo loại (Đùn/Kéo) ở tab Số lượng Khuôn
+let _khCatEditId = null;
+let _khQtyEditId = null;
+
+function khGoSubTab(tab){
+  _khTab = tab; _khSearch=''; _khCatFilter='all'; _khQtyFilter='all'; _khQtyTypeFilter='all';
+  renderKhuon();
+}
+function khSetSearch(val){ _khSearch = (val||'').toLowerCase(); renderKhuon(); }
+function khSetCatFilter(c){ _khCatFilter = c; renderKhuon(); }
+function khSetQtyFilter(c){ _khQtyFilter = c; renderKhuon(); }
+function khSetQtyType(t){ _khQtyTypeFilter = t; renderKhuon(); }
+
+// Tình trạng tồn kho tính từ số lượng: <=0 Hết hàng, <=1 Sắp hết, còn lại Có sẵn
+function khuonStatusOf(qty){
+  const q = Number(qty)||0;
+  if(q<=0) return {cls:'danger', label:'⛔ Hết hàng'};
+  if(q<=1) return {cls:'warn', label:'⚠️ Sắp hết'};
+  return {cls:'ok', label:'✅ Có sẵn'};
+}
+
+function renderKhuon(){
+  const admin = isAdmin();
+  const catalog = DB.khuonCatalog||[];
+  const qty = DB.khuonQty||[];
+  const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
+  const lowStock = qty.filter(r=>Number(r.qty)<=1).length;
+  const outStock = qty.filter(r=>Number(r.qty)<=0).length;
+
+  const catCats = [...new Set(catalog.map(x=>x.category))];
+  const qtyCats = [...new Set(qty.map(x=>x.category))];
+
+  $('mc').innerHTML = `
+    <div class="khm-tabs" style="align-items:center">
+      <button class="khm-tab-btn ${_khTab==='catalog'?'active':''}" onclick="khGoSubTab('catalog')">📋 Tổng hợp Khuôn</button>
+      <button class="khm-tab-btn ${_khTab==='qty'?'active':''}" onclick="khGoSubTab('qty')">📦 Số lượng Khuôn</button>
+      <button class="set-btn" style="width:auto;margin-left:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700;white-space:nowrap" onclick="openKhuonQrModal()">🏷 Mã QR tổng hợp Khuôn (công khai)</button>
+    </div>
+    ${!admin?`<div class="khm-locked-note">🔒 Chỉ Quản trị viên (Admin) mới có quyền thêm/sửa/xóa dữ liệu Khuôn. Bạn đang ở chế độ chỉ xem.</div>`:''}
+    <div class="khm-stats">
+      <div class="khm-stat-card"><div class="khm-stat-num">${catalog.length}</div><div class="khm-stat-lbl">Kích thước trong danh mục</div></div>
+      <div class="khm-stat-card"><div class="khm-stat-num">${qty.length}</div><div class="khm-stat-lbl">Mục khuôn trong kho</div></div>
+      <div class="khm-stat-card"><div class="khm-stat-num">${totalQty}</div><div class="khm-stat-lbl">Tổng số khuôn hiện có</div></div>
+      <div class="khm-stat-card warn"><div class="khm-stat-num">${lowStock}</div><div class="khm-stat-lbl">Sắp hết / cần đặt thêm</div></div>
+      <div class="khm-stat-card danger"><div class="khm-stat-num">${outStock}</div><div class="khm-stat-lbl">Đã hết hàng</div></div>
+    </div>
+    <div id="khmBody"></div>
+  `;
+  if(_khTab==='catalog') renderKhuonCatalog(catalog, catCats, admin);
+  else renderKhuonQty(qty, qtyCats, admin);
+}
+
+function renderKhuonCatalog(catalog, cats, admin){
+  const q = _khSearch;
+  let list = catalog.filter(x=> (_khCatFilter==='all'||x.category===_khCatFilter) && (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q)) );
+  const groups = {};
+  list.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
+  const groupNames = Object.keys(groups).sort();
+
+  $('khmBody').innerHTML = `
+    <div class="khm-toolbar">
+      <input class="khm-search" placeholder="🔎 Tìm kích thước, nhóm khuôn..." value="${(_khSearch||'').replace(/"/g,'&quot;')}" oninput="khSetSearch(this.value)">
+      ${admin?`<button class="khm-add-btn" onclick="khCatOpenAdd()">+ Thêm kích thước</button>`:''}
+    </div>
+    <div class="khm-chip-row">
+      <button class="khm-chip ${_khCatFilter==='all'?'active':''}" onclick="khSetCatFilter('all')">Tất cả (${catalog.length})</button>
+      ${cats.map(c=>`<button class="khm-chip ${_khCatFilter===c?'active':''}" onclick="khSetCatFilter('${c.replace(/'/g,"\\'")}')">${c} (${catalog.filter(x=>x.category===c).length})</button>`).join('')}
+    </div>
+    ${groupNames.length===0?`<div class="empty"><div class="empty-icon">🗂️</div>Không tìm thấy kích thước khuôn nào phù hợp</div>`:
+      groupNames.map(g=>`
+        <div class="khm-cat-section">
+          <div class="khm-cat-title">${g} <span class="khm-cat-count">${groups[g].length} kích thước</span></div>
+          <div class="khm-item-grid">
+            ${groups[g].map(it=>`
+              <div class="khm-item-chip">
+                ${admin?`<span class="khm-item-edit" onclick="khCatOpenEdit('${it.id}')">✏️</span>`:''}
+                ${it.size.replace(/</g,'&lt;')}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')
+    }
+  `;
+}
+
+function renderKhuonQty(qty, cats, admin){
+  const q = _khSearch;
+  let list = qty.filter(x=>
+    (_khQtyFilter==='all'||x.category===_khQtyFilter) &&
+    (_khQtyTypeFilter==='all'||x.loai===_khQtyTypeFilter) &&
+    (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q) || (x.note||'').toLowerCase().includes(q))
+  );
+  list = list.slice().sort((a,b)=> (a.category||'').localeCompare(b.category) || (a.size||'').localeCompare(b.size,undefined,{numeric:true}) );
+
+  $('khmBody').innerHTML = `
+    <div class="khm-toolbar">
+      <input class="khm-search" placeholder="🔎 Tìm kích thước, nhóm, ghi chú..." value="${(_khSearch||'').replace(/"/g,'&quot;')}" oninput="khSetSearch(this.value)">
+      ${admin?`<button class="khm-add-btn" onclick="khQtyOpenAdd()">+ Thêm khuôn vào kho</button>`:''}
+    </div>
+    <div class="khm-chip-row">
+      <button class="khm-chip ${_khQtyTypeFilter==='all'?'active':''}" onclick="khSetQtyType('all')">Loại: Tất cả</button>
+      <button class="khm-chip ${_khQtyTypeFilter==='Đùn'?'active':''}" onclick="khSetQtyType('Đùn')">Đùn</button>
+      <button class="khm-chip ${_khQtyTypeFilter==='Kéo'?'active':''}" onclick="khSetQtyType('Kéo')">Kéo</button>
+    </div>
+    <div class="khm-chip-row">
+      <button class="khm-chip ${_khQtyFilter==='all'?'active':''}" onclick="khSetQtyFilter('all')">Tất cả nhóm</button>
+      ${cats.map(c=>`<button class="khm-chip ${_khQtyFilter===c?'active':''}" onclick="khSetQtyFilter('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('')}
+    </div>
+    ${list.length===0?`<div class="empty"><div class="empty-icon">📦</div>Không tìm thấy khuôn nào phù hợp</div>`:`
+    <div class="khm-table-wrap">
+      <table class="khm-table">
+        <thead><tr>
+          <th>Loại</th><th>Nhóm khuôn</th><th>Kích thước</th><th>SL</th><th>Ngày mua</th><th>Tình trạng</th><th>Ghi chú</th>${admin?'<th></th>':''}
+        </tr></thead>
+        <tbody>
+          ${list.map(r=>{
+            const st = khuonStatusOf(r.qty);
+            return `<tr>
+              <td>${r.loai||''}</td>
+              <td>${(r.category||'').replace(/</g,'&lt;')}</td>
+              <td><b>${(r.size||'').replace(/</g,'&lt;')}</b></td>
+              <td>${r.qty??0}</td>
+              <td>${r.ngayMua?fmtDate(r.ngayMua):'—'}</td>
+              <td><span class="khm-status-pill ${st.cls}">${st.label}</span></td>
+              <td>${(r.note||'—').replace(/</g,'&lt;')}</td>
+              ${admin?`<td><div class="khm-row-actions">
+                <button class="khm-icon-btn" title="Sửa" onclick="khQtyOpenEdit('${r.id}')">✏️</button>
+                <button class="khm-icon-btn danger" title="Xóa" onclick="khQtyDelete('${r.id}')">🗑</button>
+              </div></td>`:''}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`}
+  `;
+}
+
+function khFillGroupDatalist(listId, cats){
+  const dl = $(listId); if(!dl) return;
+  dl.innerHTML = cats.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">`).join('');
+}
+
+// ── Tổng hợp Khuôn: thêm / sửa / xóa (chỉ Admin) ──
+function khCatOpenAdd(){if(guardNotAdmin())return;
+  _khCatEditId = null;
+  $('khCatModalTitle').textContent = 'Thêm kích thước khuôn';
+  $('khCatGroup').value = _khCatFilter!=='all'?_khCatFilter:'';
+  $('khCatSize').value = '';
+  $('khCatErr').style.display='none';
+  khFillGroupDatalist('khCatGroupList', KHUON_CATALOG_CATS);
+  openModal('khCatModal');
+}
+function khCatOpenEdit(id){if(guardNotAdmin())return;
+  const it = (DB.khuonCatalog||[]).find(x=>x.id===id); if(!it) return;
+  _khCatEditId = id;
+  $('khCatModalTitle').textContent = 'Sửa kích thước khuôn';
+  $('khCatGroup').value = it.category||'';
+  $('khCatSize').value = it.size||'';
+  $('khCatErr').style.display='none';
+  khFillGroupDatalist('khCatGroupList', KHUON_CATALOG_CATS);
+  openModal('khCatModal');
+}
+function khCatSave(){if(guardNotAdmin())return;
+  const category = $('khCatGroup').value.trim();
+  const size = $('khCatSize').value.trim();
+  if(!category||!size){ $('khCatErr').textContent='Vui lòng nhập đủ Nhóm khuôn và Kích thước'; $('khCatErr').style.display='block'; return; }
+  if(_khCatEditId){
+    const it = (DB.khuonCatalog||[]).find(x=>x.id===_khCatEditId); if(!it) return;
+    const before = {...it};
+    it.category = category; it.size = size;
+    saveKhuonCatalog();
+    log('Sửa danh mục khuôn', `${category} · ${size}`, '', before, it);
+  } else {
+    const rec = { id:'kc_'+uid(), category, size };
+    DB.khuonCatalog.push(rec);
+    saveKhuonCatalog();
+    log('Thêm danh mục khuôn', `${category} · ${size}`, '', null, rec);
+  }
+  closeModal('khCatModal');
+  renderKhuon();
+  showToast('✅ Đã lưu danh mục khuôn');
+}
+function khCatDelete(id){if(guardNotAdmin())return;
+  const it = (DB.khuonCatalog||[]).find(x=>x.id===id); if(!it) return;
+  confirm2('Xóa kích thước khuôn', `Xóa "${it.size}" khỏi nhóm "${it.category}"?`, ()=>{
+    DB.khuonCatalog = DB.khuonCatalog.filter(x=>x.id!==id);
+    saveKhuonCatalog();
+    log('Xóa danh mục khuôn', `${it.category} · ${it.size}`, '', it, null);
+    renderKhuon();
+    showToast('Đã xóa');
+  });
+}
+
+// ── Số lượng Khuôn: thêm / sửa / xóa (chỉ Admin) ──
+function khQtyOpenAdd(){if(guardNotAdmin())return;
+  _khQtyEditId = null;
+  $('khQtyModalTitle').textContent = 'Thêm khuôn vào kho';
+  $('khQtyLoai').value = 'Đùn';
+  $('khQtyGroup').value = _khQtyFilter!=='all'?_khQtyFilter:'';
+  $('khQtySize').value = '';
+  $('khQtyNum').value = '';
+  $('khQtyDate').value = new Date().toISOString().slice(0,10);
+  $('khQtyNote').value = '';
+  $('khQtyErr').style.display='none';
+  khFillGroupDatalist('khQtyGroupList', KHUON_QTY_CATS);
+  openModal('khQtyModal');
+}
+function khQtyOpenEdit(id){if(guardNotAdmin())return;
+  const it = (DB.khuonQty||[]).find(x=>x.id===id); if(!it) return;
+  _khQtyEditId = id;
+  $('khQtyModalTitle').textContent = 'Sửa khuôn trong kho';
+  $('khQtyLoai').value = it.loai||'Đùn';
+  $('khQtyGroup').value = it.category||'';
+  $('khQtySize').value = it.size||'';
+  $('khQtyNum').value = it.qty??0;
+  $('khQtyDate').value = it.ngayMua||'';
+  $('khQtyNote').value = it.note||'';
+  $('khQtyErr').style.display='none';
+  khFillGroupDatalist('khQtyGroupList', KHUON_QTY_CATS);
+  openModal('khQtyModal');
+}
+function khQtySave(){if(guardNotAdmin())return;
+  const loai = $('khQtyLoai').value;
+  const category = $('khQtyGroup').value.trim();
+  const size = $('khQtySize').value.trim();
+  const numVal = $('khQtyNum').value;
+  if(!category||!size||numVal===''){ $('khQtyErr').textContent='Vui lòng nhập đủ Nhóm khuôn, Kích thước và Số lượng'; $('khQtyErr').style.display='block'; return; }
+  const data = { loai, category, size, qty:Number(numVal)||0, ngayMua:$('khQtyDate').value||null, note:$('khQtyNote').value.trim() };
+  if(_khQtyEditId){
+    const it = (DB.khuonQty||[]).find(x=>x.id===_khQtyEditId); if(!it) return;
+    const before = {...it};
+    Object.assign(it, data);
+    saveKhuonQty();
+    log('Sửa kho khuôn', `${loai} · ${category} · ${size} · SL ${data.qty}`, '', before, it);
+  } else {
+    const rec = { id:'kq_'+uid(), ...data };
+    DB.khuonQty.push(rec);
+    saveKhuonQty();
+    log('Thêm kho khuôn', `${loai} · ${category} · ${size} · SL ${data.qty}`, '', null, rec);
+  }
+  closeModal('khQtyModal');
+  updateKhuonBadge();
+  renderKhuon();
+  showToast('✅ Đã lưu kho khuôn');
+}
+function khQtyDelete(id){if(guardNotAdmin())return;
+  const it = (DB.khuonQty||[]).find(x=>x.id===id); if(!it) return;
+  confirm2('Xóa khuôn khỏi kho', `Xóa "${it.size}" (${it.loai}) khỏi kho?`, ()=>{
+    DB.khuonQty = DB.khuonQty.filter(x=>x.id!==id);
+    saveKhuonQty();
+    log('Xóa kho khuôn', `${it.loai} · ${it.category} · ${it.size}`, '', it, null);
+    updateKhuonBadge();
+    renderKhuon();
+    showToast('Đã xóa');
+  });
+}
+
+// ════════════════════════════════════════════════════════════
 // AI CẢNH BÁO BẢO TRÌ THEO TẤN (vành nước máy đùn / dầu máy rút)
 // ════════════════════════════════════════════════════════════
 function maintLevelColor(level){ return level==='due' ? 'var(--red-m)' : level==='warn' ? 'var(--amber-m)' : 'var(--green-m)'; }
@@ -14451,7 +14934,8 @@ function pubEsc(s){
 const SCAN_STAT_TYPES = {
   lichlamviec: 'Lịch làm việc',
   chamcong: 'Chấm công',
-  donhang: 'Thông tin đơn hàng'
+  donhang: 'Thông tin đơn hàng',
+  khuon: 'Tổng hợp Khuôn'
 };
 async function pubTrackScan(type){
   try{
@@ -14652,6 +15136,71 @@ function pubComputeTotal(rowData){
   return computeCongTotalStr(rowData);
 }
 
+// ════════════════════════════════════════════════════════════
+// MÃ QR CÔNG KHAI: TỔNG HỢP KHUÔN
+// Khách hàng & bất kỳ ai quét bằng camera điện thoại thường (không cần
+// cài app, không cần đăng nhập) sẽ mở thẳng trang tra cứu, đọc dữ liệu
+// trực tiếp từ Firebase RTDB (khuonCatalog + khuonQty) — dùng chung cơ
+// chế với mã QR Chấm công/Lịch làm việc và mã QR truy xuất sản phẩm ──
+// ════════════════════════════════════════════════════════════
+function khuonPublicUrl(){
+  const base = location.origin + location.pathname;
+  const db = fbUrl();
+  return base + '?pub=khuon' + (db ? '&db=' + encodeURIComponent(db) : '');
+}
+
+async function loadKhuonQrStats(){
+  const box = $('khuonQrStats'); if(!box) return;
+  if(!fbOk()){ box.innerHTML = ''; return; }
+  box.innerHTML = `<div style="font-size:11.5px;color:var(--text4)">Đang tải số lượt quét…</div>`;
+  const st = await fetchScanStats('khuon');
+  if(!$('khuonQrStats')) return; // modal đã đóng trong lúc tải
+  box.innerHTML = scanStatCardHtml('🧩 Tổng hợp Khuôn', st);
+}
+
+async function openKhuonQrModal(){
+  if(guardViewer()) return;
+  openModal('khuonQrModal');
+  const link = khuonPublicUrl();
+  $('khuonQrLinkTxt').textContent = link;
+  $('khuonQrWarn').style.display = fbOk() ? 'none' : 'block';
+  loadKhuonQrStats();
+  const wrap = $('khuonQrCanvasWrap');
+  wrap.innerHTML = '<span style="font-size:12px;color:var(--text4)">Đang tạo mã QR…</span>';
+  await ensureQrLib();
+  if(!$('khuonQrCanvasWrap')) return; // modal đã đóng trong lúc tải thư viện
+  if(!window.QRCode){ wrap.innerHTML=''; wrap.textContent = link; return; }
+  wrap.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  wrap.appendChild(canvas);
+  QRCode.toCanvas(canvas, link, {width:220, margin:1}, function(err){
+    if(err){ wrap.innerHTML=''; wrap.textContent = link; }
+  });
+}
+
+function copyKhuonLink(){
+  const link = khuonPublicUrl();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(()=>showToast('✅ Đã sao chép liên kết')).catch(()=>showToast('❌ Không thể sao chép, vui lòng tự chọn và copy', true));
+  } else {
+    showToast('❌ Trình duyệt không hỗ trợ sao chép tự động, vui lòng tự chọn và copy', true);
+  }
+}
+
+async function downloadKhuonQr(){
+  await ensureQrLib();
+  if(!window.QRCode){ showToast('❌ Chưa tải xong thư viện tạo mã QR, kiểm tra kết nối mạng và thử lại', true); return; }
+  try{
+    const dataUrl = await QRCode.toDataURL(khuonPublicUrl(), {margin:1, width:640});
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'QR_Tong_hop_Khuon.png';
+    a.click();
+  }catch(e){
+    showToast('❌ Không tạo được ảnh mã QR, vui lòng thử lại', true);
+  }
+}
+
 let _pubCcllvTab = 'llv';
 const _pubCcllvTracked = new Set(); // tránh đếm trùng lượt xem cùng 1 tab trong 1 lần mở trang
 function pubCcllvSwitchTab(tab){
@@ -14798,6 +15347,195 @@ async function renderPublicCcllv(){
     _pubCcllvTracked.add('llv');
     pubTrackScan('lichlamviec');
   }
+}
+
+// ════════════════════════════════════════════════════════════
+// TRANG CÔNG KHAI: TỔNG HỢP KHUÔN
+// Khách hàng và bất kỳ ai quét mã QR dán tại xưởng khuôn / kho khuôn sẽ
+// mở thẳng trang này bằng camera điện thoại thường — không cần cài app,
+// không cần đăng nhập — xem trực tiếp danh mục kích thước khuôn và số
+// lượng khuôn tồn kho, đọc dữ liệu trực tiếp từ Firebase RTDB.
+// ════════════════════════════════════════════════════════════
+let _pubKh = { catalog:[], qty:[], tab:'catalog', search:'', catFilter:'all', typeFilter:'all' };
+
+function khuonStatusOfPub(qty){
+  const q = Number(qty)||0;
+  if(q<=0) return {cls:'danger', label:'⛔ Hết hàng'};
+  if(q<=1) return {cls:'warn', label:'⚠️ Sắp hết'};
+  return {cls:'ok', label:'✅ Có sẵn'};
+}
+
+async function renderPublicKhuon(){
+  $('loginScreen').classList.remove('active');
+  $('publicScanScreen').classList.add('active');
+  const wrap = $('pubWrap');
+  const params = new URLSearchParams(location.search);
+  const dbUrl = (params.get('db') || fbUrl() || '').replace(/\/$/,'');
+
+  if(!dbUrl){
+    wrap.innerHTML = `<div class="pub-msg">⚠️ Không thể tải dữ liệu — liên kết thiếu thông tin kết nối.<br>Vui lòng liên hệ nhà máy để được hỗ trợ.</div>`;
+    return;
+  }
+
+  let catalog=[], qty=[], errMsg=null;
+  try{
+    const [rc, rq] = await Promise.all([
+      fetch(dbUrl + '/data/khuonCatalog.json?print=pretty', {cache:'no-store'}),
+      fetch(dbUrl + '/data/khuonQty.json?print=pretty', {cache:'no-store'})
+    ]);
+    if(!rc.ok || !rq.ok){
+      const bad = [rc,rq].map(r=>r.status).find(s=>s===401||s===403);
+      errMsg = bad
+        ? `⚠️ Không kết nối được tới máy chủ dữ liệu (mã lỗi HTTP ${bad}).<br>Có thể quy tắc bảo mật (Rules) của Firebase đang chặn truy cập công khai.`
+        : `⚠️ Không kết nối được tới máy chủ dữ liệu.<br>Vui lòng thử lại sau ít phút hoặc liên hệ nhà máy.`;
+    } else {
+      const dc = await rc.json(), dq = await rq.json();
+      catalog = Array.isArray(dc) ? dc.filter(Boolean) : Object.values(dc||{}).filter(Boolean);
+      qty = Array.isArray(dq) ? dq.filter(Boolean) : Object.values(dq||{}).filter(Boolean);
+    }
+  }catch(e){
+    errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
+  }
+
+  if(errMsg){
+    wrap.innerHTML = `<div class="pub-msg">${errMsg}</div>`;
+    return;
+  }
+
+  _pubKh = { catalog, qty, tab:'catalog', search:'', catFilter:'all', typeFilter:'all' };
+
+  const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
+  const lowStock = qty.filter(r=>Number(r.qty)<=1 && Number(r.qty)>0).length;
+  const outStock = qty.filter(r=>Number(r.qty)<=0).length;
+  const warnCls = outStock ? 'danger' : (lowStock ? 'warn' : '');
+
+  wrap.innerHTML = `
+    <div class="pub-header">
+      <div class="pub-header-logo"><img src="${DP_LOGO_DATAURL}" alt="Logo Đông Phương" class="pub-header-logo-img"><span>CÔNG TY CP CÔNG THƯƠNG ĐÔNG PHƯƠNG</span></div>
+      <div class="pub-header-title">🧩 Tổng hợp Khuôn</div>
+      <div class="pub-header-code">Danh mục kích thước &amp; kho khuôn — cập nhật trực tiếp từ hệ thống</div>
+    </div>
+    <div class="pub-kh-summary">
+      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${catalog.length}</div><div class="pub-kh-sum-lbl">Kích thước trong danh mục</div></div>
+      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${totalQty}</div><div class="pub-kh-sum-lbl">Tổng số khuôn hiện có</div></div>
+      <div class="pub-kh-sum-card ${warnCls}"><div class="pub-kh-sum-n">${lowStock+outStock}</div><div class="pub-kh-sum-lbl">Sắp hết / hết hàng</div></div>
+    </div>
+    <div class="pub-kh-tabs">
+      <button class="pub-kh-tab active" id="pubKhTabBtn-catalog" onclick="pubKhSwitchTab('catalog')">📋 Danh mục khuôn</button>
+      <button class="pub-kh-tab" id="pubKhTabBtn-qty" onclick="pubKhSwitchTab('qty')">📦 Kho khuôn (số lượng)</button>
+    </div>
+    <div id="pubKhBody"></div>
+    <div class="pub-kh-updated">Cập nhật lúc ${fmtDateTime(Date.now())}</div>
+    <div class="pub-footer">Trang tra cứu khuôn công khai — vui lòng liên hệ nhà máy nếu cần đặt thêm khuôn hoặc có sai lệch số liệu.<br>Liên hệ SĐT/Zalo: 0979698351</div>
+  `;
+  pubKhRenderBody();
+
+  if(!_pubCcllvTracked.has('khuon')){
+    _pubCcllvTracked.add('khuon');
+    pubTrackScan('khuon');
+  }
+}
+
+function pubKhSwitchTab(tab){
+  _pubKh.tab = tab; _pubKh.search=''; _pubKh.catFilter='all'; _pubKh.typeFilter='all';
+  document.querySelectorAll('.pub-kh-tab').forEach(el=>el.classList.toggle('active', el.id==='pubKhTabBtn-'+tab));
+  pubKhRenderBody();
+}
+function pubKhSetSearch(val){ _pubKh.search = (val||'').toLowerCase(); pubKhRenderBody(); }
+function pubKhSetCat(c){ _pubKh.catFilter = c; pubKhRenderBody(); }
+function pubKhSetType(t){ _pubKh.typeFilter = t; pubKhRenderBody(); }
+
+function pubKhRenderBody(){
+  const body = $('pubKhBody'); if(!body) return;
+  const active = document.activeElement;
+  const wasSearchFocused = active && active.classList && active.classList.contains('pub-kh-search');
+  const caret = wasSearchFocused ? active.selectionStart : null;
+  if(_pubKh.tab==='catalog') pubKhRenderCatalog(body); else pubKhRenderQty(body);
+  if(wasSearchFocused){
+    const inp = body.querySelector('.pub-kh-search');
+    if(inp){ inp.focus(); if(caret!=null) inp.setSelectionRange(caret, caret); }
+  }
+}
+
+function pubKhRenderCatalog(body){
+  const { catalog } = _pubKh;
+  const q = _pubKh.search;
+  const cats = [...new Set(catalog.map(x=>x.category))].sort();
+  let list = catalog.filter(x=>
+    (_pubKh.catFilter==='all' || x.category===_pubKh.catFilter) &&
+    (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q))
+  );
+  const groups = {};
+  list.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
+  const groupNames = Object.keys(groups).sort();
+
+  body.innerHTML = `
+    <div class="pub-kh-toolbar">
+      <input class="pub-kh-search" placeholder="🔎 Tìm kích thước, nhóm khuôn..." value="${pubEsc(_pubKh.search)}" oninput="pubKhSetSearch(this.value)">
+      <div class="pub-kh-chips">
+        <button class="pub-kh-chip ${_pubKh.catFilter==='all'?'active':''}" onclick="pubKhSetCat('all')">Tất cả (${catalog.length})</button>
+        ${cats.map(c=>`<button class="pub-kh-chip ${_pubKh.catFilter===c?'active':''}" onclick="pubKhSetCat('${c.replace(/'/g,"\\'")}')">${pubEsc(c)} (${catalog.filter(x=>x.category===c).length})</button>`).join('')}
+      </div>
+    </div>
+    ${groupNames.length===0 ? `<div class="pub-kh-empty">🗂️ Không tìm thấy kích thước khuôn nào phù hợp</div>` :
+      groupNames.map(g=>`
+        <div class="pub-kh-cat-title">${pubEsc(g)} <span class="pub-kh-cat-count">${groups[g].length} kích thước</span></div>
+        <div class="pub-kh-grid">
+          ${groups[g].map(it=>`<div class="pub-kh-chip-item">${pubEsc(it.size)}</div>`).join('')}
+        </div>
+      `).join('')
+    }
+  `;
+}
+
+function pubKhRenderQty(body){
+  const { qty } = _pubKh;
+  const q = _pubKh.search;
+  const cats = [...new Set(qty.map(x=>x.category))].sort();
+  const types = [...new Set(qty.map(x=>x.loai).filter(Boolean))].sort();
+  let list = qty.filter(x=>
+    (_pubKh.catFilter==='all' || x.category===_pubKh.catFilter) &&
+    (_pubKh.typeFilter==='all' || x.loai===_pubKh.typeFilter) &&
+    (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q))
+  );
+  const groups = {};
+  list.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
+  const groupNames = Object.keys(groups).sort();
+
+  body.innerHTML = `
+    <div class="pub-kh-toolbar">
+      <input class="pub-kh-search" placeholder="🔎 Tìm kích thước, nhóm khuôn..." value="${pubEsc(_pubKh.search)}" oninput="pubKhSetSearch(this.value)">
+      ${types.length>1?`<div class="pub-kh-chips">
+        <button class="pub-kh-chip ${_pubKh.typeFilter==='all'?'active':''}" onclick="pubKhSetType('all')">Tất cả loại</button>
+        ${types.map(t=>`<button class="pub-kh-chip ${_pubKh.typeFilter===t?'active':''}" onclick="pubKhSetType('${t.replace(/'/g,"\\'")}')">${pubEsc(t)}</button>`).join('')}
+      </div>`:''}
+      <div class="pub-kh-chips">
+        <button class="pub-kh-chip ${_pubKh.catFilter==='all'?'active':''}" onclick="pubKhSetCat('all')">Tất cả nhóm (${qty.length})</button>
+        ${cats.map(c=>`<button class="pub-kh-chip ${_pubKh.catFilter===c?'active':''}" onclick="pubKhSetCat('${c.replace(/'/g,"\\'")}')">${pubEsc(c)} (${qty.filter(x=>x.category===c).length})</button>`).join('')}
+      </div>
+    </div>
+    ${groupNames.length===0 ? `<div class="pub-kh-empty">📦 Không tìm thấy mục khuôn nào phù hợp</div>` :
+      groupNames.map(g=>`
+        <div class="pub-kh-cat-title">${pubEsc(g)} <span class="pub-kh-cat-count">${groups[g].length} mục</span></div>
+        <div class="pub-kh-qty-list">
+          ${groups[g].map(it=>{
+            const st = khuonStatusOfPub(it.qty);
+            const numColor = st.cls==='danger' ? '#b91c1c' : (st.cls==='warn' ? '#b45309' : 'var(--brand)');
+            return `<div class="pub-kh-qty-item">
+              <div class="pub-kh-qty-info">
+                <div class="pub-kh-qty-size">${pubEsc(it.size)}</div>
+                <div class="pub-kh-qty-meta">${it.loai?`🏷 ${pubEsc(it.loai)}`:''}${it.ngayMua?` · Mua: ${pubEsc(it.ngayMua)}`:''}</div>
+              </div>
+              <div class="pub-kh-qty-side">
+                <div class="pub-kh-qty-num" style="color:${numColor}">${Number(it.qty)||0}</div>
+                <div class="pub-kh-qty-badge ${st.cls}">${st.label}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      `).join('')
+    }
+  `;
 }
 
 function genUniqueQrCode(){
