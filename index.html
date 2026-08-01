@@ -15214,6 +15214,82 @@ function pubCcllvSwitchTab(tab){
   }
 }
 
+// ── Trang công khai: bảng chấm công cho phép xem lại các tháng trước
+// (trước đây cố định tháng hiện tại) — dữ liệu attendance đã tải về đủ
+// mọi tháng có sẵn từ Firebase (/data/attendance), chỉ cần đổi tháng
+// đang hiển thị mà không cần tải lại trang ──
+let _pubCc = { workers:[], attendance:{}, ym:'' };
+
+// Trả về danh sách các tháng có dữ liệu (định dạng "YYYY-MM"), SẮP XẾP TĂNG
+// DẦN (cũ → mới) để dễ tính lùi/tiến 1 tháng.
+function pubCcAvailableMonthsAsc(){
+  const set = new Set(Object.keys(_pubCc.attendance||{}).filter(k=>/^\d{4}-\d{2}$/.test(k)));
+  set.add(todayStr().slice(0,7));
+  return [...set].sort();
+}
+
+function pubCcBuildAttTable(ym){
+  const workers = _pubCc.workers;
+  const monthData = (_pubCc.attendance||{})[ym] || {};
+  const [y,m] = ym.split('-').map(Number);
+  const nDays = daysInMonth(ym);
+  const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
+  return workers.length ? `
+    <div style="overflow-x:auto">
+      <table style="border-collapse:collapse;font-size:11px;white-space:nowrap">
+        <thead>
+          <tr>
+            <th style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:4px 6px;z-index:1">Họ và tên</th>
+            ${dayCols.map(d=>`<th style="border:1px solid var(--border);padding:3px 4px;min-width:26px">
+              <div>${d}</div><div style="font-size:9px;color:${weekdayVN(y,m,d)==='CN'?'var(--red-m)':'var(--text4)'}">${weekdayVN(y,m,d)}</div>
+            </th>`).join('')}
+            <th style="border:1px solid var(--border);padding:4px 6px;background:var(--green-l);color:var(--green)">Tổng công</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${workers.map(w=>{
+            const rowData = monthData[w.id] || {};
+            return `<tr>
+              <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:4px 6px;text-align:left;font-weight:700">${pubEsc(w.name||'—')}</td>
+              ${dayCols.map(d=>`<td style="border:1px solid var(--border);padding:3px;text-align:center">${pubEsc(rowData[d]!==undefined?rowData[d]:'')}</td>`).join('')}
+              <td style="border:1px solid var(--border);padding:4px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${pubComputeTotal(rowData)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:10.5px;color:var(--text4);margin-top:8px;line-height:1.5">
+      <b>Ghi chú:</b> Đủ ngày công = 1 · Nửa ngày công = 0.5 · Không công = 0. Làm thêm giờ cộng thêm vào công ngày (VD: 1.2 = 1 công + làm thêm 2 tiếng).
+    </div>
+  ` : `<div style="font-size:12px;color:var(--text4);text-align:center;padding:10px 0">Chưa có dữ liệu người lao động</div>`;
+}
+
+function pubCcRenderAtt(){
+  const body = $('pubCcBody'); if(!body) return;
+  body.innerHTML = pubCcBuildAttTable(_pubCc.ym);
+  const [y,m] = _pubCc.ym.split('-').map(Number);
+  const lbl = $('pubCcMonthLbl'); if(lbl) lbl.textContent = `Bảng chấm công tháng ${m}/${y}`;
+  const sel = $('pubCcMonthSel'); if(sel) sel.value = _pubCc.ym;
+  const months = pubCcAvailableMonthsAsc();
+  const idx = months.indexOf(_pubCc.ym);
+  const prevBtn = $('pubCcPrevBtn'); if(prevBtn) prevBtn.disabled = idx<=0;
+  const nextBtn = $('pubCcNextBtn'); if(nextBtn) nextBtn.disabled = idx===-1 || idx>=months.length-1;
+}
+
+function pubCcSetMonth(ym){
+  if(!ym) return;
+  _pubCc.ym = ym;
+  pubCcRenderAtt();
+}
+
+function pubCcShiftMonth(delta){
+  const months = pubCcAvailableMonthsAsc();
+  const idx = months.indexOf(_pubCc.ym);
+  if(idx===-1) return;
+  const newIdx = idx + delta;
+  if(newIdx>=0 && newIdx<months.length) pubCcSetMonth(months[newIdx]);
+}
+
 // ── Trang công khai: xem TOÀN BỘ lịch làm việc + bảng chấm công tháng
 // hiện tại, dùng khi người lao động quét mã QR dán ở bảng tin/xưởng SX ──
 async function renderPublicCcllv(){
@@ -15258,11 +15334,12 @@ async function renderPublicCcllv(){
     return;
   }
 
-  const ym = todayStr().slice(0,7);
-  const [y,m] = ym.split('-').map(Number);
-  const nDays = daysInMonth(ym);
-  const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
-  const monthData = attendance[ym] || {};
+  // Lưu state để đổi tháng xem chấm công mà không cần tải lại dữ liệu
+  _pubCc = { workers, attendance, ym: todayStr().slice(0,7) };
+  const monthsAsc = pubCcAvailableMonthsAsc();
+  const monthOptionsHtml = monthsAsc.slice().reverse()
+    .map(mm=>{ const [yy,mo]=mm.split('-').map(Number); return `<option value="${mm}" ${mm===_pubCc.ym?'selected':''}>Tháng ${mo}/${yy}</option>`; })
+    .join('');
 
   // ── Khối Lịch làm việc: gộp theo ca, giống bản quản trị ──
   const llvHtml = lichLamViec.length ? lichLamViec.map(sheet=>{
@@ -15295,38 +15372,19 @@ async function renderPublicCcllv(){
     `;
   }).join('') : `<div class="pub-card"><div style="font-size:12px;color:var(--text4);text-align:center;padding:10px 0">Chưa có lịch làm việc nào được đăng</div></div>`;
 
-  // ── Khối Bảng chấm công: dạng bảng cuộn ngang, tháng hiện tại ──
+  // ── Khối Bảng chấm công: dạng bảng cuộn ngang, có thể chọn xem lại
+  // các tháng trước qua dropdown hoặc nút lùi/tiến (◀ ▶) ──
   const attHtml = `
     <div class="pub-card">
-      <div class="pub-card-title">Bảng chấm công tháng ${m}/${y}</div>
-      ${workers.length ? `
-      <div style="overflow-x:auto">
-        <table style="border-collapse:collapse;font-size:11px;white-space:nowrap">
-          <thead>
-            <tr>
-              <th style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:4px 6px;z-index:1">Họ và tên</th>
-              ${dayCols.map(d=>`<th style="border:1px solid var(--border);padding:3px 4px;min-width:26px">
-                <div>${d}</div><div style="font-size:9px;color:${weekdayVN(y,m,d)==='CN'?'var(--red-m)':'var(--text4)'}">${weekdayVN(y,m,d)}</div>
-              </th>`).join('')}
-              <th style="border:1px solid var(--border);padding:4px 6px;background:var(--green-l);color:var(--green)">Tổng công</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${workers.map(w=>{
-              const rowData = monthData[w.id] || {};
-              return `<tr>
-                <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:4px 6px;text-align:left;font-weight:700">${pubEsc(w.name||'—')}</td>
-                ${dayCols.map(d=>`<td style="border:1px solid var(--border);padding:3px;text-align:center">${pubEsc(rowData[d]!==undefined?rowData[d]:'')}</td>`).join('')}
-                <td style="border:1px solid var(--border);padding:4px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${pubComputeTotal(rowData)}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div class="pub-card-title" id="pubCcMonthLbl" style="margin-bottom:0;flex:1;min-width:140px">Bảng chấm công tháng ${_pubCc.ym.split('-')[1]}/${_pubCc.ym.split('-')[0]}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <button id="pubCcPrevBtn" onclick="pubCcShiftMonth(-1)" style="border:1px solid var(--border);background:var(--card);color:var(--text2);border-radius:8px;padding:5px 9px;font-weight:800;cursor:pointer">◀</button>
+          <select id="pubCcMonthSel" onchange="pubCcSetMonth(this.value)" style="border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:12px;font-weight:700;font-family:inherit;background:var(--card);color:var(--text)">${monthOptionsHtml}</select>
+          <button id="pubCcNextBtn" onclick="pubCcShiftMonth(1)" style="border:1px solid var(--border);background:var(--card);color:var(--text2);border-radius:8px;padding:5px 9px;font-weight:800;cursor:pointer">▶</button>
+        </div>
       </div>
-      <div style="font-size:10.5px;color:var(--text4);margin-top:8px;line-height:1.5">
-        <b>Ghi chú:</b> Đủ ngày công = 1 · Nửa ngày công = 0.5 · Không công = 0. Làm thêm giờ cộng thêm vào công ngày (VD: 1.2 = 1 công + làm thêm 2 tiếng).
-      </div>
-      ` : `<div style="font-size:12px;color:var(--text4);text-align:center;padding:10px 0">Chưa có dữ liệu người lao động</div>`}
+      <div id="pubCcBody">${pubCcBuildAttTable(_pubCc.ym)}</div>
     </div>
   `;
 
@@ -15344,6 +15402,7 @@ async function renderPublicCcllv(){
     <div class="pub-ccllv-panel" data-tab="cc" style="display:none">${attHtml}</div>
     <div class="pub-footer">Trang xem chấm công &amp; lịch làm việc — vui lòng liên hệ quản lý nếu có sai lệch. Liên hệ SDT : 0979698351 - Zalo : 0979698351</div>
   `;
+  pubCcRenderAtt();
   if(!_pubCcllvTracked.has('llv')){
     _pubCcllvTracked.add('llv');
     pubTrackScan('lichlamviec');
