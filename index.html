@@ -4127,8 +4127,28 @@ body{letter-spacing:-.1px}
   .sb-item:active,.sb-item.active{background:linear-gradient(90deg,rgba(59,130,246,.22),rgba(59,130,246,.06))!important;color:#fff!important;font-weight:700}
   .sb-item.active::before{background:#5B9CFF!important;box-shadow:0 0 8px rgba(91,156,255,.6)}
   .sb-footer{border-top:1px solid rgba(255,255,255,.08)!important}
-  .sb-logout{color:#C3CEEA!important}
+
+  /* Khu vực "🟢 Đang truy cập" trên sidebar nền navy tối — trước đây các
+     dòng tên người dùng / tiêu đề / badge vẫn giữ màu chữ tối (gần đen,
+     xanh lá đậm...) vốn thiết kế cho nền sáng, nên bị chìm vào nền tối,
+     khó đọc. Ghi đè lại toàn bộ để tương phản rõ ràng, hiện đại hơn. */
   .sb-online{color:#93A5D1!important}
+  .sb-online-hd{color:#DCE4F7!important}
+  .sb-online-breakdown{color:#7A8FC9!important}
+  .sb-online-offline{background:rgba(245,158,11,.14)!important;color:#FCD34D!important}
+  .sb-online-list{gap:2px!important}
+  .sb-online-row{border-radius:9px;padding:5px 6px!important;margin:0 -6px;transition:background .12s}
+  .sb-online-row:hover{background:rgba(255,255,255,.05)}
+  .sb-online-avatar::after{border-color:var(--navy2)!important}
+  .sb-online-name{color:#F3F6FF!important}
+  .sb-online-tab{color:#8DA0D4!important}
+  .sb-online-me{background:rgba(91,156,255,.22)!important;color:#BFD4FF!important}
+
+  /* Nút "Đăng xuất" — trước đây chỉ đổi màu chữ, nền vẫn là hồng nhạt vốn
+     dành cho sidebar nền trắng nên bị lệch tông, tương phản kém trên nền
+     navy. Thiết kế lại kiểu "outline đỏ" hiện đại, chữ/icon nổi bật rõ. */
+  .sb-logout{background:rgba(220,90,80,.14)!important;color:#FF9C90!important;border:1px solid rgba(220,90,80,.28)!important}
+  .sb-logout:hover{background:rgba(220,90,80,.24)!important;border-color:rgba(220,90,80,.45)!important}
 }
 
 /* ── Topbar: thêm ô tìm kiếm nhanh + nhóm icon bên phải giống ảnh mẫu ── */
