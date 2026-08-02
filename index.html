@@ -2618,6 +2618,26 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .kh-clock{box-shadow:0 1px 4px rgba(15,23,42,.25);font-size:10.5px}
 .kh-overdue{font-size:10px;color:#fff;font-weight:800;margin-left:auto;background:linear-gradient(135deg,#ef4444,#b91c1c);padding:2px 8px;border-radius:20px;box-shadow:0 2px 6px rgba(220,38,38,.35);animation:pulse-run 1.6s infinite}
 
+/* ── Kế hoạch SX: hàng 3 khung gọn gàng — Trạng thái / Ưu tiên / Thời gian
+   sản xuất — thay cho các badge rời rạc trước đây, đồng bộ 1 hàng ngang,
+   phong cách hiện đại (khung bo góc, icon + nhãn nhỏ + giá trị nổi bật). ── */
+.kh-info-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;flex-basis:100%;width:100%}
+.kh-info-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 4px;border-radius:10px;background:rgba(255,255,255,.6);border:1px solid rgba(15,23,42,.06);box-shadow:0 1px 3px rgba(15,23,42,.05),inset 0 1px 0 rgba(255,255,255,.5);min-width:0}
+.kh-info-lbl{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.kh-info-val{font-size:12.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:-.1px}
+.kh-info-box.kh-info-status{color:#556072}
+.kh-info-box.kh-info-status.st-pending{color:#C2700A;background:#FEF3C7cc}
+.kh-info-box.kh-info-status.st-running{color:#1D4ED8;background:#DBEAFEcc}
+.kh-info-box.kh-info-status.st-done{color:#0C7A54;background:#DCFCE7cc}
+.kh-info-box.kh-info-pri{border-width:1.5px;border-style:solid}
+.kh-info-box.kh-info-time{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.kh-info-box.kh-info-time.tm-running{color:#1D4ED8;background:#DBEAFEcc;animation:pulse-run 2s infinite}
+.kh-info-box.kh-info-time.tm-wait{color:#556072;background:#EEF0F3cc}
+.kh-info-box.kh-info-time.tm-warn{color:#C2700A;background:#FEF3C7cc}
+.kh-info-box.kh-info-time.tm-overdue{color:#DC2626;background:#FEE2E2cc}
+.kh-info-box.kh-info-time.tm-done{color:#0C7A54;background:#DCFCE7cc}
+@media(max-width:420px){.kh-info-lbl{font-size:8px}.kh-info-val{font-size:11.5px}}
+
 /* ── Khách hàng: avatar tròn + tên nổi bật, hiện đại hơn ── */
 .card-customer-row{display:flex;align-items:center;gap:8px;padding:8px 12px 3px}
 .cust-avatar{width:32px;height:32px;border-radius:10px;color:#fff;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 8px rgba(15,23,42,.2),inset 0 1px 0 rgba(255,255,255,.35);letter-spacing:.3px}
@@ -5381,6 +5401,7 @@ let filterStatus = 'all';
 let ddRecvFrom = '';   // lọc theo ngày nhận đơn (từ ngày)
 let ddPriorityFilter = 'all';   // lọc theo mức ưu tiên
 let ddCustomerFilter = 'all';   // lọc theo khách hàng
+let ddSpecFilter = 'all';       // lọc theo quy cách (VD: Φ18×6000mm)
 let ddSelected = new Set();          // các đơn đang được chọn để thao tác hàng loạt
 let _editOrderId = null;
 let _editUserId  = null;
@@ -8682,7 +8703,7 @@ function goToOrderInPlan(orderId){
     // Reset toàn bộ bộ lọc/tìm kiếm của tab Hoàn thành trước khi nhảy sang,
     // nếu không đơn có thể bị bộ lọc đang áp dụng dở (trạng thái/khách hàng/
     // khoảng ngày...) che mất, khiến nút bấm trông như "không hoạt động".
-    htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all';
+    htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all'; htFilterPriority='all'; htFilterSpec='all';
     goTab('hoanThanh');
   } else {
     // Tương tự cho tab Kế hoạch SX: reset toàn bộ filter + ô tìm kiếm.
@@ -9842,7 +9863,7 @@ function ddSmartSort(list){
 }
 
 function ddResetFilters(){
-  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all';
+  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all'; ddSpecFilter='all';
   renderDorDang();
 }
 
@@ -10052,8 +10073,11 @@ function tbGlobalSearchGo(raw){
   const nTokens = rawTokens.map(_smartTokenNorm);
   const used = new Array(rawTokens.length).fill(false);
 
-  // 1) Nhận diện tab đích
-  let tab = 'dorDang';
+  // 1) Nhận diện tab đích — mặc định GIỮ NGUYÊN tab đang mở (trước đây luôn
+  // mặc định nhảy về "Đơn hàng" khiến gõ tìm ở tab Kế hoạch SX / Hoàn thành
+  // bị nhảy sai tab). Chỉ đổi sang tab khác khi người dùng gõ rõ từ khoá
+  // tên tab đó ("kế hoạch", "đã giao", "hoàn thành"...) trong câu tìm.
+  let tab = (currentTab==='keHoach'||currentTab==='hoanThanh') ? currentTab : 'dorDang';
   if(_smartFindPhrase(nTokens, used, [['ke','hoach']])) tab = 'keHoach';
   else if(_smartFindPhrase(nTokens, used, [['hoan','thanh'],['da','giao'],['nhap','kho'],['hoan','tra'],['cho','giao']])) tab = 'hoanThanh';
 
@@ -10100,10 +10124,10 @@ function tbGlobalSearchGo(raw){
   // Reset toàn bộ bộ lọc của cả 3 tab trước khi áp bộ lọc mới nhận diện được,
   // để không bị lẫn với lần lọc thủ công trước đó (dùng lại nguyên các biến/
   // hàm lọc searchQ/khSearchQ/htSearchQ... đã có sẵn của từng tab).
-  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all';
-  khSearchQ=''; khFilterStatus='all'; khFilterCustomer='all'; khFilterPriority='all';
+  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all'; ddSpecFilter='all';
+  khSearchQ=''; khFilterStatus='all'; khFilterCustomer='all'; khFilterPriority='all'; khFilterSpec='all';
   khFilterStage='all'; khFilterOwner='all'; khCreatedFrom=''; khCreatedTo=''; khDueFrom=''; khDueTo='';
-  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all';
+  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all'; htFilterPriority='all'; htFilterSpec='all';
 
   if(tab==='dorDang'){
     filterStatus = status || 'all';
@@ -10188,9 +10212,9 @@ let _usOpenTab = null;
 
 // Đếm số bộ lọc (không tính từ khóa) đang áp dụng — hiện số trên nút Bộ lọc
 function usActiveCount(tab){
-  if(tab==='dorDang') return [filterStatus!=='all', !!ddRecvFrom, ddPriorityFilter!=='all', ddCustomerFilter!=='all'].filter(Boolean).length;
-  if(tab==='keHoach') return [khFilterStatus!=='all', khFilterCustomer!=='all', khFilterPriority!=='all', khFilterStage!=='all', khFilterOwner!=='all', !!(khCreatedFrom||khCreatedTo), !!(khDueFrom||khDueTo)].filter(Boolean).length;
-  if(tab==='hoanThanh') return [htFilterStatus!=='all', htCustomerFilter!=='all', !!(htDoneFrom||htDoneTo)].filter(Boolean).length;
+  if(tab==='dorDang') return [filterStatus!=='all', !!ddRecvFrom, ddPriorityFilter!=='all', ddCustomerFilter!=='all', ddSpecFilter!=='all'].filter(Boolean).length;
+  if(tab==='keHoach') return [khFilterStatus!=='all', khFilterCustomer!=='all', khFilterPriority!=='all', khFilterSpec!=='all', khFilterStage!=='all', khFilterOwner!=='all', !!(khCreatedFrom||khCreatedTo), !!(khDueFrom||khDueTo)].filter(Boolean).length;
+  if(tab==='hoanThanh') return [htFilterStatus!=='all', htCustomerFilter!=='all', htFilterPriority!=='all', htFilterSpec!=='all', !!(htDoneFrom||htDoneTo)].filter(Boolean).length;
   return 0;
 }
 
@@ -10205,14 +10229,16 @@ function usBarHTML(tab, searchVal, searchId, placeholder){
   // Vẫn giữ input ẩn (hidden) để các hàm cũ (usAttachSearchInput/usClearSearch/
   // clearSearch...) đọc-ghi giá trị searchQ/khSearchQ/htSearchQ không bị lỗi.
   const kw = (searchVal||'').replace(/"/g,'&quot;');
-  // Đã bỏ nút "Bộ lọc chi tiết" (Bottom Sheet/Floating Panel) vì dư thừa:
-  // các thẻ KPI/trạng thái trên từng tab + ô tìm kiếm thông minh dùng chung
-  // ở Topbar (#tbGlobalSearch) đã đủ để lọc nhanh. Vẫn giữ input ẩn để các
-  // hàm cũ (usAttachSearchInput/usClearSearch/clearSearch...) không lỗi.
+  // Nút "Bộ lọc chi tiết" (Khách hàng / Quy cách / Ưu tiên... tuỳ tab) — mở
+  // Bottom Sheet (Mobile) / Floating Panel (Desktop) qua usOpen(). Có huy
+  // hiệu số hiển thị số bộ lọc đang áp dụng để người dùng biết ngay.
   return `
   <div class="us-bar">
     <input class="search-inp" id="${searchId}" type="hidden" value="${kw}">
     ${searchVal?`<span class="us-active-kw" title="Đang lọc theo từ khóa từ ô tìm kiếm nhanh">🔎 “${kw}”<button onclick="usClearSearch('${tab}')" title="Xóa từ khóa">✕</button></span>`:''}
+    <button class="us-filter-btn${n?' has-active':''}" onclick="usOpen('${tab}', this)" title="Bộ lọc chi tiết: khách hàng, quy cách, ưu tiên...">
+      🔧 Bộ lọc chi tiết${n?`<span class="us-badge">${n}</span>`:''}
+    </button>
   </div>`;
 }
 
@@ -10241,6 +10267,7 @@ function usSheetBody(tab){
   if(tab==='dorDang'){
     const allActive = DB.orders.filter(o=>o.status!=='done');
     const customers = [...new Set(allActive.map(o=>o.customer).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+    const specs = [...new Set(allActive.map(o=>specStr(o)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
     return `
       <div class="dd-fld"><label>Trạng thái</label>
         <select onchange="filterStatus=this.value;renderDorDang()">
@@ -10262,12 +10289,19 @@ function usSheetBody(tab){
           ${customers.map(c=>`<option value="${c.replace(/"/g,'&quot;')}" ${ddCustomerFilter===c?'selected':''}>${c}</option>`).join('')}
         </select>
       </div>
+      <div class="dd-fld"><label>Quy cách</label>
+        <select onchange="ddSpecFilter=this.value;renderDorDang()">
+          <option value="all">Tất cả</option>
+          ${specs.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${ddSpecFilter===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
       <div class="dd-fld"><label>Ngày đặt từ</label><input type="date" value="${ddRecvFrom}" onchange="ddRecvFrom=this.value;renderDorDang()"></div>`;
   }
   if(tab==='keHoach'){
     const allActive = DB.orders.filter(o=>o.status!=='done');
     const owners = [...new Set(allActive.map(o=>o.createdBy).filter(Boolean))].map(uid=>(DB.users||[]).find(u=>u.id===uid)).filter(Boolean);
     const customers = [...new Set(allActive.map(o=>o.customer).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+    const specs = [...new Set(allActive.map(o=>specStr(o)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
     return `
       <div class="dd-fld"><label>Khách hàng</label>
         <select onchange="khFilterCustomer=this.value;renderKeHoach()">
@@ -10279,6 +10313,12 @@ function usSheetBody(tab){
         <select onchange="khFilterPriority=this.value;renderKeHoach()">
           <option value="all">Tất cả</option>
           ${Object.keys(PRI_COLOR).map(p=>`<option value="${p}" ${khFilterPriority===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dd-fld"><label>Quy cách</label>
+        <select onchange="khFilterSpec=this.value;renderKeHoach()">
+          <option value="all">Tất cả</option>
+          ${specs.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${khFilterSpec===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </div>
       <div class="dd-fld"><label>Công đoạn</label>
@@ -10303,6 +10343,7 @@ function usSheetBody(tab){
   if(tab==='hoanThanh'){
     const allDone = DB.orders.filter(o=>o.status==='done');
     const customers = [...new Set(allDone.map(o=>o.customer).filter(Boolean))].sort();
+    const specs = [...new Set(allDone.map(o=>specStr(o)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
     return `
       <div class="dd-fld"><label>Trạng thái</label>
         <select onchange="htFilterStatus=this.value;renderHoanThanh()">
@@ -10317,6 +10358,18 @@ function usSheetBody(tab){
         <select onchange="htCustomerFilter=this.value;renderHoanThanh()">
           <option value="all">Tất cả</option>
           ${customers.map(c=>`<option value="${c}" ${htCustomerFilter===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dd-fld"><label>Ưu tiên</label>
+        <select onchange="htFilterPriority=this.value;renderHoanThanh()">
+          <option value="all">Tất cả</option>
+          ${Object.keys(PRI_COLOR).map(p=>`<option value="${p}" ${htFilterPriority===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dd-fld"><label>Quy cách</label>
+        <select onchange="htFilterSpec=this.value;renderHoanThanh()">
+          <option value="all">Tất cả</option>
+          ${specs.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${htFilterSpec===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </div>
       <div class="us-sheet-grid">
@@ -10446,6 +10499,7 @@ function renderDorDang(){
   if(ddRecvFrom) list = list.filter(o=>ddInRange(o.createdAt, ddRecvFrom, ''));
   if(ddPriorityFilter!=='all') list = list.filter(o=>o.priority===ddPriorityFilter);
   if(ddCustomerFilter!=='all') list = list.filter(o=>o.customer===ddCustomerFilter);
+  if(ddSpecFilter!=='all') list = list.filter(o=>specStr(o)===ddSpecFilter);
   list = ddSmartSort(list);
 
   const stats = [
@@ -10491,7 +10545,7 @@ function renderDorDang(){
     </div>
 
     ${!list.length
-      ? `<div class="ord-empty">${searchQ||filterStatus!=='all'||ddRecvFrom||ddPriorityFilter!=='all'||ddCustomerFilter!=='all'?'🔍 Không tìm thấy đơn hàng phù hợp':'📦 Chưa có đơn hàng nào trong hệ thống'}</div>`
+      ? `<div class="ord-empty">${searchQ||filterStatus!=='all'||ddRecvFrom||ddPriorityFilter!=='all'||ddCustomerFilter!=='all'||ddSpecFilter!=='all'?'🔍 Không tìm thấy đơn hàng phù hợp':'📦 Chưa có đơn hàng nào trong hệ thống'}</div>`
       : `<div class="ord-list-toolbar">
           <span class="ord-list-count">Hiển thị ${list.length} / ${total} đơn hàng</span>
         </div>
@@ -10551,23 +10605,57 @@ function fmtDateTime(ts){
   return `${time} · ${date}`;
 }
 
+// ── Khung "Thời gian sản xuất" hợp nhất trong thẻ Kế hoạch SX: đang chạy
+// thì đếm giờ chạy máy realtime (dùng lại đúng id clk-{id} để setInterval
+// cũ tự cập nhật mỗi giây, không cần sửa gì thêm); chưa chạy thì đếm ngược
+// đến hạn giao (còn bao nhiêu ngày / trễ bao nhiêu ngày); đã xong thì hiện
+// tổng thời gian đã sản xuất.
+function khTimeInfo(o, s){
+  if(s==='running' && o.startedAt){
+    return {cls:'tm-running', id:`clk-${o.id}`, val:'⏱ --:--', lbl:'Đang chạy'};
+  }
+  if(s==='done'){
+    const dur = (o.doneAt && o.startedAt) ? fmtDuration(o.doneAt-o.startedAt) : '—';
+    return {cls:'tm-done', id:'', val:'✅ '+dur, lbl:'TG sản xuất'};
+  }
+  if(o.deliveryDate){
+    const daysLeft = Math.ceil((new Date(o.deliveryDate)-Date.now())/86400000);
+    if(daysLeft<0) return {cls:'tm-overdue', id:'', val:'⚠️ Trễ '+Math.abs(daysLeft)+'ng', lbl:'Quá hạn'};
+    if(daysLeft===0) return {cls:'tm-warn', id:'', val:'🔴 Hôm nay', lbl:'Hạn giao'};
+    if(daysLeft===1) return {cls:'tm-warn', id:'', val:'🟡 Còn 1ng', lbl:'Hạn giao'};
+    return {cls:'tm-wait', id:'', val:'⏳ Còn '+daysLeft+'ng', lbl:'Hạn giao'};
+  }
+  return {cls:'tm-wait', id:'', val:'—', lbl:'Thời gian'};
+}
+
 function khPlanCard(o, seq){
   const s=o.status==='cutting'?'running':o.status;
   const pc=PRI_COLOR[o.priority]||'#64748b';
   const overdue=khIsOverdue(o);
   const dueSoon = !overdue && s!=='done' && o.deliveryDate && (new Date(o.deliveryDate)-new Date())<86400000*2;
-  const hasTimer=o.startedAt&&s==='running';
   const canStatus=isStaff();
   const canEdit=isAdmin();
   const si=statusInfo(s);
+  const ti=khTimeInfo(o, s);
 
   return `<div class="card kh-plan-card${overdue?' is-overdue':''}" data-order-id="${o.id}" style="border-left:4px solid ${pc}" onclick="khViewDetail('${o.id}')">
     <div class="card-header kh-hd status-${s}">
       ${seq!=null?`<span class="kh-seq" style="background:linear-gradient(135deg,${pc},${pc}cc)">${seq}</span>`:''}
-      <span class="badge kh-badge ${si.cls}">${si.label}</span>
-      <span class="spec-tag pri kh-pri" style="background:${pc}1c;color:${pc};border-color:${pc}70">🚩 ${o.priority||'—'}</span>
-      ${hasTimer?`<span class="run-clock kh-clock" id="clk-${o.id}">⏱ --:--</span>`:''}
       ${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:dueSoon?`<span class="kh-overdue" style="background:linear-gradient(135deg,#f59e0b,#d97706)">🟡 Sắp đến hạn</span>`:''}
+      <div class="kh-info-row">
+        <div class="kh-info-box kh-info-status st-${s}">
+          <span class="kh-info-lbl">Trạng thái</span>
+          <span class="kh-info-val">${si.label}</span>
+        </div>
+        <div class="kh-info-box kh-info-pri" style="color:${pc};border-color:${pc}70;background:${pc}14">
+          <span class="kh-info-lbl">Ưu tiên</span>
+          <span class="kh-info-val">🚩 ${o.priority||'—'}</span>
+        </div>
+        <div class="kh-info-box kh-info-time ${ti.cls}">
+          <span class="kh-info-lbl">${ti.lbl}</span>
+          <span class="kh-info-val"${ti.id?` id="${ti.id}"`:''}>${ti.val}</span>
+        </div>
+      </div>
     </div>
     <div class="card-customer-row">
       <div class="cust-avatar" style="background:linear-gradient(135deg,${pc},${pc}aa)">${custInitial(o.customer)}</div>
@@ -10654,6 +10742,7 @@ let khSearchQ       = ''; // ô tìm kiếm
 let khFilterStatus  = 'all'; // all | pending | running | overdue | priority
 let khFilterCustomer= 'all';
 let khFilterPriority= 'all';
+let khFilterSpec    = 'all'; // lọc theo quy cách (VD: Φ18×6000mm)
 let khFilterStage   = 'all';
 let khFilterOwner   = 'all';
 let khCreatedFrom = '', khCreatedTo = '';
@@ -10685,24 +10774,24 @@ function goToKeHoachFilter(f){
 // "Tổng đơn hàng" / "Sản lượng tổng" trên Tổng quan — chỉ set biến bộ lọc,
 // KHÔNG tự render ở đây vì goTab()->renderTab() sẽ render lại ngay sau).
 function goToDorDangAll(){
-  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all';
+  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all'; ddSpecFilter='all';
   goTab('dorDang');
 }
 // Nhảy sang tab Đơn hoàn thành, bỏ hết bộ lọc đang áp dụng (dùng cho thẻ KPI
 // "Tổng hoàn thành" trên Tổng quan)
 function goToHoanThanhAll(){
-  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all';
+  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all'; htFilterPriority='all'; htFilterSpec='all';
   goTab('hoanThanh');
 }
 // Nhảy sang tab Đơn Hàng và lọc đúng các đơn được TẠO trong hôm nay (dùng
 // cho thẻ KPI "Đơn hàng hôm nay" trên Tổng quan)
 function goToDorDangToday(){
-  filterStatus = 'all'; searchQ=''; ddRecvFrom=todayStr(); ddPriorityFilter='all'; ddCustomerFilter='all';
+  filterStatus = 'all'; searchQ=''; ddRecvFrom=todayStr(); ddPriorityFilter='all'; ddCustomerFilter='all'; ddSpecFilter='all';
   goTab('dorDang');
 }
 
 function khResetFilters(){
-  khFilterStatus='all'; khFilterCustomer='all'; khFilterPriority='all';
+  khFilterStatus='all'; khFilterCustomer='all'; khFilterPriority='all'; khFilterSpec='all';
   khFilterStage='all'; khFilterOwner='all';
   khCreatedFrom=''; khCreatedTo=''; khDueFrom=''; khDueTo=''; khSearchQ='';
   renderKeHoach();
@@ -10746,6 +10835,7 @@ function renderKeHoach(){
   else if(khFilterStatus==='priority') list = list.filter(khIsTopPriority);
   if(khFilterCustomer!=='all') list = list.filter(o=>o.customer===khFilterCustomer);
   if(khFilterPriority!=='all') list = list.filter(o=>o.priority===khFilterPriority);
+  if(khFilterSpec!=='all') list = list.filter(o=>specStr(o)===khFilterSpec);
   if(khFilterStage!=='all') list = list.filter(o=>(o.stage||'')===khFilterStage);
   if(khFilterOwner!=='all') list = list.filter(o=>o.createdBy===khFilterOwner);
   if(khCreatedFrom||khCreatedTo) list = list.filter(o=>ddInRange(o.createdAt, khCreatedFrom, khCreatedTo));
@@ -10770,7 +10860,7 @@ function renderKeHoach(){
     {key:'overdue',  icon:'⚠️', ic:'#FEE2E2', col:'#DC2626', n:overdueList.length,  l:'Trễ tiến độ'},
   ];
 
-  const isFiltered = khSearchQ||khFilterStatus!=='all'||khFilterCustomer!=='all'||khFilterPriority!=='all'||khFilterStage!=='all'||khFilterOwner!=='all'||khCreatedFrom||khCreatedTo||khDueFrom||khDueTo;
+  const isFiltered = khSearchQ||khFilterStatus!=='all'||khFilterCustomer!=='all'||khFilterPriority!=='all'||khFilterSpec!=='all'||khFilterStage!=='all'||khFilterOwner!=='all'||khCreatedFrom||khCreatedTo||khDueFrom||khDueTo;
 
   $('mc').innerHTML=`
     <div class="dd-overview">
@@ -11000,6 +11090,8 @@ let htSearchQ = '';               // search query cho tab Đơn hàng đã hoàn
 let htFilterStatus = 'all';       // all | today | new | wh_all | shipping | delivered | returned
 let htDoneFrom = '', htDoneTo = ''; // lọc theo ngày hoàn thành
 let htCustomerFilter = 'all';     // lọc theo khách hàng
+let htFilterPriority = 'all';     // lọc theo mức ưu tiên
+let htFilterSpec = 'all';         // lọc theo quy cách (VD: Φ18×6000mm)
 let htSelected = new Set();       // các đơn đang chọn để thao tác hàng loạt
 let _htVisibleIds = [];
 
@@ -11054,7 +11146,7 @@ function htCode(o){ return ddCode(o); }
 // đảm bảo đơn chắc chắn hiển thị (nếu đang lọc dở dang sẽ không thấy được).
 function htGoToOrderInDonHang(id, ev){
   if(ev) ev.stopPropagation();
-  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all';
+  searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all'; ddSpecFilter='all';
   goTab('dorDang');
   setTimeout(()=>{
     const el = document.querySelector('[data-order-id="'+id+'"]');
@@ -11099,7 +11191,7 @@ function htSmartSort(list){
 }
 
 function htResetFilters(){
-  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all';
+  htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all'; htFilterPriority='all'; htFilterSpec='all';
   renderHoanThanh();
 }
 function htSetFilter(key){
@@ -11352,6 +11444,8 @@ function renderHoanThanh(){
   else if(htFilterStatus!=='all') list = list.filter(o=>htStage(o).key===htFilterStatus);
   if(htDoneFrom||htDoneTo) list = list.filter(o=>ddInRange(o.doneAt, htDoneFrom, htDoneTo));
   if(htCustomerFilter!=='all') list = list.filter(o=>o.customer===htCustomerFilter);
+  if(htFilterPriority!=='all') list = list.filter(o=>o.priority===htFilterPriority);
+  if(htFilterSpec!=='all') list = list.filter(o=>specStr(o)===htFilterSpec);
   list = htSmartSort(list);
 
   const stats = [
@@ -11384,7 +11478,7 @@ function renderHoanThanh(){
     </div>
 
     ${!list.length
-      ? `<div class="ord-empty">${htSearchQ||htFilterStatus!=='all'||htDoneFrom||htCustomerFilter!=='all'?'🔍 Không tìm thấy đơn thành phẩm phù hợp':'📦 Chưa có đơn nào hoàn thành sản xuất'}</div>`
+      ? `<div class="ord-empty">${htSearchQ||htFilterStatus!=='all'||htDoneFrom||htCustomerFilter!=='all'||htFilterPriority!=='all'||htFilterSpec!=='all'?'🔍 Không tìm thấy đơn thành phẩm phù hợp':'📦 Chưa có đơn nào hoàn thành sản xuất'}</div>`
       : `<div class="ord-list-toolbar">
           <span class="ord-list-count">Hiển thị ${list.length} / ${totalDone} đơn thành phẩm</span>
         </div>
