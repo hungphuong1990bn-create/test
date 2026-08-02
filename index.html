@@ -2621,22 +2621,22 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 /* ── Kế hoạch SX: hàng 3 khung gọn gàng — Trạng thái / Ưu tiên / Thời gian
    sản xuất — thay cho các badge rời rạc trước đây, đồng bộ 1 hàng ngang,
    phong cách hiện đại (khung bo góc, icon + nhãn nhỏ + giá trị nổi bật). ── */
-.kh-info-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;flex-basis:100%;width:100%}
-.kh-info-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 4px;border-radius:10px;background:rgba(255,255,255,.6);border:1px solid rgba(15,23,42,.06);box-shadow:0 1px 3px rgba(15,23,42,.05),inset 0 1px 0 rgba(255,255,255,.5);min-width:0}
-.kh-info-lbl{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.kh-info-val{font-size:12.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:-.1px}
+.kh-info-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:6px;flex-basis:100%;width:100%;min-width:0}
+.kh-info-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px 2px;border-radius:9px;background:rgba(255,255,255,.6);border:1px solid rgba(15,23,42,.06);box-shadow:0 1px 3px rgba(15,23,42,.05),inset 0 1px 0 rgba(255,255,255,.5);min-width:0;max-width:100%;overflow:hidden}
+.kh-info-lbl{font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.2px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:100%;text-align:center}
+.kh-info-val{font-size:10.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:100%;text-align:center;letter-spacing:-.2px}
 .kh-info-box.kh-info-status{color:#556072}
 .kh-info-box.kh-info-status.st-pending{color:#C2700A;background:#FEF3C7cc}
 .kh-info-box.kh-info-status.st-running{color:#1D4ED8;background:#DBEAFEcc}
 .kh-info-box.kh-info-status.st-done{color:#0C7A54;background:#DCFCE7cc}
-.kh-info-box.kh-info-pri{border-width:1.5px;border-style:solid}
+.kh-info-box.kh-info-pri,.kh-info-box.kh-info-seq{border-width:1.5px;border-style:solid}
 .kh-info-box.kh-info-time{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .kh-info-box.kh-info-time.tm-running{color:#1D4ED8;background:#DBEAFEcc;animation:pulse-run 2s infinite}
 .kh-info-box.kh-info-time.tm-wait{color:#556072;background:#EEF0F3cc}
 .kh-info-box.kh-info-time.tm-warn{color:#C2700A;background:#FEF3C7cc}
 .kh-info-box.kh-info-time.tm-overdue{color:#DC2626;background:#FEE2E2cc}
 .kh-info-box.kh-info-time.tm-done{color:#0C7A54;background:#DCFCE7cc}
-@media(max-width:420px){.kh-info-lbl{font-size:8px}.kh-info-val{font-size:11.5px}}
+@media(max-width:420px){.kh-info-lbl{font-size:6.5px}.kh-info-val{font-size:9.5px}.kh-info-box{padding:4px 1px}}
 
 /* ── Khách hàng: avatar tròn + tên nổi bật, hiện đại hơn ── */
 .card-customer-row{display:flex;align-items:center;gap:8px;padding:8px 12px 3px}
@@ -4177,6 +4177,17 @@ body{letter-spacing:-.1px}
 .tb-search-input{width:100%;padding:9px 12px 9px 34px;border-radius:11px;border:1.5px solid var(--border);background:var(--bg2);font-size:13px;font-family:inherit;color:var(--text);outline:none;transition:border-color .15s,background .15s}
 .tb-search-input::placeholder{color:var(--text4)}
 .tb-search-input:focus{border-color:var(--brand3);background:var(--card)}
+/* ── Nút "Bộ lọc chi tiết" hợp nhất cạnh ô tìm kiếm trung tâm ở Topbar —
+   thay cho việc mỗi tab (Đơn hàng/Kế hoạch SX/Đơn hoàn thành) có 1 nút lọc
+   riêng lặp lại. Bấm vào sẽ mở đúng bộ lọc của tab đang xem (hoặc tab Đơn
+   hàng nếu đang ở tab khác không có bộ lọc riêng) — xem tbFilterBtnClick(). */
+.tb-filter-btn{position:relative;flex-shrink:0;width:38px;height:38px;border-radius:11px;border:1.5px solid var(--border);background:var(--bg2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s,transform .12s;color:var(--text2)}
+.tb-filter-btn:hover{border-color:var(--brand3);background:var(--card)}
+.tb-filter-btn:active{transform:scale(.94)}
+.tb-filter-btn.has-active{border-color:var(--brand3);background:#eff6ff;color:var(--brand)}
+.tb-filter-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 3px;border-radius:20px;background:var(--brand);color:#fff;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(15,23,42,.3)}
+/* Nút lọc phải LUÔN hiển thị kể cả khi ô tìm kiếm chữ (.tb-search-wrap) bị ẩn
+   trên mobile (<900px) — vì ở mobile đây là lối duy nhất để mở bộ lọc chi tiết. */
 .tb-icon-btn{background:none;border:none;cursor:pointer;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text3);position:relative;flex-shrink:0;transition:background .12s,color .12s}
 .tb-icon-btn:hover{background:var(--bg);color:var(--brand)}
 .tb-icon-btn svg{width:18px;height:18px}
@@ -4441,6 +4452,7 @@ body{letter-spacing:-.1px}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" class="tb-search-input" id="tbGlobalSearch" placeholder="🔍 Tìm & lọc thông minh: mã đơn, khách hàng, &quot;gấp 1&quot;, &quot;kế hoạch&quot;, &quot;đã giao&quot;..." title="Ô tìm kiếm chung cho mọi tab — tự nhận diện mức ưu tiên, trạng thái, khách hàng và tab cần xem ngay trong câu gõ vào. VD: &quot;Hoàng Gia gấp 2&quot;, &quot;kế hoạch chưa lên&quot;, &quot;đã giao tuần này&quot;" onkeydown="if(event.key==='Enter'){tbGlobalSearchGo(this.value)}">
       </div>
+      <button type="button" class="tb-filter-btn" id="tbFilterBtn" title="Bộ lọc chi tiết" onclick="tbFilterBtnClick(this)">🔧</button>
       <div class="topbar-clock" id="clock" title="Giờ hệ thống">
         <span class="tc-live"></span>
         <span class="tc-time" id="clockTime">--:--:--</span>
@@ -8690,6 +8702,7 @@ function goTab(tab){
   },50);
   renderTab(tab);
   updateBadges();
+  if(typeof tbUpdateFilterBtn==='function') tbUpdateFilterBtn(tbFilterTab());
   if(tab==='nhatKy'){ actLog.forEach(l=>l.read=true); logSave(); updateLogBadge(); }
   if(fbOk()) updateOnline();
 }
@@ -10065,6 +10078,34 @@ function _smartFindPhrase(nTokens, used, phraseList){
   return false;
 }
 
+// ── Bộ lọc chi tiết hợp nhất ở Topbar (thay cho nút riêng từng tab) ──
+// Xác định tab nào sẽ được áp bộ lọc khi bấm nút 🔧 cạnh ô tìm kiếm trung
+// tâm: đúng tab đang mở nếu đó là 1 trong 3 tab có bộ lọc (Đơn hàng/Kế
+// hoạch SX/Đơn hoàn thành), ngược lại mặc định về tab Đơn hàng — cùng logic
+// với ô tìm kiếm nhanh tbGlobalSearchGo() để hành vi luôn nhất quán.
+function tbFilterTab(){
+  return (currentTab==='keHoach'||currentTab==='hoanThanh') ? currentTab : 'dorDang';
+}
+function tbFilterBtnClick(btn){
+  usOpen(tbFilterTab(), btn);
+}
+// Cập nhật huy hiệu số bộ lọc đang áp dụng trên nút 🔧 ở Topbar — gọi mỗi
+// khi 1 trong 3 tab render lại (xem usBarHTML) để huy hiệu luôn đúng.
+function tbUpdateFilterBtn(tab){
+  const btn = document.getElementById('tbFilterBtn');
+  if(!btn) return;
+  const n = usActiveCount(tab);
+  const old = btn.querySelector('.tb-filter-badge');
+  if(old) old.remove();
+  btn.classList.toggle('has-active', !!n);
+  if(n){
+    const b = document.createElement('span');
+    b.className = 'tb-filter-badge';
+    b.textContent = n;
+    btn.appendChild(b);
+  }
+}
+
 function tbGlobalSearchGo(raw){
   raw = (raw||'').trim();
   if(!raw) return;
@@ -10218,10 +10259,14 @@ function usActiveCount(tab){
   return 0;
 }
 
-// Thanh tìm kiếm gọn (Search Bubble) — thay cho khối bộ lọc luôn-mở-rộng cũ.
-// Khi đóng chỉ còn ô tìm kiếm + nút Bộ lọc (có huy hiệu số lượng đang áp dụng).
+// Thanh tìm kiếm gọn (Search Bubble) — nút "Bộ lọc chi tiết" riêng của từng
+// tab đã được BỎ (chuyển lên 1 nút 🔧 duy nhất cạnh ô tìm kiếm trung tâm ở
+// Topbar, xem tbFilterBtnClick()/tbUpdateFilterBtn()); ở đây chỉ còn hiện
+// chip từ khoá đang lọc (nếu có) để người dùng biết & xoá nhanh.
 function usBarHTML(tab, searchVal, searchId, placeholder){
-  const n = usActiveCount(tab);
+  // Đồng bộ huy hiệu số bộ lọc đang áp dụng trên nút 🔧 ở Topbar mỗi khi tab
+  // này render lại.
+  tbUpdateFilterBtn(tab);
   // Ô tìm kiếm riêng của từng tab đã được BỎ — ô tìm kiếm nhanh dùng chung
   // ở giữa Topbar (#tbGlobalSearch) đã tìm được trên MỌI tab, kèm bộ lọc
   // thông minh (tự nhận diện mức ưu tiên "gấp 1..8", trạng thái, khách
@@ -10229,16 +10274,11 @@ function usBarHTML(tab, searchVal, searchId, placeholder){
   // Vẫn giữ input ẩn (hidden) để các hàm cũ (usAttachSearchInput/usClearSearch/
   // clearSearch...) đọc-ghi giá trị searchQ/khSearchQ/htSearchQ không bị lỗi.
   const kw = (searchVal||'').replace(/"/g,'&quot;');
-  // Nút "Bộ lọc chi tiết" (Khách hàng / Quy cách / Ưu tiên... tuỳ tab) — mở
-  // Bottom Sheet (Mobile) / Floating Panel (Desktop) qua usOpen(). Có huy
-  // hiệu số hiển thị số bộ lọc đang áp dụng để người dùng biết ngay.
+  if(!searchVal) return `<input class="search-inp" id="${searchId}" type="hidden" value="${kw}">`;
   return `
   <div class="us-bar">
     <input class="search-inp" id="${searchId}" type="hidden" value="${kw}">
-    ${searchVal?`<span class="us-active-kw" title="Đang lọc theo từ khóa từ ô tìm kiếm nhanh">🔎 “${kw}”<button onclick="usClearSearch('${tab}')" title="Xóa từ khóa">✕</button></span>`:''}
-    <button class="us-filter-btn${n?' has-active':''}" onclick="usOpen('${tab}', this)" title="Bộ lọc chi tiết: khách hàng, quy cách, ưu tiên...">
-      🔧 Bộ lọc chi tiết${n?`<span class="us-badge">${n}</span>`:''}
-    </button>
+    <span class="us-active-kw" title="Đang lọc theo từ khóa từ ô tìm kiếm nhanh">🔎 “${kw}”<button onclick="usClearSearch('${tab}')" title="Xóa từ khóa">✕</button></span>
   </div>`;
 }
 
@@ -10640,9 +10680,12 @@ function khPlanCard(o, seq){
 
   return `<div class="card kh-plan-card${overdue?' is-overdue':''}" data-order-id="${o.id}" style="border-left:4px solid ${pc}" onclick="khViewDetail('${o.id}')">
     <div class="card-header kh-hd status-${s}">
-      ${seq!=null?`<span class="kh-seq" style="background:linear-gradient(135deg,${pc},${pc}cc)">${seq}</span>`:''}
       ${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:dueSoon?`<span class="kh-overdue" style="background:linear-gradient(135deg,#f59e0b,#d97706)">🟡 Sắp đến hạn</span>`:''}
-      <div class="kh-info-row">
+      <div class="kh-info-row"${seq!=null?' style="grid-template-columns:repeat(4,minmax(0,1fr))"':''}>
+        ${seq!=null?`<div class="kh-info-box kh-info-seq" style="color:${pc};border-color:${pc}70;background:${pc}14">
+          <span class="kh-info-lbl">STT</span>
+          <span class="kh-info-val">${seq}</span>
+        </div>`:''}
         <div class="kh-info-box kh-info-status st-${s}">
           <span class="kh-info-lbl">Trạng thái</span>
           <span class="kh-info-val">${si.label}</span>
