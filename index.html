@@ -2609,11 +2609,11 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 /* ── KẾ HOẠCH SX: khối header dạng "dashboard tối" hiện đại — nền xanh
    navy đậm đồng nhất, khung kính mờ (glass) cho STT / Trạng thái / Ưu
    tiên / Thời gian chạy, nhận diện nhanh chỉ bằng liếc mắt ── */
-.kh-hd{padding:10px 12px 9px;border-radius:var(--r) var(--r) 0 0;border-bottom:1px solid rgba(255,255,255,.07);transition:background .2s;position:relative;overflow:hidden;background:linear-gradient(135deg,#0a2545 0%,#123a63 48%,#164b82 100%);box-shadow:inset 0 -1px 0 rgba(255,255,255,.05)}
-.kh-hd::before{content:'';position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,.10),rgba(255,255,255,0) 42%);pointer-events:none}
-.kh-hd.status-pending{background:linear-gradient(135deg,#0a2545 0%,#123a63 48%,#7a4c0f 130%)}
-.kh-hd.status-running{background:linear-gradient(135deg,#0a2545 0%,#123a63 48%,#1b5aa0 130%)}
-.kh-hd.status-done{background:linear-gradient(135deg,#0a2545 0%,#123a63 48%,#0f6e4f 130%)}
+.kh-hd{padding:10px 12px 9px;border-radius:var(--r) var(--r) 0 0;border-bottom:1px solid rgba(255,255,255,.15);transition:background .2s;position:relative;overflow:hidden;background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#6fa3de 100%);box-shadow:inset 0 -1px 0 rgba(255,255,255,.12)}
+.kh-hd::before{content:'';position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,.18),rgba(255,255,255,0) 42%);pointer-events:none}
+.kh-hd.status-pending{background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#d6a344 130%)}
+.kh-hd.status-running{background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#79b0e6 130%)}
+.kh-hd.status-done{background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#4bc192 130%)}
 .kh-seq{width:23px;height:23px;border-radius:8px;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(15,23,42,.22),inset 0 1px 0 rgba(255,255,255,.3)}
 .kh-badge{box-shadow:0 1px 3px rgba(15,23,42,.1);font-size:10.5px;padding:2px 8px}
 .kh-pri{border-width:1.5px;border-style:solid;font-size:10.5px;padding:2px 8px}
@@ -2625,15 +2625,17 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
    trên nền navy đậm (khung bo góc, icon + nhãn nhỏ + giá trị nổi bật). ── */
 .kh-info-row{display:flex;align-items:stretch;gap:5px;margin-top:7px;flex-basis:100%;width:100%;min-width:0;position:relative;z-index:1}
 .kh-info-row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;flex:1;min-width:0}
-.kh-seq-badge{flex:0 0 auto;align-self:center;width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.08));border:1.5px solid rgba(255,255,255,.4);box-shadow:0 2px 6px rgba(0,0,0,.25),inset 0 1px 1px rgba(255,255,255,.35);text-shadow:0 1px 2px rgba(0,0,0,.3)}
-.kh-info-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 2px;border-radius:10px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 4px rgba(0,0,0,.15);min-width:0;max-width:100%;overflow:hidden;backdrop-filter:blur(3px)}
+.kh-seq-badge{flex:0 0 auto;align-self:center;width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.08));border:1.5px solid rgba(255,255,255,.4);box-shadow:0 2px 6px rgba(0,0,0,.25),inset 0 1px 1px rgba(255,255,255,.35);text-shadow:0 1px 2px rgba(0,0,0,.3);position:relative;overflow:hidden}
+.kh-seq-badge::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(125deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 55%);pointer-events:none}
+.kh-info-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 2px;border-radius:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 4px rgba(0,0,0,.1);min-width:0;max-width:100%;overflow:hidden;backdrop-filter:blur(3px);position:relative}
+.kh-info-box::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(125deg,rgba(255,255,255,.32) 0%,rgba(255,255,255,0) 50%);pointer-events:none}
 .kh-info-lbl{font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.35px;opacity:.65;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:100%;text-align:center}
 .kh-info-val{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:100%;text-align:center;letter-spacing:-.3px;color:#fff}
 .kh-info-box.kh-info-status .kh-info-val{font-size:9.3px;letter-spacing:-.35px}
 .kh-info-box.kh-info-status{color:#fff}
-.kh-info-box.kh-info-status.st-pending{color:#FDE68A;background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.4)}
-.kh-info-box.kh-info-status.st-running{color:#BFDBFE;background:rgba(96,165,250,.2);border-color:rgba(96,165,250,.45)}
-.kh-info-box.kh-info-status.st-done{color:#BBF7D0;background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.4)}
+.kh-info-box.kh-info-status.st-pending{color:#FDE68A;background:rgba(251,191,36,.18);border-color:rgba(253,230,138,.55)}
+.kh-info-box.kh-info-status.st-running{color:#BFDBFE;background:rgba(96,165,250,.2);border-color:rgba(191,219,254,.6)}
+.kh-info-box.kh-info-status.st-done{color:#BBF7D0;background:rgba(74,222,128,.18);border-color:rgba(187,247,208,.55)}
 .kh-info-box.kh-info-pri,.kh-info-box.kh-info-seq{border-width:1.5px;border-style:solid}
 .kh-info-box.kh-info-time{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .kh-info-box.kh-info-time.tm-running{color:#BFDBFE;background:rgba(96,165,250,.2);border-color:rgba(96,165,250,.45);animation:pulse-run 2s infinite}
@@ -10687,13 +10689,13 @@ function khPlanCard(o, seq){
     <div class="card-header kh-hd status-${s}">
       ${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:dueSoon?`<span class="kh-overdue" style="background:linear-gradient(135deg,#f59e0b,#d97706)">🟡 Sắp đến hạn</span>`:''}
       <div class="kh-info-row">
-        ${seq!=null?`<div class="kh-seq-badge" style="border-color:${pc}cc;box-shadow:0 0 0 2px ${pc}33,0 2px 6px rgba(0,0,0,.3),inset 0 1px 1px rgba(255,255,255,.35)" title="STT ${seq}">${seq}</div>`:''}
+        ${seq!=null?`<div class="kh-seq-badge" style="border-color:color-mix(in srgb, ${pc} 50%, #fff 50%);box-shadow:0 0 0 2px ${pc}33,0 2px 6px rgba(0,0,0,.3),inset 0 1px 1px rgba(255,255,255,.35)" title="STT ${seq}">${seq}</div>`:''}
         <div class="kh-info-row3">
           <div class="kh-info-box kh-info-status st-${s}">
             <span class="kh-info-lbl">Trạng thái</span>
             <span class="kh-info-val">${si.label}</span>
           </div>
-          <div class="kh-info-box kh-info-pri" style="color:#fff;border-color:${pc}cc;background:${pc}3d">
+          <div class="kh-info-box kh-info-pri" style="color:#fff;border-color:color-mix(in srgb, ${pc} 45%, #fff 55%);background:${pc}3d">
             <span class="kh-info-lbl">Ưu tiên</span>
             <span class="kh-info-val">🚩 ${o.priority||'—'}</span>
           </div>
