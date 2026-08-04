@@ -10048,8 +10048,23 @@ function ddViewDetail(id){
     ${o.address?`<div><b>Địa chỉ giao:</b> ${o.address}</div>`:''}
     ${o.note?`<div style="margin-top:8px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${o.note}</div>`:''}
   `;
+  // Nút "Chỉnh sửa" chỉ dành cho admin — TRƯỚC ĐÂY nút này luôn hiện & luôn
+  // gán sẵn onclick trong modal xem chi tiết bất kể vai trò, trong khi ở
+  // menu thao tác trên từng dòng (danh sách) đã ẩn đúng cho tài khoản
+  // nhân viên/viewer (xem biến canEdit=isAdmin() ở trên). Vì vậy tài khoản
+  // nhân viên bấm "Xem chi tiết" vẫn thấy và bấm sửa được đơn hàng dù ở
+  // ngoài danh sách không hề thấy nút Sửa. Ẩn hẳn nút + không gán onclick
+  // khi không phải admin để đồng bộ đúng quyền như ngoài danh sách.
   const editBtn = $('ddDetailEditBtn');
-  if(editBtn) editBtn.onclick = ()=>{ closeModal('ddDetailModal'); editOrder(id); };
+  if(editBtn){
+    if(isAdmin()){
+      editBtn.style.display = '';
+      editBtn.onclick = ()=>{ closeModal('ddDetailModal'); editOrder(id); };
+    } else {
+      editBtn.style.display = 'none';
+      editBtn.onclick = null;
+    }
+  }
   const planBtn = $('ddDetailPlanBtn');
   if(planBtn) planBtn.onclick = ()=>{ closeModal('ddDetailModal'); goToOrderInPlan(id); };
   openModal('ddDetailModal');
@@ -11209,7 +11224,17 @@ function khViewDetail(id){
     </div>
   `;
   const progBtn=$('khDetailProgressBtn'); if(progBtn) progBtn.onclick=()=>{ closeModal('khDetailModal'); openProgress(id); };
-  const editBtn=$('khDetailEditBtn'); if(editBtn) editBtn.onclick=()=>{ closeModal('khDetailModal'); editOrder(id); };
+  // Nút "Chỉnh sửa" chỉ dành cho admin — xem chú thích tương tự ở ddViewDetail().
+  const editBtn=$('khDetailEditBtn');
+  if(editBtn){
+    if(isAdmin()){
+      editBtn.style.display = '';
+      editBtn.onclick = ()=>{ closeModal('khDetailModal'); editOrder(id); };
+    } else {
+      editBtn.style.display = 'none';
+      editBtn.onclick = null;
+    }
+  }
   openModal('khDetailModal');
 }
 
@@ -14413,7 +14438,14 @@ function showMaintAlertModal(list){
 // ORDERS CRUD
 // ════════════════════════════════════════════════════════════
 function openAddOrder(){if(guardViewer())return; _editOrderId=null; $('orderModalTitle').textContent='Thêm đơn hàng mới'; ['ofCust','ofPO','ofType','ofNote','ofAddr','ofKg','ofPhi'].forEach(id=>$(id).value=''); ['ofThk','ofW','ofQty'].forEach(id=>$(id).value=''); $('ofL').value='4000'; $('ofMat').value='B*'; $('ofPri').value='GẤP 1'; $('ofDate').value=''; $('orderErr').style.display='none'; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=''; if($('ofIsCoil')) $('ofIsCoil').checked=false; toggleCoilMode(); openModal('orderModal'); }
-function editOrder(id){if(guardViewer())return;
+// Chốt chặn quyền cuối cùng: chỉ Admin được sửa đơn hàng đã có (khớp đúng
+// quyền canEdit=isAdmin() đang dùng để ẩn/hiện nút Sửa ở danh sách) — trước
+// đây hàm này chỉ chặn tài khoản Xem (guardViewer), nên nhân viên vẫn sửa
+// được nếu bấm trúng nút Sửa ở modal "Xem chi tiết" (nút đó trước đây luôn
+// hiện sẵn, không ẩn theo vai trò).
+function editOrder(id){
+  if(guardViewer())return;
+  if(!isAdmin()){ showToast('🔒 Chỉ Quản trị viên (Admin) mới có quyền sửa đơn hàng', true); return; }
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   _editOrderId=id;
   $('orderModalTitle').textContent='Sửa đơn hàng';
