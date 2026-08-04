@@ -4204,7 +4204,16 @@ body{letter-spacing:-.1px}
   .topbar-title{flex:0 0 auto;margin-right:4px}
 }
 @media(max-width:899px){
-  .tb-search-wrap{display:none}
+  /* TRƯỚC ĐÂY: ẩn hẳn ô tìm kiếm trên mobile (display:none) khiến điện
+     thoại/tablet không có cách nào gõ tìm kiếm/tra cứu đơn hàng — chỉ còn
+     nút Bộ lọc chi tiết. NAY: đưa ô tìm kiếm xuống thành 1 hàng riêng, đầy
+     đủ chiều rộng, ngay dưới hàng tiêu đề + icon — topbar tự cao thêm để
+     chứa hàng này. Tăng biến --top tương ứng để các khối neo theo topbar
+     (toast, panel thông báo, banner cập nhật...) không bị hàng tìm kiếm
+     mới che mất.  */
+  :root{--top:104px}
+  .topbar{flex-wrap:wrap;height:auto;padding-bottom:8px}
+  .tb-search-wrap{display:flex;order:10;flex:0 0 100%;max-width:100%;margin:8px 0 0}
 }
 
 /* ── Dashboard: banner chào mừng ── */
@@ -4457,9 +4466,9 @@ body{letter-spacing:-.1px}
       <div class="topbar-title" id="pageTitle">Tổng quan</div>
       <div class="tb-search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="tb-search-input" id="tbGlobalSearch" placeholder="🔍 Tìm & lọc thông minh: mã đơn, khách hàng, &quot;gấp 1&quot;, &quot;kế hoạch&quot;, &quot;đã giao&quot;..." title="Ô tìm kiếm chung cho mọi tab — tự nhận diện mức ưu tiên, trạng thái, khách hàng và tab cần xem ngay trong câu gõ vào. VD: &quot;Hoàng Gia gấp 2&quot;, &quot;kế hoạch chưa lên&quot;, &quot;đã giao tuần này&quot;" onkeydown="if(event.key==='Enter'){tbGlobalSearchGo(this.value)}">
+        <input type="text" class="tb-search-input" id="tbGlobalSearch" placeholder="🔍 Tìm & lọc thông minh: mã đơn, khách hàng, &quot;gấp 1&quot;, &quot;kế hoạch&quot;, &quot;đã giao&quot;..." title="Ô tìm kiếm chung cho mọi tab — tự nhận diện mức ưu tiên, trạng thái, khách hàng và tab cần xem ngay trong câu gõ vào. VD: &quot;Hoàng Gia gấp 2&quot;, &quot;kế hoạch chưa lên&quot;, &quot;đã giao tuần này&quot;" oninput="tbGlobalSearchLive(this.value)" onkeydown="if(event.key==='Enter'){tbGlobalSearchGo(this.value)}">
       </div>
-      <button type="button" class="tb-filter-btn" id="tbFilterBtn" title="Bộ lọc chi tiết" onclick="tbFilterBtnClick(this)">🔧</button>
+      <button type="button" class="tb-filter-btn" id="tbFilterBtn" title="Bộ lọc chi tiết" onclick="tbFilterBtnClick(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 4 21 4 14 13 14 19 10 21 10 13 3 4"/></svg></button>
       <div class="topbar-clock" id="clock" title="Giờ hệ thống">
         <span class="tc-live"></span>
         <span class="tc-time" id="clockTime">--:--:--</span>
@@ -9784,26 +9793,59 @@ function renderOnlineStrip(){
 function _stripDiacritics(s){
   return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d');
 }
+// Chuẩn hoá 1 chuỗi kích thước để so khớp tìm kiếm: gộp mọi ký hiệu "nhân"
+// (×, *, x, X, có/không khoảng trắng quanh nó) về cùng 1 dạng "x", đồng thời
+// bỏ đơn vị "mm" dính liền sau số (vd "6000mm" → "6000"). Nhờ vậy người dùng
+// gõ tay ("20x30x4000") hay bấm/dán NGUYÊN chuỗi quy cách đang hiển thị trên
+// bảng (vd "Φ18×6000mm", "20×30×4000mm") đều tìm ra đúng đơn — trước đây dán
+// nguyên chuỗi hiển thị luôn ra rỗng vì dấu "×" và chữ "mm" không được chuẩn
+// hoá giống lúc lưu dữ liệu.
+function _normSpecQuery(s){
+  return String(s||'')
+    .replace(/[×xX*]/g, 'x')   // mọi ký hiệu nhân → "x"
+    .replace(/\s*x\s*/g, 'x')  // bỏ khoảng trắng quanh dấu "x" (vd "18 x 6000" → "18x6000")
+    .replace(/mm\b/g, '');     // bỏ đơn vị "mm" dính liền sau số
+}
+// Khớp 1 từ khoá với 1 trường dữ liệu (đã chuẩn hoá). Với từ khoá chỉ gồm
+// số/dấu "x" (kích thước, mã số...) bắt buộc khớp NGUYÊN một "từ" theo ranh
+// giới khoảng trắng, thay vì chỉ cần là chuỗi con — trước đây tìm "10x100"
+// (includes) bị khớp NHẦM vào cả "10x1000" (chỉ vì "10x100" là 5 ký tự đầu
+// của "10x1000"), khiến kết quả trả về rất nhiều/gần như toàn bộ đơn không
+// liên quan thay vì đúng 1 đơn có quy cách 10×100. Với từ khoá chữ (tên
+// khách, ghi chú...) vẫn giữ khớp chuỗi con như cũ để tìm linh hoạt.
+function _specTokenMatch(fieldStr, token){
+  // Nhận diện "mã kích thước" (thuần số/x, hoặc có tiền tố fi/phi/φ) — áp
+  // dụng khớp NGUYÊN từ cho cả nhóm này. Trước đây chỉ áp dụng cho token
+  // thuần số/x nên "φ10x100" (dán nguyên quy cách hiển thị) vẫn bị khớp
+  // NHẦM vào "φ10x1000" qua includes() thông thường.
+  if(/^(fi|phi|φ)?[0-9]+(x[0-9]+)*$/.test(token)){
+    const esc = token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return new RegExp('(^|\\s)'+esc+'(\\s|$)').test(fieldStr);
+  }
+  return fieldStr.includes(token);
+}
 function matchSearch(o, q){
   if(!q) return true;
-  const qNorm = _stripDiacritics(q.toLowerCase()).trim();
+  const qNorm = _normSpecQuery(_stripDiacritics(q.toLowerCase())).trim();
   if(!qNorm) return true;
   // Kích thước gộp: cho phép gõ "20x30", "20x30x4000", "Φ50", "phi50", "fi50"
+  // — cũng như dán nguyên cụm hiển thị "Φ18x6000" / "20x30x4000" (đã qua
+  // _normSpecQuery ở trên) nhờ có sẵn các biến thể gộp Φ+kích thước dưới đây.
   const sizeStr = o.isRound && o.phi
-    ? `phi${o.phi} fi${o.phi} Φ${o.phi} ${o.phi}x${o.length||''}`
-    : `${o.thickness||''}x${o.width||''}x${o.length||''} ${o.thickness||''}*${o.width||''}`;
+    ? `phi${o.phi} fi${o.phi} Φ${o.phi} ${o.phi}x${o.length||''} Φ${o.phi}x${o.length||''} phi${o.phi}x${o.length||''}`
+    : `${o.thickness||''}x${o.width||''}x${o.length||''} ${o.thickness||''}*${o.width||''} ${o.thickness||''}x${o.width||''}`;
   const fields = [
     o.customer, o.po, o.id, o.type, o.note, o.material, o.priority,
     String(o.thickness||''), String(o.width||''), String(o.length||''),
     String(o.phi||''), String(o.qty||''), sizeStr,
     o.isCoil?'cuộn coil':'', String(o.meterPerCoil||''), String(o.totalMeters||'')
-  ].map(v=>_stripDiacritics(String(v||'').toLowerCase()));
+  ].map(v=>_normSpecQuery(_stripDiacritics(String(v||'').toLowerCase())));
   // Cho phép gõ nhiều từ khoá cách nhau bởi khoảng trắng, mỗi từ chỉ cần khớp
   // ở MỘT trường bất kỳ (không nhất thiết cùng 1 trường) → ví dụ gõ "fi18 gap1"
   // hoặc "2x12 cuon" vẫn ra đúng đơn dù kích thước và loại cuộn nằm ở 2 trường khác nhau.
   const tokens = qNorm.split(/\s+/).filter(Boolean);
-  if(tokens.length<=1) return fields.some(v=>v.includes(qNorm));
-  return tokens.every(t=>fields.some(v=>v.includes(t)));
+  if(tokens.length<=1) return fields.some(v=>_specTokenMatch(v, qNorm));
+  return tokens.every(t=>fields.some(v=>_specTokenMatch(v, t)));
 }
 
 // ── Màu theo ưu tiên ──
@@ -10086,10 +10128,11 @@ function _smartFindPhrase(nTokens, used, phraseList){
 }
 
 // ── Bộ lọc chi tiết hợp nhất ở Topbar (thay cho nút riêng từng tab) ──
-// Xác định tab nào sẽ được áp bộ lọc khi bấm nút 🔧 cạnh ô tìm kiếm trung
-// tâm: đúng tab đang mở nếu đó là 1 trong 3 tab có bộ lọc (Đơn hàng/Kế
-// hoạch SX/Đơn hoàn thành), ngược lại mặc định về tab Đơn hàng — cùng logic
-// với ô tìm kiếm nhanh tbGlobalSearchGo() để hành vi luôn nhất quán.
+// Xác định tab nào sẽ được áp bộ lọc khi bấm nút 🔽 (icon phễu lọc — trước
+// đây là cờ lê 🔧 dễ khiến người dùng nhầm thành "Cài đặt hệ thống") cạnh ô
+// tìm kiếm trung tâm: đúng tab đang mở nếu đó là 1 trong 3 tab có bộ lọc
+// (Đơn hàng/Kế hoạch SX/Đơn hoàn thành), ngược lại mặc định về tab Đơn hàng
+// — cùng logic với ô tìm kiếm nhanh tbGlobalSearchGo() để hành vi luôn nhất quán.
 function tbFilterTab(){
   return (currentTab==='keHoach'||currentTab==='hoanThanh') ? currentTab : 'dorDang';
 }
@@ -10113,9 +10156,30 @@ function tbUpdateFilterBtn(tab){
   }
 }
 
-function tbGlobalSearchGo(raw){
+// live=true → đang gõ trực tiếp (gọi từ tbGlobalSearchLive, có debounce) —
+// chỉ vẽ lại bảng nếu KHÔNG cần đổi tab, để không giật/cuộn màn hình mỗi lần
+// gõ 1 ký tự. live=false (mặc định, khi bấm Enter) → giữ hành vi cũ, luôn
+// goTab() kể cả khi ở đúng tab hiện tại.
+function tbGlobalSearchGo(raw, opts){
+  const live = !!(opts && opts.live);
   raw = (raw||'').trim();
-  if(!raw) return;
+
+  if(!raw){
+    // TRƯỚC ĐÂY: gõ trực tiếp mà xoá hết ô tìm kiếm không làm gì cả (return
+    // sớm), khiến kết quả lọc/tìm kiếm CŨ vẫn còn nguyên trên màn hình dù ô
+    // tìm kiếm đã trống — trông như "tìm kiếm bị treo/không chịu tìm lại".
+    // NAY: xoá sạch mọi bộ lọc nhanh đã áp (kể cả suy ra từ câu tìm trước
+    // đó) và vẽ lại đúng tab đang xem, không nhảy/cuộn màn hình.
+    const tab0 = (currentTab==='keHoach'||currentTab==='hoanThanh') ? currentTab : 'dorDang';
+    searchQ=''; filterStatus='all'; ddRecvFrom=''; ddPriorityFilter='all'; ddCustomerFilter='all'; ddSpecFilter='all';
+    khSearchQ=''; khFilterStatus='all'; khFilterCustomer='all'; khFilterPriority='all'; khFilterSpec='all';
+    khFilterStage='all'; khFilterOwner='all'; khCreatedFrom=''; khCreatedTo=''; khDueFrom=''; khDueTo='';
+    htSearchQ=''; htFilterStatus='all'; htDoneFrom=''; htDoneTo=''; htCustomerFilter='all'; htFilterPriority='all'; htFilterSpec='all';
+    if(tab0==='dorDang' && typeof renderDorDang==='function') renderDorDang();
+    else if(tab0==='keHoach' && typeof renderKeHoach==='function') renderKeHoach();
+    else if(tab0==='hoanThanh' && typeof renderHoanThanh==='function') renderHoanThanh();
+    return;
+  }
 
   const rawTokens = raw.split(/\s+/);
   const nTokens = rawTokens.map(_smartTokenNorm);
@@ -10182,22 +10246,41 @@ function tbGlobalSearchGo(raw){
     ddPriorityFilter = priority || 'all';
     ddCustomerFilter = customer || 'all';
     searchQ = leftover;
-    goTab('dorDang');
-    setTimeout(()=>{ if(typeof renderDorDang==='function') renderDorDang(); }, 0);
   } else if(tab==='keHoach'){
     khFilterStatus = status || 'all';
     khFilterPriority = priority || 'all';
     khFilterCustomer = customer || 'all';
     khSearchQ = leftover;
-    goTab('keHoach');
-    setTimeout(()=>{ if(typeof renderKeHoach==='function') renderKeHoach(); }, 0);
   } else {
     htFilterStatus = status || 'all';
     htCustomerFilter = customer || 'all';
     htSearchQ = leftover;
-    goTab('hoanThanh');
-    setTimeout(()=>{ if(typeof renderHoanThanh==='function') renderHoanThanh(); }, 0);
   }
+
+  const renderThis = ()=>{
+    if(tab==='dorDang' && typeof renderDorDang==='function') renderDorDang();
+    else if(tab==='keHoach' && typeof renderKeHoach==='function') renderKeHoach();
+    else if(tab==='hoanThanh' && typeof renderHoanThanh==='function') renderHoanThanh();
+  };
+
+  if(live && tab===currentTab){
+    // Đang gõ trực tiếp, không cần đổi tab → chỉ vẽ lại bảng đang xem, KHÔNG
+    // gọi goTab() (tránh cuộn màn hình về đầu trang/đóng menu mỗi lần gõ).
+    renderThis();
+  } else {
+    goTab(tab);
+    setTimeout(renderThis, 0);
+  }
+}
+
+// Gọi khi người dùng ĐANG GÕ trong ô tìm kiếm Topbar (oninput) — có debounce
+// 300ms để không lọc lại danh sách sau từng phím gõ, mượt hơn khi dữ liệu
+// lớn. TRƯỚC ĐÂY ô này chỉ tìm khi bấm Enter, nên gõ xong quên bấm Enter (rất
+// dễ xảy ra, nhất là trên điện thoại) sẽ trông như "tìm kiếm không hoạt động"
+// / "tìm ra tất cả" vì danh sách vẫn hiển thị y như trước khi gõ.
+const _tbGlobalSearchLiveDebounced = debounce(v=>tbGlobalSearchGo(v, {live:true}), 300);
+function tbGlobalSearchLive(v){
+  _tbGlobalSearchLiveDebounced(v);
 }
 
 function ddExportExcel(){
@@ -10518,13 +10601,17 @@ function usPositionDesktop(btn){
 }
 
 function renderDorDang(){
-  const inpOld = document.getElementById('srchInp');
-  let caretPos = null, hadFocus = false;
-  if(inpOld){
-    searchQ = inpOld.value;
-    hadFocus = document.activeElement===inpOld;
-    caretPos = inpOld.selectionStart;
-  }
+  // Ô #srchInp giờ luôn là input ẩn (type="hidden", xem usBarHTML) — người
+  // dùng KHÔNG còn gõ trực tiếp vào đây được nữa, mọi tìm kiếm đều đi qua ô
+  // tìm kiếm trung tâm ở Topbar (#tbGlobalSearch → tbGlobalSearchGo() gán
+  // thẳng biến searchQ). TRƯỚC ĐÂY dòng "searchQ = inpOld.value" bên dưới đọc
+  // lại giá trị CŨ còn sót trong DOM (vì innerHTML của #mc chỉ được ghi đè ở
+  // cuối hàm này) rồi GHI ĐÈ LÊN searchQ vừa được tbGlobalSearchGo() gán —
+  // khiến lần tìm thứ 2 trở đi bị "nuốt mất", quay về đúng từ khoá của lần
+  // tìm ĐẦU TIÊN (hoặc một phần dở dang của nó) → đổi sang cỡ khác thì không
+  // ăn/hiện lẫn cỡ cũ. Bỏ hẳn việc đọc lại này — input ẩn không thể được
+  // người dùng focus/gõ nên không cần khôi phục caret/focus của nó nữa.
+  const caretPos = null, hadFocus = false;
   // Đơn đã hoàn thành (status='done') chuyển hẳn sang tab "Hoàn thành", không còn hiện ở đây nữa
   const all = DB.orders.filter(o=>o.status!=='done');
   const doneCount = DB.orders.length - all.length;
@@ -10848,13 +10935,9 @@ function khResetFilters(){
 }
 
 function renderKeHoach(){
-  const khInp = document.getElementById('khSearch');
-  let caretPos=null, hadFocus=false;
-  if(khInp){
-    khSearchQ = khInp.value;
-    hadFocus = document.activeElement===khInp;
-    caretPos = khInp.selectionStart;
-  }
+  // #khSearch giờ luôn là input ẩn (xem usBarHTML) — bỏ đọc lại giá trị DOM
+  // cũ đè lên khSearchQ, lý do xem chú thích tương tự ở đầu renderDorDang().
+  const caretPos=null, hadFocus=false;
 
   const priSort=(a,b)=>parseInt((a.priority||'GẤP 9').replace('GẤP ',''))-parseInt((b.priority||'GẤP 9').replace('GẤP ',''));
   // Lưới an toàn khi RENDER: đảm bảo danh sách hiển thị luôn duy nhất theo
@@ -11466,13 +11549,9 @@ function htRow(o, stt){
 }
 
 function renderHoanThanh(){
-  const htInp = document.getElementById('htSearch');
-  let caretPos = null, hadFocus = false;
-  if(htInp){
-    htSearchQ = htInp.value;
-    hadFocus = document.activeElement===htInp;
-    caretPos = htInp.selectionStart;
-  }
+  // #htSearch giờ luôn là input ẩn (xem usBarHTML) — bỏ đọc lại giá trị DOM
+  // cũ đè lên htSearchQ, lý do xem chú thích tương tự ở đầu renderDorDang().
+  const caretPos = null, hadFocus = false;
 
   const allDone = DB.orders.filter(o=>o.status==='done');
   const totalDone   = allDone.length;
