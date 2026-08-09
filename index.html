@@ -2513,6 +2513,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 #sbi-dashboard svg{color:var(--brand2);background:#dbeafe}
 #sbi-dorDang svg{color:var(--orange-m);background:var(--orange-l)}
 #sbi-keHoach svg{color:var(--purple-m);background:var(--purple-l)}
+#sbi-dieuHanh svg{color:var(--red-m);background:var(--red-l)}
 #sbi-hoanThanh svg{color:var(--green-m);background:var(--green-l)}
 #sbi-baoCao svg{color:var(--cyan-m);background:var(--cyan-l)}
 #sbi-nhatKy svg{color:var(--slate-m);background:var(--slate-l)}
@@ -3465,6 +3466,210 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .kh-detail-sec:first-of-type{margin-top:14px}
 .kh-detail-sec-title{font-size:12.5px;font-weight:800;color:var(--text2);margin-bottom:10px;letter-spacing:.1px}
 .kh-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
+.kh-machine-assign{display:flex;flex-direction:column;gap:8px}
+.kh-machine-row{display:flex;align-items:center;gap:8px}
+.kh-machine-lbl{flex:0 0 92px;font-size:12.5px;font-weight:700;color:var(--text2)}
+.kh-machine-sel{flex:1;min-width:0;font-size:12.5px;padding:7px 8px}
+.kh-machine-dot{flex:0 0 auto;font-size:13px}
+
+/* ── 🏭 Bảng Điều hành sản xuất — MES/Smart Factory hiện đại, tối ưu TV ── */
+.dh-wrap{--dh-bg1:#0a1a3d;--dh-bg2:#123a7d;--dh-bg3:#1e56b8;--dh-card:#16234a;--dh-card2:#0f1c3c;--dh-border:#2f4a86;--dh-text:#eef3ff;--dh-text2:#9db3e0;
+  --glow-run:#ffffff;--glow-fault:#ff5252;--glow-maint:#c084fc;--glow-ready:#4d9bff;--glow-wait:#fbbf24;
+  background:
+    radial-gradient(1300px 760px at 8% -12%,#3b7bf0 0%,transparent 55%),
+    radial-gradient(1000px 680px at 105% 0%,#2159c9 0%,transparent 52%),
+    radial-gradient(900px 600px at 50% 115%,#173f96 0%,transparent 55%),
+    linear-gradient(165deg,#08152f 0%,#0e2a63 45%,#154faa 100%);
+  color:var(--dh-text);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.dh-fit-outer{width:100%}
+.dh-fit-inner{display:flex;flex-direction:column;gap:14px}
+.dh-tv .dh-wrap{border-radius:0}
+.dh-tv .dh-fit-outer{height:100vh;height:100dvh;overflow:hidden;display:flex;justify-content:center;align-items:flex-start}
+/* Khung nội dung co giãn theo mọi kích thước màn hình TV hiện nay: HD/FHD nhỏ
+   dùng gần hết chiều rộng; 2K/4K/màn hình lớn được giới hạn để chữ không quá
+   khổ; JS (dhApplyAutoFit) chỉ còn việc scale tinh chỉnh vừa khít, không phải
+   gánh hết việc co giãn như trước. */
+.dh-tv .dh-fit-inner{width:min(2400px,96vw)}
+@media (min-width:2400px){.dh-tv .dh-fit-inner{width:min(2800px,88vw)}}
+@media (min-width:3200px){.dh-tv .dh-fit-inner{width:min(3200px,82vw)}}
+/* Màn hình dọc (TV/màn hình xoay portrait) — ưu tiên chiều rộng tối đa */
+@media (max-aspect-ratio:4/5){.dh-tv .dh-fit-inner{width:98vw}}
+/* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn để tránh
+   thẻ máy bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối */
+@media (min-aspect-ratio:2/1){.dh-tv .dh-fit-inner{width:min(2200px,74vw)}}
+
+/* ── Khối tổng quan "TRẠNG THÁI TOÀN NHÀ MÁY" — ngay đầu trang ── */
+.dh-status-overview{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.dh-status-overview{grid-template-columns:1fr}}
+/* ── Thanh Tên công ty + Logo — gọn, nằm chung khung với NHÀ MÁY/ĐƠN HÀNG ── */
+.dh-company-bar{grid-column:1/-1;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:10px 18px;box-shadow:0 6px 20px rgba(0,0,10,.25)}
+.dh-company-logo{width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff;padding:4px;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.dh-company-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dh-company-name{font-size:15.5px;font-weight:800;letter-spacing:.4px;color:#fff;text-transform:uppercase;line-height:1.25;text-shadow:0 0 18px rgba(93,156,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-company-sub{font-size:11.5px;font-weight:700;color:#a9c4f5;letter-spacing:.4px;text-transform:uppercase}
+.dh-tv .dh-company-bar{padding:clamp(10px,.9vw,18px) clamp(16px,1.4vw,28px)}
+.dh-tv .dh-company-logo{width:clamp(46px,3vw,68px);height:clamp(46px,3vw,68px)}
+.dh-tv .dh-company-name{font-size:clamp(16px,1.15vw,24px)}
+.dh-tv .dh-company-sub{font-size:clamp(11px,.7vw,15px)}
+@media (max-width:560px){.dh-company-bar{padding:8px 12px;gap:10px}.dh-company-logo{width:36px;height:36px}.dh-company-name{font-size:12.5px;white-space:normal}.dh-company-sub{font-size:10px}}
+.dh-so-col{background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:14px 18px;backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,10,.25)}
+.dh-so-title{font-size:12px;font-weight:800;letter-spacing:.7px;color:#bcd6ff;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:6px}
+.dh-so-rows{display:flex;flex-direction:column;gap:9px}
+.dh-so-row{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:#eef3ff}
+.dh-so-row .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;background:currentColor;box-shadow:0 0 8px 1px currentColor}
+.dh-so-row b{font-size:17px;font-weight:800;min-width:22px;color:currentColor}
+.dh-so-row span:last-child{color:#dfe9ff;font-weight:600}
+.dh-so-row.so-green{color:#4ade80}
+.dh-so-row.so-yellow{color:#fbbf24}
+.dh-so-row.so-orange{color:#fb923c}
+.dh-so-row.so-red{color:#ff5252}
+.dh-so-row.so-blue{color:#4d9bff}
+.dh-so-row.so-white{color:#cbd5e1}
+.dh-tv .dh-so-logo{width:34px;height:34px}
+.dh-tv .dh-so-row{font-size:clamp(13px,0.8vw,17px)}
+.dh-tv .dh-so-row b{font-size:clamp(16px,1vw,22px)}
+.dh-so-row.so-cyan{color:#22d3ee}
+/* ── 4 KHỐI RIÊNG BIỆT cùng 1 hàng: NHÀ MÁY │ ĐƠN HÀNG │ NHÂN LỰC HÔM NAY │
+   ĐIỀU HÀNH SẢN XUẤT (lớn nhất). 3 khối đầu chia đều, khối cuối rộng hơn hẳn. */
+.dh-header-row{display:flex;align-items:stretch;gap:14px;flex-wrap:wrap}
+.dh-hb{min-width:0}
+.dh-hb-nhamay,.dh-hb-donhang,.dh-hb-nhanluc{flex:1 1 200px}
+.dh-hb-dieuhanh{flex:2.3 1 340px;align-items:center}
+.dh-hb-nhanluc{cursor:pointer;transition:background .15s}
+.dh-hb-nhanluc:hover{background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04))}
+@media (max-width:1180px){.dh-hb-dieuhanh{flex-basis:100%;order:-1}}
+@media (max-width:820px){.dh-header-row{flex-direction:column}.dh-hb-nhamay,.dh-hb-donhang,.dh-hb-nhanluc,.dh-hb-dieuhanh{flex:1 1 auto;width:100%}}
+/* ── Dải "NHÂN LỰC HÔM NAY" — khung riêng, 1 hàng ngang THẤP GỌN đặt dưới
+   NHÀ MÁY/ĐƠN HÀNG, không xếp dọc để không chiếm nhiều chiều cao, tránh rối
+   mắt / che khuất phần theo dõi máy sản xuất. Số liệu lấy trực tiếp từ
+   buildWorkforceData() nên luôn tự đồng bộ với Lịch làm việc / Quản lý nhân
+   sự, không cần thao tác gì thêm. */
+.dh-wf-strip{display:flex;align-items:center;gap:16px;flex-wrap:wrap;cursor:pointer;
+  background:linear-gradient(120deg,rgba(255,255,255,.09),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:9px 18px;
+  box-shadow:0 6px 18px rgba(0,0,10,.22);transition:background .12s}
+.dh-wf-strip:hover{background:linear-gradient(120deg,rgba(255,255,255,.14),rgba(255,255,255,.04))}
+.dh-wf-strip-title{font-size:11.5px;font-weight:800;letter-spacing:.6px;color:#bcd6ff;text-transform:uppercase;white-space:nowrap;flex:0 0 auto}
+.dh-wf-strip-items{display:flex;align-items:center;gap:14px;flex-wrap:wrap;flex:1;min-width:0}
+.dh-wf-item{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+.dh-wf-item b{font-size:17px;font-weight:800;color:#eef3ff;line-height:1}
+.dh-wf-item span{font-size:11px;font-weight:700;color:#9db3e0;text-transform:uppercase;letter-spacing:.2px}
+.dh-wf-item.wf-leave b{color:#22d3ee}
+.dh-wf-item.wf-working b{color:#4ade80}
+.dh-wf-item.wf-ca1 b{color:#60a5fa}
+.dh-wf-item.wf-ca2 b{color:#fbbf24}
+.dh-wf-item.wf-tangca b{color:#fb923c}
+.dh-wf-sep{width:1px;height:16px;background:rgba(255,255,255,.16);flex:0 0 auto}
+.dh-tv .dh-wf-strip{padding:clamp(9px,.8vw,16px) clamp(16px,1.4vw,26px)}
+.dh-tv .dh-wf-strip-title{font-size:clamp(11px,.7vw,15px)}
+.dh-tv .dh-wf-item b{font-size:clamp(17px,1.05vw,24px)}
+.dh-tv .dh-wf-item span{font-size:clamp(10px,.62vw,13px)}
+@media (max-width:640px){.dh-wf-strip{gap:10px;padding:8px 12px}.dh-wf-strip-items{gap:10px}.dh-wf-sep{display:none}}
+
+.dh-topbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(30,50,100,.65),rgba(10,20,50,.75));backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 20px;box-shadow:0 8px 28px rgba(0,0,10,.35)}
+.dh-brand{font-size:14px;font-weight:800;letter-spacing:.6px;color:#8fc0ff;display:flex;align-items:center;gap:8px;text-shadow:0 0 16px rgba(93,156,255,.5)}
+.dh-clock{display:flex;align-items:center;gap:16px}
+.dh-clock-time{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;background:linear-gradient(90deg,#fff,#bcd6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dh-clock-date{font-size:12.5px;color:var(--dh-text2);text-transform:capitalize}
+.dh-runtime-inline{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:6px 16px;min-width:130px}
+.dh-runtime-inline-label{font-size:10.5px;font-weight:800;letter-spacing:.4px;color:#bcd6ff;text-transform:uppercase}
+.dh-runtime-inline-time{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;color:#fde68a}
+.dh-tv .dh-runtime-inline-time{font-size:clamp(20px,1.3vw,32px)}
+.dh-so-logo{width:24px;height:24px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.dh-shift{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;white-space:nowrap}
+.dh-tv-btn{background:linear-gradient(135deg,#3b7bf0,#1b3ea8);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 18px rgba(59,123,240,.5)}
+.dh-tv-btn:active{transform:scale(.97)}
+
+.dh-alerts{display:flex;flex-direction:column;gap:6px}
+.dh-alert{background:linear-gradient(90deg,rgba(239,68,68,.22),rgba(239,68,68,.1));color:#ffd2d2;border:1px solid #ef444466;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;animation:dhAlertBlink 2s ease-in-out infinite}
+@keyframes dhAlertBlink{0%,100%{box-shadow:0 0 0 rgba(220,38,38,0)}50%{box-shadow:0 0 16px rgba(239,68,68,.5)}}
+
+.dh-group-title{font-size:13.5px;font-weight:800;color:#bcd6ff;letter-spacing:.6px;text-transform:uppercase;margin:2px 0 8px 4px;display:flex;align-items:center;gap:8px}
+.dh-group-title::before{content:'';width:4px;height:14px;border-radius:3px;background:linear-gradient(180deg,#8fc0ff,#3b7bf0)}
+.dh-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+/* Màn hình TV rộng/4K: cho phép nhiều thẻ hơn trên 1 hàng thay vì thẻ bị kéo
+   giãn to bất thường; màn hình dọc/hẹp: thu nhỏ ngưỡng để vẫn đủ ≥2 cột */
+@media (min-width:1600px){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
+@media (min-width:2200px){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}}
+@media (min-aspect-ratio:2/1){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}}
+@media (max-aspect-ratio:4/5){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.dh-status-overview{grid-template-columns:1fr}}
+
+/* Thẻ máy: viền phát sáng đổi màu theo trạng thái, set qua --dh-accent */
+.dh-card{--dh-accent:var(--glow-ready);
+  background:linear-gradient(160deg,var(--dh-card),var(--dh-card2));border:1.5px solid color-mix(in srgb,var(--dh-accent) 55%,var(--dh-border));
+  border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:7px;position:relative;overflow:hidden;
+  transition:transform .12s,box-shadow .12s;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--dh-accent) 25%,transparent),0 0 18px -3px color-mix(in srgb,var(--dh-accent) 55%,transparent),0 10px 22px rgba(0,0,10,.35)}
+.dh-card::after{content:'';position:absolute;inset:0;border-radius:18px;pointer-events:none;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--dh-accent) 12%,transparent),transparent 55%)}
+.dh-card[onclick]{cursor:pointer}
+.dh-card[onclick]:hover{transform:translateY(-3px);box-shadow:0 0 0 1px color-mix(in srgb,var(--dh-accent) 45%,transparent),0 0 26px -2px color-mix(in srgb,var(--dh-accent) 75%,transparent),0 14px 28px rgba(0,0,10,.4)}
+
+.dh-card.st-run{--dh-accent:var(--glow-run);animation:dhRunGlow 1.7s ease-in-out infinite}
+.dh-card.st-fault{--dh-accent:var(--glow-fault);animation:dhFaultGlow 1s ease-in-out infinite}
+.dh-card.st-maint{--dh-accent:var(--glow-maint)}
+.dh-card.st-ready{--dh-accent:var(--glow-ready)}
+.dh-card.st-wait{--dh-accent:var(--glow-wait)}
+@keyframes dhRunGlow{
+  0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 14px -2px rgba(255,255,255,.5),0 10px 22px rgba(0,0,10,.35)}
+  50%{box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 0 30px 2px rgba(255,255,255,.85),0 10px 22px rgba(0,0,10,.35)}
+}
+@keyframes dhFaultGlow{
+  0%,100%{box-shadow:0 0 0 1px rgba(255,82,82,.4),0 0 14px -2px rgba(255,82,82,.55),0 10px 22px rgba(0,0,10,.35)}
+  50%{box-shadow:0 0 0 1.5px rgba(255,82,82,.95),0 0 28px 3px rgba(255,82,82,.85),0 10px 22px rgba(0,0,10,.35)}
+}
+.dh-card.dh-card-overdue{box-shadow:0 0 0 2px #f59e0bcc,0 0 22px -2px #f59e0bcc,0 10px 22px rgba(0,0,10,.35)}
+
+.dh-card-hd{display:flex;align-items:center;gap:8px;position:relative;z-index:1}
+.dh-card-ic{font-size:18px}
+.dh-card-name{font-weight:800;font-size:13.5px;flex:1;color:#dfe9ff}
+.dh-status-chip{margin-left:auto;font-size:10px;font-weight:800;padding:3px 9px 3px 7px;border-radius:20px;letter-spacing:.3px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+  background:color-mix(in srgb,var(--dh-accent) 20%,transparent);color:var(--dh-accent);border:1px solid color-mix(in srgb,var(--dh-accent) 55%,transparent)}
+.dh-status-chip::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--dh-accent);box-shadow:0 0 6px 1px var(--dh-accent)}
+.dh-card.st-run .dh-status-chip::before{animation:dhDotBlink 1s ease-in-out infinite}
+.dh-card.st-fault .dh-status-chip::before{animation:dhDotBlink .7s ease-in-out infinite}
+@keyframes dhDotBlink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.dh-card-empty{font-size:12.5px;color:var(--dh-text2);padding:14px 0 8px;text-align:center;position:relative;z-index:1}
+
+/* Khách hàng — nổi bật nhất, to rõ nhất trên thẻ */
+.dh-card-cust{font-size:16.5px;font-weight:800;color:#fff;line-height:1.22;position:relative;z-index:1;letter-spacing:.1px}
+.dh-card-cust::before{content:'👤 '}
+
+/* Quy cách — to, rõ, dạng pill nổi bật */
+.dh-card-spec{font-size:14.5px;font-weight:800;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:9px;padding:5px 10px;display:inline-block;width:fit-content;max-width:100%;letter-spacing:.1px;position:relative;z-index:1}
+
+/* Mã đơn — thu nhỏ, chỉ là thông tin phụ */
+.dh-card-order{display:flex;align-items:center;gap:8px;position:relative;z-index:1}
+.dh-card-code{font-size:10.5px;font-weight:700;color:var(--dh-text2);letter-spacing:.2px;opacity:.85}
+.dh-card-flag{margin-left:auto;font-size:10px;font-weight:800;color:#fde68a;background:rgba(245,158,11,.18);border:1px solid #f59e0b77;border-radius:6px;padding:2px 7px;animation:dhAlertBlink 1.4s ease-in-out infinite}
+
+/* Công đoạn — nhìn phát biết máy đang làm gì */
+.dh-card-stage{font-size:12.5px;font-weight:800;color:var(--dh-accent);background:color-mix(in srgb,var(--dh-accent) 16%,#101c3c);
+  border:1px solid color-mix(in srgb,var(--dh-accent) 40%,transparent);border-radius:9px;padding:5px 9px;display:inline-flex;align-items:center;gap:5px;width:fit-content;position:relative;z-index:1}
+
+.dh-card-ring-row{display:flex;align-items:center;gap:12px;margin-top:3px;position:relative;z-index:1}
+.dh-ring{--p:0;width:58px;height:58px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;
+  background:conic-gradient(var(--dh-accent) calc(var(--p)*1%),rgba(255,255,255,.1) 0);position:relative;
+  box-shadow:0 0 12px -2px color-mix(in srgb,var(--dh-accent) 60%,transparent)}
+.dh-ring::before{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--dh-card2)}
+.dh-ring span{position:relative;z-index:1}
+.dh-card-qty{flex:1;display:flex;flex-direction:column;gap:4px}
+.dh-card-qty span{font-size:11px;color:var(--dh-text2);font-weight:700}
+.dh-prog-wrap{width:100%;height:8px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden}
+.dh-prog-bar{height:100%;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--dh-accent) 70%,#2856D6),var(--dh-accent));box-shadow:0 0 8px -1px var(--dh-accent)}
+.dh-card-status{font-size:11.5px;font-weight:700;color:var(--dh-text2);border-top:1px solid rgba(255,255,255,.1);padding-top:6px;margin-top:1px;position:relative;z-index:1}
+
+/* TV Mode: chữ/thẻ to hơn hẳn, co giãn mượt theo bề rộng màn hình (clamp+vw)
+   thay vì 1 mốc cố định — nhờ vậy HD nhỏ, FHD, 2K, 4K đều hiển thị cân đối,
+   kết hợp thêm auto-fit scale (JS) để luôn vừa khít, không cần cuộn. */
+.dh-tv .dh-clock-time{font-size:clamp(28px,1.9vw,46px)}
+.dh-tv .dh-card-cust{font-size:clamp(15px,1.05vw,22px)}
+.dh-tv .dh-card-spec{font-size:clamp(13px,0.9vw,18px)}
+.dh-tv .dh-card-name{font-size:clamp(12.5px,0.78vw,16.5px)}
+.dh-tv .dh-group-title{font-size:clamp(13px,0.8vw,17px)}
 .kh-detail-grid>div{display:flex;flex-direction:column;gap:1px;min-width:0}
 .kh-detail-grid>div b{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.2px}
 .kh-detail-grid>div span{font-size:13px;color:var(--text);font-weight:600;overflow-wrap:break-word}
@@ -4400,6 +4605,10 @@ body{letter-spacing:-.1px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         Kế hoạch SX
       </button>
+      <button class="sb-item" id="sbi-dieuHanh" onclick="goTab('dieuHanh')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Điều hành SX
+      </button>
       <button class="sb-item" id="sbi-hoanThanh" onclick="goTab('hoanThanh')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Đơn hoàn thành
@@ -4510,6 +4719,10 @@ body{letter-spacing:-.1px}
       <button class="bn" id="bn-keHoach" onclick="goTab('keHoach')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         Kế hoạch
+      </button>
+      <button class="bn" id="bn-dieuHanh" onclick="goTab('dieuHanh')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Điều hành
       </button>
       <button class="bn" id="bn-hoanThanh" onclick="goTab('hoanThanh')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -5373,8 +5586,26 @@ const MACHINES = [
   {id:'m_rut100_2',group:'Máy rút', name:'Máy rút 100 - 2',   icon:'⚙️'},
   {id:'m_rut50',   group:'Máy rút', name:'Máy rút 50',        icon:'⚙️'},
   {id:'m_danhbong_1',group:'Máy đánh bóng', name:'Máy đánh bóng - 1', icon:'✨'},
-  {id:'m_danhbong_2',group:'Máy đánh bóng', name:'Máy đánh bóng - 2', icon:'✨'}
+  {id:'m_danhbong_2',group:'Máy đánh bóng', name:'Máy đánh bóng - 2', icon:'✨'},
+  {id:'m_cat_1',    group:'Máy cắt', name:'Máy cắt 1', icon:'✂️'},
+  {id:'m_cat_2',    group:'Máy cắt', name:'Máy cắt 2', icon:'✂️'}
 ];
+
+// ── Phân công máy theo Công đoạn (dùng cho tab Kế hoạch SX + Điều hành SX) ──
+// Mỗi công đoạn gán với đúng 1 nhóm máy trong MACHINES ở trên (group phải khớp
+// tuyệt đối tên nhóm). Đây là danh sách CÔNG ĐOẠN PHÂN CÔNG MÁY — độc lập với
+// STAGES (luồng trạng thái Đùn→Rút→Đánh bóng đã chạy production từ trước) để
+// KHÔNG đụng vào logic chuyển trạng thái/tiến độ hiện có (an toàn dữ liệu cũ).
+// Việc phân công máy được lưu ngay trong bản ghi đơn hàng (o.machineAssign),
+// nên khi saveOrders() chạy, nó tự đồng bộ Realtime cùng các trường khác của
+// đơn — không cần tạo thêm nhánh Firebase mới, không có dữ liệu trùng.
+const ASSIGN_STAGES = [
+  {key:'dun',      label:'Đùn',        group:'Máy đùn',        icon:'🔧'},
+  {key:'rut',      label:'Rút',        group:'Máy rút',        icon:'🔩'},
+  {key:'cat',      label:'Cắt',        group:'Máy cắt',        icon:'✂️'},
+  {key:'danhbong', label:'Đánh bóng',  group:'Máy đánh bóng',  icon:'✨'}
+];
+const ASSIGN_STAGE_LABEL = Object.fromEntries(ASSIGN_STAGES.map(s=>[s.key, s.label]));
 const BTM_TYPE_LABEL = {hong:'🔴 Hỏng đột xuất', baotri:'🟡 Bảo trì định kỳ', kiemtra:'🔵 Kiểm tra định kỳ'};
 
 // ════════════════════════════════════════════════════════════
@@ -8383,6 +8614,7 @@ function updateTopbarClock(){
   if(dEl){
     dEl.textContent = `${vnWeekdayShort(now)}, ${vnDateDM(now)}`;
   }
+  if(typeof dhTickClock==='function') dhTickClock();
 }
 function vnDateTimeShort(d){ d=(d instanceof Date)?d:new Date(d); if(isNaN(d)) return '—'; return `${vnDateDM(d)} ${vnTimeHM(d)}`; }
 function vnWeekdayShort(d){ d=(d instanceof Date)?d:new Date(d); if(isNaN(d)) return ''; return VN_WEEKDAYS_SHORT[d.getDay()]; }
@@ -8605,6 +8837,16 @@ function doLogout(){
 
 // Enter to login
 document.addEventListener('DOMContentLoaded',()=>{
+  // TV Mode khoá cứng qua URL (?tv=1) — dùng cho CỬA SỔ TV riêng (Windows
+  // Extend: 1 PC + 1 màn PC + 1 TV). Mở link này trên cửa sổ TV, tab sẽ tự
+  // khoá vĩnh viễn ở "Điều hành sản xuất" — không liên quan/không ảnh hưởng
+  // tới cửa sổ PC đang thao tác bình thường (2 cửa sổ = 2 currentTab độc
+  // lập, không dùng chung). Lưu vào sessionStorage (riêng theo từng cửa sổ)
+  // nên vẫn giữ khoá nếu cửa sổ TV lỡ bị tải lại, không cần bấm lại nút TV
+  // Mode hay F5 thủ công mỗi lần.
+  if(new URLSearchParams(location.search).get('tv')==='1'){
+    try{ sessionStorage.setItem('sx_tv_locked','1'); }catch(e){}
+  }
   // Nếu link mở ra từ việc quét mã QR (khách hàng dùng camera điện thoại
   // thường, không qua app) → hiện thẳng trang tra cứu công khai, không
   // yêu cầu đăng nhập, và bỏ qua toàn bộ luồng khởi tạo app bên dưới.
@@ -8692,8 +8934,19 @@ document.addEventListener('DOMContentLoaded',()=>{
 // NAVIGATION
 // ════════════════════════════════════════════════════════════
 function applyRoleNav(){ /* không còn giới hạn tab theo vai trò — mọi tài khoản dùng đầy đủ menu như trước */ }
-function defaultTabFor(){ return 'dashboard'; }
+function defaultTabFor(){ return dhTvLocked() ? 'dieuHanh' : 'dashboard'; }
 function goTab(tab){
+  // Cửa sổ đang ở TV Mode khoá cứng → luôn ép về Điều hành SX, bất kể tab
+  // nào được truyền vào (kể cả nếu có thao tác/điều hướng lỡ xảy ra ngay
+  // trong chính cửa sổ TV). Tự bật lại TV Mode + fullscreen nếu vì lý do
+  // gì đó đang bị tắt (ví dụ cửa sổ vừa được tải lại).
+  if(dhTvLocked()){
+    tab='dieuHanh';
+    if(!dhTvMode){
+      dhTvMode=true;
+      try{ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }catch(e){}
+    }
+  }
   currentTab=tab;
   // Sidebar
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
@@ -8702,7 +8955,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
   $('pageTitle').textContent=titles[tab]||tab;
   // FAB: admin mới thấy nút thêm đơn
   // FAB: admin thấy nút + ở tất cả các tab
@@ -8800,7 +9053,7 @@ function updateKhuonBadge(){
 // RENDER
 // ════════════════════════════════════════════════════════════
 function renderTab(tab){
-  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
+  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,dieuHanh:renderDieuHanh,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
   if(fns[tab]) fns[tab]();
 }
 
@@ -10822,6 +11075,7 @@ function khPlanCard(o, seq){
       ${o.deliveryDate?`<span class="kh-meta-item${overdue?' danger':''}">📅 Hạn giao: <b>${fmtDate(o.deliveryDate)}</b></span>`:''}
       ${s==='running'&&o.startedAt?`<span class="kh-meta-item info">▶ Bắt đầu: <b>${fmtDateTime(o.startedAt)}</b></span>`:''}
       ${khStageChip(o)!=='' ? `<span class="kh-meta-item">${khStageChip(o)}</span>` : ''}
+      ${khMachineChip(o)}
     </div>
     ${o.note?`<div class="card-note">📝 ${o.note}</div>`:''}
     ${renderProgressBar(o)}
@@ -11043,6 +11297,330 @@ function renderKeHoach(){
   usAttachSearchInput(document.getElementById('khSearch'), v=>khSearchQ=v, renderKeHoach, hadFocus, caretPos);
 }
 
+// ════════════════════════════════════════════════════════════
+// 🏭 BẢNG ĐIỀU HÀNH SẢN XUẤT — màn hình giám sát TV/monitor lớn tại xưởng.
+// CHỈ ĐỌC dữ liệu từ DB.orders (phân công máy đã lưu tại o.machineAssign) —
+// không lưu máy/công đoạn riêng, không nhập lại gì ở đây, nên luôn khớp
+// 100% với tab Kế hoạch SX và không bao giờ có dữ liệu trùng.
+// ════════════════════════════════════════════════════════════
+let dhTvMode = false;   // chế độ TV: fullscreen + tự động co giãn vừa khít màn hình
+let _dhFitBound = false; // đã gắn listener resize/orientation chưa (chỉ gắn 1 lần)
+
+// ── TV Mode "khoá cứng": khi bật (bấm nút TV Mode, hoặc mở link kèm
+// ?tv=1), CỬA SỔ trình duyệt này sẽ luôn ở lại tab Điều hành SX — goTab()
+// sẽ tự ép về 'dieuHanh' dù được gọi với tab nào. Lưu trong sessionStorage
+// (theo TỪNG cửa sổ/tab trình duyệt riêng, KHÔNG chia sẻ với cửa sổ PC
+// khác — 2 cửa sổ = 2 currentTab độc lập) nên cửa sổ PC đổi tab thoải mái
+// mà không ảnh hưởng gì tới cửa sổ TV, và cửa sổ TV vẫn giữ khoá dù lỡ bị
+// tải lại, không cần bấm lại TV Mode hay F5.
+function dhTvLocked(){
+  try{ return sessionStorage.getItem('sx_tv_locked')==='1'; }catch(e){ return false; }
+}
+
+function dhCurrentShift(){
+  const h = new Date().getHours();
+  if(h>=6 && h<14) return 'Ca 1 · 06:00–14:00';
+  if(h>=14 && h<22) return 'Ca 2 · 14:00–22:00';
+  return 'Ca 3 · 22:00–06:00';
+}
+
+// Tìm đơn hàng đang thực sự CHẠY tại 1 máy (dựa trên phân công máy + trạng
+// thái running) — đây là nguồn suy ra toàn bộ nội dung 1 thẻ máy.
+function dhOrderAtMachine(machineId){
+  return DB.orders.find(o=>o.status==='running' && Object.entries(orderMachineAssign(o)).some(([stage,mid])=>mid===machineId)) || null;
+}
+function dhStageAtMachine(o, machineId){
+  const a = orderMachineAssign(o);
+  const entry = Object.entries(a).find(([stage,mid])=>mid===machineId);
+  return entry ? entry[0] : null;
+}
+
+// ── Thẻ máy hiện đại (thay bảng cũ) — vòng tiến độ + trạng thái phát sáng,
+// tự co giãn theo lưới (grid auto-fit) nên nhiều/ít máy vẫn luôn gọn màn hình.
+function dhMachineCard(m){
+  const o = dhOrderAtMachine(m.id);
+  const rs = machineRuntimeStatus(m.id);
+  const statusCls = {run:'st-run',sang:'st-ready',cho:'st-wait',bt:'st-maint',sc:'st-fault'}[rs.code]||'st-ready';
+
+  if(!o){
+    return `<div class="dh-card ${statusCls}">
+      <div class="dh-card-hd"><span class="dh-card-ic">${m.icon}</span><span class="dh-card-name">${m.name}</span><span class="dh-status-chip">${rs.label}</span></div>
+      <div class="dh-card-empty">${rs.code==='sc'?'🔴 Đang sự cố':rs.code==='bt'?'🟣 Đang bảo trì':'⚪ Chưa có đơn — sẵn sàng nhận lệnh'}</div>
+    </div>`;
+  }
+
+  const stageKey = dhStageAtMachine(o, m.id);
+  const st = ASSIGN_STAGES.find(x=>x.key===stageKey);
+  const pct = khStageProgressPct(o);
+  const qty = o.qty||0, done = o.doneQty||0;
+  const qtyPct = qty ? Math.min(100,Math.round(done/qty*100)) : 0;
+  const overdue = khIsOverdue(o);
+  return `<div class="dh-card ${statusCls}${overdue?' dh-card-overdue':''}" onclick="khViewDetail('${o.id}')">
+    <div class="dh-card-hd"><span class="dh-card-ic">${m.icon}</span><span class="dh-card-name">${m.name}</span><span class="dh-status-chip">${rs.label}</span></div>
+    <div class="dh-card-cust">${o.customer||'—'}</div>
+    <span class="dh-card-spec">${specStr(o)}</span>
+    <div class="dh-card-order">
+      <span class="dh-card-code">${ddCode(o)}</span>
+      ${overdue?'<span class="dh-card-flag">⚠️ TRỄ</span>':''}
+    </div>
+    <div class="dh-card-stage">${st?st.icon+' '+st.label:'—'}</div>
+    <div class="dh-card-ring-row">
+      <div class="dh-ring" style="--p:${pct}"><span>${pct}%</span></div>
+      <div class="dh-card-qty">
+        <div class="dh-prog-wrap"><div class="dh-prog-bar" style="width:${qtyPct}%"></div></div>
+        <span>${done.toLocaleString('vi-VN')}/${qty.toLocaleString('vi-VN')||0} — Sản lượng</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Đếm trạng thái toàn bộ máy trong xưởng (5 nhóm) — dùng cho khối
+// "TRẠNG THÁI TOÀN NHÀ MÁY" ở đầu Bảng điều hành SX.
+function dhMachineStatusCounts(){
+  const c = {run:0,cho:0,dung:0,sc:0,bt:0};
+  MACHINES.forEach(m=>{
+    const code = machineRuntimeStatus(m.id).code;
+    if(code==='run') c.run++;
+    else if(code==='cho') c.cho++;
+    else if(code==='sc') c.sc++;
+    else if(code==='bt') c.bt++;
+    else c.dung++; // 'sang' (sẵn sàng/không có việc) = máy đang dừng
+  });
+  return c;
+}
+
+// ── Đếm trạng thái đơn hàng đang quản lý (loại trừ đã hoàn thành) — dùng
+// cho khối "ĐƠN HÀNG" cùng widget trên. "Chờ" = đã gán máy nhưng chưa chạy;
+// "Chưa chạy" = chưa được phân công máy nào (khác nhau để điều hành biết
+// đơn nào cần gán máy gấp).
+function dhOrderStatusCounts(){
+  const activeOrders = DB.orders.filter(o=>o.status!=='done');
+  const running = activeOrders.filter(o=>o.status==='running'||o.status==='cutting').length;
+  const tre = activeOrders.filter(khIsOverdue).length;
+  const pendingOrders = activeOrders.filter(o=>o.status==='pending');
+  const cho = pendingOrders.filter(o=>Object.keys(orderMachineAssign(o)).length>0).length;
+  const chuaChay = pendingOrders.filter(o=>!Object.keys(orderMachineAssign(o)).length).length;
+  return {running,cho,tre,chuaChay};
+}
+
+// ── Thời điểm bắt đầu ca hiện tại (xử lý cả ca 3 vắt qua nửa đêm) — dùng
+// để tính "Thời gian chạy" = thời gian đã trôi qua từ đầu ca tới giờ.
+function dhShiftStartDate(){
+  const now = new Date();
+  const h = now.getHours();
+  const d = new Date(now);
+  if(h>=6 && h<14) d.setHours(6,0,0,0);
+  else if(h>=14 && h<22) d.setHours(14,0,0,0);
+  else { if(h<6) d.setDate(d.getDate()-1); d.setHours(22,0,0,0); }
+  return d;
+}
+function dhRuntimeElapsedStr(){
+  let diff = Math.floor((Date.now()-dhShiftStartDate().getTime())/1000);
+  if(diff<0) diff = 0;
+  const hh=Math.floor(diff/3600), mm=Math.floor((diff%3600)/60), ss=diff%60;
+  return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+}
+
+// ── Lấy sẵn logo công ty từ topbar chung của app để hiển thị trong ô
+// "NHÀ MÁY" của Bảng điều hành SX, tránh nhúng lại base64 trùng lặp.
+function dhLogoSrc(){
+  if(!window._dhLogoSrc){
+    const img = document.querySelector('.topbar-logo');
+    window._dhLogoSrc = img ? img.src : '';
+  }
+  return window._dhLogoSrc;
+}
+
+// ── Phần đầu Bảng điều hành SX — 4 KHỐI RIÊNG BIỆT cùng 1 hàng (Desktop/TV):
+// ① 🏭 NHÀ MÁY (nhỏ) │ ② 📦 ĐƠN HÀNG (nhỏ) │ ③ 👥 NHÂN LỰC HÔM NAY (nhỏ) │
+// ④ 🎛️ ĐIỀU HÀNH SẢN XUẤT (lớn nhất — brand + đồng hồ + thời gian chạy + ca + nút TV).
+// Dưới màn hình hẹp (điện thoại) 4 khối tự xếp dọc (xem CSS .dh-header-row).
+// Khối NHÂN LỰC dùng lại buildWorkforceData() (đọc trực tiếp DB.lichLamViec +
+// DB.nghiPhep) nên luôn tự khớp với tab Lịch làm việc, không cần đồng bộ thủ công.
+function dhHeaderHTML(){
+  const mc = dhMachineStatusCounts();
+  const oc = dhOrderStatusCounts();
+  const wf = (typeof buildWorkforceData==='function') ? buildWorkforceData() : null;
+  const wfRowsHTML = (wf && wf.sheetsCount) ? (()=>{
+    const sc = wf.shiftCounts;
+    return `
+      <div class="dh-so-row so-white"><span class="dot"></span><b>${wf.totalWorkers}</b><span>tổng LĐ</span></div>
+      <div class="dh-so-row so-cyan"><span class="dot"></span><b>${wf.onLeaveList.length}</b><span>nghỉ phép</span></div>
+      <div class="dh-so-row so-green"><span class="dot"></span><b>${wf.workingCount}</b><span>đang làm</span></div>
+      <div class="dh-so-row so-blue"><span class="dot"></span><b>${sc.ca1||0}</b><span>ca 1</span></div>
+      <div class="dh-so-row so-yellow"><span class="dot"></span><b>${sc.ca2||0}</b><span>ca 2</span></div>
+      <div class="dh-so-row so-orange"><span class="dot"></span><b>${sc.tangca||0}</b><span>tăng ca</span></div>`;
+  })() : `<div class="dh-so-row so-white"><span>Chưa có dữ liệu lịch làm việc</span></div>`;
+
+  return `
+    <div class="dh-company-bar">
+      <img class="dh-company-logo" src="${dhLogoSrc()}" alt="Logo Đông Phương">
+      <div class="dh-company-info">
+        <div class="dh-company-name">Công ty Cổ phần Công thương Đông Phương</div>
+        <div class="dh-company-sub">🏭 Hệ thống điều hành sản xuất</div>
+      </div>
+    </div>
+    <div class="dh-header-row">
+      <div class="dh-so-col dh-hb dh-hb-nhamay">
+        <div class="dh-so-title">🏭 NHÀ MÁY</div>
+        <div class="dh-so-rows">
+          <div class="dh-so-row so-green"><span class="dot"></span><b>${mc.run}</b><span>máy đang chạy</span></div>
+          <div class="dh-so-row so-yellow"><span class="dot"></span><b>${mc.cho}</b><span>máy chờ</span></div>
+          <div class="dh-so-row so-orange"><span class="dot"></span><b>${mc.dung}</b><span>máy dừng</span></div>
+          <div class="dh-so-row so-red"><span class="dot"></span><b>${mc.sc}</b><span>máy sự cố</span></div>
+          <div class="dh-so-row so-blue"><span class="dot"></span><b>${mc.bt}</b><span>máy bảo trì</span></div>
+        </div>
+      </div>
+      <div class="dh-so-col dh-hb dh-hb-donhang">
+        <div class="dh-so-title">📦 ĐƠN HÀNG</div>
+        <div class="dh-so-rows">
+          <div class="dh-so-row so-green"><span class="dot"></span><b>${oc.running}</b><span>đang sản xuất</span></div>
+          <div class="dh-so-row so-yellow"><span class="dot"></span><b>${oc.cho}</b><span>chờ</span></div>
+          <div class="dh-so-row so-red"><span class="dot"></span><b>${oc.tre}</b><span>trễ</span></div>
+          <div class="dh-so-row so-white"><span class="dot"></span><b>${oc.chuaChay}</b><span>chưa chạy</span></div>
+        </div>
+      </div>
+      <div class="dh-so-col dh-hb dh-hb-nhanluc" onclick="goTab('lichLamViec')">
+        <div class="dh-so-title">👥 NHÂN LỰC HÔM NAY</div>
+        <div class="dh-so-rows">${wfRowsHTML}</div>
+      </div>
+      <div class="dh-topbar dh-hb dh-hb-dieuhanh">
+        <div class="dh-brand">🎛️ <span>ĐIỀU HÀNH SẢN XUẤT</span></div>
+        <div class="dh-clock">
+          <div class="dh-clock-time" id="dhClockTime">--:--:--</div>
+          <div class="dh-clock-date" id="dhClockDate">—</div>
+        </div>
+        <div class="dh-runtime-inline">
+          <div class="dh-runtime-inline-label">⏱️ Thời gian chạy</div>
+          <div class="dh-runtime-inline-time" id="dhRuntimeClock">${dhRuntimeElapsedStr()}</div>
+        </div>
+        <div class="dh-shift" id="dhShift">${dhCurrentShift()}</div>
+        <button class="dh-tv-btn" onclick="dhToggleTv()">${dhTvMode?'🡼 Thoát TV':'⛶ TV Mode · Tự vừa màn hình'}</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderDieuHanh(){
+  const activeOrders = DB.orders.filter(o=>o.status!=='done');
+  const overdueList = activeOrders.filter(khIsOverdue);
+  // "Máy dừng lâu": máy đang báo Sự cố (từ tab Bảo trì máy) — dữ liệu thật,
+  // không suy diễn thêm. "Thiếu nguyên liệu"/"QC chưa hoàn thành" cần dữ liệu
+  // riêng chưa có trong hệ thống nên chưa đưa vào đây (tránh cảnh báo giả).
+  const brokenMachines = MACHINES.filter(m=>machineRuntimeStatus(m.id).code==='sc');
+  const groups = [...new Set(MACHINES.map(m=>m.group))];
+
+  $('mc').innerHTML = `
+    <div class="dh-wrap${dhTvMode?' dh-tv':''}" id="dhWrap">
+      <div class="dh-fit-outer" id="dhFitOuter"><div class="dh-fit-inner" id="dhFitInner">
+      ${dhHeaderHTML()}
+
+      ${(overdueList.length||brokenMachines.length) ? `<div class="dh-alerts">
+        ${overdueList.slice(0,6).map(o=>`<div class="dh-alert" onclick="khViewDetail('${o.id}')">🔴 Trễ tiến độ: <b>${ddCode(o)}</b> — ${o.customer||''}</div>`).join('')}
+        ${brokenMachines.map(m=>`<div class="dh-alert">🔴 ${m.name} đang sự cố</div>`).join('')}
+      </div>` : ''}
+
+      ${groups.map(g=>`
+        <div class="dh-group">
+          <div class="dh-group-title">${g}</div>
+          <div class="dh-card-grid">${MACHINES.filter(m=>m.group===g).map(dhMachineCard).join('')}</div>
+        </div>
+      `).join('')}
+      </div></div>
+    </div>
+  `;
+  dhTickClock();
+  dhBindAutoFit();
+  requestAnimationFrame(dhApplyAutoFit);
+}
+
+function dhToggleTv(){
+  dhTvMode = !dhTvMode;
+  // Bật TV Mode = khoá luôn CỬA SỔ này ở tab Điều hành SX (theo sessionStorage
+  // riêng của cửa sổ, không ảnh hưởng cửa sổ PC khác) — đúng công dụng: cửa
+  // sổ này giờ là "cửa sổ TV", dùng Windows Extend kéo qua màn TV. Tắt TV Mode
+  // = mở khoá, trả cửa sổ này về trạng thái bình thường (đổi tab được như PC).
+  try{
+    if(dhTvMode) sessionStorage.setItem('sx_tv_locked','1');
+    else sessionStorage.removeItem('sx_tv_locked');
+  }catch(e){}
+  const el = document.documentElement;
+  if(dhTvMode && el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  if(!dhTvMode && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  renderDieuHanh();
+}
+
+// ── Tự động co giãn (scale) toàn bộ bảng để VỪA KHÍT MỌI kích thước màn
+// hình TV hiện nay (HD/FHD nhỏ, FHD 1080p, 2K, 4K, màn hình siêu rộng,
+// màn hình dọc...), không cần cuộn — dù có bao nhiêu máy/đơn hàng đi nữa.
+// Bước 1: CSS (clamp+vw, media theo aspect-ratio) đã tự lo phần lớn việc co
+// giãn hợp lý theo kích thước màn hình thật. Bước 2: JS ở đây chỉ still làm
+// nốt phần "vừa khít tuyệt đối" — bù trừ chiều cao (nhiều/ít máy) và các sai
+// số nhỏ còn lại, tránh vừa phải scale quá tay vừa tránh vỡ layout.
+function dhApplyAutoFit(){
+  if(!dhTvMode) return;
+  const outer = document.getElementById('dhFitOuter');
+  const inner = document.getElementById('dhFitInner');
+  if(!outer || !inner) return;
+  inner.style.transform = 'none';
+  inner.style.width = outer.clientWidth+'px';
+  const naturalW = inner.scrollWidth;
+  const naturalH = inner.scrollHeight;
+  const availW = outer.clientWidth;
+  const availH = outer.clientHeight;
+  if(!naturalW || !naturalH || !availW || !availH) return;
+  // Cho phép co giãn linh hoạt hơn ở cả 2 chiều: co nhỏ khi có rất nhiều máy
+  // (xưởng lớn), phóng to vừa phải khi ít máy/màn hình rất lớn (4K, TV to).
+  const scale = Math.min(availW/naturalW, availH/naturalH, 1.35);
+  inner.style.transformOrigin = 'top center';
+  inner.style.transform = `scale(${Math.max(scale,0.4)})`;
+}
+
+// Gộp nhiều lần gọi liên tiếp (resize kéo tay, xoay màn hình, đổi cửa sổ)
+// thành 1 lần tính toán, tránh giật/lag trên các TV cấu hình yếu.
+let _dhFitRaf = null;
+function dhScheduleAutoFit(){
+  if(_dhFitRaf) cancelAnimationFrame(_dhFitRaf);
+  _dhFitRaf = requestAnimationFrame(()=>{ _dhFitRaf=null; if(currentTab==='dieuHanh') dhApplyAutoFit(); });
+}
+
+let _dhResizeObserver = null;
+function dhBindAutoFit(){
+  if(!_dhFitBound){
+    _dhFitBound = true;
+    // Đổi kích thước cửa sổ (kéo tay, đổi độ phân giải điều khiển từ xa TV)
+    window.addEventListener('resize', dhScheduleAutoFit);
+    // Xoay màn hình (TV/màn hình treo tường dạng dọc)
+    window.addEventListener('orientationchange', dhScheduleAutoFit);
+    document.addEventListener('fullscreenchange', dhScheduleAutoFit);
+  }
+  // #dhFitOuter bị tạo lại mỗi lần renderDieuHanh() chạy (innerHTML mới) nên
+  // phải gắn lại ResizeObserver vào node mới mỗi lần, tránh theo dõi 1 node
+  // đã bị gỡ khỏi DOM (không còn báo thay đổi kích thước nữa).
+  if(window.ResizeObserver){
+    if(_dhResizeObserver) _dhResizeObserver.disconnect();
+    const outer = document.getElementById('dhFitOuter');
+    if(outer){
+      _dhResizeObserver = new ResizeObserver(dhScheduleAutoFit);
+      _dhResizeObserver.observe(outer);
+    }
+  }
+}
+
+// Đồng hồ realtime của Bảng Điều hành SX — cập nhật đúng 2 span, không vẽ
+// lại cả bảng mỗi giây (updateTopbarClock() gọi hàm này mỗi giây sẵn có).
+function dhTickClock(){
+  const tEl = document.getElementById('dhClockTime');
+  const dEl = document.getElementById('dhClockDate');
+  if(!tEl && !dEl) return;
+  const now = new Date();
+  if(tEl) tEl.textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+  if(dEl) dEl.textContent = `${vnWeekdayShort(now)}, ${vnDateDM(now)}`;
+  const shiftEl = document.getElementById('dhShift'); if(shiftEl) shiftEl.textContent = dhCurrentShift();
+  const rtEl = document.getElementById('dhRuntimeClock'); if(rtEl) rtEl.textContent = dhRuntimeElapsedStr();
+  const rtSubEl = document.getElementById('dhRuntimeSub'); if(rtSubEl) rtSubEl.textContent = dhCurrentShift();
+}
+
 // ── 1 dòng bảng Kế hoạch sản xuất (ERP/MES table style, đồng bộ Tab Đơn hàng) ──
 // Tiến độ theo CÔNG ĐOẠN sản xuất hiện tại (0-100%), độc lập với số lượng đã chạy —
 // dùng để cột "Tiến độ" luôn cập nhật ngay khi đổi công đoạn, kể cả khi chưa nhập doneQty.
@@ -11209,6 +11787,10 @@ function khViewDetail(id){
       <div class="kh-detail-sec-title">📊 Tiến độ sản xuất</div>
       ${renderProgressBar(o)||'<div class="empty" style="padding:4px 0;font-size:12.5px;color:var(--text4)">Chưa bắt đầu sản xuất</div>'}
       ${renderStageTracker(o, isStaff())}
+    </div>
+    <div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">🏭 Phân công máy</div>
+      ${khMachineAssignHTML(o)}
     </div>
     <div class="kh-detail-sec">
       <div class="kh-detail-sec-title">📈 Thống kê sản xuất</div>
@@ -14633,6 +15215,109 @@ function setStage(id, stage){if(guardViewer())return;
     showToast(`🏭 Công đoạn: ${STAGE_LABEL[stage]||stage}`);
     saveOrders(); // ghi Database + đồng bộ Realtime ngay
   });
+}
+
+// ════════════════════════════════════════════════════════════
+// PHÂN CÔNG MÁY (Kế hoạch SX) + BẢNG ĐIỀU HÀNH SẢN XUẤT
+// ────────────────────────────────────────────────────────────
+// Nguồn dữ liệu gốc DUY NHẤT là o.machineAssign trong từng đơn hàng
+// (DB.orders) — Bảng Điều hành SX chỉ ĐỌC lại từ đây, không lưu máy riêng,
+// nên không bao giờ lệch nhau và không tạo dữ liệu trùng trên Firebase.
+// ════════════════════════════════════════════════════════════
+function orderMachineAssign(o){ return o.machineAssign || {}; }
+function machineById(id){ return MACHINES.find(m=>m.id===id); }
+function machinesForStage(stageKey){
+  const st = ASSIGN_STAGES.find(x=>x.key===stageKey);
+  return st ? MACHINES.filter(m=>m.group===st.group) : [];
+}
+
+// Đơn hàng khác (không phải excludeOrderId) có đang CHIẾM máy này ở đúng
+// công đoạn này không (chỉ tính đơn đang ở trạng thái "Đang sản xuất").
+function machineConflictOrder(machineId, stageKey, excludeOrderId){
+  if(!machineId) return null;
+  return DB.orders.find(o=>o.id!==excludeOrderId && o.status==='running' && orderMachineAssign(o)[stageKey]===machineId) || null;
+}
+
+// Trạng thái hiển thị của 1 máy — ưu tiên Sự cố/Bảo trì (từ tab Bảo trì máy,
+// dữ liệu đã có sẵn), sau đó tới đang chạy/chờ theo phân công từ đơn hàng.
+function machineRuntimeStatus(machineId){
+  const bt = (typeof machineStatus==='function') ? machineStatus(machineId) : 'ok';
+  if(bt==='hong')   return {code:'sc', label:'🔴 Sự cố', dot:'🔴'};
+  if(bt==='baotri') return {code:'bt', label:'🟣 Bảo trì', dot:'🟣'};
+  const runningOrder = DB.orders.find(o=>o.status==='running' && Object.values(orderMachineAssign(o)).includes(machineId));
+  if(runningOrder) return {code:'run', label:'🟢 Đang chạy', dot:'🟢', order:runningOrder};
+  const queuedOrder = DB.orders.find(o=>o.status==='pending' && Object.values(orderMachineAssign(o)).includes(machineId));
+  if(queuedOrder) return {code:'cho', label:'🟡 Chờ', dot:'🟡', order:queuedOrder};
+  return {code:'sang', label:'🔵 Sẵn sàng', dot:'🔵'};
+}
+
+// Gán/đổi máy cho 1 công đoạn của 1 đơn hàng — CHỈ cập nhật bản ghi đã có
+// theo id (giống mọi thao tác khác của Kế hoạch SX), không tạo đơn mới.
+function assignMachine(orderId, stageKey, machineId){
+  if(guardViewer()) return;
+  if(!isStaff()){ showToast('❌ Bạn không có quyền phân công máy', true); renderTab(currentTab); return; }
+  withPlanLock('assign_'+orderId+'_'+stageKey, ()=>{
+    const o = DB.orders.find(x=>x.id===orderId); if(!o) return;
+    machineId = machineId || '';
+    const old = orderMachineAssign(o)[stageKey] || '';
+    if(old===machineId) return;
+    if(machineId){
+      const conflict = machineConflictOrder(machineId, stageKey, orderId);
+      if(conflict){
+        showToast(`⚠️ Máy đang chạy đơn ${ddCode(conflict)} (${conflict.customer||''}) — hãy đổi máy khác hoặc đợi đơn đó xong`, true);
+        renderTab(currentTab);
+        refreshKhDetailIfOpen(orderId);
+        return;
+      }
+    }
+    if(!o.machineAssign) o.machineAssign = {};
+    if(machineId) o.machineAssign[stageKey] = machineId; else delete o.machineAssign[stageKey];
+    const m = machineById(machineId);
+    log('Phân công máy', `${o.customer||''} · ${ASSIGN_STAGE_LABEL[stageKey]||stageKey} → ${m?m.name:'(bỏ gán)'}`, orderId, {[stageKey]:old}, {[stageKey]:machineId});
+    renderTab(currentTab);
+    refreshKhDetailIfOpen(orderId);
+    showToast(m?`🏭 Đã gán ${m.name} cho công đoạn ${ASSIGN_STAGE_LABEL[stageKey]}`:'↺ Đã bỏ gán máy');
+    saveOrders(); // ghi Database + đồng bộ Realtime ngay — Bảng Điều hành SX tự cập nhật theo
+  });
+}
+
+// Chip gọn hiển thị máy đang gán cho công đoạn HIỆN TẠI của đơn (dùng ở thẻ
+// Kế hoạch SX, để không phải mở Panel chi tiết mới biết đơn đang chạy máy nào)
+function khMachineChip(o){
+  const s = o.status==='cutting'?'running':o.status;
+  if(s==='pending' && !Object.keys(orderMachineAssign(o)).length) return '';
+  const cur = orderMachineAssign(o)[o.stage];
+  if(o.stage && cur){
+    const m = machineById(cur);
+    if(m) return `<span class="kh-meta-item info">🏭 ${m.name}</span>`;
+  }
+  return '';
+}
+
+// Khối "Phân công máy" trong Panel chi tiết Kế hoạch SX — 1 dòng / công đoạn,
+// mỗi dòng có <select> chọn máy (chỉ Admin/Staff thao tác được) + chấm trạng
+// thái máy realtime. Đổi máy tại đây tự đồng bộ ngay sang Bảng Điều hành SX.
+function khMachineAssignHTML(o){
+  const canAssign = isStaff();
+  const rows = ASSIGN_STAGES.map(st=>{
+    const opts = machinesForStage(st.key);
+    const cur = orderMachineAssign(o)[st.key] || '';
+    const optionsHTML = ['<option value="">— Chưa gán —</option>']
+      .concat(opts.map(m=>{
+        const rs = machineRuntimeStatus(m.id);
+        const busyOther = rs.code==='run' && rs.order && rs.order.id!==o.id;
+        const warn = busyOther ? ` (đang chạy ${ddCode(rs.order)})` : '';
+        return `<option value="${m.id}" ${cur===m.id?'selected':''}>${m.name}${warn}</option>`;
+      })).join('');
+    const curMachine = machineById(cur);
+    const curStatus = curMachine ? machineRuntimeStatus(cur) : null;
+    return `<div class="kh-machine-row">
+      <div class="kh-machine-lbl">${st.icon} ${st.label}</div>
+      <select class="field-inp kh-machine-sel" ${canAssign?'':'disabled'} onchange="assignMachine('${o.id}','${st.key}',this.value)">${optionsHTML}</select>
+      ${curStatus?`<span class="kh-machine-dot" title="${curStatus.label}">${curStatus.dot}</span>`:''}
+    </div>`;
+  }).join('');
+  return `<div class="kh-machine-assign">${rows}</div>`;
 }
 
 // Khối lượng riêng đồng đỏ (Cu) — dùng để tính KG thanh cái dẹt
