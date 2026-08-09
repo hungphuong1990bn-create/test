@@ -3567,22 +3567,31 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dh-tv .dh-wf-item span{font-size:clamp(10px,.62vw,13px)}
 @media (max-width:640px){.dh-wf-strip{gap:10px;padding:8px 12px}.dh-wf-strip-items{gap:10px}.dh-wf-sep{display:none}}
 
-.dh-topbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(30,50,100,.65),rgba(10,20,50,.75));backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 20px;box-shadow:0 8px 28px rgba(0,0,10,.35)}
+/* ── Khối ④ ĐIỀU HÀNH SẢN XUẤT — nâng cấp: hàng 1 = brand + nút TV; hàng 2 =
+   2 thẻ cân đối "Đồng hồ · Lịch" và "Thời gian ca hiện tại" (gộp rõ luôn số
+   ca đang chạy vào cùng 1 khối, không còn rời rạc như trước). */
+.dh-topbar{display:flex;flex-direction:column;gap:14px;background:linear-gradient(135deg,rgba(30,50,100,.65),rgba(10,20,50,.75));backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px 20px;box-shadow:0 8px 28px rgba(0,0,10,.35)}
+.dh-topbar-row1{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .dh-brand{font-size:14px;font-weight:800;letter-spacing:.6px;color:#8fc0ff;display:flex;align-items:center;gap:8px;text-shadow:0 0 16px rgba(93,156,255,.5)}
-.dh-clock{display:flex;align-items:center;gap:16px}
-.dh-clock-time{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;background:linear-gradient(90deg,#fff,#bcd6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.dh-clock-date{font-size:12.5px;color:var(--dh-text2);text-transform:capitalize}
-.dh-runtime-inline{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:6px 16px;min-width:130px}
+.dh-topbar-row2{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap}
+.dh-clock-card,.dh-shift-card{flex:1 1 190px;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:11px 16px;display:flex;flex-direction:column;justify-content:center;gap:5px}
+.dh-clock-card{align-items:center;text-align:center}
+.dh-clock{display:flex;flex-direction:column;align-items:center;gap:3px}
+.dh-clock-time{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.6px;background:linear-gradient(90deg,#fff,#bcd6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dh-clock-date{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--dh-text2);font-weight:700;letter-spacing:.2px}
+.dh-clock-date .dh-clock-wd{color:#dfe9ff;font-weight:800}
+.dh-clock-date .dh-clock-sep{color:#5c76ad}
+.dh-shift-card{gap:7px}
+.dh-shift-card-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .dh-runtime-inline-label{font-size:10.5px;font-weight:800;letter-spacing:.4px;color:#bcd6ff;text-transform:uppercase}
-.dh-runtime-inline-time{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;color:#fde68a}
-.dh-tv .dh-runtime-inline-time{font-size:clamp(20px,1.3vw,32px)}
+.dh-shift-badge{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:3px 10px;font-size:12px;font-weight:800;color:#8fc0ff;white-space:nowrap}
+.dh-runtime-inline-time{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;color:#fde68a;text-align:center}
+.dh-tv .dh-runtime-inline-time{font-size:clamp(24px,1.6vw,40px)}
+.dh-tv .dh-clock-date{font-size:clamp(12px,.8vw,16px)}
 .dh-so-logo{width:24px;height:24px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3)}
-.dh-shift{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;white-space:nowrap}
 .dh-tv-btn{background:linear-gradient(135deg,#3b7bf0,#1b3ea8);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 18px rgba(59,123,240,.5)}
 .dh-tv-btn:active{transform:scale(.97)}
 
-.dh-alerts{display:flex;flex-direction:column;gap:6px}
-.dh-alert{background:linear-gradient(90deg,rgba(239,68,68,.22),rgba(239,68,68,.1));color:#ffd2d2;border:1px solid #ef444466;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;animation:dhAlertBlink 2s ease-in-out infinite}
 @keyframes dhAlertBlink{0%,100%{box-shadow:0 0 0 rgba(220,38,38,0)}50%{box-shadow:0 0 16px rgba(239,68,68,.5)}}
 
 .dh-group-title{font-size:13.5px;font-weight:800;color:#bcd6ff;letter-spacing:.6px;text-transform:uppercase;margin:2px 0 8px 4px;display:flex;align-items:center;gap:8px}
@@ -11485,40 +11494,35 @@ function dhHeaderHTML(){
         <div class="dh-so-rows">${wfRowsHTML}</div>
       </div>
       <div class="dh-topbar dh-hb dh-hb-dieuhanh">
-        <div class="dh-brand">🎛️ <span>ĐIỀU HÀNH SẢN XUẤT</span></div>
-        <div class="dh-clock">
-          <div class="dh-clock-time" id="dhClockTime">--:--:--</div>
-          <div class="dh-clock-date" id="dhClockDate">—</div>
+        <div class="dh-topbar-row1">
+          <div class="dh-brand">🎛️ <span>ĐIỀU HÀNH SẢN XUẤT</span></div>
+          <button class="dh-tv-btn" onclick="dhToggleTv()">${dhTvMode?'🡼 Thoát TV':'⛶ TV Mode · Tự vừa màn hình'}</button>
         </div>
-        <div class="dh-runtime-inline">
-          <div class="dh-runtime-inline-label">⏱️ Thời gian chạy</div>
-          <div class="dh-runtime-inline-time" id="dhRuntimeClock">${dhRuntimeElapsedStr()}</div>
+        <div class="dh-topbar-row2">
+          <div class="dh-clock-card">
+            <div class="dh-clock-time" id="dhClockTime">--:--:--</div>
+            <div class="dh-clock-date" id="dhClockDate">—</div>
+          </div>
+          <div class="dh-shift-card">
+            <div class="dh-shift-card-hd">
+              <span class="dh-runtime-inline-label">⏱️ Thời gian ca hiện tại</span>
+              <span class="dh-shift-badge" id="dhShift">${dhCurrentShift()}</span>
+            </div>
+            <div class="dh-runtime-inline-time" id="dhRuntimeClock">${dhRuntimeElapsedStr()}</div>
+          </div>
         </div>
-        <div class="dh-shift" id="dhShift">${dhCurrentShift()}</div>
-        <button class="dh-tv-btn" onclick="dhToggleTv()">${dhTvMode?'🡼 Thoát TV':'⛶ TV Mode · Tự vừa màn hình'}</button>
       </div>
     </div>
   `;
 }
 
 function renderDieuHanh(){
-  const activeOrders = DB.orders.filter(o=>o.status!=='done');
-  const overdueList = activeOrders.filter(khIsOverdue);
-  // "Máy dừng lâu": máy đang báo Sự cố (từ tab Bảo trì máy) — dữ liệu thật,
-  // không suy diễn thêm. "Thiếu nguyên liệu"/"QC chưa hoàn thành" cần dữ liệu
-  // riêng chưa có trong hệ thống nên chưa đưa vào đây (tránh cảnh báo giả).
-  const brokenMachines = MACHINES.filter(m=>machineRuntimeStatus(m.id).code==='sc');
   const groups = [...new Set(MACHINES.map(m=>m.group))];
 
   $('mc').innerHTML = `
     <div class="dh-wrap${dhTvMode?' dh-tv':''}" id="dhWrap">
       <div class="dh-fit-outer" id="dhFitOuter"><div class="dh-fit-inner" id="dhFitInner">
       ${dhHeaderHTML()}
-
-      ${(overdueList.length||brokenMachines.length) ? `<div class="dh-alerts">
-        ${overdueList.slice(0,6).map(o=>`<div class="dh-alert" onclick="khViewDetail('${o.id}')">🔴 Trễ tiến độ: <b>${ddCode(o)}</b> — ${o.customer||''}</div>`).join('')}
-        ${brokenMachines.map(m=>`<div class="dh-alert">🔴 ${m.name} đang sự cố</div>`).join('')}
-      </div>` : ''}
 
       ${groups.map(g=>`
         <div class="dh-group">
@@ -11615,10 +11619,9 @@ function dhTickClock(){
   if(!tEl && !dEl) return;
   const now = new Date();
   if(tEl) tEl.textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
-  if(dEl) dEl.textContent = `${vnWeekdayShort(now)}, ${vnDateDM(now)}`;
+  if(dEl) dEl.innerHTML = `<span class="dh-clock-wd">${VN_WEEKDAYS[now.getDay()]}</span><span class="dh-clock-sep">•</span><span>${vnDateDMY(now)}</span>`;
   const shiftEl = document.getElementById('dhShift'); if(shiftEl) shiftEl.textContent = dhCurrentShift();
   const rtEl = document.getElementById('dhRuntimeClock'); if(rtEl) rtEl.textContent = dhRuntimeElapsedStr();
-  const rtSubEl = document.getElementById('dhRuntimeSub'); if(rtSubEl) rtSubEl.textContent = dhCurrentShift();
 }
 
 // ── 1 dòng bảng Kế hoạch sản xuất (ERP/MES table style, đồng bộ Tab Đơn hàng) ──
