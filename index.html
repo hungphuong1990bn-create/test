@@ -3488,43 +3488,54 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dh-fit-outer{width:100%}
 .dh-fit-inner{display:flex;flex-direction:column;gap:14px}
 /* ============================================================================
-   TV MODE — VIEWPORT CỐ ĐỊNH 100dvh × 100vw, KHÔNG PHỤ THUỘC DOM CHA
+   TV MODE — RENDER NATIVE, KHÔNG SCALE TOÀN BỘ DASHBOARD
    ------------------------------------------------------------------------------
-   BUG GỐC (đã tìm ra và sửa): selector cũ ".dh-tv .dh-wrap{...height:100dvh}"
-   là combinator CON (descendant) — nhưng trong HTML, "dh-tv" và "dh-wrap" là
-   2 class nằm trên CÙNG 1 thẻ <div class="dh-wrap dh-tv">, không phải quan hệ
-   cha/con. Vì vậy rule đó KHÔNG BAO GIỜ được áp dụng: .dh-wrap ở TV Mode chưa
-   từng thực sự bị khoá height:100dvh, nó cao tự do theo nội dung, tràn ra khỏi
-   khung nhìn và bị .main-wrap{overflow:hidden} cắt mất phần cuối (Máy đánh
-   bóng, Máy cắt...) — đúng lỗi trong ảnh test, bất kể JS auto-fit scale gì.
-   SỬA TRIỆT ĐỂ:
-   1) Selector đúng phải là compound ".dh-wrap.dh-tv" (cùng 1 phần tử).
-   2) Không dựa vào chiều cao "còn lại" của app-body/main-wrap/main-content
-      (có thể lệch do padding/margin/animation của tổ tiên) — neo cứng bằng
-      position:fixed;inset:0 để LUÔN đúng 100vw × 100dvh của MÀN HÌNH THẬT,
-      độc lập hoàn toàn với cấu trúc DOM bên ngoài. Nhờ vậy outer.clientWidth/
-      clientHeight mà JS đo được luôn chính xác tuyệt đối trên mọi màn hình
-      (1366×768, 1920×1080, 3840×2160, mọi TV 27"–75"...).
+   Selector đúng phải là COMPOUND ".dh-wrap.dh-tv" (dh-tv và dh-wrap nằm trên
+   CÙNG 1 phần tử <div class="dh-wrap dh-tv">) — không dùng combinator con kiểu
+   ".dh-tv .dh-wrap" vì sẽ không bao giờ khớp.
+
+   Toàn bộ cơ chế transform:scale()/zoom() thu nhỏ cả bảng đã bị LOẠI BỎ HOÀN
+   TOÀN (xem dhApplyAutoFit trong JS — nay chỉ dọn inline style, không còn
+   tính/​gán scale nào nữa). #dhFitInner luôn render ở kích thước tự nhiên
+   (native): 1 pixel CSS = 1 pixel CSS thật, không bị nhân tỉ lệ.
+
+   Việc "vừa màn hình" ở mọi độ phân giải (1920×1080 / 2560×1440 / 3840×2160)
+   do CSS đảm nhiệm 100% bằng 3 lớp:
+   1) Container neo cứng position:fixed;inset:0 → luôn đúng 100vw × 100dvh
+      của MÀN HÌNH THẬT, độc lập hoàn toàn với DOM cha (app-body/main-wrap...).
+   2) #dhFitInner rộng hết viewport (không còn giới hạn theo px như bản cũ)
+      để Grid tự thêm cột theo bề rộng thật — màn càng lớn càng nhiều cột/thẻ
+      trên 1 hàng, đúng tinh thần "tận dụng không gian 4K" thay vì phóng to
+      1 layout 1080p.
+   3) clamp()/vw/vh lo phần chữ + khoảng cách theo từng mốc độ phân giải
+      (xem các rule .dh-tv ... clamp(...) và các @media theo min-width bên dưới).
+
+   Nếu ở 1 màn hình cực kỳ hẹp/thấp mà nội dung vẫn nhiều hơn không gian thật
+   (VD: rất nhiều máy + rất nhiều nhóm cùng lúc), #dhFitOuter cho phép cuộn dọc
+   NHƯNG ẩn hẳn thanh cuộn để KHÔNG BAO GIỜ có máy nào bị cắt/mất — đây là lưới
+   an toàn cuối cùng, không phải cơ chế chính (cơ chế chính là Grid co giãn tự
+   nhiên nêu trên).
    ============================================================================ */
 .dh-wrap.dh-tv{
   position:fixed;inset:0;z-index:9990;
   width:100vw;width:100dvw;height:100vh;height:100dvh;
-  margin:0;border-radius:0;
+  margin:0;border-radius:0;box-sizing:border-box;
+  padding:clamp(10px,1.1vh,26px);gap:clamp(8px,1vh,20px);
   display:flex;flex-direction:column;overflow:hidden;
 }
-.dh-tv .dh-fit-outer{flex:1 1 auto;min-height:0;width:100%;overflow:hidden;display:flex;justify-content:center;align-items:flex-start}
-/* Khung nội dung co giãn theo mọi kích thước màn hình TV hiện nay: HD/FHD nhỏ
-   dùng gần hết chiều rộng; 2K/4K/màn hình lớn được giới hạn để chữ không quá
-   khổ; JS (dhApplyAutoFit) chỉ còn việc scale tinh chỉnh vừa khít, không phải
-   gánh hết việc co giãn như trước. */
-.dh-tv .dh-fit-inner{width:min(2400px,96vw)}
-@media (min-width:2400px){.dh-tv .dh-fit-inner{width:min(2800px,88vw)}}
-@media (min-width:3200px){.dh-tv .dh-fit-inner{width:min(3200px,82vw)}}
-/* Màn hình dọc (TV/màn hình xoay portrait) — ưu tiên chiều rộng tối đa */
-@media (max-aspect-ratio:4/5){.dh-tv .dh-fit-inner{width:98vw}}
-/* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn để tránh
-   thẻ máy bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối */
-@media (min-aspect-ratio:2/1){.dh-tv .dh-fit-inner{width:min(2200px,74vw)}}
+.dh-tv .dh-fit-outer{
+  flex:1 1 auto;min-height:0;width:100%;box-sizing:border-box;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:none;-ms-overflow-style:none; /* ẩn thanh cuộn (lưới an toàn) */
+}
+.dh-tv .dh-fit-outer::-webkit-scrollbar{width:0;height:0;display:none}
+/* #dhFitInner render NATIVE, rộng hết khung thật (không còn cap theo px như
+   bản scale cũ) để lưới thẻ máy tự thêm cột khi màn hình rộng hơn. */
+.dh-tv .dh-fit-inner{width:100%;gap:clamp(10px,1.1vh,20px)}
+/* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn nhẹ để thẻ
+   máy không bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối; đây là
+   giới hạn CHIỀU RỘNG BỐ CỤC (layout), không phải phép scale nội dung. */
+@media (min-aspect-ratio:2/1){.dh-tv .dh-fit-inner{width:min(3200px,92vw);margin:0 auto}}
 
 /* ── TV Mode THẬT SỰ toàn màn hình: ẩn hẳn sidebar/topbar/bottom-nav/FAB/
    banner của app (không chỉ riêng khung dh-wrap) và bỏ mọi padding/margin
@@ -3649,6 +3660,9 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
    giãn to bất thường; màn hình dọc/hẹp: thu nhỏ ngưỡng để vẫn đủ ≥2 cột */
 @media (min-width:1600px){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
 @media (min-width:2200px){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}}
+/* 4K (≥3200px thật, ví dụ TV 3840×2160): thẻ máy to hơn hẳn, khoảng cách rộng
+   hơn — tận dụng không gian 4K thay vì phóng to layout 1080p. */
+@media (min-width:3200px){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px}}
 @media (min-aspect-ratio:2/1){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}}
 @media (max-aspect-ratio:4/5){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.dh-status-overview{grid-template-columns:1fr}}
 
@@ -3735,14 +3749,67 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh-next-cust{font-size:clamp(11px,0.72vw,15px)}
 .dh-tv .dh-next-hd{font-size:clamp(9px,0.62vw,12px)}
 
-/* TV Mode: chữ/thẻ to hơn hẳn, co giãn mượt theo bề rộng màn hình (clamp+vw)
-   thay vì 1 mốc cố định — nhờ vậy HD nhỏ, FHD, 2K, 4K đều hiển thị cân đối,
-   kết hợp thêm auto-fit scale (JS) để luôn vừa khít, không cần cuộn. */
-.dh-tv .dh-clock-time{font-size:clamp(28px,1.9vw,46px)}
-.dh-tv .dh-card-cust{font-size:clamp(15px,1.05vw,22px)}
-.dh-tv .dh-card-spec{font-size:clamp(13px,0.9vw,18px)}
-.dh-tv .dh-card-name{font-size:clamp(12.5px,0.78vw,16.5px)}
-.dh-tv .dh-group-title{font-size:clamp(13px,0.8vw,17px)}
+/* TV Mode: chữ/thẻ to hơn hẳn, co giãn mượt theo bề rộng màn hình THẬT bằng
+   clamp()+vw (KHÔNG có transform:scale nào can thiệp) — HD nhỏ, FHD 1080p,
+   2K, 4K đều hiển thị cân đối và luôn RÕ NÉT (native), không bị mờ/nhòe. */
+.dh-tv .dh-clock-time{font-size:clamp(28px,1.9vw,52px)}
+.dh-tv .dh-card-cust{font-size:clamp(15px,1.05vw,26px)}
+.dh-tv .dh-card-spec{font-size:clamp(13px,0.9vw,21px)}
+.dh-tv .dh-card-name{font-size:clamp(12.5px,0.78vw,19px)}
+.dh-tv .dh-group-title{font-size:clamp(13px,0.8vw,20px)}
+.dh-tv .dh-card{padding:clamp(14px,1.1vw,24px);gap:clamp(7px,.6vw,12px);border-radius:clamp(18px,1.1vw,26px)}
+.dh-tv .dh-card-ic{font-size:clamp(18px,1.1vw,28px)}
+.dh-tv .dh-status-chip{font-size:clamp(10px,.6vw,14px);padding:clamp(3px,.25vw,6px) clamp(9px,.6vw,14px) clamp(3px,.25vw,6px) clamp(7px,.5vw,11px)}
+.dh-tv .dh-ring{width:clamp(58px,3.4vw,86px);height:clamp(58px,3.4vw,86px);font-size:clamp(12px,.75vw,18px)}
+.dh-tv .dh-prog-wrap{height:clamp(8px,.5vw,12px)}
+.dh-tv .dh-card-stage{font-size:clamp(12.5px,.75vw,17px);padding:clamp(5px,.35vw,8px) clamp(9px,.6vw,13px)}
+.dh-tv .dh-card-status{font-size:clamp(11.5px,.68vw,15px)}
+.dh-tv .dh-card-qty span{font-size:clamp(11px,.62vw,14px)}
+/* Mốc 2K (2560×1440 trở lên): tăng thêm 1 nấc so với 1080p */
+@media (min-width:2400px){
+  .dh-tv .dh-clock-time{font-size:clamp(40px,1.9vw,56px)}
+  .dh-tv .dh-card-cust{font-size:clamp(22px,1.15vw,28px)}
+  .dh-tv .dh-card-spec{font-size:clamp(18px,1vw,23px)}
+  .dh-tv .dh-card-name{font-size:clamp(16px,.9vw,20px)}
+  .dh-tv .dh-group-title{font-size:clamp(17px,.9vw,21px)}
+  .dh-tv .dh-company-name{font-size:clamp(20px,1.2vw,27px)}
+  .dh-tv .dh-so-row{font-size:clamp(16px,.9vw,19px)}
+  .dh-tv .dh-so-row b{font-size:clamp(19px,1.05vw,24px)}
+  .dh-tv .dh-wf-item b{font-size:clamp(22px,1.1vw,27px)}
+}
+/* Mốc 4K THẬT (3840×2160 trở lên): tận dụng tối đa không gian — thẻ, chữ, KPI,
+   khoảng cách đều lớn hơn hẳn, KHÔNG phải phóng to layout 1080p mà là bố cục
+   native ở kích thước lớn hơn với nhiều cột/thẻ hơn trên mỗi hàng. */
+@media (min-width:3200px){
+  .dh-tv .dh-clock-time{font-size:clamp(52px,2.1vw,72px)}
+  .dh-tv .dh-clock-date{font-size:clamp(18px,.95vw,24px)}
+  .dh-tv .dh-runtime-inline-time{font-size:clamp(44px,2.2vw,60px)}
+  .dh-tv .dh-card-cust{font-size:clamp(28px,1.35vw,36px)}
+  .dh-tv .dh-card-spec{font-size:clamp(23px,1.15vw,29px)}
+  .dh-tv .dh-card-name{font-size:clamp(20px,1.05vw,25px)}
+  .dh-tv .dh-group-title{font-size:clamp(21px,1.05vw,27px)}
+  .dh-tv .dh-card{padding:clamp(22px,1.3vw,30px);border-radius:28px}
+  .dh-tv .dh-card-ic{font-size:clamp(26px,1.3vw,32px)}
+  .dh-tv .dh-status-chip{font-size:clamp(14px,.7vw,17px)}
+  .dh-tv .dh-ring{width:clamp(84px,3.6vw,100px);height:clamp(84px,3.6vw,100px);font-size:clamp(17px,.85vw,21px)}
+  .dh-tv .dh-prog-wrap{height:clamp(11px,.55vw,14px)}
+  .dh-tv .dh-card-stage{font-size:clamp(17px,.85vw,21px)}
+  .dh-tv .dh-card-status{font-size:clamp(15px,.75vw,18px)}
+  .dh-tv .dh-card-qty span{font-size:clamp(14px,.68vw,17px)}
+  .dh-tv .dh-next-cust{font-size:clamp(18px,.95vw,23px)}
+  .dh-tv .dh-next-hd{font-size:clamp(14px,.75vw,17px)}
+  .dh-tv .dh-company-name{font-size:clamp(26px,1.35vw,34px)}
+  .dh-tv .dh-company-sub{font-size:clamp(16px,.85vw,20px)}
+  .dh-tv .dh-company-logo{width:clamp(64px,3.4vw,84px);height:clamp(64px,3.4vw,84px)}
+  .dh-tv .dh-so-row{font-size:clamp(19px,1vw,24px)}
+  .dh-tv .dh-so-row b{font-size:clamp(23px,1.2vw,29px)}
+  .dh-tv .dh-so-logo{width:44px;height:44px}
+  .dh-tv .dh-wf-strip-title{font-size:clamp(16px,.85vw,20px)}
+  .dh-tv .dh-wf-item b{font-size:clamp(28px,1.35vw,36px)}
+  .dh-tv .dh-wf-item span{font-size:clamp(15px,.75vw,18px)}
+  .dh-wrap.dh-tv{padding:clamp(20px,1.4vh,34px);gap:clamp(16px,1.3vh,28px)}
+  .dh-tv .dh-fit-inner{gap:clamp(18px,1.3vh,28px)}
+}
 .kh-detail-grid>div{display:flex;flex-direction:column;gap:1px;min-width:0}
 .kh-detail-grid>div b{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.2px}
 .kh-detail-grid>div span{font-size:13px;color:var(--text);font-weight:600;overflow-wrap:break-word}
@@ -11664,12 +11731,10 @@ function renderDieuHanh(){
   `;
   dhTickClock();
   dhBindAutoFit();
-  // Đo lại nhiều lần sau khi render: 1 khung hình đầu có thể đo SAI vì
-  // font-family/logo công ty chưa tải xong (kích thước chữ/ảnh thay đổi
-  // sau đó làm scrollHeight lệch so với lúc tính scale) → dẫn tới scale
-  // hụt và nội dung cuối trang (Máy cắt...) vẫn có thể bị tràn/cắt dù
-  // logic scale đã đúng. Đo lại ở nhiều mốc thời gian để luôn khớp với
-  // kích thước nội dung THẬT SỰ sau khi mọi thứ đã tải/render xong.
+  // Gọi lại nhiều lần sau khi render (font-family/logo công ty có thể tải
+  // xong muộn hơn khung hình đầu) để dọn sạch mọi inline style transform/width
+  // còn sót — layout thật sự do CSS (Grid + clamp) tự lo, không còn phép tính
+  // scale nào ở đây nữa.
   requestAnimationFrame(dhApplyAutoFit);
   setTimeout(dhApplyAutoFit, 60);
   setTimeout(dhApplyAutoFit, 250);
@@ -11697,36 +11762,26 @@ function dhToggleTv(){
   dhScheduleAutoFit();
 }
 
-// ── Tự động co giãn (scale) toàn bộ bảng để VỪA KHÍT MỌI kích thước màn
-// hình TV hiện nay (HD/FHD nhỏ, FHD 1080p, 2K, 4K, màn hình siêu rộng,
-// màn hình dọc...), không cần cuộn — dù có bao nhiêu máy/đơn hàng đi nữa.
-// Bước 1: CSS (clamp+vw, media theo aspect-ratio) đã tự lo phần lớn việc co
-// giãn hợp lý theo kích thước màn hình thật. Bước 2: JS ở đây chỉ still làm
-// nốt phần "vừa khít tuyệt đối" — bù trừ chiều cao (nhiều/ít máy) và các sai
-// số nhỏ còn lại, tránh vừa phải scale quá tay vừa tránh vỡ layout.
+// ── TV Mode RENDER NATIVE — KHÔNG scale toàn bộ bảng nữa. ─────────────────
+// Trước đây hàm này dùng transform:scale(...) để ép nội dung vừa khung hình,
+// khiến chữ/thẻ bị mờ, nhòe và không tận dụng được không gian màn hình lớn
+// (2K/4K). Toàn bộ việc "vừa màn hình" bây giờ do CSS đảm nhiệm 100%: Grid
+// (auto-fit/minmax) tự chia cột theo bề rộng thật, clamp()/vw/vh lo font và
+// khoảng cách theo từng độ phân giải — không có phép nhân tỉ lệ (scale) nào
+// tác động lên layout. Hàm/tên hàm được GIỮ NGUYÊN (và vẫn được gọi ở đúng
+// những chỗ cũ: dhToggleTv, resize, orientationchange, fullscreenchange,
+// visibilitychange, ResizeObserver...) để không đụng tới logic điều khiển
+// hiện có — nó chỉ còn nhiệm vụ dọn sạch mọi transform/kích thước inline còn
+// sót lại từ phiên bản cũ (nếu có) để đảm bảo #dhFitInner luôn render đúng
+// kích thước tự nhiên (native) của nó.
 function dhApplyAutoFit(){
-  if(!dhTvMode) return;
-  const outer = document.getElementById('dhFitOuter');
   const inner = document.getElementById('dhFitInner');
-  if(!outer || !inner) return;
-  inner.style.transform = 'none';
-  inner.style.width = outer.clientWidth+'px';
-  const naturalW = inner.scrollWidth;
-  const naturalH = inner.scrollHeight;
-  const availW = outer.clientWidth;
-  const availH = outer.clientHeight;
-  if(!naturalW || !naturalH || !availW || !availH) return;
-  // QUAN TRỌNG: TUYỆT ĐỐI không đặt "sàn" (minimum) cho scale — trước đây có
-  // Math.max(scale,0.4) khiến khi có nhiều máy (nội dung cần scale < 0.4 mới
-  // vừa màn hình) thì scale vẫn bị ép về 0.4, làm nội dung TRÀN khỏi khung
-  // nhìn và bị cắt (đúng lỗi Máy đánh bóng/Máy cắt bị mất). Yêu cầu bắt buộc
-  // là KHÔNG BAO GIỜ được cắt/ẩn máy nào, nên scale phải luôn đủ nhỏ để toàn
-  // bộ nội dung vừa khít — chữ có thể nhỏ hơn nhưng không được cắt nội dung.
-  // Trừ hao 0.985 để chừa sai số bo tròn pixel/scrollbar, tránh vừa đủ 100%
-  // vẫn bị tràn 1-2px sinh ra thanh cuộn không mong muốn.
-  const scale = Math.min(availW/naturalW, availH/naturalH, 1.35) * 0.985;
-  inner.style.transformOrigin = 'top center';
-  inner.style.transform = `scale(${scale})`;
+  if(!inner) return;
+  // Dọn sạch mọi inline style scale/width cũ (có thể còn sót từ lần render
+  // trước hoặc từ bản build cũ hơn) — không đặt lại bất kỳ transform nào.
+  inner.style.transform = '';
+  inner.style.transformOrigin = '';
+  inner.style.width = '';
 }
 
 // Gộp nhiều lần gọi liên tiếp (resize kéo tay, xoay màn hình, đổi cửa sổ)
