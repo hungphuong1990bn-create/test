@@ -3487,8 +3487,21 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .dh-fit-outer{width:100%}
 .dh-fit-inner{display:flex;flex-direction:column;gap:14px}
-.dh-tv .dh-wrap{border-radius:0}
-.dh-tv .dh-fit-outer{height:100vh;height:100dvh;overflow:hidden;display:flex;justify-content:center;align-items:flex-start}
+/* QUAN TRỌNG: trước đây .dh-wrap có padding+gap riêng, còn .dh-fit-outer lại
+   tự đặt height:100vh — nghĩa là tổng chiều cao thực tế = 100vh (fit-outer)
+   + padding trên/dưới của .dh-wrap, LỚN HƠN khung nhìn 100vh, nên phần cuối
+   (Máy cắt) luôn bị .main-wrap{overflow:hidden} cắt mất, bất kể JS auto-fit
+   scale thế nào (vì lúc đo, outer.clientHeight vẫn đúng 100vh chứ không phải
+   phần "còn lại sau padding", nên scale tính sai). Sửa triệt để bằng cách:
+   - .dh-wrap mới là khung bị khoá cứng đúng 100dvh (100% khung nhìn, không
+     hơn không kém) và tự dùng flex để CHIA chiều cao cho chính nó, không cần
+     cộng dồn thêm ở phần tử con.
+   - .dh-fit-outer không tự đặt height cố định nữa mà flex:1 + min-height:0
+     để LUÔN NHẬN ĐÚNG phần chiều cao còn lại (đã trừ hết padding/gap của
+     .dh-wrap) — nhờ vậy outer.clientHeight mà JS đo được mới chính xác 100%,
+     và scale luôn vừa khít, không bao giờ tràn/bị cắt dù màn hình nào. */
+.dh-tv .dh-wrap{border-radius:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.dh-tv .dh-fit-outer{flex:1 1 auto;min-height:0;width:100%;overflow:hidden;display:flex;justify-content:center;align-items:flex-start}
 /* Khung nội dung co giãn theo mọi kích thước màn hình TV hiện nay: HD/FHD nhỏ
    dùng gần hết chiều rộng; 2K/4K/màn hình lớn được giới hạn để chữ không quá
    khổ; JS (dhApplyAutoFit) chỉ còn việc scale tinh chỉnh vừa khít, không phải
