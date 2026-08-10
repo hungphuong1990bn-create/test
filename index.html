@@ -3520,7 +3520,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   position:fixed;inset:0;z-index:9990;
   width:100vw;width:100dvw;height:100vh;height:100dvh;
   margin:0;border-radius:0;box-sizing:border-box;
-  padding:clamp(10px,1.1vh,26px);gap:clamp(8px,1vh,20px);
+  padding:calc(10px * var(--dhs));gap:calc(8px * var(--dhs));
   display:flex;flex-direction:column;overflow:hidden;
 }
 .dh-tv .dh-fit-outer{
@@ -3531,7 +3531,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dh-tv .dh-fit-outer::-webkit-scrollbar{width:0;height:0;display:none}
 /* #dhFitInner render NATIVE, rộng hết khung thật (không còn cap theo px như
    bản scale cũ) để lưới thẻ máy tự thêm cột khi màn hình rộng hơn. */
-.dh-tv .dh-fit-inner{width:100%;gap:clamp(10px,1.1vh,20px)}
+.dh-tv .dh-fit-inner{width:100%;gap:calc(10px * var(--dhs))}
 /* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn nhẹ để thẻ
    máy không bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối; đây là
    giới hạn CHIỀU RỘNG BỐ CỤC (layout), không phải phép scale nội dung. */
@@ -3567,10 +3567,6 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-company-info{display:flex;flex-direction:column;gap:2px;min-width:0}
 .dh-company-name{font-size:15.5px;font-weight:800;letter-spacing:.4px;color:#fff;text-transform:uppercase;line-height:1.25;text-shadow:0 0 18px rgba(93,156,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dh-company-sub{font-size:11.5px;font-weight:700;color:#a9c4f5;letter-spacing:.4px;text-transform:uppercase}
-.dh-tv .dh-company-bar{padding:clamp(10px,.9vw,18px) clamp(16px,1.4vw,28px)}
-.dh-tv .dh-company-logo{width:clamp(46px,3vw,68px);height:clamp(46px,3vw,68px)}
-.dh-tv .dh-company-name{font-size:clamp(16px,1.15vw,24px)}
-.dh-tv .dh-company-sub{font-size:clamp(11px,.7vw,15px)}
 @media (max-width:560px){.dh-company-bar{padding:8px 12px;gap:10px}.dh-company-logo{width:36px;height:36px}.dh-company-name{font-size:12.5px;white-space:normal}.dh-company-sub{font-size:10px}}
 .dh-so-col{background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:14px 18px;backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,10,.25)}
 .dh-so-title{font-size:12px;font-weight:800;letter-spacing:.7px;color:#bcd6ff;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:6px}
@@ -3585,9 +3581,6 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-so-row.so-red{color:#ff5252}
 .dh-so-row.so-blue{color:#4d9bff}
 .dh-so-row.so-white{color:#cbd5e1}
-.dh-tv .dh-so-logo{width:34px;height:34px}
-.dh-tv .dh-so-row{font-size:clamp(13px,0.8vw,17px)}
-.dh-tv .dh-so-row b{font-size:clamp(16px,1vw,22px)}
 .dh-so-row.so-cyan{color:#22d3ee}
 /* ── 4 KHỐI RIÊNG BIỆT cùng 1 hàng: NHÀ MÁY │ ĐƠN HÀNG │ NHÂN LỰC HÔM NAY │
    ĐIỀU HÀNH SẢN XUẤT (lớn nhất). 3 khối đầu chia đều, khối cuối rộng hơn hẳn. */
@@ -3620,10 +3613,6 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-wf-item.wf-ca2 b{color:#fbbf24}
 .dh-wf-item.wf-tangca b{color:#fb923c}
 .dh-wf-sep{width:1px;height:16px;background:rgba(255,255,255,.16);flex:0 0 auto}
-.dh-tv .dh-wf-strip{padding:clamp(9px,.8vw,16px) clamp(16px,1.4vw,26px)}
-.dh-tv .dh-wf-strip-title{font-size:clamp(11px,.7vw,15px)}
-.dh-tv .dh-wf-item b{font-size:clamp(17px,1.05vw,24px)}
-.dh-tv .dh-wf-item span{font-size:clamp(10px,.62vw,13px)}
 @media (max-width:640px){.dh-wf-strip{gap:10px;padding:8px 12px}.dh-wf-strip-items{gap:10px}.dh-wf-sep{display:none}}
 
 /* ── Khối ④ ĐIỀU HÀNH SẢN XUẤT — nâng cấp: hàng 1 = brand + nút TV; hàng 2 =
@@ -3645,8 +3634,6 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-runtime-inline-label{font-size:10.5px;font-weight:800;letter-spacing:.4px;color:#bcd6ff;text-transform:uppercase}
 .dh-shift-badge{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:3px 10px;font-size:12px;font-weight:800;color:#8fc0ff;white-space:nowrap}
 .dh-runtime-inline-time{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;color:#fde68a;text-align:center}
-.dh-tv .dh-runtime-inline-time{font-size:clamp(24px,1.6vw,40px)}
-.dh-tv .dh-clock-date{font-size:clamp(12px,.8vw,16px)}
 .dh-so-logo{width:24px;height:24px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .dh-tv-btn{background:linear-gradient(135deg,#3b7bf0,#1b3ea8);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 18px rgba(59,123,240,.5)}
 .dh-tv-btn:active{transform:scale(.97)}
@@ -3746,70 +3733,87 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-next-spec{font-size:10px;color:var(--dh-text2);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dh-next-pri{flex:0 0 auto;font-size:9px;font-weight:800;color:#fde68a;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:2px 6px;white-space:nowrap}
 .dh-next-more{font-size:10px;font-weight:700;color:var(--dh-text2);text-align:center;padding-top:1px;opacity:.85}
-.dh-tv .dh-next-cust{font-size:clamp(11px,0.72vw,15px)}
-.dh-tv .dh-next-hd{font-size:clamp(9px,0.62vw,12px)}
+/* ============================================================================
+   TV MODE — HỆ THỐNG CO GIÃN "--dhs" (fit-scale) DUY NHẤT
+   ------------------------------------------------------------------------------
+   Đây là cơ chế THẬT SỰ khác transform:scale()/zoom(): --dhs là 1 SỐ (không
+   đơn vị) được nhân vào TỪNG font-size/padding/gap bằng calc(px * var(--dhs)).
+   Khi JS đổi --dhs, trình duyệt tính lại kích thước chữ/khoảng cách THẬT rồi
+   render lại (reflow) — chữ luôn sắc nét ở đúng kích thước đó, không phải
+   "phóng to/thu nhỏ hình ảnh" của layout cũ như transform:scale().
+   JS (dhApplyAutoFit) đo chiều cao nội dung thật (#dhFitInner.scrollHeight)
+   so với chiều cao khung thật (#dhFitOuter.clientHeight) và tự dò --dhs tới
+   khi VỪA KHÍT — không cần cuộn ở 1920×1080, và tận dụng hết không gian thừa
+   ở 2560×1440 / 3840×2160 bằng cách tăng --dhs lên thêm.
+   --dhs có 1 mốc khởi điểm hợp lý theo độ rộng màn hình thật (media query
+   dưới đây) để JS không phải dò từ quá xa, nhưng con số CHÍNH XÁC CUỐI CÙNG
+   luôn do JS đo & quyết định theo đúng nội dung đang có (bao nhiêu máy, bao
+   nhiêu đơn chạy tiếp...) — không đoán mò theo vw/vh như trước.
+   ============================================================================ */
+.dh-wrap.dh-tv{--dhs:1}
+@media (min-width:2400px){.dh-wrap.dh-tv{--dhs:1.25}}
+@media (min-width:3200px){.dh-wrap.dh-tv{--dhs:1.55}}
 
-/* TV Mode: chữ/thẻ to hơn hẳn, co giãn mượt theo bề rộng màn hình THẬT bằng
-   clamp()+vw (KHÔNG có transform:scale nào can thiệp) — HD nhỏ, FHD 1080p,
-   2K, 4K đều hiển thị cân đối và luôn RÕ NÉT (native), không bị mờ/nhòe. */
-.dh-tv .dh-clock-time{font-size:clamp(28px,1.9vw,52px)}
-.dh-tv .dh-card-cust{font-size:clamp(15px,1.05vw,26px)}
-.dh-tv .dh-card-spec{font-size:clamp(13px,0.9vw,21px)}
-.dh-tv .dh-card-name{font-size:clamp(12.5px,0.78vw,19px)}
-.dh-tv .dh-group-title{font-size:clamp(13px,0.8vw,20px)}
-.dh-tv .dh-card{padding:clamp(14px,1.1vw,24px);gap:clamp(7px,.6vw,12px);border-radius:clamp(18px,1.1vw,26px)}
-.dh-tv .dh-card-ic{font-size:clamp(18px,1.1vw,28px)}
-.dh-tv .dh-status-chip{font-size:clamp(10px,.6vw,14px);padding:clamp(3px,.25vw,6px) clamp(9px,.6vw,14px) clamp(3px,.25vw,6px) clamp(7px,.5vw,11px)}
-.dh-tv .dh-ring{width:clamp(58px,3.4vw,86px);height:clamp(58px,3.4vw,86px);font-size:clamp(12px,.75vw,18px)}
-.dh-tv .dh-prog-wrap{height:clamp(8px,.5vw,12px)}
-.dh-tv .dh-card-stage{font-size:clamp(12.5px,.75vw,17px);padding:clamp(5px,.35vw,8px) clamp(9px,.6vw,13px)}
-.dh-tv .dh-card-status{font-size:clamp(11.5px,.68vw,15px)}
-.dh-tv .dh-card-qty span{font-size:clamp(11px,.62vw,14px)}
-/* Mốc 2K (2560×1440 trở lên): tăng thêm 1 nấc so với 1080p */
-@media (min-width:2400px){
-  .dh-tv .dh-clock-time{font-size:clamp(40px,1.9vw,56px)}
-  .dh-tv .dh-card-cust{font-size:clamp(22px,1.15vw,28px)}
-  .dh-tv .dh-card-spec{font-size:clamp(18px,1vw,23px)}
-  .dh-tv .dh-card-name{font-size:clamp(16px,.9vw,20px)}
-  .dh-tv .dh-group-title{font-size:clamp(17px,.9vw,21px)}
-  .dh-tv .dh-company-name{font-size:clamp(20px,1.2vw,27px)}
-  .dh-tv .dh-so-row{font-size:clamp(16px,.9vw,19px)}
-  .dh-tv .dh-so-row b{font-size:clamp(19px,1.05vw,24px)}
-  .dh-tv .dh-wf-item b{font-size:clamp(22px,1.1vw,27px)}
-}
-/* Mốc 4K THẬT (3840×2160 trở lên): tận dụng tối đa không gian — thẻ, chữ, KPI,
-   khoảng cách đều lớn hơn hẳn, KHÔNG phải phóng to layout 1080p mà là bố cục
-   native ở kích thước lớn hơn với nhiều cột/thẻ hơn trên mỗi hàng. */
-@media (min-width:3200px){
-  .dh-tv .dh-clock-time{font-size:clamp(52px,2.1vw,72px)}
-  .dh-tv .dh-clock-date{font-size:clamp(18px,.95vw,24px)}
-  .dh-tv .dh-runtime-inline-time{font-size:clamp(44px,2.2vw,60px)}
-  .dh-tv .dh-card-cust{font-size:clamp(28px,1.35vw,36px)}
-  .dh-tv .dh-card-spec{font-size:clamp(23px,1.15vw,29px)}
-  .dh-tv .dh-card-name{font-size:clamp(20px,1.05vw,25px)}
-  .dh-tv .dh-group-title{font-size:clamp(21px,1.05vw,27px)}
-  .dh-tv .dh-card{padding:clamp(22px,1.3vw,30px);border-radius:28px}
-  .dh-tv .dh-card-ic{font-size:clamp(26px,1.3vw,32px)}
-  .dh-tv .dh-status-chip{font-size:clamp(14px,.7vw,17px)}
-  .dh-tv .dh-ring{width:clamp(84px,3.6vw,100px);height:clamp(84px,3.6vw,100px);font-size:clamp(17px,.85vw,21px)}
-  .dh-tv .dh-prog-wrap{height:clamp(11px,.55vw,14px)}
-  .dh-tv .dh-card-stage{font-size:clamp(17px,.85vw,21px)}
-  .dh-tv .dh-card-status{font-size:clamp(15px,.75vw,18px)}
-  .dh-tv .dh-card-qty span{font-size:clamp(14px,.68vw,17px)}
-  .dh-tv .dh-next-cust{font-size:clamp(18px,.95vw,23px)}
-  .dh-tv .dh-next-hd{font-size:clamp(14px,.75vw,17px)}
-  .dh-tv .dh-company-name{font-size:clamp(26px,1.35vw,34px)}
-  .dh-tv .dh-company-sub{font-size:clamp(16px,.85vw,20px)}
-  .dh-tv .dh-company-logo{width:clamp(64px,3.4vw,84px);height:clamp(64px,3.4vw,84px)}
-  .dh-tv .dh-so-row{font-size:clamp(19px,1vw,24px)}
-  .dh-tv .dh-so-row b{font-size:clamp(23px,1.2vw,29px)}
-  .dh-tv .dh-so-logo{width:44px;height:44px}
-  .dh-tv .dh-wf-strip-title{font-size:clamp(16px,.85vw,20px)}
-  .dh-tv .dh-wf-item b{font-size:clamp(28px,1.35vw,36px)}
-  .dh-tv .dh-wf-item span{font-size:clamp(15px,.75vw,18px)}
-  .dh-wrap.dh-tv{padding:clamp(20px,1.4vh,34px);gap:clamp(16px,1.3vh,28px)}
-  .dh-tv .dh-fit-inner{gap:clamp(18px,1.3vh,28px)}
-}
+.dh-tv .dh-header-row{gap:calc(12px * var(--dhs))}
+.dh-tv .dh-status-overview{gap:calc(12px * var(--dhs))}
+.dh-tv .dh-company-bar{padding:calc(10px * var(--dhs)) calc(18px * var(--dhs));gap:calc(12px * var(--dhs));border-radius:calc(12px * var(--dhs))}
+.dh-tv .dh-company-logo{width:calc(44px * var(--dhs));height:calc(44px * var(--dhs))}
+.dh-tv .dh-company-name{font-size:calc(17px * var(--dhs))}
+.dh-tv .dh-company-sub{font-size:calc(11.5px * var(--dhs))}
+.dh-tv .dh-so-col{padding:calc(11px * var(--dhs)) calc(16px * var(--dhs));border-radius:calc(14px * var(--dhs))}
+.dh-tv .dh-so-title{font-size:calc(11.5px * var(--dhs));margin-bottom:calc(8px * var(--dhs))}
+.dh-tv .dh-so-rows{gap:calc(7px * var(--dhs))}
+.dh-tv .dh-so-row{font-size:calc(13.5px * var(--dhs));gap:calc(8px * var(--dhs))}
+.dh-tv .dh-so-row b{font-size:calc(16.5px * var(--dhs))}
+.dh-tv .dh-so-logo{width:calc(24px * var(--dhs));height:calc(24px * var(--dhs))}
+.dh-tv .dh-wf-strip{padding:calc(8px * var(--dhs)) calc(16px * var(--dhs));gap:calc(13px * var(--dhs));border-radius:calc(12px * var(--dhs))}
+.dh-tv .dh-wf-strip-title{font-size:calc(11px * var(--dhs))}
+.dh-tv .dh-wf-strip-items{gap:calc(11px * var(--dhs))}
+.dh-tv .dh-wf-item b{font-size:calc(17px * var(--dhs))}
+.dh-tv .dh-wf-item span{font-size:calc(10.5px * var(--dhs))}
+.dh-tv .dh-topbar{padding:calc(12px * var(--dhs)) calc(16px * var(--dhs));gap:calc(10px * var(--dhs));border-radius:calc(14px * var(--dhs))}
+.dh-tv .dh-topbar-row1{gap:calc(10px * var(--dhs))}
+.dh-tv .dh-brand{font-size:calc(13px * var(--dhs));gap:calc(6px * var(--dhs))}
+.dh-tv .dh-topbar-row2{gap:calc(9px * var(--dhs))}
+.dh-tv .dh-clock-card,.dh-tv .dh-shift-card{padding:calc(8px * var(--dhs)) calc(13px * var(--dhs));gap:calc(4px * var(--dhs));border-radius:calc(10px * var(--dhs))}
+.dh-tv .dh-clock-time{font-size:calc(29px * var(--dhs))}
+.dh-tv .dh-clock-date{font-size:calc(11.5px * var(--dhs));gap:calc(6px * var(--dhs))}
+.dh-tv .dh-shift-card-hd{gap:calc(6px * var(--dhs))}
+.dh-tv .dh-runtime-inline-label{font-size:calc(9.5px * var(--dhs))}
+.dh-tv .dh-shift-badge{font-size:calc(11px * var(--dhs));padding:calc(2px * var(--dhs)) calc(8px * var(--dhs))}
+.dh-tv .dh-runtime-inline-time{font-size:calc(25px * var(--dhs))}
+.dh-tv .dh-tv-btn{font-size:calc(12px * var(--dhs));padding:calc(9px * var(--dhs)) calc(14px * var(--dhs))}
+.dh-tv .dh-group-title{font-size:calc(13.5px * var(--dhs));margin:calc(2px * var(--dhs)) 0 calc(7px * var(--dhs)) calc(4px * var(--dhs))}
+.dh-tv .dh-group-title::before{width:calc(4px * var(--dhs));height:calc(13px * var(--dhs))}
+.dh-tv .dh-card-grid{gap:calc(12px * var(--dhs))}
+.dh-tv .dh-card{padding:calc(12px * var(--dhs));gap:calc(6px * var(--dhs));border-radius:calc(16px * var(--dhs))}
+.dh-tv .dh-card-hd{gap:calc(7px * var(--dhs))}
+.dh-tv .dh-card-ic{font-size:calc(16px * var(--dhs))}
+.dh-tv .dh-card-name{font-size:calc(13px * var(--dhs))}
+.dh-tv .dh-status-chip{font-size:calc(9.5px * var(--dhs));padding:calc(3px * var(--dhs)) calc(9px * var(--dhs)) calc(3px * var(--dhs)) calc(7px * var(--dhs));gap:calc(4px * var(--dhs))}
+.dh-tv .dh-status-chip::before{width:calc(6px * var(--dhs));height:calc(6px * var(--dhs))}
+.dh-tv .dh-card-empty{font-size:calc(12px * var(--dhs));padding:calc(10px * var(--dhs)) 0 calc(6px * var(--dhs))}
+.dh-tv .dh-card-cust{font-size:calc(15.5px * var(--dhs))}
+.dh-tv .dh-card-spec{font-size:calc(13.5px * var(--dhs));padding:calc(4px * var(--dhs)) calc(9px * var(--dhs));border-radius:calc(8px * var(--dhs))}
+.dh-tv .dh-card-order{gap:calc(7px * var(--dhs))}
+.dh-tv .dh-card-code{font-size:calc(9.5px * var(--dhs))}
+.dh-tv .dh-card-flag{font-size:calc(9px * var(--dhs));padding:calc(2px * var(--dhs)) calc(6px * var(--dhs))}
+.dh-tv .dh-card-stage{font-size:calc(11.5px * var(--dhs));padding:calc(4px * var(--dhs)) calc(8px * var(--dhs));gap:calc(4px * var(--dhs))}
+.dh-tv .dh-card-ring-row{gap:calc(10px * var(--dhs));margin-top:calc(2px * var(--dhs))}
+.dh-tv .dh-ring{width:calc(50px * var(--dhs));height:calc(50px * var(--dhs));font-size:calc(11px * var(--dhs))}
+.dh-tv .dh-card-qty{gap:calc(3px * var(--dhs))}
+.dh-tv .dh-card-qty span{font-size:calc(10px * var(--dhs))}
+.dh-tv .dh-prog-wrap{height:calc(7px * var(--dhs));border-radius:calc(5px * var(--dhs))}
+.dh-tv .dh-card-status{font-size:calc(10.5px * var(--dhs));padding-top:calc(5px * var(--dhs));margin-top:1px}
+.dh-tv .dh-card-next{margin-top:calc(4px * var(--dhs));padding-top:calc(6px * var(--dhs));gap:calc(4px * var(--dhs))}
+.dh-tv .dh-next-hd{font-size:calc(9px * var(--dhs));gap:calc(4px * var(--dhs))}
+.dh-tv .dh-next-item{gap:calc(7px * var(--dhs));padding:calc(5px * var(--dhs)) calc(7px * var(--dhs));border-radius:calc(8px * var(--dhs))}
+.dh-tv .dh-next-pos{width:calc(17px * var(--dhs));height:calc(17px * var(--dhs));font-size:calc(9px * var(--dhs))}
+.dh-tv .dh-next-body{gap:1px}
+.dh-tv .dh-next-cust{font-size:calc(10.5px * var(--dhs))}
+.dh-tv .dh-next-spec{font-size:calc(9.5px * var(--dhs))}
+.dh-tv .dh-next-pri{font-size:calc(8.5px * var(--dhs));padding:calc(2px * var(--dhs)) calc(5px * var(--dhs))}
+.dh-tv .dh-next-more{font-size:calc(9.5px * var(--dhs))}
 .kh-detail-grid>div{display:flex;flex-direction:column;gap:1px;min-width:0}
 .kh-detail-grid>div b{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.2px}
 .kh-detail-grid>div span{font-size:13px;color:var(--text);font-weight:600;overflow-wrap:break-word}
@@ -11762,26 +11766,77 @@ function dhToggleTv(){
   dhScheduleAutoFit();
 }
 
-// ── TV Mode RENDER NATIVE — KHÔNG scale toàn bộ bảng nữa. ─────────────────
-// Trước đây hàm này dùng transform:scale(...) để ép nội dung vừa khung hình,
-// khiến chữ/thẻ bị mờ, nhòe và không tận dụng được không gian màn hình lớn
-// (2K/4K). Toàn bộ việc "vừa màn hình" bây giờ do CSS đảm nhiệm 100%: Grid
-// (auto-fit/minmax) tự chia cột theo bề rộng thật, clamp()/vw/vh lo font và
-// khoảng cách theo từng độ phân giải — không có phép nhân tỉ lệ (scale) nào
-// tác động lên layout. Hàm/tên hàm được GIỮ NGUYÊN (và vẫn được gọi ở đúng
-// những chỗ cũ: dhToggleTv, resize, orientationchange, fullscreenchange,
-// visibilitychange, ResizeObserver...) để không đụng tới logic điều khiển
-// hiện có — nó chỉ còn nhiệm vụ dọn sạch mọi transform/kích thước inline còn
-// sót lại từ phiên bản cũ (nếu có) để đảm bảo #dhFitInner luôn render đúng
-// kích thước tự nhiên (native) của nó.
+// ── TV Mode RENDER NATIVE — KHÔNG scale toàn bộ bảng bằng transform/zoom. ──
+// Thay vì đoán kích thước theo vw/vh (không biết trước sẽ có bao nhiêu máy,
+// bao nhiêu đơn chạy tiếp...), hàm này ĐO CHIỀU CAO NỘI DUNG THẬT
+// (#dhFitInner.scrollHeight) so với chiều cao khung thật (#dhFitOuter.
+// clientHeight) rồi dò biến CSS --dhs (một con số nhân vào font-size/
+// padding/gap của mọi phần tử TV qua calc(px * var(--dhs)) — xem CSS) cho
+// tới khi nội dung VỪA KHÍT. Đây KHÔNG phải transform:scale()/zoom(): mỗi
+// bước đổi --dhs là một font-size/padding THẬT, trình duyệt tính lại chữ và
+// layout (reflow) — chữ luôn sắc nét ở đúng cỡ đó, không bị "phóng ảnh" nên
+// không mờ/nhòe như cách cũ.
+// Thuật toán 2 pha:
+//  1) SHRINK: nếu nội dung cao hơn khung → giảm dần --dhs tới khi vừa khít
+//     (hoặc chạm sàn an toàn) — đảm bảo 1920×1080 hiển thị đủ mọi nhóm máy
+//     (kể cả Máy đánh bóng/Máy cắt) mà KHÔNG cần cuộn.
+//  2) GROW: nếu còn thừa nhiều khoảng trống (2560×1440, 3840×2160, hoặc ít
+//     máy) → tăng dần --dhs lên tới khi vừa chạm đáy khung hoặc chạm trần
+//     theo từng mốc màn hình — tận dụng hết không gian thay vì để trống.
 function dhApplyAutoFit(){
+  if(!dhTvMode) return;
+  const wrap = document.getElementById('dhWrap');
+  const outer = document.getElementById('dhFitOuter');
   const inner = document.getElementById('dhFitInner');
-  if(!inner) return;
-  // Dọn sạch mọi inline style scale/width cũ (có thể còn sót từ lần render
-  // trước hoặc từ bản build cũ hơn) — không đặt lại bất kỳ transform nào.
-  inner.style.transform = '';
-  inner.style.transformOrigin = '';
-  inner.style.width = '';
+  if(!wrap || !outer || !inner) return;
+
+  const w = window.innerWidth;
+  // Mốc khởi điểm hợp lý theo bề rộng màn hình thật — chỉ để JS không phải dò
+  // từ quá xa, KHÔNG phải là kích thước cuối cùng (bước đo bên dưới mới quyết
+  // định con số chính xác theo đúng nội dung đang hiển thị).
+  let dhs = w>=3200 ? 1.55 : (w>=2400 ? 1.25 : 1);
+  // Trần tối đa theo mốc màn hình — tránh chữ to quá khổ dù còn thừa chỗ.
+  const ceil = w>=3200 ? 2.05 : (w>=2400 ? 1.65 : 1.18);
+  // Sàn tối thiểu — không để chữ nhỏ tới mức khó đọc; nếu chạm sàn mà vẫn
+  // tràn (cực hiếm, ví dụ quá nhiều máy cùng lúc) thì #dhFitOuter vẫn còn
+  // overflow-y:auto (thanh cuộn ẩn) làm lưới an toàn cuối cùng, không mất nội
+  // dung.
+  const floor = 0.62;
+  const fits = ()=> inner.scrollHeight <= outer.clientHeight + 1;
+
+  wrap.style.setProperty('--dhs', dhs.toFixed(3));
+
+  if(!fits()){
+    // PHA THU NHỎ: giảm dần tới khi vừa khít hoặc chạm sàn.
+    let lo = floor, hi = dhs, guard = 0;
+    while(guard++ < 26 && (hi-lo) > 0.006){
+      const mid = (lo+hi)/2;
+      wrap.style.setProperty('--dhs', mid.toFixed(3));
+      if(fits()) lo = mid; else hi = mid;
+    }
+    dhs = lo;
+    wrap.style.setProperty('--dhs', dhs.toFixed(3));
+    if(!fits()){
+      dhs = floor;
+      wrap.style.setProperty('--dhs', dhs.toFixed(3));
+    }
+  } else {
+    // PHA TẬN DỤNG KHOẢNG TRỐNG: tăng dần tới khi vừa chạm đáy khung hoặc
+    // chạm trần theo mốc màn hình — giúp 2K/4K/ít máy không bị "trống trải".
+    let lo = dhs, hi = ceil, guard = 0;
+    wrap.style.setProperty('--dhs', hi.toFixed(3));
+    if(fits()){
+      dhs = hi;
+    } else {
+      while(guard++ < 26 && (hi-lo) > 0.006){
+        const mid = (lo+hi)/2;
+        wrap.style.setProperty('--dhs', mid.toFixed(3));
+        if(fits()) lo = mid; else hi = mid;
+      }
+      dhs = lo;
+    }
+    wrap.style.setProperty('--dhs', dhs.toFixed(3));
+  }
 }
 
 // Gộp nhiều lần gọi liên tiếp (resize kéo tay, xoay màn hình, đổi cửa sổ)
