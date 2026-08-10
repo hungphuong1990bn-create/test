@@ -3467,10 +3467,13 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .kh-detail-sec-title{font-size:12.5px;font-weight:800;color:var(--text2);margin-bottom:10px;letter-spacing:.1px}
 .kh-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
 .kh-machine-assign{display:flex;flex-direction:column;gap:8px}
-.kh-machine-row{display:flex;align-items:center;gap:8px}
+.kh-machine-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .kh-machine-lbl{flex:0 0 92px;font-size:12.5px;font-weight:700;color:var(--text2)}
 .kh-machine-sel{flex:1;min-width:0;font-size:12.5px;padding:7px 8px}
 .kh-machine-dot{flex:0 0 auto;font-size:13px}
+/* Ghi chú "đang xếp hàng chờ máy X" khi phân công trước cho đơn chưa chạy */
+.kh-machine-queue-note{flex:0 0 100%;margin-left:100px;font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-l);border:1px solid var(--amber-m);border-radius:8px;padding:5px 9px;line-height:1.4}
+@media (max-width:480px){.kh-machine-queue-note{margin-left:0}}
 
 /* ── 🏭 Bảng Điều hành sản xuất — MES/Smart Factory hiện đại, tối ưu TV ── */
 .dh-wrap{--dh-bg1:#0a1a3d;--dh-bg2:#123a7d;--dh-bg3:#1e56b8;--dh-card:#16234a;--dh-card2:#0f1c3c;--dh-border:#2f4a86;--dh-text:#eef3ff;--dh-text2:#9db3e0;
@@ -3498,6 +3501,27 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 /* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn để tránh
    thẻ máy bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối */
 @media (min-aspect-ratio:2/1){.dh-tv .dh-fit-inner{width:min(2200px,74vw)}}
+
+/* ── TV Mode THẬT SỰ toàn màn hình: ẩn hẳn sidebar/topbar/bottom-nav/FAB/
+   banner của app (không chỉ riêng khung dh-wrap) và bỏ mọi padding/margin
+   bao quanh, để nội dung Điều hành SX chiếm trọn 100% khung nhìn — không
+   còn viền trắng, không cắt, không phát sinh scrollbar dọc/ngang do phần
+   khung app còn sót lại. Áp cho toàn trang qua class trên <body> (bật/tắt
+   ở dhToggleTv() và mỗi lần goTab() khoá cứng TV). Không đụng gì tới CSS
+   PC/Mobile bình thường vì chỉ có hiệu lực khi có class này. */
+body.dh-tv-fullscreen{overflow:hidden}
+body.dh-tv-fullscreen .sidebar,
+body.dh-tv-fullscreen .sidebar-overlay,
+body.dh-tv-fullscreen .topbar,
+body.dh-tv-fullscreen .bottom-nav,
+body.dh-tv-fullscreen #fab,
+body.dh-tv-fullscreen .ai-bubble-wrap,
+body.dh-tv-fullscreen .ann-write-btn,
+body.dh-tv-fullscreen #announceBanner,
+body.dh-tv-fullscreen #updateBanner{display:none!important}
+body.dh-tv-fullscreen .app-body{overflow:hidden!important;height:100vh;height:100dvh}
+body.dh-tv-fullscreen .main-wrap{overflow:hidden!important;padding-bottom:0!important;height:100vh;height:100dvh}
+body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important;margin:0!important;animation:none!important}
 
 /* ── Khối tổng quan "TRẠNG THÁI TOÀN NHÀ MÁY" — ngay đầu trang ── */
 .dh-status-overview{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -3670,6 +3694,22 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dh-prog-wrap{width:100%;height:8px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden}
 .dh-prog-bar{height:100%;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--dh-accent) 70%,#2856D6),var(--dh-accent));box-shadow:0 0 8px -1px var(--dh-accent)}
 .dh-card-status{font-size:11.5px;font-weight:700;color:var(--dh-text2);border-top:1px solid rgba(255,255,255,.1);padding-top:6px;margin-top:1px;position:relative;z-index:1}
+
+/* Khối "Đơn chạy tiếp" — hàng đợi các đơn chưa chạy đã được xếp sẵn cho máy
+   này, hiện ngay dưới đơn đang chạy để biết trước "chạy xong thì tới đơn nào" */
+.dh-card-next{margin-top:5px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.16);position:relative;z-index:1;display:flex;flex-direction:column;gap:5px}
+.dh-next-hd{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:var(--dh-text2);text-transform:uppercase;letter-spacing:.35px}
+.dh-next-hd b{color:#8fc0ff;font-weight:800;text-transform:none;letter-spacing:0}
+.dh-next-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:6px 8px;cursor:pointer;transition:background .12s,transform .12s}
+.dh-next-item:hover{background:rgba(255,255,255,.1);transform:translateX(1px)}
+.dh-next-pos{flex:0 0 auto;width:19px;height:19px;border-radius:50%;background:rgba(143,192,255,.16);border:1px solid rgba(143,192,255,.45);color:#8fc0ff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dh-next-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.dh-next-cust{font-size:11.5px;font-weight:800;color:#eaf1ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-next-spec{font-size:10px;color:var(--dh-text2);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-next-pri{flex:0 0 auto;font-size:9px;font-weight:800;color:#fde68a;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:2px 6px;white-space:nowrap}
+.dh-next-more{font-size:10px;font-weight:700;color:var(--dh-text2);text-align:center;padding-top:1px;opacity:.85}
+.dh-tv .dh-next-cust{font-size:clamp(11px,0.72vw,15px)}
+.dh-tv .dh-next-hd{font-size:clamp(9px,0.62vw,12px)}
 
 /* TV Mode: chữ/thẻ to hơn hẳn, co giãn mượt theo bề rộng màn hình (clamp+vw)
    thay vì 1 mốc cố định — nhờ vậy HD nhỏ, FHD, 2K, 4K đều hiển thị cân đối,
@@ -5645,10 +5685,14 @@ function maintTypeOfMachine(m){
   return null;
 }
 
-// Công đoạn sản xuất: Máy Đùn -> Máy Rút -> Đánh Bóng
+// Công đoạn sản xuất: Máy Đùn -> Máy Rút -> Cắt -> Đánh Bóng — SỬA LỖI: trước
+// đây danh sách này THIẾU 'Cắt' (chỉ có 3 bước) trong khi hệ thống phân công
+// máy (ASSIGN_STAGES) có đủ 4 bước — khiến o.stage (tiến độ công đoạn) không
+// bao giờ có thể bằng 'cat', làm máy Cắt luôn bị coi là "chưa tới lượt".
 const STAGES = [
   {key:'dun', label:'Máy Đùn', icon:'🔧'},
   {key:'rut', label:'Máy Rút', icon:'🔩'},
+  {key:'cat', label:'Cắt', icon:'✂️'},
   {key:'danhbong', label:'Đánh Bóng', icon:'✨'}
 ];
 const STAGE_LABEL = Object.fromEntries(STAGES.map(s=>[s.key, s.label]));
@@ -8854,7 +8898,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // nên vẫn giữ khoá nếu cửa sổ TV lỡ bị tải lại, không cần bấm lại nút TV
   // Mode hay F5 thủ công mỗi lần.
   if(new URLSearchParams(location.search).get('tv')==='1'){
-    try{ sessionStorage.setItem('sx_tv_locked','1'); }catch(e){}
+    try{ sessionStorage.setItem('sx_tv_locked','1'); localStorage.setItem('sx_tv_locked','1'); }catch(e){}
   }
   // Nếu link mở ra từ việc quét mã QR (khách hàng dùng camera điện thoại
   // thường, không qua app) → hiện thẳng trang tra cứu công khai, không
@@ -8955,6 +8999,12 @@ function goTab(tab){
       dhTvMode=true;
       try{ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }catch(e){}
     }
+    dhSyncFullscreenClass();
+  } else if(dhTvMode){
+    // Phòng trường hợp hiếm: cửa sổ vẫn còn cờ dhTvMode nhưng khoá đã bị gỡ
+    // (ví dụ dữ liệu storage bị xoá thủ công) — tắt luôn class fullscreen.
+    dhTvMode=false;
+    dhSyncFullscreenClass();
   }
   currentTab=tab;
   // Sidebar
@@ -11323,7 +11373,23 @@ let _dhFitBound = false; // đã gắn listener resize/orientation chưa (chỉ 
 // mà không ảnh hưởng gì tới cửa sổ TV, và cửa sổ TV vẫn giữ khoá dù lỡ bị
 // tải lại, không cần bấm lại TV Mode hay F5.
 function dhTvLocked(){
-  try{ return sessionStorage.getItem('sx_tv_locked')==='1'; }catch(e){ return false; }
+  // Khoá cứng TV được coi là đang bật nếu MỘT TRONG HAI đúng:
+  //  - sessionStorage: khoá riêng theo cửa sổ (giữ được qua F5/reload trong
+  //    cùng cửa sổ, nhưng mất khi đóng hẳn cửa sổ/trình duyệt)
+  //  - localStorage: khoá theo THIẾT BỊ (giữ được cả khi tắt hẳn trình
+  //    duyệt/app rồi mở lại) — đây là phần mới, đáp ứng yêu cầu "khởi động
+  //    lại vẫn tự vào đúng Điều hành SX", TV xưởng dùng bookmark ?tv=1 hoặc
+  //    đã từng bấm nút TV Mode sẽ luôn tự khoá lại dù mất điện/khởi động lại.
+  try{
+    return sessionStorage.getItem('sx_tv_locked')==='1' || localStorage.getItem('sx_tv_locked')==='1';
+  }catch(e){ return false; }
+}
+
+// Đồng bộ class toàn trang <body> để ẩn hẳn sidebar/topbar/bottom-nav/FAB
+// khi đang ở TV Mode (không chỉ riêng khung dh-wrap) — gọi mỗi khi dhTvMode
+// thay đổi (bật/tắt thủ công, hoặc tự khôi phục sau reload/khởi động lại).
+function dhSyncFullscreenClass(){
+  try{ document.body.classList.toggle('dh-tv-fullscreen', !!dhTvMode); }catch(e){}
 }
 
 function dhCurrentShift(){
@@ -11336,7 +11402,11 @@ function dhCurrentShift(){
 // Tìm đơn hàng đang thực sự CHẠY tại 1 máy (dựa trên phân công máy + trạng
 // thái running) — đây là nguồn suy ra toàn bộ nội dung 1 thẻ máy.
 function dhOrderAtMachine(machineId){
-  return DB.orders.find(o=>o.status==='running' && Object.entries(orderMachineAssign(o)).some(([stage,mid])=>mid===machineId)) || null;
+  return DB.orders.find(o=>{
+    if(o.status!=='running') return false;
+    const active = orderActiveAssignStage(o);
+    return active && orderMachineAssign(o)[active.key]===machineId;
+  }) || null;
 }
 function dhStageAtMachine(o, machineId){
   const a = orderMachineAssign(o);
@@ -11350,11 +11420,20 @@ function dhMachineCard(m){
   const o = dhOrderAtMachine(m.id);
   const rs = machineRuntimeStatus(m.id);
   const statusCls = {run:'st-run',sang:'st-ready',cho:'st-wait',bt:'st-maint',sc:'st-fault'}[rs.code]||'st-ready';
+  // Hàng đợi "đơn chạy tiếp" — loại trừ chính đơn đang hiển thị làm đơn hiện
+  // tại (trường hợp máy đang 'cho': rs.order chính là item đầu hàng đợi).
+  const queue = (rs.queue||[]).filter(q=>!o || q.id!==o.id);
+  const queueHTML = dhNextQueueHTML(queue);
 
   if(!o){
+    const emptyMsg = rs.code==='sc' ? '🔴 Đang sự cố'
+      : rs.code==='bt' ? '🟣 Đang bảo trì'
+      : queue.length ? '🔵 Sẵn sàng — chuẩn bị chạy đơn kế tiếp'
+      : '⚪ Chưa có đơn — sẵn sàng nhận lệnh';
     return `<div class="dh-card ${statusCls}">
       <div class="dh-card-hd"><span class="dh-card-ic">${m.icon}</span><span class="dh-card-name">${m.name}</span><span class="dh-status-chip">${rs.label}</span></div>
-      <div class="dh-card-empty">${rs.code==='sc'?'🔴 Đang sự cố':rs.code==='bt'?'🟣 Đang bảo trì':'⚪ Chưa có đơn — sẵn sàng nhận lệnh'}</div>
+      <div class="dh-card-empty">${emptyMsg}</div>
+      ${queueHTML}
     </div>`;
   }
 
@@ -11380,6 +11459,31 @@ function dhMachineCard(m){
         <span>${done.toLocaleString('vi-VN')}/${qty.toLocaleString('vi-VN')||0} — Sản lượng</span>
       </div>
     </div>
+    ${queueHTML}
+  </div>`;
+}
+
+// ── Khối "Đơn chạy tiếp" trên thẻ máy — hiển thị 1-2 đơn CHƯA CHẠY kế tiếp
+// đã được phân công sẵn cho máy này (đã sắp xếp theo mức ưu tiên/ngày tạo ở
+// dhMachineQueue), kèm số lượng còn lại trong hàng đợi nếu nhiều hơn. Bấm
+// vào 1 dòng sẽ mở thẳng Panel chi tiết đơn đó, không làm nổ bong bóng click
+// ra ngoài thẻ (stopPropagation) để không trùng với onclick mở đơn đang chạy.
+function dhNextQueueHTML(queue){
+  if(!queue || !queue.length) return '';
+  const shown = queue.slice(0,2);
+  const rest = queue.length - shown.length;
+  return `<div class="dh-card-next">
+    <div class="dh-next-hd">⏭️ Đơn chạy tiếp <b>· ${queue.length} đang chờ</b></div>
+    ${shown.map((q,i)=>`
+      <div class="dh-next-item" onclick="event.stopPropagation();khViewDetail('${q.id}')">
+        <span class="dh-next-pos">${i+1}</span>
+        <div class="dh-next-body">
+          <span class="dh-next-cust">${q.customer||'—'}</span>
+          <span class="dh-next-spec">${specStr(q)} · ${ddCode(q)}</span>
+        </div>
+        ${q.priority?`<span class="dh-next-pri">${q.priority}</span>`:''}
+      </div>`).join('')}
+    ${rest>0?`<div class="dh-next-more">+${rest} đơn khác trong hàng đợi</div>`:''}
   </div>`;
 }
 
@@ -11517,6 +11621,7 @@ function dhHeaderHTML(){
 }
 
 function renderDieuHanh(){
+  dhSyncFullscreenClass();
   const groups = [...new Set(MACHINES.map(m=>m.group))];
 
   $('mc').innerHTML = `
@@ -11545,13 +11650,15 @@ function dhToggleTv(){
   // sổ này giờ là "cửa sổ TV", dùng Windows Extend kéo qua màn TV. Tắt TV Mode
   // = mở khoá, trả cửa sổ này về trạng thái bình thường (đổi tab được như PC).
   try{
-    if(dhTvMode) sessionStorage.setItem('sx_tv_locked','1');
-    else sessionStorage.removeItem('sx_tv_locked');
+    if(dhTvMode){ sessionStorage.setItem('sx_tv_locked','1'); localStorage.setItem('sx_tv_locked','1'); }
+    else { sessionStorage.removeItem('sx_tv_locked'); localStorage.removeItem('sx_tv_locked'); }
   }catch(e){}
+  dhSyncFullscreenClass();
   const el = document.documentElement;
   if(dhTvMode && el.requestFullscreen) el.requestFullscreen().catch(()=>{});
   if(!dhTvMode && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
   renderDieuHanh();
+  dhScheduleAutoFit();
 }
 
 // ── Tự động co giãn (scale) toàn bộ bảng để VỪA KHÍT MỌI kích thước màn
@@ -11597,6 +11704,16 @@ function dhBindAutoFit(){
     // Xoay màn hình (TV/màn hình treo tường dạng dọc)
     window.addEventListener('orientationchange', dhScheduleAutoFit);
     document.addEventListener('fullscreenchange', dhScheduleAutoFit);
+    // TV tắt/mở lại nguồn HDMI, khoá màn hình rồi mở lại... trình duyệt có
+    // thể giữ nguyên trang (không reload) nhưng kích thước hiển thị có thể
+    // đã đổi — tính lại fit + đảm bảo vẫn đang khoá đúng tab khi quay lại.
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden){
+        if(dhTvLocked() && currentTab!=='dieuHanh') goTab('dieuHanh');
+        dhSyncFullscreenClass();
+        dhScheduleAutoFit();
+      }
+    });
   }
   // #dhFitOuter bị tạo lại mỗi lần renderDieuHanh() chạy (innerHTML mới) nên
   // phải gắn lại ResizeObserver vào node mới mỗi lần, tránh theo dõi 1 node
@@ -15211,7 +15328,23 @@ function setStage(id, stage){if(guardViewer())return;
     const old = o.stage;
     if(old===stage) return;
     o.stage = stage;
-    log('Cập nhật công đoạn', `${o.customer||''} · ${STAGE_LABEL[stage]||stage}`, id, {stage:old||''}, {stage});
+    // Nhả máy của các công đoạn đã đi qua — chỉ làm ở ĐÂY (khi tiến độ thật
+    // sự tiến lên), không làm khi chỉ gán TRƯỚC máy cho công đoạn sau (xem
+    // assignMachine) — nhờ vậy máy công đoạn hiện tại không bị "nhả" sớm chỉ
+    // vì đã đặt trước máy công đoạn kế tiếp.
+    let releasedNames = [];
+    if(o.machineAssign){
+      const newIdx = ASSIGN_STAGES.findIndex(s=>s.key===stage);
+      if(newIdx>0){
+        ASSIGN_STAGES.slice(0,newIdx).forEach(s=>{
+          if(o.machineAssign[s.key]){
+            releasedNames.push(`${s.label} (${machineById(o.machineAssign[s.key])?.name||o.machineAssign[s.key]})`);
+            delete o.machineAssign[s.key];
+          }
+        });
+      }
+    }
+    log('Cập nhật công đoạn', `${o.customer||''} · ${STAGE_LABEL[stage]||stage}${releasedNames.length?` · Nhả máy: ${releasedNames.join(', ')}`:''}`, id, {stage:old||''}, {stage});
     renderTab(currentTab);
     refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
     goToOrderCard(id);
@@ -15234,6 +15367,22 @@ function machinesForStage(stageKey){
   return st ? MACHINES.filter(m=>m.group===st.group) : [];
 }
 
+// Công đoạn PHÂN CÔNG MÁY mà 1 đơn đang THỰC SỰ chạy ngay bây giờ — SỬA LỖI:
+// trước đây các hàm dưới đây dựa vào o.status (chỉ có pending/running) để
+// suy ra "đơn đã tới lượt máy này chưa", nhưng 1 đơn "running" có thể đang
+// chạy Đùn dù ĐÃ được gán trước máy Rút/Cắt/Đánh bóng cho công đoạn kế tiếp
+// (phân công trước, chưa chạy tới) — khiến máy đó bị hiểu nhầm là "đang
+// chạy" đơn này, còn hàng đợi thật (Đùn) thì không thấy nó đâu. Nguồn đáng
+// tin cậy DUY NHẤT cho biết "đơn đang ở công đoạn nào" là o.stage (được
+// setStage() cập nhật tường minh mỗi khi đơn thực sự chuyển công đoạn) —
+// dùng trực tiếp o.stage thay vì suy luận qua machineAssign, để việc GÁN
+// TRƯỚC máy cho công đoạn sau (đơn vẫn đang ở công đoạn hiện tại) không bị
+// hiểu nhầm là đơn đã chuyển sang công đoạn đó.
+function orderActiveAssignStage(o){
+  const key = o.stage || 'dun';
+  return ASSIGN_STAGES.find(s=>s.key===key) || ASSIGN_STAGES[0];
+}
+
 // Đơn hàng khác (không phải excludeOrderId) có đang CHIẾM máy này ở đúng
 // công đoạn này không (chỉ tính đơn đang ở trạng thái "Đang sản xuất").
 function machineConflictOrder(machineId, stageKey, excludeOrderId){
@@ -15241,17 +15390,49 @@ function machineConflictOrder(machineId, stageKey, excludeOrderId){
   return DB.orders.find(o=>o.id!==excludeOrderId && o.status==='running' && orderMachineAssign(o)[stageKey]===machineId) || null;
 }
 
+// ── Hàng đợi "đơn nào chạy tiếp" của 1 máy — mọi đơn CHƯA CHẠY (pending) đã
+// được phân công sẵn cho máy này (bất kỳ công đoạn nào), sắp xếp theo mức ưu
+// tiên (GẤP 1 lên trước) rồi tới ngày tạo (đơn tạo trước xếp trước). Đây là
+// nguồn DUY NHẤT cho biết "máy này chạy xong đơn hiện tại thì tới đơn nào" —
+// cho phép phân công máy TRƯỚC cho đơn chưa chạy (xem assignMachine()), nên
+// Bảng Điều hành SX luôn biết trước thứ tự chạy tiếp theo mà không cần đợi
+// đơn hiện tại kết thúc mới gán máy.
+function dhMachineQueue(machineId, excludeOrderId){
+  const m = machineById(machineId);
+  const myStage = m ? ASSIGN_STAGES.find(s=>s.group===m.group) : null;
+  if(!myStage) return [];
+  return DB.orders
+    .filter(o=>o.id!==excludeOrderId && o.status!=='done' && orderMachineAssign(o)[myStage.key]===machineId)
+    // Loại trừ đơn ĐANG THỰC SỰ CHẠY đúng tại máy này (đó là "đơn hiện tại"
+    // hiển thị riêng bởi dhOrderAtMachine, không phải "đơn chạy tiếp"). Đơn
+    // pending hoặc đơn running nhưng công đoạn hiện tại của nó KHÁC máy này
+    // (VD: đang chạy Đùn, đã gán trước máy Rút) đều tính là đang xếp hàng.
+    .filter(o=>{
+      if(o.status!=='running') return true;
+      const active = orderActiveAssignStage(o);
+      return !(active && active.key===myStage.key);
+    })
+    .sort((a,b)=>{
+      const pa=parseInt(String(a.priority||'GẤP 9').replace('GẤP ',''))||9;
+      const pb=parseInt(String(b.priority||'GẤP 9').replace('GẤP ',''))||9;
+      if(pa!==pb) return pa-pb;
+      return (a.createdAt||0)-(b.createdAt||0);
+    });
+}
+
 // Trạng thái hiển thị của 1 máy — ưu tiên Sự cố/Bảo trì (từ tab Bảo trì máy,
 // dữ liệu đã có sẵn), sau đó tới đang chạy/chờ theo phân công từ đơn hàng.
+// Luôn kèm theo `queue` (hàng đợi đơn chưa chạy) để nơi gọi tự quyết định
+// hiển thị "đơn chạy tiếp" mà không cần tính lại.
 function machineRuntimeStatus(machineId){
   const bt = (typeof machineStatus==='function') ? machineStatus(machineId) : 'ok';
-  if(bt==='hong')   return {code:'sc', label:'🔴 Sự cố', dot:'🔴'};
-  if(bt==='baotri') return {code:'bt', label:'🟣 Bảo trì', dot:'🟣'};
-  const runningOrder = DB.orders.find(o=>o.status==='running' && Object.values(orderMachineAssign(o)).includes(machineId));
-  if(runningOrder) return {code:'run', label:'🟢 Đang chạy', dot:'🟢', order:runningOrder};
-  const queuedOrder = DB.orders.find(o=>o.status==='pending' && Object.values(orderMachineAssign(o)).includes(machineId));
-  if(queuedOrder) return {code:'cho', label:'🟡 Chờ', dot:'🟡', order:queuedOrder};
-  return {code:'sang', label:'🔵 Sẵn sàng', dot:'🔵'};
+  const queue = dhMachineQueue(machineId);
+  if(bt==='hong')   return {code:'sc', label:'🔴 Sự cố', dot:'🔴', queue};
+  if(bt==='baotri') return {code:'bt', label:'🟣 Bảo trì', dot:'🟣', queue};
+  const runningOrder = dhOrderAtMachine(machineId);
+  if(runningOrder) return {code:'run', label:'🟢 Đang chạy', dot:'🟢', order:runningOrder, queue};
+  if(queue.length) return {code:'cho', label:'🟡 Chờ', dot:'🟡', order:queue[0], queue};
+  return {code:'sang', label:'🔵 Sẵn sàng', dot:'🔵', queue:[]};
 }
 
 // Gán/đổi máy cho 1 công đoạn của 1 đơn hàng — CHỈ cập nhật bản ghi đã có
@@ -15264,22 +15445,47 @@ function assignMachine(orderId, stageKey, machineId){
     machineId = machineId || '';
     const old = orderMachineAssign(o)[stageKey] || '';
     if(old===machineId) return;
+    // Đơn khác đang thực sự CHIẾM máy này (status='running') ở đúng công đoạn?
+    // — Chỉ chặn khi đây là CÔNG ĐOẠN ĐANG CHẠY THẬT SỰ của chính đơn này
+    //   (o.stage === stageKey) — vì lúc đó 2 đơn sẽ "chạy chồng" cùng lúc
+    //   trên 1 máy → chặn, yêu cầu đổi máy khác hoặc đợi.
+    // — Mọi trường hợp còn lại (đơn đang pending, HOẶC đơn đang chạy nhưng ở
+    //   1 công đoạn KHÁC — VD đang chạy Đùn mà phân công trước máy Rút/Cắt/
+    //   Đánh bóng cho các công đoạn sau) đều cho phép PHÂN CÔNG TRƯỚC — đơn
+    //   sẽ tự xếp vào HÀNG ĐỢI của máy đó và hiện là "đơn chạy tiếp" ngay
+    //   trên Bảng Điều hành SX, không cần đợi máy trống mới được gán. Đây
+    //   chính là lý do trước đây máy Rút/Cắt/Đánh bóng không phân công được
+    //   đơn tiếp theo dù máy đùn của đơn hiện tại còn đang chạy — vì trước
+    //   đây coi status='running' của ĐƠN là đủ để chặn, dù công đoạn định
+    //   gán không hề trùng với công đoạn đơn đang thực sự chạy.
+    let queueAfter = null;
     if(machineId){
       const conflict = machineConflictOrder(machineId, stageKey, orderId);
       if(conflict){
-        showToast(`⚠️ Máy đang chạy đơn ${ddCode(conflict)} (${conflict.customer||''}) — hãy đổi máy khác hoặc đợi đơn đó xong`, true);
-        renderTab(currentTab);
-        refreshKhDetailIfOpen(orderId);
-        return;
+        const activeStageNow = orderActiveAssignStage(o);
+        const isCurrentActiveStage = o.status==='running' && activeStageNow && activeStageNow.key===stageKey;
+        if(isCurrentActiveStage){
+          showToast(`⚠️ Máy đang chạy đơn ${ddCode(conflict)} (${conflict.customer||''}) — hãy đổi máy khác hoặc đợi đơn đó xong`, true);
+          renderTab(currentTab);
+          refreshKhDetailIfOpen(orderId);
+          return;
+        }
+        queueAfter = conflict; // xếp hàng, không chặn
       }
     }
     if(!o.machineAssign) o.machineAssign = {};
     if(machineId) o.machineAssign[stageKey] = machineId; else delete o.machineAssign[stageKey];
+
     const m = machineById(machineId);
     log('Phân công máy', `${o.customer||''} · ${ASSIGN_STAGE_LABEL[stageKey]||stageKey} → ${m?m.name:'(bỏ gán)'}`, orderId, {[stageKey]:old}, {[stageKey]:machineId});
     renderTab(currentTab);
     refreshKhDetailIfOpen(orderId);
-    showToast(m?`🏭 Đã gán ${m.name} cho công đoạn ${ASSIGN_STAGE_LABEL[stageKey]}`:'↺ Đã bỏ gán máy');
+    if(m && queueAfter){
+      const pos = dhMachineQueue(machineId).findIndex(x=>x.id===orderId);
+      showToast(`🕐 Đã xếp hàng chờ ${m.name} — sẽ chạy tiếp sau đơn ${ddCode(queueAfter)}${pos>0?` (vị trí #${pos+1})`:''}`);
+    } else {
+      showToast(m?`🏭 Đã gán ${m.name} cho công đoạn ${ASSIGN_STAGE_LABEL[stageKey]}`:'↺ Đã bỏ gán máy');
+    }
     saveOrders(); // ghi Database + đồng bộ Realtime ngay — Bảng Điều hành SX tự cập nhật theo
   });
 }
@@ -15288,13 +15494,21 @@ function assignMachine(orderId, stageKey, machineId){
 // Kế hoạch SX, để không phải mở Panel chi tiết mới biết đơn đang chạy máy nào)
 function khMachineChip(o){
   const s = o.status==='cutting'?'running':o.status;
-  if(s==='pending' && !Object.keys(orderMachineAssign(o)).length) return '';
-  const cur = orderMachineAssign(o)[o.stage];
-  if(o.stage && cur){
-    const m = machineById(cur);
-    if(m) return `<span class="kh-meta-item info">🏭 ${m.name}</span>`;
+  const assign = orderMachineAssign(o);
+  if(s==='pending' && !Object.keys(assign).length) return '';
+  // Đơn CHƯA CHẠY nhưng đã được phân công máy trước (o.stage chưa có vì chưa
+  // bắt đầu) → coi như đang nhắm tới công đoạn 'dun' đầu tiên, để chip vẫn
+  // hiện đúng máy + vị trí hàng đợi ngay trên thẻ, không cần mở panel chi tiết.
+  const stageKey = o.stage || (s==='pending' ? 'dun' : '');
+  const cur = stageKey ? assign[stageKey] : '';
+  if(!cur) return '';
+  const m = machineById(cur);
+  if(!m) return '';
+  if(s==='pending' && machineRuntimeStatus(cur).code==='run'){
+    const pos = dhMachineQueue(cur).findIndex(x=>x.id===o.id);
+    return `<span class="kh-meta-item info">🏭 ${m.name} · 🕐 xếp hàng${pos>0?' #'+(pos+1):''}</span>`;
   }
-  return '';
+  return `<span class="kh-meta-item info">🏭 ${m.name}</span>`;
 }
 
 // Khối "Phân công máy" trong Panel chi tiết Kế hoạch SX — 1 dòng / công đoạn,
@@ -15309,15 +15523,34 @@ function khMachineAssignHTML(o){
       .concat(opts.map(m=>{
         const rs = machineRuntimeStatus(m.id);
         const busyOther = rs.code==='run' && rs.order && rs.order.id!==o.id;
-        const warn = busyOther ? ` (đang chạy ${ddCode(rs.order)})` : '';
-        return `<option value="${m.id}" ${cur===m.id?'selected':''}>${m.name}${warn}</option>`;
+        const q = dhMachineQueue(m.id, o.id).length;
+        // Máy đang chạy đơn khác: KHÔNG chặn chọn nữa — cho phép "xếp hàng
+        // trước" (xem assignMachine). Chỉ ghi chú rõ để người phân công biết
+        // đơn sẽ CHẠY TIẾP THEO chứ không chạy ngay.
+        const tag = busyOther
+          ? ` — 🟢 đang chạy ${ddCode(rs.order)}${q?`, ${q} chờ`:''} · chọn = xếp hàng tiếp theo`
+          : (q ? ` — 🟡 ${q} đơn đang chờ` : '');
+        return `<option value="${m.id}" ${cur===m.id?'selected':''}>${m.name}${tag}</option>`;
       })).join('');
     const curMachine = machineById(cur);
     const curStatus = curMachine ? machineRuntimeStatus(cur) : null;
+    // Đơn NÀY chưa tới lượt máy này (đang 'pending', HOẶC đang 'running'
+    // nhưng công đoạn hiện tại của nó là công đoạn KHÁC — VD đang chạy Đùn,
+    // đã gán trước máy Rút cho công đoạn kế tiếp) mà máy được gán đang chạy
+    // đơn KHÁC → hiển thị rõ vị trí trong hàng đợi thay vì im lặng hoặc
+    // trông như một cảnh báo lỗi.
+    let queueNote = '';
+    const notYetHere = o.status==='pending' || (o.status==='running' && (()=>{ const as=orderActiveAssignStage(o); return !as || as.key!==st.key; })());
+    if(cur && notYetHere && curStatus && curStatus.code==='run' && curStatus.order && curStatus.order.id!==o.id){
+      const queue = dhMachineQueue(cur);
+      const pos = queue.findIndex(x=>x.id===o.id);
+      queueNote = `<div class="kh-machine-queue-note">🕐 Đang xếp hàng chờ <b>${curMachine.name}</b> — sẽ chạy tiếp theo sau đơn <b>${ddCode(curStatus.order)}</b>${pos>0?` (vị trí #${pos+1})`:''}</div>`;
+    }
     return `<div class="kh-machine-row">
       <div class="kh-machine-lbl">${st.icon} ${st.label}</div>
       <select class="field-inp kh-machine-sel" ${canAssign?'':'disabled'} onchange="assignMachine('${o.id}','${st.key}',this.value)">${optionsHTML}</select>
       ${curStatus?`<span class="kh-machine-dot" title="${curStatus.label}">${curStatus.dot}</span>`:''}
+      ${queueNote}
     </div>`;
   }).join('');
   return `<div class="kh-machine-assign">${rows}</div>`;
@@ -15597,6 +15830,26 @@ function setStatus(id, newStatus){if(guardViewer())return;
   // không đổi id) — id truyền vào phải khớp đúng 1 bản ghi hiện có trong
   // DB.orders, nếu không tìm thấy thì dừng lại, không tự tạo mới.
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
+
+  // Bắt đầu chạy: nếu công đoạn hiện tại (mặc định 'dun' nếu đơn chưa từng
+  // chạy) đã được phân công máy, và máy đó đang thực sự CHẠY đơn khác →
+  // chặn lại, không cho 2 đơn cùng "chạy chồng" trên 1 máy. Đơn bị chặn vẫn
+  // giữ nguyên vị trí trong HÀNG ĐỢI của máy đó (xem dhMachineQueue) và tự
+  // được phép bấm "Bắt đầu" lại ngay khi máy trống.
+  if(newStatus==='running'){
+    const stageKey = o.stage || 'dun';
+    const machineId = orderMachineAssign(o)[stageKey];
+    if(machineId){
+      const conflict = machineConflictOrder(machineId, stageKey, id);
+      if(conflict){
+        const m = machineById(machineId);
+        showToast(`⛔ ${m?m.name:'Máy'} đang chạy đơn ${ddCode(conflict)} (${conflict.customer||''}) — đơn này đang xếp hàng chờ, hãy đợi máy trống hoặc đổi máy khác`, true);
+        renderTab(currentTab);
+        return;
+      }
+    }
+  }
+
   const before=o.status;
   o.status=newStatus;
   if(newStatus==='running'&&!o.startedAt) o.startedAt=Date.now();
