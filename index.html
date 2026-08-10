@@ -3487,20 +3487,31 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .dh-fit-outer{width:100%}
 .dh-fit-inner{display:flex;flex-direction:column;gap:14px}
-/* QUAN TRỌNG: trước đây .dh-wrap có padding+gap riêng, còn .dh-fit-outer lại
-   tự đặt height:100vh — nghĩa là tổng chiều cao thực tế = 100vh (fit-outer)
-   + padding trên/dưới của .dh-wrap, LỚN HƠN khung nhìn 100vh, nên phần cuối
-   (Máy cắt) luôn bị .main-wrap{overflow:hidden} cắt mất, bất kể JS auto-fit
-   scale thế nào (vì lúc đo, outer.clientHeight vẫn đúng 100vh chứ không phải
-   phần "còn lại sau padding", nên scale tính sai). Sửa triệt để bằng cách:
-   - .dh-wrap mới là khung bị khoá cứng đúng 100dvh (100% khung nhìn, không
-     hơn không kém) và tự dùng flex để CHIA chiều cao cho chính nó, không cần
-     cộng dồn thêm ở phần tử con.
-   - .dh-fit-outer không tự đặt height cố định nữa mà flex:1 + min-height:0
-     để LUÔN NHẬN ĐÚNG phần chiều cao còn lại (đã trừ hết padding/gap của
-     .dh-wrap) — nhờ vậy outer.clientHeight mà JS đo được mới chính xác 100%,
-     và scale luôn vừa khít, không bao giờ tràn/bị cắt dù màn hình nào. */
-.dh-tv .dh-wrap{border-radius:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+/* ============================================================================
+   TV MODE — VIEWPORT CỐ ĐỊNH 100dvh × 100vw, KHÔNG PHỤ THUỘC DOM CHA
+   ------------------------------------------------------------------------------
+   BUG GỐC (đã tìm ra và sửa): selector cũ ".dh-tv .dh-wrap{...height:100dvh}"
+   là combinator CON (descendant) — nhưng trong HTML, "dh-tv" và "dh-wrap" là
+   2 class nằm trên CÙNG 1 thẻ <div class="dh-wrap dh-tv">, không phải quan hệ
+   cha/con. Vì vậy rule đó KHÔNG BAO GIỜ được áp dụng: .dh-wrap ở TV Mode chưa
+   từng thực sự bị khoá height:100dvh, nó cao tự do theo nội dung, tràn ra khỏi
+   khung nhìn và bị .main-wrap{overflow:hidden} cắt mất phần cuối (Máy đánh
+   bóng, Máy cắt...) — đúng lỗi trong ảnh test, bất kể JS auto-fit scale gì.
+   SỬA TRIỆT ĐỂ:
+   1) Selector đúng phải là compound ".dh-wrap.dh-tv" (cùng 1 phần tử).
+   2) Không dựa vào chiều cao "còn lại" của app-body/main-wrap/main-content
+      (có thể lệch do padding/margin/animation của tổ tiên) — neo cứng bằng
+      position:fixed;inset:0 để LUÔN đúng 100vw × 100dvh của MÀN HÌNH THẬT,
+      độc lập hoàn toàn với cấu trúc DOM bên ngoài. Nhờ vậy outer.clientWidth/
+      clientHeight mà JS đo được luôn chính xác tuyệt đối trên mọi màn hình
+      (1366×768, 1920×1080, 3840×2160, mọi TV 27"–75"...).
+   ============================================================================ */
+.dh-wrap.dh-tv{
+  position:fixed;inset:0;z-index:9990;
+  width:100vw;width:100dvw;height:100vh;height:100dvh;
+  margin:0;border-radius:0;
+  display:flex;flex-direction:column;overflow:hidden;
+}
 .dh-tv .dh-fit-outer{flex:1 1 auto;min-height:0;width:100%;overflow:hidden;display:flex;justify-content:center;align-items:flex-start}
 /* Khung nội dung co giãn theo mọi kích thước màn hình TV hiện nay: HD/FHD nhỏ
    dùng gần hết chiều rộng; 2K/4K/màn hình lớn được giới hạn để chữ không quá
@@ -11653,7 +11664,19 @@ function renderDieuHanh(){
   `;
   dhTickClock();
   dhBindAutoFit();
+  // Đo lại nhiều lần sau khi render: 1 khung hình đầu có thể đo SAI vì
+  // font-family/logo công ty chưa tải xong (kích thước chữ/ảnh thay đổi
+  // sau đó làm scrollHeight lệch so với lúc tính scale) → dẫn tới scale
+  // hụt và nội dung cuối trang (Máy cắt...) vẫn có thể bị tràn/cắt dù
+  // logic scale đã đúng. Đo lại ở nhiều mốc thời gian để luôn khớp với
+  // kích thước nội dung THẬT SỰ sau khi mọi thứ đã tải/render xong.
   requestAnimationFrame(dhApplyAutoFit);
+  setTimeout(dhApplyAutoFit, 60);
+  setTimeout(dhApplyAutoFit, 250);
+  setTimeout(dhApplyAutoFit, 600);
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(dhApplyAutoFit).catch(()=>{});
+  }
 }
 
 function dhToggleTv(){
@@ -11693,11 +11716,17 @@ function dhApplyAutoFit(){
   const availW = outer.clientWidth;
   const availH = outer.clientHeight;
   if(!naturalW || !naturalH || !availW || !availH) return;
-  // Cho phép co giãn linh hoạt hơn ở cả 2 chiều: co nhỏ khi có rất nhiều máy
-  // (xưởng lớn), phóng to vừa phải khi ít máy/màn hình rất lớn (4K, TV to).
-  const scale = Math.min(availW/naturalW, availH/naturalH, 1.35);
+  // QUAN TRỌNG: TUYỆT ĐỐI không đặt "sàn" (minimum) cho scale — trước đây có
+  // Math.max(scale,0.4) khiến khi có nhiều máy (nội dung cần scale < 0.4 mới
+  // vừa màn hình) thì scale vẫn bị ép về 0.4, làm nội dung TRÀN khỏi khung
+  // nhìn và bị cắt (đúng lỗi Máy đánh bóng/Máy cắt bị mất). Yêu cầu bắt buộc
+  // là KHÔNG BAO GIỜ được cắt/ẩn máy nào, nên scale phải luôn đủ nhỏ để toàn
+  // bộ nội dung vừa khít — chữ có thể nhỏ hơn nhưng không được cắt nội dung.
+  // Trừ hao 0.985 để chừa sai số bo tròn pixel/scrollbar, tránh vừa đủ 100%
+  // vẫn bị tràn 1-2px sinh ra thanh cuộn không mong muốn.
+  const scale = Math.min(availW/naturalW, availH/naturalH, 1.35) * 0.985;
   inner.style.transformOrigin = 'top center';
-  inner.style.transform = `scale(${Math.max(scale,0.4)})`;
+  inner.style.transform = `scale(${scale})`;
 }
 
 // Gộp nhiều lần gọi liên tiếp (resize kéo tay, xoay màn hình, đổi cửa sổ)
