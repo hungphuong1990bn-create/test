@@ -4172,13 +4172,13 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .stage-tracker-pct{font-size:10.5px;font-weight:800;color:var(--brand2);background:#fff;border:1px solid #c7d7fb;padding:2px 9px;border-radius:20px;box-shadow:0 1px 4px rgba(11,95,203,.12);transition:all .3s}
 .stage-tracker-pct.is-done{color:#fff;background:var(--green-m);border-color:transparent;box-shadow:0 1px 3px rgba(16,24,40,.15)}
 .stage-steps{display:flex;align-items:flex-start;position:relative;z-index:1}
-.stage-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:0 0 auto;width:64px}
+.stage-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1 1 0;min-width:0}
 .stage-step[data-clickable="1"]{cursor:pointer}
 .stage-step[data-clickable="1"]:hover .stage-dot{transform:translateY(-2px) scale(1.08);box-shadow:0 8px 16px rgba(37,99,235,.3)}
 .stage-step[data-clickable="1"]:hover .stage-name{color:var(--brand2)}
-.stage-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2px solid var(--border);background:#fff;color:var(--text4);transition:all .25s cubic-bezier(.34,1.56,.64,1)}
-.stage-name{font-size:9.5px;font-weight:700;color:var(--text4);text-align:center;line-height:1.2;transition:color .25s}
-.stage-line{flex:1 1 auto;height:3px;border-radius:3px;background:var(--border);margin:15px -2px 0;min-width:10px;transition:background .4s ease}
+.stage-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2px solid var(--border);background:#fff;color:var(--text4);transition:all .25s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
+.stage-name{font-size:9.5px;font-weight:700;color:var(--text4);text-align:center;line-height:1.2;transition:color .25s;width:100%;overflow-wrap:break-word;word-break:break-word;padding:0 1px}
+.stage-line{flex:1 1 16px;height:3px;border-radius:3px;background:var(--border);margin:15px -2px 0;min-width:6px;transition:background .4s ease}
 .stage-step.st-done .stage-dot{background:var(--green-m);border-color:transparent;color:#fff;box-shadow:0 2px 6px rgba(16,24,40,.15);animation:stageDonePop .4s cubic-bezier(.34,1.56,.64,1)}
 .stage-step.st-done .stage-name{color:var(--green-m);font-weight:800}
 .stage-line.done{background:var(--green-m)}
