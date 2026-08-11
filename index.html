@@ -3488,54 +3488,65 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dh-fit-outer{width:100%}
 .dh-fit-inner{display:flex;flex-direction:column;gap:14px}
 /* ============================================================================
-   TV MODE — RENDER NATIVE, KHÔNG SCALE TOÀN BỘ DASHBOARD
+   TV MODE — BỐ CỤC THUẦN CSS GRID/FLEX, KHÔNG JS ĐO/CO GIÃN, KHÔNG CUỘN
    ------------------------------------------------------------------------------
    Selector đúng phải là COMPOUND ".dh-wrap.dh-tv" (dh-tv và dh-wrap nằm trên
    CÙNG 1 phần tử <div class="dh-wrap dh-tv">) — không dùng combinator con kiểu
    ".dh-tv .dh-wrap" vì sẽ không bao giờ khớp.
 
-   Toàn bộ cơ chế transform:scale()/zoom() thu nhỏ cả bảng đã bị LOẠI BỎ HOÀN
-   TOÀN (xem dhApplyAutoFit trong JS — nay chỉ dọn inline style, không còn
-   tính/​gán scale nào nữa). #dhFitInner luôn render ở kích thước tự nhiên
-   (native): 1 pixel CSS = 1 pixel CSS thật, không bị nhân tỉ lệ.
-
-   Việc "vừa màn hình" ở mọi độ phân giải (1920×1080 / 2560×1440 / 3840×2160)
-   do CSS đảm nhiệm 100% bằng 3 lớp:
-   1) Container neo cứng position:fixed;inset:0 → luôn đúng 100vw × 100dvh
-      của MÀN HÌNH THẬT, độc lập hoàn toàn với DOM cha (app-body/main-wrap...).
-   2) #dhFitInner rộng hết viewport (không còn giới hạn theo px như bản cũ)
-      để Grid tự thêm cột theo bề rộng thật — màn càng lớn càng nhiều cột/thẻ
-      trên 1 hàng, đúng tinh thần "tận dụng không gian 4K" thay vì phóng to
-      1 layout 1080p.
-   3) clamp()/vw/vh lo phần chữ + khoảng cách theo từng mốc độ phân giải
-      (xem các rule .dh-tv ... clamp(...) và các @media theo min-width bên dưới).
-
-   Nếu ở 1 màn hình cực kỳ hẹp/thấp mà nội dung vẫn nhiều hơn không gian thật
-   (VD: rất nhiều máy + rất nhiều nhóm cùng lúc), #dhFitOuter cho phép cuộn dọc
-   NHƯNG ẩn hẳn thanh cuộn để KHÔNG BAO GIỜ có máy nào bị cắt/mất — đây là lưới
-   an toàn cuối cùng, không phải cơ chế chính (cơ chế chính là Grid co giãn tự
-   nhiên nêu trên).
+   KHÔNG dùng transform:scale()/zoom() và KHÔNG còn bất kỳ vòng lặp JS nào đo
+   scrollHeight rồi dò một biến số nhân chung (--dhs) như bản cũ — cơ chế đó đã
+   bị GỠ BỎ HOÀN TOÀN (xem lại dhApplyAutoFit/dhScheduleAutoFit trong JS: nay
+   không còn tồn tại). Toàn bộ việc "vừa khít 1 màn hình, không cuộn" do đúng 3
+   lớp CSS tĩnh đảm nhiệm, tính lại tức thời bởi trình duyệt mỗi khi resize —
+   không có độ trễ dò/không có bước nhảy giật do JS:
+   1) #dhWrap neo cứng position:fixed;inset:0, width/height = 100dvw/100dvh →
+      luôn đúng khung MÀN HÌNH THẬT, độc lập hoàn toàn với DOM cha
+      (app-body/main-wrap/main-content...) nên không bao giờ bị khung cha cắt.
+   2) #dhWrap là 1 CỘT FLEX cao đúng 100dvh: Header (company-bar + header-row)
+      lấy đúng chiều cao nội dung (flex:0 0 auto), phần CÁC NHÓM MÁY
+      (#dhFitInner > .dh-group) chia đều hết chiều cao CÒN LẠI cho nhau
+      (flex:1 1 0 + min-height:0) — đây chính là "tự động phân bổ chiều cao
+      Header → KPI → nhóm máy" bằng CSS, không cần JS tính toán.
+   3) Trong mỗi nhóm, .dh-card-grid dùng grid-template-columns:repeat(var(--n),1fr)
+      (var(--n) = SỐ MÁY thật của đúng nhóm đó, gán inline từ JS khi render) nên
+      LUÔN đúng 1 hàng duy nhất, không bao giờ wrap xuống hàng 2 — nhờ vậy
+      grid-template-rows:1fr cho phép hàng đó chiếm trọn 100% chiều cao nhóm.
+      Font-size/padding/gap của mọi phần tử bên trong dùng clamp(min, x*dvh, max)
+      nên chữ luôn render ở kích thước THẬT (không phóng ảnh/không mờ), tự to
+      dần theo chiều cao màn hình thật (1080p → 1440p → 4K "native", không phải
+      phóng to 1 layout 1080p) mà vẫn có sàn tối thiểu để luôn đọc rõ.
+   Kết quả: #dhWrap luôn overflow:hidden tuyệt đối — không còn "lưới an toàn"
+   cho phép cuộn ẩn như bản cũ, vì với bố cục chia đều chiều cao ở trên, nội
+   dung không bao giờ cao hơn khung thật nữa.
    ============================================================================ */
 .dh-wrap.dh-tv{
   position:fixed;inset:0;z-index:9990;
   width:100vw;width:100dvw;height:100vh;height:100dvh;
   margin:0;border-radius:0;box-sizing:border-box;
-  padding:calc(10px * var(--dhs));gap:calc(8px * var(--dhs));
+  padding:clamp(8px,1dvh,20px) clamp(10px,1.2dvw,26px);
+  gap:clamp(6px,0.9dvh,16px);
   display:flex;flex-direction:column;overflow:hidden;
 }
 .dh-tv .dh-fit-outer{
   flex:1 1 auto;min-height:0;width:100%;box-sizing:border-box;
-  overflow-y:auto;overflow-x:hidden;
-  scrollbar-width:none;-ms-overflow-style:none; /* ẩn thanh cuộn (lưới an toàn) */
+  display:flex;overflow:hidden; /* không cuộn: nội dung luôn vừa khít nhờ Flex chia đều bên dưới */
 }
-.dh-tv .dh-fit-outer::-webkit-scrollbar{width:0;height:0;display:none}
-/* #dhFitInner render NATIVE, rộng hết khung thật (không còn cap theo px như
-   bản scale cũ) để lưới thẻ máy tự thêm cột khi màn hình rộng hơn. */
-.dh-tv .dh-fit-inner{width:100%;gap:calc(10px * var(--dhs))}
-/* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn nhẹ để thẻ
-   máy không bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối; đây là
-   giới hạn CHIỀU RỘNG BỐ CỤC (layout), không phải phép scale nội dung. */
-@media (min-aspect-ratio:2/1){.dh-tv .dh-fit-inner{width:min(3200px,92vw);margin:0 auto}}
+.dh-tv .dh-fit-inner{
+  flex:1 1 auto;min-height:0;width:100%;box-sizing:border-box;
+  display:flex;flex-direction:column;gap:clamp(6px,0.9dvh,16px);overflow:hidden;
+}
+/* Header (company-bar + header-row) giữ đúng chiều cao nội dung, KHÔNG co giãn */
+.dh-tv .dh-fit-inner>.dh-company-bar,
+.dh-tv .dh-fit-inner>.dh-header-row{flex:0 0 auto;min-height:0}
+/* Mỗi nhóm máy (Máy đùn/Máy rút/Máy đánh bóng/Máy cắt) chia ĐỀU phần chiều cao
+   còn lại — đây là cơ chế "tự động phân bổ chiều cao" chính, thay hoàn toàn
+   cho vòng lặp JS đo/co giãn cũ. */
+.dh-tv .dh-fit-inner>.dh-group{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+/* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn nhẹ bề RỘNG
+   để thẻ máy không bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối; đây
+   là giới hạn CHIỀU RỘNG BỐ CỤC (layout), không đụng gì tới chiều cao/chữ. */
+@media (min-aspect-ratio:2/1){.dh-tv .dh-fit-inner{max-width:min(3200px,92vw);margin:0 auto}}
 
 /* ── TV Mode THẬT SỰ toàn màn hình: ẩn hẳn sidebar/topbar/bottom-nav/FAB/
    banner của app (không chỉ riêng khung dh-wrap) và bỏ mọi padding/margin
@@ -3734,86 +3745,104 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-next-pri{flex:0 0 auto;font-size:9px;font-weight:800;color:#fde68a;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:2px 6px;white-space:nowrap}
 .dh-next-more{font-size:10px;font-weight:700;color:var(--dh-text2);text-align:center;padding-top:1px;opacity:.85}
 /* ============================================================================
-   TV MODE — HỆ THỐNG CO GIÃN "--dhs" (fit-scale) DUY NHẤT
+   TV MODE — KÍCH THƯỚC BẰNG clamp(min, x·dvh, max), KHÔNG CÒN JS ĐO/CO GIÃN
    ------------------------------------------------------------------------------
-   Đây là cơ chế THẬT SỰ khác transform:scale()/zoom(): --dhs là 1 SỐ (không
-   đơn vị) được nhân vào TỪNG font-size/padding/gap bằng calc(px * var(--dhs)).
-   Khi JS đổi --dhs, trình duyệt tính lại kích thước chữ/khoảng cách THẬT rồi
-   render lại (reflow) — chữ luôn sắc nét ở đúng kích thước đó, không phải
-   "phóng to/thu nhỏ hình ảnh" của layout cũ như transform:scale().
-   JS (dhApplyAutoFit) đo chiều cao nội dung thật (#dhFitInner.scrollHeight)
-   so với chiều cao khung thật (#dhFitOuter.clientHeight) và tự dò --dhs tới
-   khi VỪA KHÍT — không cần cuộn ở 1920×1080, và tận dụng hết không gian thừa
-   ở 2560×1440 / 3840×2160 bằng cách tăng --dhs lên thêm.
-   --dhs có 1 mốc khởi điểm hợp lý theo độ rộng màn hình thật (media query
-   dưới đây) để JS không phải dò từ quá xa, nhưng con số CHÍNH XÁC CUỐI CÙNG
-   luôn do JS đo & quyết định theo đúng nội dung đang có (bao nhiêu máy, bao
-   nhiêu đơn chạy tiếp...) — không đoán mò theo vw/vh như trước.
+   Toàn bộ biến --dhs và vòng lặp JS dò số nhân (dhApplyAutoFit) đã bị GỠ BỎ.
+   Thay vào đó, MỌI font-size/padding/gap/kích thước trong TV Mode dùng
+   clamp(sàn, x·dvh, trần):
+     - Đơn vị dvh (dynamic viewport height) = % CHIỀU CAO MÀN HÌNH THẬT, nên
+       browser tự tính lại tức thời khi đổi độ phân giải — không cần JS.
+     - "x·dvh" càng lớn ở màn hình cao hơn (1440p, 4K) → chữ tự to hơn NGUYÊN
+       BẢN (font-size thật, browser tự render lại glyph — không phải phóng to
+       ảnh như transform:scale() nên luôn sắc nét), đúng tinh thần "4K hiển thị
+       native, không scale layout 1080p".
+     - "sàn" (giá trị min của clamp) đảm bảo chữ không bao giờ nhỏ hơn ngưỡng
+       đọc được, kể cả ở 1080p với đủ 4 nhóm máy cùng lúc.
+     - "trần" (giá trị max của clamp) tránh chữ to quá khổ ở 4K khi ít nội dung.
+   Việc "vừa khít 1 màn hình" do CHÍNH BỐ CỤC (Flex chia đều theo nhóm ở trên +
+   Grid 1-hàng-duy-nhất theo var(--n) ở dưới) đảm nhiệm — clamp() chỉ lo phần
+   CHỮ/KHOẢNG CÁCH đọc rõ bên trong khung đã được bố cục sẵn, không tham gia
+   vào việc "có vừa màn hình hay không".
    ============================================================================ */
-.dh-wrap.dh-tv{--dhs:1}
-@media (min-width:2400px){.dh-wrap.dh-tv{--dhs:1.25}}
-@media (min-width:3200px){.dh-wrap.dh-tv{--dhs:1.55}}
+.dh-tv .dh-header-row{gap:clamp(6px,0.9dvw,16px)}
+.dh-tv .dh-company-bar{padding:clamp(3px,0.55dvh,11px) clamp(8px,1.1dvh,20px);gap:clamp(5px,0.75dvh,14px);border-radius:clamp(6px,0.9dvh,16px)}
+.dh-tv .dh-company-logo{width:clamp(16px,2.5dvh,40px);height:clamp(16px,2.5dvh,40px)}
+.dh-tv .dh-company-name{font-size:clamp(8px,1.1dvh,17px)}
+.dh-tv .dh-company-sub{font-size:clamp(6.5px,0.7dvh,11px)}
+.dh-tv .dh-so-col{padding:clamp(4px,0.6dvh,11px) clamp(8px,1.1dvh,20px);border-radius:clamp(7px,1dvh,17px)}
+.dh-tv .dh-so-title{font-size:clamp(6.5px,0.7dvh,11px);margin-bottom:clamp(2px,0.4dvh,8px)}
+.dh-tv .dh-so-rows{gap:clamp(2px,0.4dvh,7px)}
+.dh-tv .dh-so-row{font-size:clamp(7px,0.85dvh,14px);gap:clamp(4px,0.55dvh,9px)}
+.dh-tv .dh-so-row b{font-size:clamp(8px,1.05dvh,16px)}
+.dh-tv .dh-so-logo{width:clamp(12px,1.8dvh,24px);height:clamp(12px,1.8dvh,24px)}
+.dh-tv .dh-topbar{padding:clamp(4px,0.75dvh,14px) clamp(8px,1.1dvh,20px);gap:clamp(4px,0.65dvh,11px);border-radius:clamp(7px,1dvh,16px)}
+.dh-tv .dh-topbar-row1{gap:clamp(5px,0.8dvh,14px)}
+.dh-tv .dh-brand{font-size:clamp(7px,0.9dvh,13px);gap:clamp(3px,0.5dvh,8px)}
+.dh-tv .dh-topbar-row2{gap:clamp(4px,0.6dvh,10px)}
+.dh-tv .dh-clock-card,.dh-tv .dh-shift-card{padding:clamp(3px,0.55dvh,11px) clamp(6px,1dvh,18px);gap:clamp(2px,0.3dvh,5px);border-radius:clamp(6px,0.85dvh,13px)}
+.dh-tv .dh-clock-time{font-size:clamp(11px,1.9dvh,28px)}
+.dh-tv .dh-clock-date{font-size:clamp(6.5px,0.75dvh,12px);gap:clamp(3px,0.5dvh,8px)}
+.dh-tv .dh-shift-card-hd{gap:clamp(3px,0.5dvh,8px)}
+.dh-tv .dh-runtime-inline-label{font-size:clamp(6px,0.65dvh,10px)}
+.dh-tv .dh-shift-badge{font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.2dvh,3px) clamp(4px,0.6dvh,10px)}
+.dh-tv .dh-runtime-inline-time{font-size:clamp(9px,1.7dvh,24px)}
+.dh-tv .dh-tv-btn{font-size:clamp(7px,0.85dvh,12px);padding:clamp(3px,0.6dvh,9px) clamp(6px,1dvh,15px)}
 
-.dh-tv .dh-header-row{gap:calc(12px * var(--dhs))}
-.dh-tv .dh-status-overview{gap:calc(12px * var(--dhs))}
-.dh-tv .dh-company-bar{padding:calc(10px * var(--dhs)) calc(18px * var(--dhs));gap:calc(12px * var(--dhs));border-radius:calc(12px * var(--dhs))}
-.dh-tv .dh-company-logo{width:calc(44px * var(--dhs));height:calc(44px * var(--dhs))}
-.dh-tv .dh-company-name{font-size:calc(17px * var(--dhs))}
-.dh-tv .dh-company-sub{font-size:calc(11.5px * var(--dhs))}
-.dh-tv .dh-so-col{padding:calc(11px * var(--dhs)) calc(16px * var(--dhs));border-radius:calc(14px * var(--dhs))}
-.dh-tv .dh-so-title{font-size:calc(11.5px * var(--dhs));margin-bottom:calc(8px * var(--dhs))}
-.dh-tv .dh-so-rows{gap:calc(7px * var(--dhs))}
-.dh-tv .dh-so-row{font-size:calc(13.5px * var(--dhs));gap:calc(8px * var(--dhs))}
-.dh-tv .dh-so-row b{font-size:calc(16.5px * var(--dhs))}
-.dh-tv .dh-so-logo{width:calc(24px * var(--dhs));height:calc(24px * var(--dhs))}
-.dh-tv .dh-wf-strip{padding:calc(8px * var(--dhs)) calc(16px * var(--dhs));gap:calc(13px * var(--dhs));border-radius:calc(12px * var(--dhs))}
-.dh-tv .dh-wf-strip-title{font-size:calc(11px * var(--dhs))}
-.dh-tv .dh-wf-strip-items{gap:calc(11px * var(--dhs))}
-.dh-tv .dh-wf-item b{font-size:calc(17px * var(--dhs))}
-.dh-tv .dh-wf-item span{font-size:calc(10.5px * var(--dhs))}
-.dh-tv .dh-topbar{padding:calc(12px * var(--dhs)) calc(16px * var(--dhs));gap:calc(10px * var(--dhs));border-radius:calc(14px * var(--dhs))}
-.dh-tv .dh-topbar-row1{gap:calc(10px * var(--dhs))}
-.dh-tv .dh-brand{font-size:calc(13px * var(--dhs));gap:calc(6px * var(--dhs))}
-.dh-tv .dh-topbar-row2{gap:calc(9px * var(--dhs))}
-.dh-tv .dh-clock-card,.dh-tv .dh-shift-card{padding:calc(8px * var(--dhs)) calc(13px * var(--dhs));gap:calc(4px * var(--dhs));border-radius:calc(10px * var(--dhs))}
-.dh-tv .dh-clock-time{font-size:calc(29px * var(--dhs))}
-.dh-tv .dh-clock-date{font-size:calc(11.5px * var(--dhs));gap:calc(6px * var(--dhs))}
-.dh-tv .dh-shift-card-hd{gap:calc(6px * var(--dhs))}
-.dh-tv .dh-runtime-inline-label{font-size:calc(9.5px * var(--dhs))}
-.dh-tv .dh-shift-badge{font-size:calc(11px * var(--dhs));padding:calc(2px * var(--dhs)) calc(8px * var(--dhs))}
-.dh-tv .dh-runtime-inline-time{font-size:calc(25px * var(--dhs))}
-.dh-tv .dh-tv-btn{font-size:calc(12px * var(--dhs));padding:calc(9px * var(--dhs)) calc(14px * var(--dhs))}
-.dh-tv .dh-group-title{font-size:calc(13.5px * var(--dhs));margin:calc(2px * var(--dhs)) 0 calc(7px * var(--dhs)) calc(4px * var(--dhs))}
-.dh-tv .dh-group-title::before{width:calc(4px * var(--dhs));height:calc(13px * var(--dhs))}
-.dh-tv .dh-card-grid{gap:calc(12px * var(--dhs))}
-.dh-tv .dh-card{padding:calc(12px * var(--dhs));gap:calc(6px * var(--dhs));border-radius:calc(16px * var(--dhs))}
-.dh-tv .dh-card-hd{gap:calc(7px * var(--dhs))}
-.dh-tv .dh-card-ic{font-size:calc(16px * var(--dhs))}
-.dh-tv .dh-card-name{font-size:calc(13px * var(--dhs))}
-.dh-tv .dh-status-chip{font-size:calc(9.5px * var(--dhs));padding:calc(3px * var(--dhs)) calc(9px * var(--dhs)) calc(3px * var(--dhs)) calc(7px * var(--dhs));gap:calc(4px * var(--dhs))}
-.dh-tv .dh-status-chip::before{width:calc(6px * var(--dhs));height:calc(6px * var(--dhs))}
-.dh-tv .dh-card-empty{font-size:calc(12px * var(--dhs));padding:calc(10px * var(--dhs)) 0 calc(6px * var(--dhs))}
-.dh-tv .dh-card-cust{font-size:calc(15.5px * var(--dhs))}
-.dh-tv .dh-card-spec{font-size:calc(13.5px * var(--dhs));padding:calc(4px * var(--dhs)) calc(9px * var(--dhs));border-radius:calc(8px * var(--dhs))}
-.dh-tv .dh-card-order{gap:calc(7px * var(--dhs))}
-.dh-tv .dh-card-code{font-size:calc(9.5px * var(--dhs))}
-.dh-tv .dh-card-flag{font-size:calc(9px * var(--dhs));padding:calc(2px * var(--dhs)) calc(6px * var(--dhs))}
-.dh-tv .dh-card-stage{font-size:calc(11.5px * var(--dhs));padding:calc(4px * var(--dhs)) calc(8px * var(--dhs));gap:calc(4px * var(--dhs))}
-.dh-tv .dh-card-ring-row{gap:calc(10px * var(--dhs));margin-top:calc(2px * var(--dhs))}
-.dh-tv .dh-ring{width:calc(50px * var(--dhs));height:calc(50px * var(--dhs));font-size:calc(11px * var(--dhs))}
-.dh-tv .dh-card-qty{gap:calc(3px * var(--dhs))}
-.dh-tv .dh-card-qty span{font-size:calc(10px * var(--dhs))}
-.dh-tv .dh-prog-wrap{height:calc(7px * var(--dhs));border-radius:calc(5px * var(--dhs))}
-.dh-tv .dh-card-status{font-size:calc(10.5px * var(--dhs));padding-top:calc(5px * var(--dhs));margin-top:1px}
-.dh-tv .dh-card-next{margin-top:calc(4px * var(--dhs));padding-top:calc(6px * var(--dhs));gap:calc(4px * var(--dhs))}
-.dh-tv .dh-next-hd{font-size:calc(9px * var(--dhs));gap:calc(4px * var(--dhs))}
-.dh-tv .dh-next-item{gap:calc(7px * var(--dhs));padding:calc(5px * var(--dhs)) calc(7px * var(--dhs));border-radius:calc(8px * var(--dhs))}
-.dh-tv .dh-next-pos{width:calc(17px * var(--dhs));height:calc(17px * var(--dhs));font-size:calc(9px * var(--dhs))}
+/* ── Tiêu đề nhóm: chiều cao cố định nhỏ, KHÔNG co giãn (flex:0 0 auto), để
+   dồn tối đa chiều cao còn lại cho .dh-card-grid bên dưới. */
+.dh-tv .dh-group-title{flex:0 0 auto;font-size:clamp(10px,1.3dvh,20px);margin:0 0 clamp(3px,0.6dvh,10px) clamp(2px,0.3dvw,6px)}
+.dh-tv .dh-group-title::before{width:clamp(3px,0.35dvh,6px);height:clamp(9px,1.3dvh,18px)}
+
+/* ── Lưới thẻ máy trong TV Mode: LUÔN đúng 1 hàng (không auto-fit/wrap như
+   PC) vì grid-template-columns dùng đúng var(--n) = số máy thật của nhóm đó
+   (gán inline bởi JS lúc render). grid-template-rows:1fr cho hàng duy nhất
+   đó cao đúng 100% phần còn lại của nhóm — đây là "card tự compact theo
+   chiều cao màn hình". */
+.dh-tv .dh-card-grid{
+  flex:1 1 auto;min-height:0;
+  display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));grid-template-rows:1fr;
+  gap:clamp(6px,0.9dvw,18px);
+}
+.dh-tv .dh-card{
+  height:100%;min-height:0;min-width:0;overflow:hidden;
+  padding:clamp(4px,0.6dvh,12px);gap:clamp(2px,0.3dvh,6px);border-radius:clamp(8px,1dvh,18px);
+}
+.dh-tv .dh-card-hd{flex:0 0 auto;gap:clamp(4px,0.6dvw,10px)}
+.dh-tv .dh-card-ic{font-size:clamp(10px,1.4dvh,19px)}
+.dh-tv .dh-card-name{font-size:clamp(8px,1.1dvh,15px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh-tv .dh-status-chip{font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.25dvh,4px) clamp(5px,0.7dvh,10px) clamp(1px,0.25dvh,4px) clamp(4px,0.55dvh,8px);gap:clamp(2px,0.3dvh,4px)}
+.dh-tv .dh-status-chip::before{width:clamp(4px,0.45dvh,6px);height:clamp(4px,0.45dvh,6px)}
+.dh-tv .dh-card-empty{flex:1 1 auto;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,1dvh,13px);padding:clamp(2px,0.6dvh,10px) 0 clamp(2px,0.35dvh,6px)}
+.dh-tv .dh-card-cust{flex:0 0 auto;font-size:clamp(9px,1.25dvh,17px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh-tv .dh-card-spec{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(8px,1.1dvh,14px);padding:clamp(1px,0.35dvh,5px) clamp(5px,0.75dvh,10px);border-radius:clamp(4px,0.55dvh,8px)}
+.dh-tv .dh-card-order{flex:0 0 auto;gap:clamp(4px,0.55dvh,8px)}
+.dh-tv .dh-card-code{font-size:clamp(6.5px,0.75dvh,10.5px)}
+.dh-tv .dh-card-flag{font-size:clamp(6.5px,0.7dvh,10px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.5dvh,6px)}
+.dh-tv .dh-card-stage{flex:0 0 auto;font-size:clamp(7.5px,0.95dvh,12.5px);padding:clamp(1px,0.35dvh,4px) clamp(4px,0.6dvh,9px);gap:clamp(2px,0.35dvh,4px)}
+.dh-tv .dh-card-ring-row{flex:0 0 auto;gap:clamp(4px,0.7dvh,11px);margin-top:clamp(1px,0.2dvh,3px)}
+/* Vòng tiến độ (%): thu nhỏ hệ số dvh có chủ đích so với các phần tử khác —
+   đây là phần tử "nặng" nhất trong thẻ nên phải nhường chỗ đầu tiên khi màn
+   hình thấp (1080p), vẫn đủ lớn để đọc %, và tự lớn hẳn lên ở 1440p/4K. */
+.dh-tv .dh-ring{width:clamp(18px,2.8dvh,48px);height:clamp(18px,2.8dvh,48px);font-size:clamp(6.5px,0.85dvh,11px)}
+.dh-tv .dh-card-qty{gap:clamp(2px,0.3dvh,4px)}
+.dh-tv .dh-card-qty span{font-size:clamp(6.5px,0.8dvh,11px)}
+.dh-tv .dh-prog-wrap{height:clamp(3px,0.5dvh,8px);border-radius:clamp(3px,0.35dvh,5px)}
+.dh-tv .dh-card-status{flex:0 0 auto;font-size:clamp(7px,0.85dvh,12px);padding-top:clamp(1px,0.35dvh,6px);margin-top:1px}
+/* Khối "Đơn chạy tiếp": TV Mode chỉ hiện TỐI ĐA 1 đơn kế tiếp (thay vì 2 như
+   PC/Mobile) — số lượng đang chờ vẫn hiển thị đủ ở dòng tiêu đề (dh-next-hd,
+   lấy trực tiếp từ dữ liệu, không đổi), nên KHÔNG mất thông tin, chỉ gọn lại
+   phần xem trước để đảm bảo card luôn vừa khít chiều cao ô lưới, không bị
+   cắt. Chỉ áp trong .dh-tv — PC/Mobile vẫn hiện đủ như cũ. */
+.dh-tv .dh-card-next{flex:0 0 auto;overflow:hidden;margin-top:clamp(2px,0.3dvh,5px);padding-top:clamp(2px,0.4dvh,7px);gap:clamp(2px,0.3dvh,5px)}
+.dh-tv .dh-next-item~.dh-next-item{display:none}
+.dh-tv .dh-next-more{display:none}
+.dh-tv .dh-next-hd{font-size:clamp(6px,0.68dvh,10px);gap:clamp(2px,0.3dvh,4px)}
+.dh-tv .dh-next-item{gap:clamp(4px,0.5dvh,8px);padding:clamp(1px,0.35dvh,6px) clamp(4px,0.5dvh,8px);border-radius:clamp(4px,0.5dvh,9px)}
+.dh-tv .dh-next-pos{width:clamp(10px,1.6dvh,18px);height:clamp(10px,1.6dvh,18px);font-size:clamp(6px,0.68dvh,10px)}
 .dh-tv .dh-next-body{gap:1px}
-.dh-tv .dh-next-cust{font-size:calc(10.5px * var(--dhs))}
-.dh-tv .dh-next-spec{font-size:calc(9.5px * var(--dhs))}
-.dh-tv .dh-next-pri{font-size:calc(8.5px * var(--dhs));padding:calc(2px * var(--dhs)) calc(5px * var(--dhs))}
-.dh-tv .dh-next-more{font-size:calc(9.5px * var(--dhs))}
+.dh-tv .dh-next-cust{font-size:clamp(7px,0.8dvh,12px)}
+.dh-tv .dh-next-spec{font-size:clamp(6px,0.68dvh,10px)}
+.dh-tv .dh-next-pri{font-size:clamp(5.5px,0.65dvh,9px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.4dvh,6px)}
 .kh-detail-grid>div{display:flex;flex-direction:column;gap:1px;min-width:0}
 .kh-detail-grid>div b{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.2px}
 .kh-detail-grid>div span{font-size:13px;color:var(--text);font-weight:600;overflow-wrap:break-word}
@@ -11457,8 +11486,7 @@ function renderKeHoach(){
 // không lưu máy/công đoạn riêng, không nhập lại gì ở đây, nên luôn khớp
 // 100% với tab Kế hoạch SX và không bao giờ có dữ liệu trùng.
 // ════════════════════════════════════════════════════════════
-let dhTvMode = false;   // chế độ TV: fullscreen + tự động co giãn vừa khít màn hình
-let _dhFitBound = false; // đã gắn listener resize/orientation chưa (chỉ gắn 1 lần)
+let dhTvMode = false;   // chế độ TV: fullscreen, bố cục tự vừa khít màn hình hoàn toàn bằng CSS
 
 // ── TV Mode "khoá cứng": khi bật (bấm nút TV Mode, hoặc mở link kèm
 // ?tv=1), CỬA SỔ trình duyệt này sẽ luôn ở lại tab Điều hành SX — goTab()
@@ -11724,28 +11752,23 @@ function renderDieuHanh(){
       <div class="dh-fit-outer" id="dhFitOuter"><div class="dh-fit-inner" id="dhFitInner">
       ${dhHeaderHTML()}
 
-      ${groups.map(g=>`
+      ${groups.map(g=>{
+        const list = MACHINES.filter(m=>m.group===g);
+        // --n = số máy thật của ĐÚNG nhóm này, dùng cho lưới TV Mode (CSS
+        // grid-template-columns:repeat(var(--n),1fr)) để mỗi nhóm luôn xếp
+        // đúng 1 hàng duy nhất, không wrap — không ảnh hưởng PC/Mobile vì
+        // biến này chỉ được CSS trong .dh-tv sử dụng.
+        return `
         <div class="dh-group">
           <div class="dh-group-title">${g}</div>
-          <div class="dh-card-grid">${MACHINES.filter(m=>m.group===g).map(dhMachineCard).join('')}</div>
+          <div class="dh-card-grid" style="--n:${list.length}">${list.map(dhMachineCard).join('')}</div>
         </div>
-      `).join('')}
+      `;}).join('')}
       </div></div>
     </div>
   `;
   dhTickClock();
   dhBindAutoFit();
-  // Gọi lại nhiều lần sau khi render (font-family/logo công ty có thể tải
-  // xong muộn hơn khung hình đầu) để dọn sạch mọi inline style transform/width
-  // còn sót — layout thật sự do CSS (Grid + clamp) tự lo, không còn phép tính
-  // scale nào ở đây nữa.
-  requestAnimationFrame(dhApplyAutoFit);
-  setTimeout(dhApplyAutoFit, 60);
-  setTimeout(dhApplyAutoFit, 250);
-  setTimeout(dhApplyAutoFit, 600);
-  if(document.fonts && document.fonts.ready){
-    document.fonts.ready.then(dhApplyAutoFit).catch(()=>{});
-  }
 }
 
 function dhToggleTv(){
@@ -11763,121 +11786,31 @@ function dhToggleTv(){
   if(dhTvMode && el.requestFullscreen) el.requestFullscreen().catch(()=>{});
   if(!dhTvMode && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
   renderDieuHanh();
-  dhScheduleAutoFit();
 }
 
-// ── TV Mode RENDER NATIVE — KHÔNG scale toàn bộ bảng bằng transform/zoom. ──
-// Thay vì đoán kích thước theo vw/vh (không biết trước sẽ có bao nhiêu máy,
-// bao nhiêu đơn chạy tiếp...), hàm này ĐO CHIỀU CAO NỘI DUNG THẬT
-// (#dhFitInner.scrollHeight) so với chiều cao khung thật (#dhFitOuter.
-// clientHeight) rồi dò biến CSS --dhs (một con số nhân vào font-size/
-// padding/gap của mọi phần tử TV qua calc(px * var(--dhs)) — xem CSS) cho
-// tới khi nội dung VỪA KHÍT. Đây KHÔNG phải transform:scale()/zoom(): mỗi
-// bước đổi --dhs là một font-size/padding THẬT, trình duyệt tính lại chữ và
-// layout (reflow) — chữ luôn sắc nét ở đúng cỡ đó, không bị "phóng ảnh" nên
-// không mờ/nhòe như cách cũ.
-// Thuật toán 2 pha:
-//  1) SHRINK: nếu nội dung cao hơn khung → giảm dần --dhs tới khi vừa khít
-//     (hoặc chạm sàn an toàn) — đảm bảo 1920×1080 hiển thị đủ mọi nhóm máy
-//     (kể cả Máy đánh bóng/Máy cắt) mà KHÔNG cần cuộn.
-//  2) GROW: nếu còn thừa nhiều khoảng trống (2560×1440, 3840×2160, hoặc ít
-//     máy) → tăng dần --dhs lên tới khi vừa chạm đáy khung hoặc chạm trần
-//     theo từng mốc màn hình — tận dụng hết không gian thay vì để trống.
-function dhApplyAutoFit(){
-  if(!dhTvMode) return;
-  const wrap = document.getElementById('dhWrap');
-  const outer = document.getElementById('dhFitOuter');
-  const inner = document.getElementById('dhFitInner');
-  if(!wrap || !outer || !inner) return;
-
-  const w = window.innerWidth;
-  // Mốc khởi điểm hợp lý theo bề rộng màn hình thật — chỉ để JS không phải dò
-  // từ quá xa, KHÔNG phải là kích thước cuối cùng (bước đo bên dưới mới quyết
-  // định con số chính xác theo đúng nội dung đang hiển thị).
-  let dhs = w>=3200 ? 1.55 : (w>=2400 ? 1.25 : 1);
-  // Trần tối đa theo mốc màn hình — tránh chữ to quá khổ dù còn thừa chỗ.
-  const ceil = w>=3200 ? 2.05 : (w>=2400 ? 1.65 : 1.18);
-  // Sàn tối thiểu — không để chữ nhỏ tới mức khó đọc; nếu chạm sàn mà vẫn
-  // tràn (cực hiếm, ví dụ quá nhiều máy cùng lúc) thì #dhFitOuter vẫn còn
-  // overflow-y:auto (thanh cuộn ẩn) làm lưới an toàn cuối cùng, không mất nội
-  // dung.
-  const floor = 0.62;
-  const fits = ()=> inner.scrollHeight <= outer.clientHeight + 1;
-
-  wrap.style.setProperty('--dhs', dhs.toFixed(3));
-
-  if(!fits()){
-    // PHA THU NHỎ: giảm dần tới khi vừa khít hoặc chạm sàn.
-    let lo = floor, hi = dhs, guard = 0;
-    while(guard++ < 26 && (hi-lo) > 0.006){
-      const mid = (lo+hi)/2;
-      wrap.style.setProperty('--dhs', mid.toFixed(3));
-      if(fits()) lo = mid; else hi = mid;
-    }
-    dhs = lo;
-    wrap.style.setProperty('--dhs', dhs.toFixed(3));
-    if(!fits()){
-      dhs = floor;
-      wrap.style.setProperty('--dhs', dhs.toFixed(3));
-    }
-  } else {
-    // PHA TẬN DỤNG KHOẢNG TRỐNG: tăng dần tới khi vừa chạm đáy khung hoặc
-    // chạm trần theo mốc màn hình — giúp 2K/4K/ít máy không bị "trống trải".
-    let lo = dhs, hi = ceil, guard = 0;
-    wrap.style.setProperty('--dhs', hi.toFixed(3));
-    if(fits()){
-      dhs = hi;
-    } else {
-      while(guard++ < 26 && (hi-lo) > 0.006){
-        const mid = (lo+hi)/2;
-        wrap.style.setProperty('--dhs', mid.toFixed(3));
-        if(fits()) lo = mid; else hi = mid;
-      }
-      dhs = lo;
-    }
-    wrap.style.setProperty('--dhs', dhs.toFixed(3));
-  }
-}
-
-// Gộp nhiều lần gọi liên tiếp (resize kéo tay, xoay màn hình, đổi cửa sổ)
-// thành 1 lần tính toán, tránh giật/lag trên các TV cấu hình yếu.
-let _dhFitRaf = null;
-function dhScheduleAutoFit(){
-  if(_dhFitRaf) cancelAnimationFrame(_dhFitRaf);
-  _dhFitRaf = requestAnimationFrame(()=>{ _dhFitRaf=null; if(currentTab==='dieuHanh') dhApplyAutoFit(); });
-}
-
-let _dhResizeObserver = null;
+// ── TV Mode BỐ CỤC THUẦN CSS — không còn hàm JS nào đo/co giãn layout nữa.
+// "Vừa khít 1 màn hình, không cuộn" ở mọi độ phân giải (1920×1080 /
+// 2560×1440 / 3840×2160) hoàn toàn do CSS đảm nhiệm (Flex chia đều theo
+// nhóm máy + Grid 1-hàng-duy-nhất theo var(--n) + clamp(dvh) cho chữ/khoảng
+// cách — xem chi tiết trong khối CSS ".dh-wrap.dh-tv" ở phần <style>), nên
+// không cần requestAnimationFrame/setTimeout/ResizeObserver để "dò" kích
+// thước như bản cũ nữa — trình duyệt tự tính lại tức thời mỗi khi resize.
+//
+// Phần JS còn lại dưới đây KHÔNG liên quan tới bố cục: chỉ đảm bảo cửa sổ
+// TV (đã khoá cứng qua dhToggleTv()/?tv=1) luôn tự quay lại đúng tab Điều
+// hành SX + đúng class fullscreen mỗi khi màn hình TV được bật lại (đổi
+// nguồn HDMI, khoá màn hình rồi mở lại...) — logic này giữ nguyên như cũ.
+let _dhWatchersBound = false;
 function dhBindAutoFit(){
-  if(!_dhFitBound){
-    _dhFitBound = true;
-    // Đổi kích thước cửa sổ (kéo tay, đổi độ phân giải điều khiển từ xa TV)
-    window.addEventListener('resize', dhScheduleAutoFit);
-    // Xoay màn hình (TV/màn hình treo tường dạng dọc)
-    window.addEventListener('orientationchange', dhScheduleAutoFit);
-    document.addEventListener('fullscreenchange', dhScheduleAutoFit);
-    // TV tắt/mở lại nguồn HDMI, khoá màn hình rồi mở lại... trình duyệt có
-    // thể giữ nguyên trang (không reload) nhưng kích thước hiển thị có thể
-    // đã đổi — tính lại fit + đảm bảo vẫn đang khoá đúng tab khi quay lại.
-    document.addEventListener('visibilitychange', ()=>{
-      if(!document.hidden){
-        if(dhTvLocked() && currentTab!=='dieuHanh') goTab('dieuHanh');
-        dhSyncFullscreenClass();
-        dhScheduleAutoFit();
-      }
-    });
-  }
-  // #dhFitOuter bị tạo lại mỗi lần renderDieuHanh() chạy (innerHTML mới) nên
-  // phải gắn lại ResizeObserver vào node mới mỗi lần, tránh theo dõi 1 node
-  // đã bị gỡ khỏi DOM (không còn báo thay đổi kích thước nữa).
-  if(window.ResizeObserver){
-    if(_dhResizeObserver) _dhResizeObserver.disconnect();
-    const outer = document.getElementById('dhFitOuter');
-    if(outer){
-      _dhResizeObserver = new ResizeObserver(dhScheduleAutoFit);
-      _dhResizeObserver.observe(outer);
+  if(_dhWatchersBound) return;
+  _dhWatchersBound = true;
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden){
+      if(dhTvLocked() && currentTab!=='dieuHanh') goTab('dieuHanh');
+      dhSyncFullscreenClass();
     }
-  }
+  });
+  document.addEventListener('fullscreenchange', dhSyncFullscreenClass);
 }
 
 // Đồng hồ realtime của Bảng Điều hành SX — cập nhật đúng 2 span, không vẽ
