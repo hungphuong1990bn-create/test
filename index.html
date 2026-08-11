@@ -3536,13 +3536,22 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   flex:1 1 auto;min-height:0;width:100%;box-sizing:border-box;
   display:flex;flex-direction:column;gap:clamp(6px,0.9dvh,16px);overflow:hidden;
 }
-/* Header (company-bar + header-row) giữ đúng chiều cao nội dung, KHÔNG co giãn */
+/* Header (company-bar + header-row/KPI row) giữ đúng chiều cao nội dung,
+   KHÔNG co giãn — phần còn lại (dh2-content: nhóm máy + sidebar quản lý)
+   chia hết chiều cao còn lại. */
 .dh-tv .dh-fit-inner>.dh-company-bar,
 .dh-tv .dh-fit-inner>.dh-header-row{flex:0 0 auto;min-height:0}
-/* Mỗi nhóm máy (Máy đùn/Máy rút/Máy đánh bóng/Máy cắt) chia ĐỀU phần chiều cao
-   còn lại — đây là cơ chế "tự động phân bổ chiều cao" chính, thay hoàn toàn
-   cho vòng lặp JS đo/co giãn cũ. */
-.dh-tv .dh-fit-inner>.dh-group{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.dh-tv .dh-fit-inner>.dh2-content{flex:1 1 0;min-height:0;display:flex;align-items:stretch;overflow:hidden}
+/* Cột chính (nhóm máy): mỗi nhóm máy (Máy đùn/Máy rút/Máy đánh bóng/Máy cắt)
+   chia ĐỀU phần chiều cao còn lại — cơ chế "tự động phân bổ chiều cao"
+   chính, thay hoàn toàn cho vòng lặp JS đo/co giãn cũ. */
+.dh-tv .dh2-main{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.dh-tv .dh2-main>.dh-group{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+/* Cột phụ bên phải (sidebar): 3 khối (Trễ hạn / Sắp giao / Hiệu suất) cũng
+   chia ĐỀU chiều cao còn lại theo đúng nguyên lý trên, độ rộng cố định theo
+   dvw để không chiếm quá nhiều không gian của khu vực máy sản xuất. */
+.dh-tv .dh2-side{flex:0 0 auto;width:clamp(180px,17.5dvw,320px);min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.dh-tv .dh2-side>.dh2-side-panel{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 /* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn nhẹ bề RỘNG
    để thẻ máy không bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối; đây
    là giới hạn CHIỀU RỘNG BỐ CỤC (layout), không đụng gì tới chiều cao/chữ. */
@@ -3665,9 +3674,15 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 @media (max-aspect-ratio:4/5){.dh-card-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.dh-status-overview{grid-template-columns:1fr}}
 
 /* Thẻ máy: viền phát sáng đổi màu theo trạng thái, set qua --dh-accent */
+/* overflow KHÔNG được đặt là hidden ở đây (bản PC/Mobile ngoài TV Mode) — nếu
+   không, bất kỳ tình huống nào khiến chiều cao card bị ép nhỏ hơn nội dung
+   thật (VD: quirk canh hàng của grid, extension của trình duyệt, zoom lẻ...)
+   sẽ ÂM THẦM cắt mất "ĐƠN CHẠY TIẾP" mà không có dấu hiệu gì. Ở chế độ
+   PC/Mobile trang có thể cuộn tự do nên card LUÔN được phép cao tự do theo
+   đúng nội dung (overflow:visible), không cần và không nên clip. */
 .dh-card{--dh-accent:var(--glow-ready);
   background:linear-gradient(160deg,var(--dh-card),var(--dh-card2));border:1.5px solid color-mix(in srgb,var(--dh-accent) 55%,var(--dh-border));
-  border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:7px;position:relative;overflow:hidden;
+  border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:7px;position:relative;overflow:visible;
   transition:transform .12s,box-shadow .12s;
   box-shadow:0 0 0 1px color-mix(in srgb,var(--dh-accent) 25%,transparent),0 0 18px -3px color-mix(in srgb,var(--dh-accent) 55%,transparent),0 10px 22px rgba(0,0,10,.35)}
 .dh-card::after{content:'';position:absolute;inset:0;border-radius:18px;pointer-events:none;
@@ -3736,12 +3751,16 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-card-next{margin-top:5px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.16);position:relative;z-index:1;display:flex;flex-direction:column;gap:5px}
 .dh-next-hd{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:var(--dh-text2);text-transform:uppercase;letter-spacing:.35px}
 .dh-next-hd b{color:#8fc0ff;font-weight:800;text-transform:none;letter-spacing:0}
+.dh-next-list{display:flex;flex-direction:column;gap:5px;min-height:0}
 .dh-next-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:6px 8px;cursor:pointer;transition:background .12s,transform .12s}
 .dh-next-item:hover{background:rgba(255,255,255,.1);transform:translateX(1px)}
 .dh-next-pos{flex:0 0 auto;width:19px;height:19px;border-radius:50%;background:rgba(143,192,255,.16);border:1px solid rgba(143,192,255,.45);color:#8fc0ff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .dh-next-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.dh-next-cust{font-size:11.5px;font-weight:800;color:#eaf1ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-next-row1{display:flex;align-items:center;gap:6px;min-width:0}
+.dh-next-cust{font-size:11.5px;font-weight:800;color:#eaf1ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
 .dh-next-spec{font-size:10px;color:var(--dh-text2);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-next-qty{font-size:9.5px;color:#9db3e0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-next-wait{font-size:9.5px;color:#8fc0ff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dh-next-pri{flex:0 0 auto;font-size:9px;font-weight:800;color:#fde68a;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:2px 6px;white-space:nowrap}
 .dh-next-more{font-size:10px;font-weight:700;color:var(--dh-text2);text-align:center;padding-top:1px;opacity:.85}
 /* ============================================================================
@@ -3803,46 +3822,203 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
   display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));grid-template-rows:1fr;
   gap:clamp(6px,0.9dvw,18px);
 }
+/* ── SỬA TRIỆT ĐỂ LỖI TRÀN KHUNG (bao gồm "Máy rút 100-1" và MỌI card máy) ──
+   Nguyên nhân gốc: trước đây MỌI phần tử con của .dh-card đều bị khoá
+   flex:0 0 auto (flex-shrink:0 ⇒ KHÔNG được phép co lại). Khi tổng chiều cao
+   nội dung (header + khách hàng + quy cách + công đoạn + vòng tiến độ + đơn
+   chạy tiếp) vượt quá chiều cao ô lưới (100% chiều cao TV chia cho số máy),
+   flexbox buộc phải tràn ra ngoài .dh-card, và overflow:hidden của .dh-card
+   chỉ đơn giản CẮT PHẦN THỪA Ở CUỐI — luôn luôn là "ĐƠN CHẠY TIẾP" vì nó là
+   phần tử cuối cùng trong DOM.
+   Cách sửa tận gốc: cho phép TẤT CẢ phần tử con cùng co giãn theo tỉ lệ
+   (flex-grow/flex-shrink + min-height:0 + overflow:hidden riêng từng khối)
+   thay vì chỉ đẩy phần tử cuối ra ngoài. Nhờ vậy khi TV thấp (1080p, nhiều
+   máy/hàng), TOÀN BỘ card co lại đồng đều và cân đối, "ĐƠN CHẠY TIẾP" LUÔN
+   được giữ một phần tỉ lệ riêng nên không bao giờ bị cắt mất hoàn toàn.
+   overflow:hidden ở đây chỉ đóng vai trò lưới an toàn cuối cùng chống tràn
+   (ví dụ text quá dài) — không phải cơ chế chính để ẩn dữ liệu. */
 .dh-tv .dh-card{
+  display:flex;flex-direction:column;
   height:100%;min-height:0;min-width:0;overflow:hidden;
-  padding:clamp(4px,0.6dvh,12px);gap:clamp(2px,0.3dvh,6px);border-radius:clamp(8px,1dvh,18px);
+  padding:clamp(4px,0.6dvh,12px);gap:clamp(1px,0.28dvh,6px);border-radius:clamp(8px,1dvh,18px);
 }
-.dh-tv .dh-card-hd{flex:0 0 auto;gap:clamp(4px,0.6dvw,10px)}
-.dh-tv .dh-card-ic{font-size:clamp(10px,1.4dvh,19px)}
-.dh-tv .dh-card-name{font-size:clamp(8px,1.1dvh,15px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dh-tv .dh-status-chip{font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.25dvh,4px) clamp(5px,0.7dvh,10px) clamp(1px,0.25dvh,4px) clamp(4px,0.55dvh,8px);gap:clamp(2px,0.3dvh,4px)}
+/* 1) Header máy + trạng thái — luôn giữ nguyên kích thước, không co, vì đây
+   là thông tin định danh máy tối quan trọng và vốn đã rất nhỏ gọn. */
+.dh-tv .dh-card-hd{flex:0 0 auto;min-height:0;min-width:0;overflow:hidden;gap:clamp(4px,0.6dvw,10px)}
+.dh-tv .dh-card-ic{flex-shrink:0;font-size:clamp(10px,1.4dvh,19px)}
+.dh-tv .dh-card-name{min-width:0;font-size:clamp(8px,1.1dvh,15px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh-tv .dh-status-chip{flex-shrink:0;font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.25dvh,4px) clamp(5px,0.7dvh,10px) clamp(1px,0.25dvh,4px) clamp(4px,0.55dvh,8px);gap:clamp(2px,0.3dvh,4px)}
 .dh-tv .dh-status-chip::before{width:clamp(4px,0.45dvh,6px);height:clamp(4px,0.45dvh,6px)}
-.dh-tv .dh-card-empty{flex:1 1 auto;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,1dvh,13px);padding:clamp(2px,0.6dvh,10px) 0 clamp(2px,0.35dvh,6px)}
-.dh-tv .dh-card-cust{flex:0 0 auto;font-size:clamp(9px,1.25dvh,17px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dh-tv .dh-card-spec{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(8px,1.1dvh,14px);padding:clamp(1px,0.35dvh,5px) clamp(5px,0.75dvh,10px);border-radius:clamp(4px,0.55dvh,8px)}
-.dh-tv .dh-card-order{flex:0 0 auto;gap:clamp(4px,0.55dvh,8px)}
-.dh-tv .dh-card-code{font-size:clamp(6.5px,0.75dvh,10.5px)}
-.dh-tv .dh-card-flag{font-size:clamp(6.5px,0.7dvh,10px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.5dvh,6px)}
-.dh-tv .dh-card-stage{flex:0 0 auto;font-size:clamp(7.5px,0.95dvh,12.5px);padding:clamp(1px,0.35dvh,4px) clamp(4px,0.6dvh,9px);gap:clamp(2px,0.35dvh,4px)}
-.dh-tv .dh-card-ring-row{flex:0 0 auto;gap:clamp(4px,0.7dvh,11px);margin-top:clamp(1px,0.2dvh,3px)}
-/* Vòng tiến độ (%): thu nhỏ hệ số dvh có chủ đích so với các phần tử khác —
-   đây là phần tử "nặng" nhất trong thẻ nên phải nhường chỗ đầu tiên khi màn
-   hình thấp (1080p), vẫn đủ lớn để đọc %, và tự lớn hẳn lên ở 1440p/4K. */
-.dh-tv .dh-ring{width:clamp(18px,2.8dvh,48px);height:clamp(18px,2.8dvh,48px);font-size:clamp(6.5px,0.85dvh,11px)}
-.dh-tv .dh-card-qty{gap:clamp(2px,0.3dvh,4px)}
-.dh-tv .dh-card-qty span{font-size:clamp(6.5px,0.8dvh,11px)}
-.dh-tv .dh-prog-wrap{height:clamp(3px,0.5dvh,8px);border-radius:clamp(3px,0.35dvh,5px)}
-.dh-tv .dh-card-status{flex:0 0 auto;font-size:clamp(7px,0.85dvh,12px);padding-top:clamp(1px,0.35dvh,6px);margin-top:1px}
-/* Khối "Đơn chạy tiếp": TV Mode chỉ hiện TỐI ĐA 1 đơn kế tiếp (thay vì 2 như
-   PC/Mobile) — số lượng đang chờ vẫn hiển thị đủ ở dòng tiêu đề (dh-next-hd,
-   lấy trực tiếp từ dữ liệu, không đổi), nên KHÔNG mất thông tin, chỉ gọn lại
-   phần xem trước để đảm bảo card luôn vừa khít chiều cao ô lưới, không bị
-   cắt. Chỉ áp trong .dh-tv — PC/Mobile vẫn hiện đủ như cũ. */
-.dh-tv .dh-card-next{flex:0 0 auto;overflow:hidden;margin-top:clamp(2px,0.3dvh,5px);padding-top:clamp(2px,0.4dvh,7px);gap:clamp(2px,0.3dvh,5px)}
-.dh-tv .dh-next-item~.dh-next-item{display:none}
-.dh-tv .dh-next-more{display:none}
-.dh-tv .dh-next-hd{font-size:clamp(6px,0.68dvh,10px);gap:clamp(2px,0.3dvh,4px)}
-.dh-tv .dh-next-item{gap:clamp(4px,0.5dvh,8px);padding:clamp(1px,0.35dvh,6px) clamp(4px,0.5dvh,8px);border-radius:clamp(4px,0.5dvh,9px)}
-.dh-tv .dh-next-pos{width:clamp(10px,1.6dvh,18px);height:clamp(10px,1.6dvh,18px);font-size:clamp(6px,0.68dvh,10px)}
-.dh-tv .dh-next-body{gap:1px}
-.dh-tv .dh-next-cust{font-size:clamp(7px,0.8dvh,12px)}
-.dh-tv .dh-next-spec{font-size:clamp(6px,0.68dvh,10px)}
-.dh-tv .dh-next-pri{font-size:clamp(5.5px,0.65dvh,9px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.4dvh,6px)}
+.dh-tv .dh-card-empty{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8px,1dvh,13px);padding:clamp(2px,0.6dvh,10px) 0 clamp(2px,0.35dvh,6px)}
+/* 2) Khách hàng */
+.dh-tv .dh-card-cust{flex:0.85 1 0;min-height:0;overflow:hidden;font-size:clamp(9px,1.25dvh,17px);text-overflow:ellipsis;white-space:nowrap}
+/* 3) Quy cách + mã đơn */
+.dh-tv .dh-card-spec{flex:0.85 1 0;min-height:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(8px,1.1dvh,14px);padding:clamp(1px,0.35dvh,5px) clamp(5px,0.75dvh,10px);border-radius:clamp(4px,0.55dvh,8px)}
+.dh-tv .dh-card-order{flex:0.55 1 0;min-height:0;min-width:0;overflow:hidden;gap:clamp(4px,0.55dvh,8px)}
+.dh-tv .dh-card-code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(6.5px,0.75dvh,10.5px)}
+.dh-tv .dh-card-flag{flex-shrink:0;font-size:clamp(6.5px,0.7dvh,10px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.5dvh,6px)}
+/* 4) Công đoạn */
+.dh-tv .dh-card-stage{flex:0.75 1 0;min-height:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(7.5px,0.95dvh,12.5px);padding:clamp(1px,0.35dvh,4px) clamp(4px,0.6dvh,9px);gap:clamp(2px,0.35dvh,4px)}
+/* 5) Tiến độ + sản lượng — khối "nặng" nhất (có vòng tròn %), được cấp tỉ
+   trọng co giãn lớn nhất trong các khối phụ để nhường chỗ trước tiên khi
+   card thấp, nhưng vẫn luôn hiển thị đủ % và thanh sản lượng. */
+.dh-tv .dh-card-ring-row{flex:1.5 1 0;min-height:0;overflow:hidden;align-items:center;gap:clamp(4px,0.7dvw,11px)}
+.dh-tv .dh-ring{flex-shrink:0;width:clamp(16px,2.6dvh,48px);height:clamp(16px,2.6dvh,48px);font-size:clamp(6.5px,0.85dvh,11px)}
+.dh-tv .dh-card-qty{flex:1 1 0;min-height:0;min-width:0;overflow:hidden;justify-content:center;gap:clamp(2px,0.3dvh,4px)}
+.dh-tv .dh-card-qty span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(6.5px,0.8dvh,11px)}
+.dh-tv .dh-prog-wrap{flex-shrink:0;height:clamp(3px,0.5dvh,8px);border-radius:clamp(3px,0.35dvh,5px)}
+.dh-tv .dh-card-status{flex:0.5 1 0;min-height:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(7px,0.85dvh,12px);padding-top:clamp(1px,0.35dvh,6px);margin-top:0}
+/* 6) Đơn chạy tiếp — luôn được cấp một tỉ trọng co giãn CỐ ĐỊNH (flex-grow
+   >0) như mọi khối khác nên KHÔNG BAO GIỜ bị đẩy hẳn ra ngoài card / bị cắt
+   mất hoàn toàn.
+   SỬA TẬN GỐC (2024 fix log): TRƯỚC ĐÂY 2 dòng dưới đây dùng
+   display:none để CƯỠNG BỨC chỉ hiện 1 đơn + ẩn tiệt "+N đơn khác" bất kể
+   card có đủ chỗ hay không ⇒ đây chính là nguyên nhân "ĐƠN CHẠY TIẾP" luôn
+   bị thiếu/cắt trên TV dù dữ liệu đã có đủ. Đã GỠ BỎ hoàn toàn 2 rule này.
+   Thay vào đó: dhNextQueueHTML() render ĐẦY ĐỦ tối đa 8 đơn (kèm mọi field
+   bắt buộc: STT/Khách hàng/Mã đơn/Quy cách/Số lượng/Sản lượng còn lại/Ưu
+   tiên/Trạng thái chờ), rồi dhFitNextQueues() ĐO chiều cao THỰC TẾ của từng
+   card sau khi render xong (không đoán/không hard-code ngưỡng) và CHỈ GỠ BỚT
+   (xoá khỏi DOM, không display:none) các đơn cuối khi thật sự tràn khung —
+   luôn giữ tối thiểu 1 đơn đầy đủ + luôn cập nhật đúng số "+N đơn tiếp theo"
+   từ data-queue-total. Chạy lại mỗi khi render/resize/đổi độ phân giải nên
+   luôn đúng ở mọi kích thước TV (1080p/1440p/4K) mà không cần sửa tay. */
+.dh-tv .dh-card-next{flex:1.2 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;margin-top:clamp(1px,0.25dvh,5px);padding-top:clamp(2px,0.4dvh,7px);gap:clamp(1px,0.25dvh,5px)}
+.dh-tv .dh-next-hd{flex:0 0 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(6px,0.68dvh,10px);gap:clamp(2px,0.3dvh,4px)}
+.dh-tv .dh-next-list{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:clamp(1px,0.22dvh,4px)}
+.dh-tv .dh-next-item{flex:0 0 auto;min-height:0;min-width:0;overflow:hidden;gap:clamp(4px,0.5dvh,8px);padding:clamp(1px,0.3dvh,5px) clamp(4px,0.5dvh,8px);border-radius:clamp(4px,0.5dvh,9px)}
+.dh-tv .dh-next-pos{flex-shrink:0;width:clamp(10px,1.6dvh,18px);height:clamp(10px,1.6dvh,18px);font-size:clamp(6px,0.68dvh,10px)}
+.dh-tv .dh-next-body{flex:1 1 auto;min-width:0;min-height:0;overflow:hidden;gap:0;display:flex;flex-direction:column}
+.dh-tv .dh-next-row1{display:flex;align-items:center;gap:clamp(3px,0.4dvh,6px);min-width:0}
+.dh-tv .dh-next-cust{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(7px,0.8dvh,12px)}
+.dh-tv .dh-next-spec{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(5.8px,0.62dvh,9.5px)}
+.dh-tv .dh-next-qty{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(5.5px,0.58dvh,9px);color:#9db3e0;font-weight:700}
+.dh-tv .dh-next-wait{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(5.3px,0.55dvh,8.5px);color:#8fc0ff;font-weight:700}
+.dh-tv .dh-next-pri{flex-shrink:0;font-size:clamp(5.5px,0.65dvh,9px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.4dvh,6px)}
+.dh-tv .dh-next-more{flex:0 0 auto;font-size:clamp(5.5px,0.6dvh,9.5px)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ĐIỀU HÀNH SX 2.0 — DASHBOARD KIỂU SMART FACTORY / MES CONTROL ROOM
+   Header (logo · tên công ty · tiêu đề · đồng hồ · TV Mode) + hàng 5 khối
+   KPI (NHÀ MÁY / ĐƠN HÀNG / NHÂN LỰC / CA HIỆN TẠI / CẢNH BÁO) + 2 cột:
+   trái = các nhóm máy theo công đoạn, phải = sidebar quản lý (đơn trễ hạn /
+   sắp giao / hiệu suất hôm nay). Không đổi dữ liệu/logic — chỉ là lớp trình
+   bày mới bọc quanh đúng các hàm dựng HTML đã có (dhMachineCard, ...).
+   ══════════════════════════════════════════════════════════════════════════ */
+.dh2-topbar{padding:11px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.dh2-tb-left{display:flex;align-items:center;gap:12px;flex:1 1 260px;min-width:0}
+.dh2-tb-center{flex:2 1 260px;text-align:center;font-size:19px;font-weight:800;letter-spacing:.7px;color:#fff;text-shadow:0 0 18px rgba(93,156,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh2-tb-right{display:flex;align-items:center;gap:14px;flex:1 1 260px;justify-content:flex-end}
+.dh2-tb-clock .dh-clock-time{font-size:26px}
+.dh2-tb-date{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.dh2-tb-sync{font-size:10px;color:#4ade80;font-weight:800;white-space:nowrap}
+@media (max-width:900px){.dh2-tb-center{order:3;flex-basis:100%;font-size:15px}}
+
+.dh2-kpi-row{align-items:stretch;flex-wrap:wrap}
+.dh2-kpi{background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 16px rgba(0,0,10,.22);min-width:0}
+.dh2-kpi-nhamay,.dh2-kpi-donhang,.dh2-kpi-nhanluc{flex:1.25 1 200px}
+.dh2-kpi-ca{flex:0.85 1 150px;align-items:center;text-align:center}
+.dh2-kpi-alerts{flex:1.3 1 210px}
+.dh2-kpi-donhang,.dh2-kpi-nhanluc{cursor:pointer;transition:background .15s}
+.dh2-kpi-donhang:hover,.dh2-kpi-nhanluc:hover{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03))}
+.dh2-kpi-body{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.dh2-kpi-body .dh-so-rows{flex:1;min-width:0}
+
+.dh2-donut{width:56px;height:56px;border-radius:50%;position:relative;flex:0 0 auto}
+.dh2-donut-hole{position:absolute;inset:7px;border-radius:50%;background:#0e1c3c;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.dh2-donut-hole b{font-size:15px;font-weight:800;color:#fff;line-height:1.1}
+.dh2-donut-hole span{font-size:7px;color:#9db3e0;font-weight:700;letter-spacing:.3px;margin-top:1px}
+
+.dh2-ca-shift{font-size:12px;font-weight:800;color:#8fc0ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:3px 9px;width:fit-content}
+.dh2-ca-time{font-size:27px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.4px;color:#fde68a;text-align:center}
+.dh2-ca-lbl{font-size:9.5px;font-weight:800;color:#9db3e0;letter-spacing:.35px;text-transform:uppercase;text-align:center;margin-top:1px}
+.dh2-ca-remain{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:#4ade80;text-align:center}
+
+.dh2-alert-list{display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow:hidden}
+.dh2-alert-row{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#fde68a;background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.32);border-radius:8px;padding:4px 9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh2-alert-row.danger{color:#ff9b9b;background:rgba(255,82,82,.13);border-color:rgba(255,82,82,.35)}
+.dh2-alert-row.ok{color:#86efac;background:rgba(74,222,128,.13);border-color:rgba(74,222,128,.32);cursor:default}
+.dh2-alert-ic{flex:0 0 auto}
+.dh2-alert-more{font-size:10.5px;font-weight:800;color:#8fc0ff;text-align:right;cursor:pointer;margin-top:auto}
+
+.dh2-content{display:flex;gap:14px;align-items:flex-start}
+.dh2-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+.dh2-side{flex:0 0 320px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:1100px){.dh2-content{flex-direction:column}.dh2-side{flex:1 1 auto;width:100%}}
+
+.dh2-side-panel{background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 16px rgba(0,0,10,.22);min-height:0}
+.dh2-side-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:800;color:#bcd6ff;text-transform:uppercase;letter-spacing:.4px}
+.dh2-side-hd b{font-size:10px;font-weight:800;color:#8fc0ff;cursor:pointer;text-transform:none;letter-spacing:0}
+.dh2-side-cols{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;font-size:9.5px;font-weight:800;color:#6f88bd;text-transform:uppercase;letter-spacing:.3px;padding:0 2px}
+.dh2-side-list{display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow:hidden}
+.dh2-side-row{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:5px 8px;cursor:pointer;font-size:11.5px}
+.dh2-side-row:hover{background:rgba(255,255,255,.1)}
+.dh2-side-code{font-weight:700;color:#9db3e0;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh2-side-cust{font-weight:800;color:#eaf1ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh2-side-badge{font-size:10px;font-weight:800;color:#fbbf24;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.38);border-radius:6px;padding:2px 7px;white-space:nowrap;justify-self:end}
+.dh2-side-badge.danger{color:#ff9b9b;background:rgba(255,82,82,.15);border-color:rgba(255,82,82,.38)}
+.dh2-side-empty{font-size:11.5px;color:#6f88bd;text-align:center;padding:10px 0}
+
+.dh2-perf-panel{flex:1.1 1 0}
+.dh2-perf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dh2-perf-stat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:6px 4px;text-align:center;min-width:0}
+.dh2-perf-stat b{display:block;font-size:16px;font-weight:800;color:#eaf1ff}
+.dh2-perf-stat span{font-size:9px;font-weight:700;color:#9db3e0;text-transform:uppercase}
+.dh2-perf-stat.good b{color:#4ade80}
+.dh2-perf-bars{display:flex;flex-direction:column;gap:6px;flex:1;justify-content:center;min-height:0}
+.dh2-perf-bar-row{display:flex;align-items:center;gap:8px}
+.dh2-perf-bar-lbl{flex:0 0 78px;font-size:10.5px;font-weight:700;color:#bcd6ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh2-perf-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden}
+.dh2-perf-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#2856D6,#4ade80)}
+.dh2-perf-bar-val{flex:0 0 32px;text-align:right;font-size:10.5px;font-weight:800;color:#eaf1ff}
+
+/* ── TV Mode: co giãn toàn bộ khối trên bằng clamp(dvh/dvw), cùng nguyên lý
+   với phần .dh-card ở trên — không JS đo/co giãn. ── */
+.dh-tv .dh2-topbar{padding:clamp(4px,0.6dvh,10px) clamp(10px,1.2dvh,20px);gap:clamp(8px,1dvw,16px)}
+.dh-tv .dh2-tb-left{gap:clamp(5px,0.75dvh,12px)}
+.dh-tv .dh2-tb-center{font-size:clamp(11px,1.6dvh,22px)}
+.dh-tv .dh2-tb-right{gap:clamp(6px,0.9dvw,14px)}
+.dh-tv .dh2-tb-clock .dh-clock-time{font-size:clamp(14px,2.2dvh,28px)}
+.dh-tv .dh2-tb-date{gap:1px}
+.dh-tv .dh2-tb-sync{font-size:clamp(6px,0.65dvh,10px)}
+
+.dh-tv .dh2-kpi-row{gap:clamp(6px,0.9dvw,14px)}
+.dh-tv .dh2-kpi{padding:clamp(5px,0.7dvh,12px) clamp(8px,1dvw,16px);gap:clamp(3px,0.5dvh,8px);border-radius:clamp(8px,1dvh,14px)}
+.dh-tv .dh2-kpi .dh-so-title{font-size:clamp(7px,0.85dvh,12px);margin-bottom:0}
+.dh-tv .dh2-kpi .dh-so-rows{gap:clamp(1px,0.3dvh,5px)}
+.dh-tv .dh2-kpi .dh-so-row{font-size:clamp(6.5px,0.78dvh,12px);gap:clamp(3px,0.5dvh,8px)}
+.dh-tv .dh2-kpi .dh-so-row b{font-size:clamp(7.5px,0.95dvh,14px)}
+.dh-tv .dh2-donut{width:clamp(28px,4.2dvh,56px);height:clamp(28px,4.2dvh,56px)}
+.dh-tv .dh2-donut-hole b{font-size:clamp(7px,0.95dvh,14px)}
+.dh-tv .dh2-donut-hole span{font-size:clamp(4.5px,0.5dvh,7px)}
+.dh-tv .dh2-ca-shift{font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.2dvh,3px) clamp(4px,0.6dvh,8px)}
+.dh-tv .dh2-ca-time{font-size:clamp(12px,2dvh,25px)}
+.dh-tv .dh2-ca-lbl{font-size:clamp(5.5px,0.55dvh,9px)}
+.dh-tv .dh2-ca-remain{font-size:clamp(9px,1.5dvh,17px)}
+.dh-tv .dh2-alert-row{font-size:clamp(6.5px,0.78dvh,11px);padding:clamp(2px,0.35dvh,4px) clamp(5px,0.7dvh,8px);gap:clamp(3px,0.4dvh,6px)}
+.dh-tv .dh2-alert-more{font-size:clamp(5.5px,0.6dvh,10px)}
+
+.dh-tv .dh2-content{gap:clamp(6px,0.9dvw,16px)}
+.dh-tv .dh2-main{gap:clamp(6px,0.9dvh,16px)}
+.dh-tv .dh2-side{gap:clamp(6px,0.9dvh,14px)}
+.dh-tv .dh2-side-panel{padding:clamp(5px,0.7dvh,12px) clamp(7px,0.9dvw,14px);gap:clamp(3px,0.5dvh,7px);border-radius:clamp(8px,1dvh,14px)}
+.dh-tv .dh2-side-hd{font-size:clamp(6.5px,0.78dvh,11px)}
+.dh-tv .dh2-side-hd b{font-size:clamp(5.5px,0.6dvh,9px)}
+.dh-tv .dh2-side-cols{font-size:clamp(5px,0.5dvh,8px);gap:clamp(4px,0.5dvw,8px)}
+.dh-tv .dh2-side-list{gap:clamp(2px,0.35dvh,5px)}
+.dh-tv .dh2-side-row{font-size:clamp(6.5px,0.78dvh,11px);padding:clamp(2px,0.35dvh,5px) clamp(4px,0.6dvh,8px);gap:clamp(4px,0.5dvw,8px);border-radius:clamp(4px,0.5dvh,8px)}
+.dh-tv .dh2-side-code{font-size:clamp(5.5px,0.6dvh,9.5px)}
+.dh-tv .dh2-side-badge{font-size:clamp(5px,0.55dvh,9px);padding:clamp(1px,0.2dvh,2px) clamp(3px,0.5dvh,6px)}
+.dh-tv .dh2-side-empty{font-size:clamp(6.5px,0.78dvh,11px);padding:clamp(4px,0.8dvh,10px) 0}
+.dh-tv .dh2-perf-stats{gap:clamp(3px,0.5dvh,8px)}
+.dh-tv .dh2-perf-stat{padding:clamp(2px,0.4dvh,6px) clamp(2px,0.3dvw,4px);border-radius:clamp(5px,0.7dvh,9px)}
+.dh-tv .dh2-perf-stat b{font-size:clamp(8px,1.15dvh,16px)}
+.dh-tv .dh2-perf-stat span{font-size:clamp(4.5px,0.5dvh,9px)}
+.dh-tv .dh2-perf-bars{gap:clamp(2px,0.35dvh,6px)}
+.dh-tv .dh2-perf-bar-lbl{flex-basis:clamp(46px,6dvw,80px);font-size:clamp(5.5px,0.6dvh,10.5px)}
+.dh-tv .dh2-perf-bar-wrap{height:clamp(3px,0.5dvh,8px)}
+.dh-tv .dh2-perf-bar-val{flex-basis:clamp(18px,2.2dvw,32px);font-size:clamp(5.5px,0.6dvh,10.5px)}
+
 .kh-detail-grid>div{display:flex;flex-direction:column;gap:1px;min-width:0}
 .kh-detail-grid>div b{font-size:10px;color:var(--text4);font-weight:800;text-transform:uppercase;letter-spacing:.2px}
 .kh-detail-grid>div span{font-size:13px;color:var(--text);font-weight:600;overflow-wrap:break-word}
@@ -11586,28 +11762,111 @@ function dhMachineCard(m){
   </div>`;
 }
 
-// ── Khối "Đơn chạy tiếp" trên thẻ máy — hiển thị 1-2 đơn CHƯA CHẠY kế tiếp
+// ── Khối "ĐƠN CHẠY TIẾP" trên thẻ máy — hiển thị các đơn CHƯA CHẠY kế tiếp
 // đã được phân công sẵn cho máy này (đã sắp xếp theo mức ưu tiên/ngày tạo ở
-// dhMachineQueue), kèm số lượng còn lại trong hàng đợi nếu nhiều hơn. Bấm
+// dhMachineQueue), ĐẦY ĐỦ mọi field bắt buộc: STT, Khách hàng, Mã đơn hàng,
+// Quy cách, Số lượng, Sản lượng còn lại, Thứ tự ưu tiên, Trạng thái chờ. Bấm
 // vào 1 dòng sẽ mở thẳng Panel chi tiết đơn đó, không làm nổ bong bóng click
 // ra ngoài thẻ (stopPropagation) để không trùng với onclick mở đơn đang chạy.
+//
+// Render ĐẦY ĐỦ tới 8 đơn ở MỌI chế độ (PC/Mobile/TV) — không hard-code số
+// hiển thị cuối cùng theo mode. dhFitNextQueues() sẽ đo chiều cao THỰC TẾ của
+// từng card ngay sau khi render (chạy ở mọi chế độ, không riêng TV) và chỉ gỡ
+// bớt (xoá khỏi DOM) các đơn cuối nếu thật sự không đủ chỗ, luôn giữ tối
+// thiểu 1 đơn + luôn cộng dồn đúng vào "+N đơn tiếp theo" — do đó KHÔNG BAO
+// GIỜ mất thông tin, chỉ gọn lại đúng theo không gian còn trống. Ở PC/Mobile
+// trang có thể cuộn tự do nên hầu như luôn hiện đủ cả 8; hàm đo chỉ thật sự
+// cắt bớt trên TV Mode (nơi không được phép có scrollbar).
 function dhNextQueueHTML(queue){
   if(!queue || !queue.length) return '';
-  const shown = queue.slice(0,2);
+  const shown = queue.slice(0, Math.min(queue.length, 8));
   const rest = queue.length - shown.length;
-  return `<div class="dh-card-next">
-    <div class="dh-next-hd">⏭️ Đơn chạy tiếp <b>· ${queue.length} đang chờ</b></div>
-    ${shown.map((q,i)=>`
+  return `<div class="dh-card-next" data-queue-total="${queue.length}">
+    <div class="dh-next-hd">⏭️ ĐƠN CHẠY TIẾP <b>· ${queue.length} đang chờ</b></div>
+    <div class="dh-next-list">
+      ${shown.map((q,i)=>{
+        const qty = q.qty||0, done = q.doneQty||0, remain = Math.max(0, qty-done);
+        const waitLabel = q.status==='running' ? 'Đang chạy công đoạn khác'
+          : q.status==='pending' ? 'Chờ sản xuất' : 'Đang chờ';
+        return `
       <div class="dh-next-item" onclick="event.stopPropagation();khViewDetail('${q.id}')">
         <span class="dh-next-pos">${i+1}</span>
         <div class="dh-next-body">
-          <span class="dh-next-cust">${q.customer||'—'}</span>
-          <span class="dh-next-spec">${specStr(q)} · ${ddCode(q)}</span>
+          <div class="dh-next-row1">
+            <span class="dh-next-cust">${q.customer||'—'}</span>
+            ${q.priority?`<span class="dh-next-pri">${q.priority}</span>`:''}
+          </div>
+          <span class="dh-next-spec">${ddCode(q)} · ${specStr(q)}</span>
+          <span class="dh-next-qty">SL: ${qty.toLocaleString('vi-VN')} · Còn lại: ${remain.toLocaleString('vi-VN')}</span>
+          <span class="dh-next-wait">${waitLabel}</span>
         </div>
-        ${q.priority?`<span class="dh-next-pri">${q.priority}</span>`:''}
-      </div>`).join('')}
-    ${rest>0?`<div class="dh-next-more">+${rest} đơn khác trong hàng đợi</div>`:''}
+      </div>`;}).join('')}
+    </div>
+    <div class="dh-next-more"${rest>0?'':' style="display:none"'}>+${rest} đơn tiếp theo</div>
   </div>`;
+}
+
+// ── Lưới AN TOÀN CUỐI CÙNG chống mất/cắt "ĐƠN CHẠY TIẾP": đo chiều cao THỰC
+// TẾ từng thẻ máy sau khi render (không đoán/không hard-code ngưỡng), CHẠY Ở
+// MỌI CHẾ ĐỘ (PC/Mobile/TV) — không riêng gì TV Mode, để dù nguyên nhân cắt
+// nội dung đến từ đâu (quirk trình duyệt, zoom lẻ, viewport bất thường...)
+// cũng luôn được tự sửa. Nếu card tràn khung thật sự (scrollHeight>
+// clientHeight) thì gỡ BỚT (xoá khỏi DOM, KHÔNG dùng display:none/height:0/
+// opacity:0) các đơn "chạy tiếp" cuối cùng cho tới khi vừa khít, nhưng LUÔN
+// giữ lại tối thiểu 1 đơn đầy đủ thông tin, và luôn cập nhật đúng "+N đơn
+// tiếp theo" từ data-queue-total (tổng số đơn thật trong hàng đợi — không
+// đổi). Ở PC/Mobile trang cuộn tự do nên hàm này gần như không bao giờ cần
+// gỡ bớt gì (scrollHeight luôn bằng clientHeight); ở TV Mode đây là cơ chế
+// DUY NHẤT quyết định "hiển thị bao nhiêu đơn là vừa". Chạy lại mỗi khi
+// render/resize/đổi độ phân giải/vào-ra fullscreen nên luôn đúng ở mọi kích
+// thước màn hình (1080p/1440p/4K) lẫn mọi máy trong danh sách MACHINES.
+function dhFitNextQueues(){
+  document.querySelectorAll('.dh-card').forEach(card=>{
+    const nextBlock = card.querySelector('.dh-card-next');
+    if(!nextBlock) return;
+    const list = nextBlock.querySelector('.dh-next-list');
+    const moreEl = nextBlock.querySelector('.dh-next-more');
+    if(!list || !moreEl) return;
+    const total = parseInt(nextBlock.dataset.queueTotal||'0', 10);
+    // QUAN TRỌNG: .dh-next-list (và .dh-card-next) là flex item CÓ THỂ CO
+    // (min-height:0) và tự overflow:hidden — khi không đủ chỗ, chính NÓ bị ép
+    // co lại rồi tự cắt phần thừa BÊN TRONG nó, nên phần overflow đó KHÔNG
+    // "nổi" lên .dh-card cha (card.scrollHeight vẫn == clientHeight dù bên
+    // trong đang mất dữ liệu thật). Vì vậy phải đo TRỰC TIẾP scrollHeight/
+    // clientHeight của .dh-next-list (nơi thật sự xảy ra clip) — đo ở
+    // .dh-card là không đủ và chính là lý do bản vá trước vẫn còn sót lỗi.
+    const overflowing = () =>
+      list.scrollHeight > list.clientHeight + 1 ||
+      nextBlock.scrollHeight > nextBlock.clientHeight + 1 ||
+      card.scrollHeight > card.clientHeight + 1;
+    let items = Array.from(list.querySelectorAll('.dh-next-item'));
+    let guard = items.length + 1; // an toàn chống lặp vô hạn
+    // Ưu tiên giữ tối thiểu 1 đơn chi tiết; CHỈ trong trường hợp cực hiếm màn
+    // hình quá chật (không còn cách nào khác) mới gỡ luôn đơn cuối cùng —
+    // dòng tiêu đề "⏭️ ĐƠN CHẠY TIẾP · N đang chờ" + "+N đơn tiếp theo" LUÔN
+    // còn lại nên KHÔNG BAO GIỜ toàn bộ khối biến mất, chỉ gọn tối đa.
+    while(items.length>1 && overflowing() && guard-->0){
+      items.pop().remove();
+      items = Array.from(list.querySelectorAll('.dh-next-item'));
+    }
+    if(items.length===1 && overflowing() && guard-->0){
+      items[0].remove();
+      items = [];
+    }
+    const rest = total - items.length;
+    if(rest>0){ moreEl.textContent = `+${rest} đơn tiếp theo`; moreEl.style.display=''; }
+    else { moreEl.style.display='none'; }
+  });
+}
+
+// Debounce đo lại khi đổi kích thước/độ phân giải màn hình TV (đổi nguồn
+// HDMI, kéo cửa sổ qua màn khác, xoay màn...) — chỉ chạy khi đang ở đúng tab
+// Điều hành SX + TV Mode để không tốn tài nguyên lúc ở tab khác.
+let _dhFitNextTimer = null;
+function dhScheduleFitNextQueues(){
+  if(currentTab!=='dieuHanh') return;
+  clearTimeout(_dhFitNextTimer);
+  _dhFitNextTimer = setTimeout(()=>requestAnimationFrame(dhFitNextQueues), 120);
 }
 
 // ── Đếm trạng thái toàn bộ máy trong xưởng (5 nhóm) — dùng cho khối
@@ -11656,6 +11915,16 @@ function dhRuntimeElapsedStr(){
   const hh=Math.floor(diff/3600), mm=Math.floor((diff%3600)/60), ss=diff%60;
   return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
 }
+// Giờ kết thúc ca hiện tại (bắt đầu ca + 8 tiếng) — dùng để tính "Thời gian còn lại ca".
+function dhShiftEndDate(){
+  return new Date(dhShiftStartDate().getTime() + 8*3600*1000);
+}
+function dhRuntimeRemainStr(){
+  let diff = Math.floor((dhShiftEndDate().getTime()-Date.now())/1000);
+  if(diff<0) diff = 0;
+  const hh=Math.floor(diff/3600), mm=Math.floor((diff%3600)/60), ss=diff%60;
+  return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+}
 
 // ── Lấy sẵn logo công ty từ topbar chung của app để hiển thị trong ô
 // "NHÀ MÁY" của Bảng điều hành SX, tránh nhúng lại base64 trùng lặp.
@@ -11667,77 +11936,241 @@ function dhLogoSrc(){
   return window._dhLogoSrc;
 }
 
-// ── Phần đầu Bảng điều hành SX — 4 KHỐI RIÊNG BIỆT cùng 1 hàng (Desktop/TV):
-// ① 🏭 NHÀ MÁY (nhỏ) │ ② 📦 ĐƠN HÀNG (nhỏ) │ ③ 👥 NHÂN LỰC HÔM NAY (nhỏ) │
-// ④ 🎛️ ĐIỀU HÀNH SẢN XUẤT (lớn nhất — brand + đồng hồ + thời gian chạy + ca + nút TV).
-// Dưới màn hình hẹp (điện thoại) 4 khối tự xếp dọc (xem CSS .dh-header-row).
-// Khối NHÂN LỰC dùng lại buildWorkforceData() (đọc trực tiếp DB.lichLamViec +
-// DB.nghiPhep) nên luôn tự khớp với tab Lịch làm việc, không cần đồng bộ thủ công.
+// ── Donut nhiều màu thuần CSS (conic-gradient) dùng chung cho các khối KPI
+// "NHÀ MÁY"/"ĐƠN HÀNG" — segments:[{value,color}], không cần canvas/SVG nên
+// luôn sắc nét ở mọi độ phân giải TV, không tốn thêm request nào.
+function dhDonutHTML(segments, centerVal, centerLbl){
+  const total = segments.reduce((s,x)=>s+(x.value||0),0);
+  let acc = 0;
+  const stops = segments.filter(s=>s.value>0).map(s=>{
+    const start = total ? (acc/total*100) : 0;
+    acc += s.value;
+    const end = total ? (acc/total*100) : 0;
+    return `${s.color} ${start}% ${end}%`;
+  });
+  const bg = stops.length ? `conic-gradient(${stops.join(',')})` : 'rgba(255,255,255,.12)';
+  return `<div class="dh2-donut" style="background:${bg}"><div class="dh2-donut-hole"><b>${centerVal}</b><span>${centerLbl}</span></div></div>`;
+}
+
+// ── Danh sách CẢNH BÁO thực tế của nhà máy — hoàn toàn suy ra từ dữ liệu hiện
+// có (không hard-code): đơn hàng trễ hạn, máy đang sự cố, máy đang bảo trì.
+function dhAlertsList(){
+  const alerts = [];
+  const overdue = dhOverdueOrdersList();
+  if(overdue.length){
+    alerts.push({level:'danger', icon:'⚠️', text:`${overdue.length} đơn hàng trễ hạn`, onclick:"goToKeHoachFilter('overdue')"});
+  }
+  MACHINES.forEach(m=>{
+    const st = machineStatus(m.id);
+    if(st==='hong'){
+      alerts.push({level:'danger', icon:'⚠️', text:`Sự cố: ${m.name}`, onclick:`goTab('baoTriMay')`});
+    } else if(st==='baotri'){
+      alerts.push({level:'warn', icon:'⚠️', text:`Bảo trì: ${m.name}`, onclick:`goTab('baoTriMay')`});
+    }
+  });
+  const chuaChay = DB.orders.filter(o=>o.status==='pending' && !Object.keys(orderMachineAssign(o)).length).length;
+  if(chuaChay>0){
+    alerts.push({level:'warn', icon:'⚠️', text:`${chuaChay} đơn chưa được phân công máy`, onclick:"goToKeHoachFilter('pending')"});
+  }
+  return alerts;
+}
+
+// ── Đơn hàng TRỄ HẠN, sắp xếp trễ nhiều nhất lên đầu — dùng cho Cảnh báo +
+// panel "ĐƠN HÀNG TRỄ HẠN" bên sidebar.
+function dhOverdueOrdersList(limit){
+  const today0 = new Date(new Date().toDateString());
+  const list = DB.orders.filter(khIsOverdue).map(o=>({
+    o, days: Math.max(1, Math.round((today0 - new Date(o.deliveryDate))/86400000))
+  })).sort((a,b)=>b.days-a.days);
+  return typeof limit==='number' ? list.slice(0,limit) : list;
+}
+
+// ── Đơn hàng SẮP GIAO (chưa trễ, có hạn giao), hạn gần nhất lên đầu — dùng
+// cho panel "ĐƠN HÀNG SẮP GIAO" bên sidebar.
+function dhUpcomingOrdersList(limit){
+  const list = DB.orders
+    .filter(o=>o.status!=='done' && o.deliveryDate && !khIsOverdue(o))
+    .sort((a,b)=>new Date(a.deliveryDate)-new Date(b.deliveryDate));
+  return typeof limit==='number' ? list.slice(0,limit) : list;
+}
+
+// ── Hiệu suất hôm nay: sản lượng kế hoạch/thực tế của các đơn ĐANG CHẠY +
+// tiến độ trung bình theo từng công đoạn (Đùn/Rút/Đánh bóng/Cắt) — toàn bộ
+// suy ra trực tiếp từ DB.orders hiện tại, không lưu số liệu riêng nào khác.
+function dhPerformanceData(){
+  const running = DB.orders.filter(o=>o.status==='running'||o.status==='cutting');
+  const planned = running.reduce((s,o)=>s+(o.qty||0),0);
+  const actual  = running.reduce((s,o)=>s+(o.doneQty||0),0);
+  const pct = planned ? Math.round(actual/planned*100) : 0;
+  const stages = ASSIGN_STAGES.map(st=>{
+    const list = running.filter(o=>(o.stage||'dun')===st.key);
+    let avg = 0;
+    if(list.length){
+      const sum = list.reduce((s,o)=>{
+        const qty=o.qty||0, done=o.doneQty||0;
+        return s + (qty? Math.min(100,Math.round(done/qty*100)) : 0);
+      },0);
+      avg = Math.round(sum/list.length);
+    }
+    return {label:st.label, icon:st.icon, pct:avg};
+  });
+  return {planned, actual, pct, stages};
+}
+
+// ── Phần đầu Bảng điều hành SX — kiểu SMART FACTORY / MES CONTROL ROOM:
+// 1 thanh Header (logo · tên công ty · tiêu đề trung tâm · đồng hồ · TV Mode)
+// + 1 hàng 5 khối KPI (NHÀ MÁY │ ĐƠN HÀNG │ NHÂN LỰC HÔM NAY │ CA HIỆN TẠI │
+// CẢNH BÁO). Toàn bộ số liệu đọc trực tiếp từ dữ liệu hiện có (Firebase),
+// không hard-code — xem các hàm dh*List()/dhMachineStatusCounts()/... ở trên.
 function dhHeaderHTML(){
   const mc = dhMachineStatusCounts();
   const oc = dhOrderStatusCounts();
   const wf = (typeof buildWorkforceData==='function') ? buildWorkforceData() : null;
-  const wfRowsHTML = (wf && wf.sheetsCount) ? (()=>{
-    const sc = wf.shiftCounts;
-    return `
-      <div class="dh-so-row so-white"><span class="dot"></span><b>${wf.totalWorkers}</b><span>tổng LĐ</span></div>
-      <div class="dh-so-row so-cyan"><span class="dot"></span><b>${wf.onLeaveList.length}</b><span>nghỉ phép</span></div>
-      <div class="dh-so-row so-green"><span class="dot"></span><b>${wf.workingCount}</b><span>đang làm</span></div>
-      <div class="dh-so-row so-blue"><span class="dot"></span><b>${sc.ca1||0}</b><span>ca 1</span></div>
-      <div class="dh-so-row so-yellow"><span class="dot"></span><b>${sc.ca2||0}</b><span>ca 2</span></div>
-      <div class="dh-so-row so-orange"><span class="dot"></span><b>${sc.tangca||0}</b><span>tăng ca</span></div>`;
-  })() : `<div class="dh-so-row so-white"><span>Chưa có dữ liệu lịch làm việc</span></div>`;
+  const alerts = dhAlertsList();
+
+  const nhaMayTotal = MACHINES.length;
+  const nhaMayDonut = dhDonutHTML([
+    {value:mc.run,color:'#4ade80'},{value:mc.cho,color:'#fbbf24'},{value:mc.dung,color:'#fb923c'},
+    {value:mc.sc,color:'#ff5252'},{value:mc.bt,color:'#4d9bff'}
+  ], nhaMayTotal, 'TỔNG');
+
+  const donHangTotal = oc.running+oc.cho+oc.tre+oc.chuaChay;
+  const donHangDonut = dhDonutHTML([
+    {value:oc.running,color:'#4ade80'},{value:oc.cho,color:'#fbbf24'},
+    {value:oc.tre,color:'#ff5252'},{value:oc.chuaChay,color:'#94a3b8'}
+  ], donHangTotal, 'TỔNG');
+
+  const wfPct = (wf && wf.totalWorkers) ? Math.round(wf.workingCount/wf.totalWorkers*100) : 0;
+  const wfRowsHTML = (wf && wf.sheetsCount) ? `
+      <div class="dh-so-row so-white"><span class="dot"></span><b>${wf.totalWorkers}</b><span>Tổng LĐ</span></div>
+      <div class="dh-so-row so-blue"><span class="dot"></span><b>${wf.shiftCounts.ca1||0}</b><span>Ca 1 (6:00 - 14:00)</span></div>
+      <div class="dh-so-row so-yellow"><span class="dot"></span><b>${wf.shiftCounts.ca2||0}</b><span>Ca 2 (14:00 - 22:00)</span></div>
+      <div class="dh-so-row so-orange"><span class="dot"></span><b>${wf.shiftCounts.ca3||0}</b><span>Ca 3 (22:00 - 6:00)</span></div>
+      <div class="dh-so-row so-cyan"><span class="dot"></span><b>${wf.onLeaveList.length}</b><span>Nghỉ phép</span></div>` :
+    `<div class="dh-so-row so-white"><span>Chưa có dữ liệu lịch làm việc</span></div>`;
+
+  const alertsHTML = alerts.length ? alerts.slice(0,3).map(a=>
+    `<div class="dh2-alert-row ${a.level}" onclick="${a.onclick||''}"><span class="dh2-alert-ic">⚠️</span><span>${a.text}</span></div>`
+  ).join('') : `<div class="dh2-alert-row ok"><span class="dh2-alert-ic">✅</span><span>Không có cảnh báo</span></div>`;
 
   return `
-    <div class="dh-company-bar">
-      <img class="dh-company-logo" src="${dhLogoSrc()}" alt="Logo Đông Phương">
-      <div class="dh-company-info">
-        <div class="dh-company-name">Công ty Cổ phần Công thương Đông Phương</div>
-        <div class="dh-company-sub">🏭 Hệ thống điều hành sản xuất</div>
+    <div class="dh-company-bar dh2-topbar">
+      <div class="dh2-tb-left">
+        <img class="dh-company-logo" src="${dhLogoSrc()}" alt="Logo Đông Phương">
+        <div class="dh-company-info">
+          <div class="dh-company-name">Công ty Cổ phần Công thương Đông Phương</div>
+          <div class="dh-company-sub">🏭 Hệ thống điều hành sản xuất</div>
+        </div>
+      </div>
+      <div class="dh2-tb-center">BẢNG ĐIỀU HÀNH SẢN XUẤT</div>
+      <div class="dh2-tb-right">
+        <button class="dh-tv-btn" onclick="dhToggleTv()">${dhTvMode?'🡼 Thoát TV':'⛶ TV MODE'}</button>
+        <div class="dh2-tb-clock">
+          <div class="dh-clock-time" id="dhClockTime">--:--:--</div>
+        </div>
+        <div class="dh2-tb-date">
+          <div class="dh-clock-date" id="dhClockDate">—</div>
+          <div class="dh2-tb-sync">🟢 Tự động cập nhật</div>
+        </div>
       </div>
     </div>
-    <div class="dh-header-row">
-      <div class="dh-so-col dh-hb dh-hb-nhamay">
+    <div class="dh-header-row dh2-kpi-row">
+      <div class="dh2-kpi dh2-kpi-nhamay dh-hb">
         <div class="dh-so-title">🏭 NHÀ MÁY</div>
-        <div class="dh-so-rows">
-          <div class="dh-so-row so-green"><span class="dot"></span><b>${mc.run}</b><span>máy đang chạy</span></div>
-          <div class="dh-so-row so-yellow"><span class="dot"></span><b>${mc.cho}</b><span>máy chờ</span></div>
-          <div class="dh-so-row so-orange"><span class="dot"></span><b>${mc.dung}</b><span>máy dừng</span></div>
-          <div class="dh-so-row so-red"><span class="dot"></span><b>${mc.sc}</b><span>máy sự cố</span></div>
-          <div class="dh-so-row so-blue"><span class="dot"></span><b>${mc.bt}</b><span>máy bảo trì</span></div>
+        <div class="dh2-kpi-body">
+          <div class="dh-so-rows">
+            <div class="dh-so-row so-green"><span class="dot"></span><b>${mc.run}</b><span>Máy đang chạy</span></div>
+            <div class="dh-so-row so-yellow"><span class="dot"></span><b>${mc.cho}</b><span>Máy chờ</span></div>
+            <div class="dh-so-row so-orange"><span class="dot"></span><b>${mc.dung}</b><span>Máy dừng</span></div>
+            <div class="dh-so-row so-red"><span class="dot"></span><b>${mc.sc}</b><span>Máy sự cố</span></div>
+            <div class="dh-so-row so-blue"><span class="dot"></span><b>${mc.bt}</b><span>Máy bảo trì</span></div>
+          </div>
+          ${nhaMayDonut}
         </div>
       </div>
-      <div class="dh-so-col dh-hb dh-hb-donhang">
+      <div class="dh2-kpi dh2-kpi-donhang dh-hb" onclick="goTab('keHoach')">
         <div class="dh-so-title">📦 ĐƠN HÀNG</div>
-        <div class="dh-so-rows">
-          <div class="dh-so-row so-green"><span class="dot"></span><b>${oc.running}</b><span>đang sản xuất</span></div>
-          <div class="dh-so-row so-yellow"><span class="dot"></span><b>${oc.cho}</b><span>chờ</span></div>
-          <div class="dh-so-row so-red"><span class="dot"></span><b>${oc.tre}</b><span>trễ</span></div>
-          <div class="dh-so-row so-white"><span class="dot"></span><b>${oc.chuaChay}</b><span>chưa chạy</span></div>
+        <div class="dh2-kpi-body">
+          <div class="dh-so-rows">
+            <div class="dh-so-row so-green"><span class="dot"></span><b>${oc.running}</b><span>Đang sản xuất</span></div>
+            <div class="dh-so-row so-yellow"><span class="dot"></span><b>${oc.cho}</b><span>Chờ sản xuất</span></div>
+            <div class="dh-so-row so-red"><span class="dot"></span><b>${oc.tre}</b><span>Trễ hạn</span></div>
+            <div class="dh-so-row so-white"><span class="dot"></span><b>${oc.chuaChay}</b><span>Chưa chạy</span></div>
+          </div>
+          ${donHangDonut}
         </div>
       </div>
-      <div class="dh-so-col dh-hb dh-hb-nhanluc" onclick="goTab('lichLamViec')">
+      <div class="dh2-kpi dh2-kpi-nhanluc dh-hb" onclick="goTab('lichLamViec')">
         <div class="dh-so-title">👥 NHÂN LỰC HÔM NAY</div>
-        <div class="dh-so-rows">${wfRowsHTML}</div>
+        <div class="dh2-kpi-body">
+          <div class="dh-so-rows">${wfRowsHTML}</div>
+          ${dhDonutHTML([{value:wfPct,color:'#4ade80'},{value:100-wfPct,color:'rgba(255,255,255,.12)'}], wfPct+'%', 'ĐANG LÀM')}
+        </div>
       </div>
-      <div class="dh-topbar dh-hb dh-hb-dieuhanh">
-        <div class="dh-topbar-row1">
-          <div class="dh-brand">🎛️ <span>ĐIỀU HÀNH SẢN XUẤT</span></div>
-          <button class="dh-tv-btn" onclick="dhToggleTv()">${dhTvMode?'🡼 Thoát TV':'⛶ TV Mode · Tự vừa màn hình'}</button>
-        </div>
-        <div class="dh-topbar-row2">
-          <div class="dh-clock-card">
-            <div class="dh-clock-time" id="dhClockTime">--:--:--</div>
-            <div class="dh-clock-date" id="dhClockDate">—</div>
-          </div>
-          <div class="dh-shift-card">
-            <div class="dh-shift-card-hd">
-              <span class="dh-runtime-inline-label">⏱️ Thời gian ca hiện tại</span>
-              <span class="dh-shift-badge" id="dhShift">${dhCurrentShift()}</span>
-            </div>
-            <div class="dh-runtime-inline-time" id="dhRuntimeClock">${dhRuntimeElapsedStr()}</div>
-          </div>
-        </div>
+      <div class="dh2-kpi dh2-kpi-ca dh-hb">
+        <div class="dh-so-title">⏱️ THỜI GIAN CA HIỆN TẠI</div>
+        <div class="dh2-ca-shift" id="dhShift">${dhCurrentShift()}</div>
+        <div class="dh2-ca-time" id="dhRuntimeClock">${dhRuntimeElapsedStr()}</div>
+        <div class="dh2-ca-lbl">THỜI GIAN CÒN LẠI CA</div>
+        <div class="dh2-ca-remain" id="dhRuntimeRemain">${dhRuntimeRemainStr()}</div>
+      </div>
+      <div class="dh2-kpi dh2-kpi-alerts dh-hb">
+        <div class="dh-so-title">🔔 CẢNH BÁO</div>
+        <div class="dh2-alert-list">${alertsHTML}</div>
+        <div class="dh2-alert-more" onclick="goTab('keHoach')">Xem tất cả (${alerts.length}) →</div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Sidebar quản lý bên phải (Desktop/TV) — Đơn hàng trễ hạn / sắp giao +
+// Hiệu suất hôm nay theo từng công đoạn. Toàn bộ realtime từ DB.orders.
+function dhSidebarHTML(){
+  const overdue = dhOverdueOrdersList(4);
+  const overdueAll = dhOverdueOrdersList().length;
+  const upcoming = dhUpcomingOrdersList(4);
+  const upcomingAll = dhUpcomingOrdersList().length;
+  const perf = dhPerformanceData();
+
+  const overdueRows = overdue.length ? overdue.map(({o,days})=>`
+    <div class="dh2-side-row" onclick="khViewDetail('${o.id}')">
+      <span class="dh2-side-code">${ddCode(o)}</span>
+      <span class="dh2-side-cust">${o.customer||'—'}</span>
+      <span class="dh2-side-badge danger">${days} ngày</span>
+    </div>`).join('') : `<div class="dh2-side-empty">Không có đơn hàng trễ hạn</div>`;
+
+  const upcomingRows = upcoming.length ? upcoming.map(o=>`
+    <div class="dh2-side-row" onclick="khViewDetail('${o.id}')">
+      <span class="dh2-side-code">${ddCode(o)}</span>
+      <span class="dh2-side-cust">${o.customer||'—'}</span>
+      <span class="dh2-side-badge">${fmtDate(o.deliveryDate)}</span>
+    </div>`).join('') : `<div class="dh2-side-empty">Không có đơn sắp giao</div>`;
+
+  return `
+    <div class="dh2-side-panel">
+      <div class="dh2-side-hd"><span>🔴 ĐƠN HÀNG TRỄ HẠN</span><b onclick="goToKeHoachFilter('overdue')">Xem tất cả (${overdueAll})</b></div>
+      <div class="dh2-side-cols"><span>Đơn hàng</span><span>Khách hàng</span><span>Trễ</span></div>
+      <div class="dh2-side-list">${overdueRows}</div>
+    </div>
+    <div class="dh2-side-panel">
+      <div class="dh2-side-hd"><span>🟡 ĐƠN HÀNG SẮP GIAO</span><b onclick="goTab('keHoach')">Xem tất cả (${upcomingAll})</b></div>
+      <div class="dh2-side-cols"><span>Đơn hàng</span><span>Khách hàng</span><span>Hạn giao</span></div>
+      <div class="dh2-side-list">${upcomingRows}</div>
+    </div>
+    <div class="dh2-side-panel dh2-perf-panel">
+      <div class="dh2-side-hd"><span>📈 HIỆU SUẤT HÔM NAY</span><b onclick="goTab('baoCao')">Xem chi tiết →</b></div>
+      <div class="dh2-perf-stats">
+        <div class="dh2-perf-stat"><b>${perf.planned.toLocaleString('vi-VN')}</b><span>Kế hoạch</span></div>
+        <div class="dh2-perf-stat"><b>${perf.actual.toLocaleString('vi-VN')}</b><span>Thực tế</span></div>
+        <div class="dh2-perf-stat good"><b>${perf.pct}%</b><span>Đạt kế hoạch</span></div>
+      </div>
+      <div class="dh2-perf-bars">
+        ${perf.stages.map(s=>`
+          <div class="dh2-perf-bar-row">
+            <span class="dh2-perf-bar-lbl">${s.icon} ${s.label}</span>
+            <div class="dh2-perf-bar-wrap"><div class="dh2-perf-bar-fill" style="width:${s.pct}%"></div></div>
+            <span class="dh2-perf-bar-val">${s.pct}%</span>
+          </div>`).join('')}
       </div>
     </div>
   `;
@@ -11748,27 +12181,38 @@ function renderDieuHanh(){
   const groups = [...new Set(MACHINES.map(m=>m.group))];
 
   $('mc').innerHTML = `
-    <div class="dh-wrap${dhTvMode?' dh-tv':''}" id="dhWrap">
+    <div class="dh-wrap dh2${dhTvMode?' dh-tv':''}" id="dhWrap">
       <div class="dh-fit-outer" id="dhFitOuter"><div class="dh-fit-inner" id="dhFitInner">
       ${dhHeaderHTML()}
 
-      ${groups.map(g=>{
-        const list = MACHINES.filter(m=>m.group===g);
-        // --n = số máy thật của ĐÚNG nhóm này, dùng cho lưới TV Mode (CSS
-        // grid-template-columns:repeat(var(--n),1fr)) để mỗi nhóm luôn xếp
-        // đúng 1 hàng duy nhất, không wrap — không ảnh hưởng PC/Mobile vì
-        // biến này chỉ được CSS trong .dh-tv sử dụng.
-        return `
-        <div class="dh-group">
-          <div class="dh-group-title">${g}</div>
-          <div class="dh-card-grid" style="--n:${list.length}">${list.map(dhMachineCard).join('')}</div>
+      <div class="dh2-content">
+        <div class="dh2-main">
+          ${groups.map(g=>{
+            const list = MACHINES.filter(m=>m.group===g);
+            // --n = số máy thật của ĐÚNG nhóm này, dùng cho lưới TV Mode (CSS
+            // grid-template-columns:repeat(var(--n),1fr)) để mỗi nhóm luôn xếp
+            // đúng 1 hàng duy nhất, không wrap — không ảnh hưởng PC/Mobile vì
+            // biến này chỉ được CSS trong .dh-tv sử dụng.
+            return `
+            <div class="dh-group">
+              <div class="dh-group-title">${g}</div>
+              <div class="dh-card-grid" style="--n:${list.length}">${list.map(dhMachineCard).join('')}</div>
+            </div>
+          `;}).join('')}
         </div>
-      `;}).join('')}
+        <div class="dh2-side">
+          ${dhSidebarHTML()}
+        </div>
+      </div>
       </div></div>
     </div>
   `;
   dhTickClock();
   dhBindAutoFit();
+  // Đo lại "ĐƠN CHẠY TIẾP" ngay sau khi DOM vừa render xong (đợi 1 khung hình
+  // để trình duyệt tính layout thật trước khi đo scrollHeight/clientHeight)
+  // — chạy ở MỌI chế độ (PC/Mobile/TV), không riêng TV Mode.
+  requestAnimationFrame(()=>requestAnimationFrame(dhFitNextQueues));
 }
 
 function dhToggleTv(){
@@ -11808,9 +12252,32 @@ function dhBindAutoFit(){
     if(!document.hidden){
       if(dhTvLocked() && currentTab!=='dieuHanh') goTab('dieuHanh');
       dhSyncFullscreenClass();
+      dhScheduleFitNextQueues();
     }
   });
-  document.addEventListener('fullscreenchange', dhSyncFullscreenClass);
+  document.addEventListener('fullscreenchange', ()=>{
+    dhSyncFullscreenClass();
+    dhScheduleFitNextQueues();
+  });
+  // Đổi độ phân giải / kéo cửa sổ TV qua màn khác (Windows Extend) / xoay màn
+  // — CSS clamp(dvh/dvw) tự co giãn ngay, nhưng số đơn "chạy tiếp" hiển thị
+  // vừa khít cần đo lại vì phụ thuộc chiều cao PIXEL thật của từng card.
+  window.addEventListener('resize', dhScheduleFitNextQueues);
+  // An toàn thêm: 'load' (ảnh/logo/font tải xong có thể đổi chiều cao card
+  // so với lúc DOM vừa render) và ResizeObserver theo dõi TRỰC TIẾP khung
+  // #dhWrap (bắt được mọi thay đổi kích thước thật sự của khu vực TV — kể cả
+  // những trường hợp không phát sinh sự kiện 'resize' của window, ví dụ khi
+  // trình duyệt/OS đổi tỉ lệ hiển thị (zoom/DPI) hoặc đổi safe-area) để
+  // dhFitNextQueues() luôn được đo lại đúng lúc, không phụ thuộc trọn vẹn vào
+  // 1 lần requestAnimationFrame ngay sau render.
+  window.addEventListener('load', dhScheduleFitNextQueues);
+  if(window.ResizeObserver){
+    const dhWrapEl = document.getElementById('dhWrap');
+    if(dhWrapEl){
+      const ro = new ResizeObserver(()=>dhScheduleFitNextQueues());
+      ro.observe(dhWrapEl);
+    }
+  }
 }
 
 // Đồng hồ realtime của Bảng Điều hành SX — cập nhật đúng 2 span, không vẽ
@@ -11824,6 +12291,7 @@ function dhTickClock(){
   if(dEl) dEl.innerHTML = `<span class="dh-clock-wd">${VN_WEEKDAYS[now.getDay()]}</span><span class="dh-clock-sep">•</span><span>${vnDateDMY(now)}</span>`;
   const shiftEl = document.getElementById('dhShift'); if(shiftEl) shiftEl.textContent = dhCurrentShift();
   const rtEl = document.getElementById('dhRuntimeClock'); if(rtEl) rtEl.textContent = dhRuntimeElapsedStr();
+  const remEl = document.getElementById('dhRuntimeRemain'); if(remEl) remEl.textContent = dhRuntimeRemainStr();
 }
 
 // ── 1 dòng bảng Kế hoạch sản xuất (ERP/MES table style, đồng bộ Tab Đơn hàng) ──
