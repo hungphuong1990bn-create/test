@@ -4020,15 +4020,17 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh2-tb-date{gap:1px}
 .dh-tv .dh2-tb-sync{font-size:clamp(6px,0.65dvh,10px)}
 
-.dh-tv .dh2-kpi-row{gap:clamp(6px,0.9dvw,14px)}
-.dh-tv .dh2-kpi{padding:clamp(6px,0.9dvh,15px) clamp(9px,1.15dvw,18px);gap:clamp(4px,0.65dvh,10px);border-radius:clamp(8px,1dvh,14px)}
-.dh-tv .dh2-kpi .dh-so-title{font-size:clamp(9px,1.1dvh,15px);margin-bottom:0}
-.dh-tv .dh2-kpi .dh-so-rows{gap:clamp(2px,0.4dvh,6px)}
-.dh-tv .dh2-kpi .dh-so-row{font-size:clamp(9px,1.05dvh,15px);gap:clamp(4px,0.6dvh,9px)}
-.dh-tv .dh2-kpi .dh-so-row b{font-size:clamp(10.5px,1.3dvh,18px)}
-.dh-tv .dh2-donut{width:clamp(30px,4.6dvh,60px);height:clamp(30px,4.6dvh,60px)}
-.dh-tv .dh2-donut-hole b{font-size:clamp(9px,1.15dvh,16px)}
-.dh-tv .dh2-donut-hole span{font-size:clamp(6px,0.65dvh,9px)}
+.dh-tv .dh2-kpi-row{gap:clamp(8px,1.1dvw,20px)}
+.dh-tv .dh2-kpi-nhamay,.dh-tv .dh2-kpi-donhang,.dh-tv .dh2-kpi-nhanluc{flex:1.6 1 260px}
+.dh-tv .dh2-kpi{padding:clamp(10px,1.5dvh,24px) clamp(13px,1.7dvw,26px);gap:clamp(6px,1.05dvh,16px);border-radius:clamp(10px,1.3dvh,18px)}
+.dh-tv .dh2-kpi-body{gap:clamp(8px,1.2dvw,20px)}
+.dh-tv .dh2-kpi .dh-so-title{font-size:clamp(12px,1.55dvh,21px);margin-bottom:0}
+.dh-tv .dh2-kpi .dh-so-rows{gap:clamp(3px,0.6dvh,10px)}
+.dh-tv .dh2-kpi .dh-so-row{font-size:clamp(11px,1.4dvh,19px);gap:clamp(4px,0.65dvh,10px)}
+.dh-tv .dh2-kpi .dh-so-row b{font-size:clamp(13.5px,1.75dvh,24px)}
+.dh-tv .dh2-donut{width:clamp(48px,7.4dvh,100px);height:clamp(48px,7.4dvh,100px)}
+.dh-tv .dh2-donut-hole b{font-size:clamp(14.5px,2dvh,27px)}
+.dh-tv .dh2-donut-hole span{font-size:clamp(8px,0.95dvh,13px)}
 .dh-tv .dh2-ca-shift{font-size:clamp(9px,1dvh,14px);padding:clamp(2px,0.3dvh,4px) clamp(5px,0.75dvh,10px)}
 .dh-tv .dh2-ca-time{font-size:clamp(15px,2.3dvh,29px)}
 .dh-tv .dh2-ca-lbl{font-size:clamp(7px,0.72dvh,11px)}
@@ -4067,7 +4069,7 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh2-side-row.dh2-cols-overdue,.dh-tv .dh2-side-row.dh2-cols-done{cursor:pointer}
 .dh-tv .dh2-side-spec{font-size:clamp(12px,1.4dvh,18px);font-weight:700;color:#9db3e0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dh-tv .dh2-side-date{font-size:clamp(13px,1.5dvh,19px);font-weight:700;color:#bcd6ff;text-align:right;white-space:nowrap}
-.dh-tv .dh2-side-late{font-size:clamp(15px,1.9dvh,25px);font-weight:900;color:#ff6b6b;text-align:right;white-space:nowrap;text-shadow:0 0 14px rgba(255,82,82,.45)}
+.dh-tv .dh2-side-late{font-size:clamp(12.5px,1.55dvh,20.5px);font-weight:900;color:#ff6b6b;text-align:right;white-space:nowrap;text-shadow:0 0 14px rgba(255,82,82,.45)}
 .dh-tv .dh2-side-qty{font-size:clamp(13px,1.5dvh,19px);font-weight:800;color:#eaf1ff;text-align:right;white-space:nowrap}
 .dh-tv .dh2-side-time{font-size:clamp(12px,1.4dvh,18px);font-weight:700;color:#9db3e0;text-align:right;white-space:nowrap}
 .dh-tv .dh2-side-check{font-size:clamp(15px,1.8dvh,23px);font-weight:900;color:#4ade80;text-align:right}
@@ -11789,13 +11791,46 @@ function dhCurrentShift(){
   return 'Ca 3 · 22:00–06:00';
 }
 
+// ── XÁC NHẬN "ĐANG CHẠY THẬT" TẠI 1 MÁY (SỬA LỖI GỐC: "chuyển công đoạn
+// xong nhưng đơn chờ tiếp theo không tự chạy") ──
+// Trước đây hệ thống suy luận "đơn X đang chạy tại máy M" chỉ bằng:
+//   o.status==='running' && o.stage===stageKey && o.machineAssign[stageKey]===M
+// Điều này KHÔNG đủ để phân biệt 2 trường hợp khác nhau:
+//   1) Đơn THỰC SỰ đang chạy tại M (đã được xác nhận trước đó).
+//   2) Đơn VỪA chuyển sang đúng công đoạn của M (setStage) nhưng M đang bận
+//      đơn khác — đơn này phải được coi là ĐANG XẾP HÀNG chờ M, không phải
+//      "đang chạy". Trước đây setStage() xử lý việc này bằng cách... CHẶN
+//      LUÔN cả việc chuyển công đoạn nếu M đang bận — hậu quả: đơn không
+//      bao giờ rời khỏi công đoạn cũ, máy cũ (VD Đùn) không bao giờ được
+//      nhả, khiến đơn xếp hàng ở máy cũ bị kẹt vĩnh viễn — ĐÂY LÀ NGUYÊN
+//      NHÂN GỐC của lỗi "B không chuyển sang RUNNING".
+// o.machineActiveAt = { [stageKey]: machineId } là nguồn XÁC NHẬN DUY NHẤT
+// cho biết đơn đã thực sự được cấp phép chạy tại đúng máy đó ở đúng công
+// đoạn đó — chỉ được set bởi promoteQueuedOrderToRunning()/setStage() (khi
+// máy đang trống) — nhờ đó KHÔNG BAO GIỜ có 2 đơn cùng được coi là "đang
+// chạy" trên 1 máy, dù cả hai cùng status='running' + cùng stage.
+function dhMarkActiveAtMachine(o, stageKey, machineId){
+  if(!o.machineActiveAt) o.machineActiveAt = {};
+  o.machineActiveAt[stageKey] = machineId;
+}
+function dhIsActiveAtMachine(o, stageKey, machineId){
+  return !!(o.machineActiveAt && o.machineActiveAt[stageKey]===machineId);
+}
+
 // Tìm đơn hàng đang thực sự CHẠY tại 1 máy (dựa trên phân công máy + trạng
 // thái running) — đây là nguồn suy ra toàn bộ nội dung 1 thẻ máy.
 function dhOrderAtMachine(machineId){
   return DB.orders.find(o=>{
     if(o.status!=='running') return false;
     const active = orderActiveAssignStage(o);
-    return active && orderMachineAssign(o)[active.key]===machineId;
+    if(!active || orderMachineAssign(o)[active.key]!==machineId) return false;
+    // Dữ liệu CŨ (tạo trước khi có machineActiveAt) chưa từng bị 2 đơn
+    // tranh chấp 1 máy → coi là hợp lệ (fallback an toàn, tự "chốt" lại
+    // ngay lần chuyển công đoạn/đẩy hàng đợi tiếp theo).
+    if(o.machineActiveAt && Object.prototype.hasOwnProperty.call(o.machineActiveAt, active.key)){
+      return o.machineActiveAt[active.key]===machineId;
+    }
+    return true;
   }) || null;
 }
 function dhStageAtMachine(o, machineId){
@@ -15959,35 +15994,45 @@ function setStage(id, stage){if(guardViewer())return;
     const old = o.stage;
     if(old===stage) return;
 
-    // CHỐNG 2 ĐƠN CÙNG RUNNING 1 MÁY (mục 12): nếu công đoạn công đoạn MỚI
-    // đã được gán sẵn máy (xem Phân công máy TRƯỚC) và máy đó đang thực sự
-    // chạy 1 đơn KHÁC → không cho chuyển thẳng công đoạn ngay, đơn này giữ
-    // nguyên công đoạn hiện tại (vẫn đang xếp hàng đúng vị trí của nó tại
-    // máy công đoạn mới — xem dhMachineQueue) và sẽ tự động được đẩy sang
-    // công đoạn/RUNNING ngay khi máy đó trống (promoteQueuedOrderToRunning
-    // được gọi lại bên dưới mỗi khi có máy được giải phóng).
+    // SỬA LỖI GỐC (đơn chờ tiếp theo kẹt vĩnh viễn dù máy cũ đã trống thật):
+    // TRƯỚC ĐÂY nếu máy của công đoạn MỚI đang bận đơn khác, hàm này CHẶN
+    // LUÔN toàn bộ thao tác chuyển công đoạn (return sớm, không đổi o.stage,
+    // không nhả máy công đoạn cũ) — khiến máy công đoạn CŨ (VD Đùn) không
+    // bao giờ được nhả ra, nên đơn đang xếp hàng sẵn ở máy cũ (VD "B") bị
+    // kẹt mãi mãi, kể cả sau này máy công đoạn mới đã trống cũng không có
+    // gì gọi lại để thử tiếp cho đơn này.
+    //
+    // NAY: đơn LUÔN được phép sang công đoạn mới VÀ máy công đoạn cũ LUÔN
+    // được nhả ngay (không phụ thuộc máy công đoạn mới bận hay rảnh) — đúng
+    // với thực tế: đơn đã thực sự rời khỏi máy cũ rồi. Nếu máy công đoạn mới
+    // đang bận, đơn chỉ đơn giản trở thành "ĐƠN CHẠY TIẾP" (đang xếp hàng)
+    // của máy đó — không được đánh dấu "đang chạy" (machineActiveAt) — nên
+    // không xảy ra 2 đơn cùng "đang chạy" 1 máy; và khi máy đó trống ra (dù
+    // do bất kỳ đơn nào khác hoàn thành), promoteQueuedOrderToRunning() vẫn
+    // tìm thấy đúng đơn này trong hàng đợi và tự đẩy lên RUNNING (đã sửa để
+    // không còn bỏ qua đơn có status='running' — xem promoteQueuedOrderToRunning).
+    o.stage = stage;
+    const releasedIds = dhReleaseEarlierMachines(o, stage);
+    const releasedNames = releasedIds.map(mid=>machineById(mid)?.name||mid);
+
     const newMachineId = o.machineAssign ? o.machineAssign[stage] : '';
+    let queuedToast = '';
     if(newMachineId){
       const busy = dhOrderAtMachine(newMachineId);
       if(busy && busy.id!==o.id){
-        showToast(`⚠️ ${machineById(newMachineId)?.name||'Máy'} đang chạy đơn ${ddCode(busy)} (${busy.customer||''}) — ${o.customer||''} sẽ tự động chạy tiếp khi máy trống`, true);
-        renderTab(currentTab);
-        return;
+        queuedToast = `🕐 ${machineById(newMachineId)?.name||'Máy'} đang chạy đơn ${ddCode(busy)} (${busy.customer||''}) — ${o.customer||''} sẽ tự động chạy tiếp khi máy trống`;
+      } else {
+        // Máy công đoạn mới đang trống → xác nhận đơn này đang chạy thật
+        // tại đó NGAY, không cần đợi 1 lượt promote riêng.
+        dhMarkActiveAtMachine(o, stage, newMachineId);
       }
     }
 
-    o.stage = stage;
-    // Nhả máy của các công đoạn đã đi qua — chỉ làm ở ĐÂY (khi tiến độ thật
-    // sự tiến lên), không làm khi chỉ gán TRƯỚC máy cho công đoạn sau (xem
-    // assignMachine) — nhờ vậy máy công đoạn hiện tại không bị "nhả" sớm chỉ
-    // vì đã đặt trước máy công đoạn kế tiếp.
-    const releasedIds = dhReleaseEarlierMachines(o, stage);
-    const releasedNames = releasedIds.map(mid=>machineById(mid)?.name||mid);
     log('Cập nhật công đoạn', `${o.customer||''} · ${STAGE_LABEL[stage]||stage}${releasedNames.length?` · Nhả máy: ${releasedNames.join(', ')}`:''}`, id, {stage:old||''}, {stage});
     renderTab(currentTab);
     refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
     goToOrderCard(id);
-    showToast(`🏭 Công đoạn: ${STAGE_LABEL[stage]||stage}`);
+    showToast(queuedToast || `🏭 Công đoạn: ${STAGE_LABEL[stage]||stage}`);
     saveOrders(); // ghi Database + đồng bộ Realtime ngay
 
     // AUTO DISPATCH (mục 11): máy (hoặc các máy) vừa được nhả ra ở trên có
@@ -16031,7 +16076,21 @@ function orderActiveAssignStage(o){
 // công đoạn này không (chỉ tính đơn đang ở trạng thái "Đang sản xuất").
 function machineConflictOrder(machineId, stageKey, excludeOrderId){
   if(!machineId) return null;
-  return DB.orders.find(o=>o.id!==excludeOrderId && o.status==='running' && orderMachineAssign(o)[stageKey]===machineId) || null;
+  // SỬA ĐỒNG BỘ với machineActiveAt (xem dhOrderAtMachine): một đơn
+  // status='running' + machineAssign[stageKey]=machineId KHÔNG còn chắc
+  // chắn nghĩa là đơn đó đang chiếm máy thật — nó có thể chỉ là 1 đơn khác
+  // ĐANG XẾP HÀNG chờ đúng máy này (sau khi setStage() cho phép sang công
+  // đoạn dù máy còn bận). Chỉ coi là XUNG ĐỘT THẬT khi đơn đó đã được xác
+  // nhận đang chạy tại đúng máy này (hoặc dữ liệu cũ chưa có field xác nhận
+  // — coi là hợp lệ, xem fallback trong dhOrderAtMachine).
+  return DB.orders.find(o=>{
+    if(o.id===excludeOrderId || o.status!=='running') return false;
+    if(orderMachineAssign(o)[stageKey]!==machineId) return false;
+    if(o.machineActiveAt && Object.prototype.hasOwnProperty.call(o.machineActiveAt, stageKey)){
+      return o.machineActiveAt[stageKey]===machineId;
+    }
+    return true;
+  }) || null;
 }
 
 // ── Hàng đợi "đơn nào chạy tiếp" của 1 máy — mọi đơn CHƯA CHẠY (pending) đã
@@ -16054,7 +16113,11 @@ function dhMachineQueue(machineId, excludeOrderId){
     .filter(o=>{
       if(o.status!=='running') return true;
       const active = orderActiveAssignStage(o);
-      return !(active && active.key===myStage.key);
+      if(!(active && active.key===myStage.key)) return true;
+      // Đơn ĐÃ sang đúng công đoạn của máy này (setStage) nhưng CHƯA được
+      // xác nhận đang chạy thật tại đây (máy còn bận lúc chuyển công đoạn)
+      // → vẫn tính là đang xếp hàng, không phải "đơn hiện tại" của máy.
+      return !dhIsActiveAtMachine(o, myStage.key, machineId);
     })
     .sort((a,b)=>{
       const pa=parseInt(String(a.priority||'GẤP 9').replace('GẤP ',''))||9;
@@ -16149,20 +16212,23 @@ function promoteQueuedOrderToRunning(machineId){
     // F. Đơn chưa hoàn thành.
     if(next.status==='done') return false;
 
-    // G. Đơn đang RUNNING (dù ở công đoạn khác — VD đang chạy Đùn, đã
-    // gán trước máy Rút cho công đoạn kế tiếp) → KHÔNG đụng vào ở đây.
-    // Việc "tới lượt công đoạn kế tiếp" được xử lý riêng bởi setStage()
-    // (người dùng bấm chuyển công đoạn) — hàm này chỉ phụ trách đẩy đơn
-    // đang THỰC SỰ CHỜ (pending) lên RUNNING, đúng phạm vi lỗi báo cáo
-    // (mục 6/7/8), tránh đụng 2 nơi cùng đổi 1 field gây xung đột.
-    if(next.status==='running') return false;
+    // G. Đơn có thể đang ở 1 trong 2 trạng thái hợp lệ để được đẩy lên đây:
+    //    - 'pending' (chưa từng chạy) → đây là lần chạy ĐẦU TIÊN.
+    //    - 'running' NHƯNG đã sang đúng công đoạn của máy này qua setStage()
+    //      trong lúc máy còn bận (dhMachineQueue() ở trên đã tự lọc đúng
+    //      trường hợp này rồi, nên tới đây chắc chắn hợp lệ) → SỬA LỖI GỐC:
+    //      trước đây hàm này bỏ qua thẳng mọi đơn 'running', khiến đơn kiểu
+    //      này không bao giờ được xác nhận chạy dù máy đã trống ra.
 
     // H. CHUYỂN CHÍNH đơn này (không tạo mới/không đổi id) → RUNNING,
-    // giữ nguyên o.machineAssign hiện có.
+    // giữ nguyên o.machineAssign hiện có, và XÁC NHẬN đang chạy thật tại
+    // đúng máy này (machineActiveAt) — nguồn duy nhất chống 2 đơn cùng
+    // "đang chạy" 1 máy (xem dhOrderAtMachine/dhMachineQueue).
     const before = next.status;
     next.status = 'running';
     if(!next.startedAt) next.startedAt = Date.now();
     if(!next.stage) next.stage = myStage.key;
+    dhMarkActiveAtMachine(next, myStage.key, machineId);
 
     log('Tự động chạy tiếp', `${next.customer||''} · ${ASSIGN_STAGE_LABEL[myStage.key]||''} → ${m.name}`,
       next.id, {status:before}, {status:'running'});
@@ -16628,6 +16694,15 @@ function setStatus(id, newStatus){if(guardViewer())return;
   o.status=newStatus;
   if(newStatus==='running'&&!o.startedAt) o.startedAt=Date.now();
   if(newStatus==='running'&&!o.stage) o.stage='dun';
+  // Bấm "Bắt đầu sản xuất" đã qua kiểm tra không xung đột ở trên → xác nhận
+  // NGAY đơn này đang chạy thật tại đúng máy công đoạn hiện tại (nếu có gán
+  // máy) — đồng bộ với cơ chế machineActiveAt dùng ở setStage()/
+  // promoteQueuedOrderToRunning() (chống 2 đơn cùng "đang chạy" 1 máy).
+  if(newStatus==='running'){
+    const stKey = o.stage || 'dun';
+    const mid = orderMachineAssign(o)[stKey];
+    if(mid) dhMarkActiveAtMachine(o, stKey, mid);
+  }
   if(newStatus==='done') o.doneAt=Date.now();
   if(newStatus==='done') o.stage='danhbong';
   if(newStatus==='done') o.doneBy=currentUser?.name||'—';
