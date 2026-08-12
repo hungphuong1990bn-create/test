@@ -4067,7 +4067,7 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh2-side-row.dh2-cols-overdue,.dh-tv .dh2-side-row.dh2-cols-done{cursor:pointer}
 .dh-tv .dh2-side-spec{font-size:clamp(12px,1.4dvh,18px);font-weight:700;color:#9db3e0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dh-tv .dh2-side-date{font-size:clamp(13px,1.5dvh,19px);font-weight:700;color:#bcd6ff;text-align:right;white-space:nowrap}
-.dh-tv .dh2-side-late{font-size:clamp(18px,2.3dvh,30px);font-weight:900;color:#ff6b6b;text-align:right;white-space:nowrap;text-shadow:0 0 14px rgba(255,82,82,.45)}
+.dh-tv .dh2-side-late{font-size:clamp(15px,1.9dvh,25px);font-weight:900;color:#ff6b6b;text-align:right;white-space:nowrap;text-shadow:0 0 14px rgba(255,82,82,.45)}
 .dh-tv .dh2-side-qty{font-size:clamp(13px,1.5dvh,19px);font-weight:800;color:#eaf1ff;text-align:right;white-space:nowrap}
 .dh-tv .dh2-side-time{font-size:clamp(12px,1.4dvh,18px);font-weight:700;color:#9db3e0;text-align:right;white-space:nowrap}
 .dh-tv .dh2-side-check{font-size:clamp(15px,1.8dvh,23px);font-weight:900;color:#4ade80;text-align:right}
@@ -8348,7 +8348,13 @@ function scheduleUIRefresh(showSyncToast){
   }
   if(_uiRefreshScheduled) return;
   _uiRefreshScheduled = true;
-  const run = ()=>{ _uiRefreshScheduled=false; renderTab(currentTab); updateBadges(); updateOnline(); };
+  // AUTO DISPATCH (mục 13): mọi lần dữ liệu đơn hàng được đồng bộ lại từ
+  // Firebase (SSE path /data/orders, /data/orders/{id}, hoặc bản đọc lại
+  // toàn bộ /data) đều đi qua đúng 1 điểm này trước khi vẽ lại UI — quét lại
+  // xem có máy nào vừa trống ra (do thao tác từ 1 thiết bị khác) để tự đẩy
+  // đơn đầu hàng đợi lên RUNNING, không cần F5. Tự no-op nếu không có gì để
+  // đẩy nên gọi vô điều kiện ở đây là an toàn, không tốn thêm round-trip.
+  const run = ()=>{ _uiRefreshScheduled=false; dhAutoDispatchSweepAll(); renderTab(currentTab); updateBadges(); updateOnline(); };
   if(typeof requestAnimationFrame==='function') requestAnimationFrame(run); else setTimeout(run,16);
 }
 
@@ -8396,6 +8402,9 @@ function applyDataSnapshot(data){
     const freshQr = Array.isArray(data.qrProducts)?data.qrProducts:Object.values(data.qrProducts);
     if(JSON.stringify(freshQr)!==JSON.stringify(DB.qrProducts)){ DB.qrProducts = freshQr; changed = true; }
   }
+  // AUTO DISPATCH (mục 13) chạy chung tại scheduleUIRefresh() bên dưới —
+  // đúng 1 điểm cho mọi đường đồng bộ (poll toàn bộ /data, SSE theo field,
+  // SSE theo từng đơn) để không trùng lặp/không bỏ sót.
   if(changed){ lsSave(); scheduleUIRefresh(true); }
   return changed;
 }
@@ -15949,29 +15958,42 @@ function setStage(id, stage){if(guardViewer())return;
     if(!isStaff()) return;
     const old = o.stage;
     if(old===stage) return;
+
+    // CHỐNG 2 ĐƠN CÙNG RUNNING 1 MÁY (mục 12): nếu công đoạn công đoạn MỚI
+    // đã được gán sẵn máy (xem Phân công máy TRƯỚC) và máy đó đang thực sự
+    // chạy 1 đơn KHÁC → không cho chuyển thẳng công đoạn ngay, đơn này giữ
+    // nguyên công đoạn hiện tại (vẫn đang xếp hàng đúng vị trí của nó tại
+    // máy công đoạn mới — xem dhMachineQueue) và sẽ tự động được đẩy sang
+    // công đoạn/RUNNING ngay khi máy đó trống (promoteQueuedOrderToRunning
+    // được gọi lại bên dưới mỗi khi có máy được giải phóng).
+    const newMachineId = o.machineAssign ? o.machineAssign[stage] : '';
+    if(newMachineId){
+      const busy = dhOrderAtMachine(newMachineId);
+      if(busy && busy.id!==o.id){
+        showToast(`⚠️ ${machineById(newMachineId)?.name||'Máy'} đang chạy đơn ${ddCode(busy)} (${busy.customer||''}) — ${o.customer||''} sẽ tự động chạy tiếp khi máy trống`, true);
+        renderTab(currentTab);
+        return;
+      }
+    }
+
     o.stage = stage;
     // Nhả máy của các công đoạn đã đi qua — chỉ làm ở ĐÂY (khi tiến độ thật
     // sự tiến lên), không làm khi chỉ gán TRƯỚC máy cho công đoạn sau (xem
     // assignMachine) — nhờ vậy máy công đoạn hiện tại không bị "nhả" sớm chỉ
     // vì đã đặt trước máy công đoạn kế tiếp.
-    let releasedNames = [];
-    if(o.machineAssign){
-      const newIdx = ASSIGN_STAGES.findIndex(s=>s.key===stage);
-      if(newIdx>0){
-        ASSIGN_STAGES.slice(0,newIdx).forEach(s=>{
-          if(o.machineAssign[s.key]){
-            releasedNames.push(`${s.label} (${machineById(o.machineAssign[s.key])?.name||o.machineAssign[s.key]})`);
-            delete o.machineAssign[s.key];
-          }
-        });
-      }
-    }
+    const releasedIds = dhReleaseEarlierMachines(o, stage);
+    const releasedNames = releasedIds.map(mid=>machineById(mid)?.name||mid);
     log('Cập nhật công đoạn', `${o.customer||''} · ${STAGE_LABEL[stage]||stage}${releasedNames.length?` · Nhả máy: ${releasedNames.join(', ')}`:''}`, id, {stage:old||''}, {stage});
     renderTab(currentTab);
     refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
     goToOrderCard(id);
     showToast(`🏭 Công đoạn: ${STAGE_LABEL[stage]||stage}`);
     saveOrders(); // ghi Database + đồng bộ Realtime ngay
+
+    // AUTO DISPATCH (mục 11): máy (hoặc các máy) vừa được nhả ra ở trên có
+    // thể đang có đơn khác xếp hàng sẵn — đẩy dây chuyền domino, không cần
+    // thao tác thủ công.
+    releasedIds.forEach(mid=>promoteQueuedOrderToRunning(mid));
   });
 }
 
@@ -16057,6 +16079,119 @@ function machineRuntimeStatus(machineId){
   return {code:'sang', label:'🔵 Sẵn sàng', dot:'🔵', queue:[]};
 }
 
+// ════════════════════════════════════════════════════════════
+// AUTO DISPATCH — SỬA TẬN GỐC LỖI "ĐƠN CHẠY TIẾP KHÔNG THỂ CHUYỂN
+// THÀNH ĐƠN ĐANG CHẠY". Trước đây, khi 1 đơn (VD "A") hoàn thành hoặc
+// nhả máy, đơn kế tiếp trong hàng đợi (VD "B") — dù ĐÃ được phân công
+// sẵn đúng máy đó (o.machineAssign[stageKey] = machineId) — KHÔNG tự
+// chuyển sang RUNNING, vẫn bị coi là "đơn đang chờ" mãi mãi, kể cả khi
+// vào Phân công máy chọn lại đúng máy đó cho B. Nguyên nhân gốc: hệ
+// thống trước đây lẫn lộn 3 khái niệm — machineAssign (được gán máy
+// nào), queue (đang xếp hàng), running (đang THỰC SỰ chạy) — coi
+// machineAssign=machineId gần như đồng nghĩa "đang chạy", trong khi
+// không có bất kỳ bước nào chủ động đẩy trạng thái đơn từ hàng đợi lên
+// RUNNING khi máy trống ra.
+//
+// promoteQueuedOrderToRunning(machineId) là NGUỒN DUY NHẤT thực hiện
+// bước "đẩy" đó — được gọi mỗi khi 1 máy có khả năng vừa trống ra (đơn
+// hoàn thành, đổi công đoạn nhả máy, vừa phân công máy thủ công cho 1
+// đơn đang chờ vào đúng máy đang trống, hoặc dữ liệu Firebase báo thay
+// đổi trạng thái liên quan) — KHÔNG gọi ở mọi lượt render để tránh vòng
+// lặp realtime (xem lock _dhAutoDispatchLocks bên dưới).
+//
+// QUY TẮC BẮT BUỘC: hàm này CHỈ UPDATE bản ghi đơn đã có theo đúng id
+// (o.status/o.stage) — KHÔNG tạo đơn mới, KHÔNG clone, KHÔNG đổi id,
+// KHÔNG xoá rồi tạo lại trên Firebase, KHÔNG xoá machineAssign.
+let _dhAutoDispatchLocks = {};
+
+// Nhả các máy của những công đoạn ĐÃ ĐI QUA (trước newStageKey) khỏi
+// o.machineAssign — dùng chung cho cả thao tác thủ công (setStage) và
+// tự động (promoteQueuedOrderToRunning khi đơn đang chạy dở tới lượt
+// công đoạn kế tiếp), trả về danh sách machineId vừa được nhả để nơi
+// gọi tiếp tục dò xem có đơn nào khác đang xếp hàng tại đúng máy đó để
+// tự động đẩy lên chạy tiếp (dây chuyền domino, không dừng ở giữa).
+function dhReleaseEarlierMachines(o, newStageKey){
+  const released = [];
+  if(!o.machineAssign) return released;
+  const newIdx = ASSIGN_STAGES.findIndex(s=>s.key===newStageKey);
+  if(newIdx>0){
+    ASSIGN_STAGES.slice(0,newIdx).forEach(s=>{
+      if(o.machineAssign[s.key]){
+        released.push(o.machineAssign[s.key]);
+        delete o.machineAssign[s.key];
+      }
+    });
+  }
+  return released;
+}
+
+function promoteQueuedOrderToRunning(machineId){
+  if(!machineId) return false;
+  if(_dhAutoDispatchLocks[machineId]) return false; // chống vòng lặp realtime (mục 13)
+  _dhAutoDispatchLocks[machineId] = true;
+  try{
+    // A. Máy đang có 1 đơn THỰC SỰ đang RUNNING → không đụng vào, dừng lại
+    //    (chống 2 đơn cùng RUNNING 1 máy — mục 12).
+    if(dhOrderAtMachine(machineId)) return false;
+    const m = machineById(machineId);
+    if(!m) return false;
+    const myStage = ASSIGN_STAGES.find(s=>s.group===m.group);
+    if(!myStage) return false;
+
+    // B+C. Lấy hàng đợi của máy này (đã sắp theo ưu tiên/ngày tạo), lấy
+    // đơn hợp lệ đầu tiên.
+    const queue = dhMachineQueue(machineId);
+    if(!queue.length) return false;
+    const next = queue[0];
+
+    // E. Đúng máy này đã được gán cho đúng công đoạn của máy.
+    if(orderMachineAssign(next)[myStage.key] !== machineId) return false;
+    // F. Đơn chưa hoàn thành.
+    if(next.status==='done') return false;
+
+    // G. Đơn đang RUNNING (dù ở công đoạn khác — VD đang chạy Đùn, đã
+    // gán trước máy Rút cho công đoạn kế tiếp) → KHÔNG đụng vào ở đây.
+    // Việc "tới lượt công đoạn kế tiếp" được xử lý riêng bởi setStage()
+    // (người dùng bấm chuyển công đoạn) — hàm này chỉ phụ trách đẩy đơn
+    // đang THỰC SỰ CHỜ (pending) lên RUNNING, đúng phạm vi lỗi báo cáo
+    // (mục 6/7/8), tránh đụng 2 nơi cùng đổi 1 field gây xung đột.
+    if(next.status==='running') return false;
+
+    // H. CHUYỂN CHÍNH đơn này (không tạo mới/không đổi id) → RUNNING,
+    // giữ nguyên o.machineAssign hiện có.
+    const before = next.status;
+    next.status = 'running';
+    if(!next.startedAt) next.startedAt = Date.now();
+    if(!next.stage) next.stage = myStage.key;
+
+    log('Tự động chạy tiếp', `${next.customer||''} · ${ASSIGN_STAGE_LABEL[myStage.key]||''} → ${m.name}`,
+      next.id, {status:before}, {status:'running'});
+
+    saveOrders(); // ghi Database + đồng bộ Realtime ngay — không cần F5 (mục 14)
+    renderTab(currentTab);
+    refreshKhDetailIfOpen(next.id);
+    dhFitNextQueues();
+    showToast(`⚙️ ${m.name}: tự động chạy tiếp ${ddCode(next)} (${next.customer||''})`);
+    addNotif('order_run','⚙️ Tự động chạy tiếp: '+(next.customer||''),
+      `${specStr(next)} · ${qtyLabel(next)} · ${next.priority||''} · ${m.name}`,'keHoach','Hệ thống');
+    return true;
+  } finally {
+    delete _dhAutoDispatchLocks[machineId];
+  }
+}
+
+// Quét toàn bộ máy trong xưởng và tự đẩy hàng đợi lên RUNNING ở những
+// máy đang trống — dùng khi dữ liệu đơn hàng vừa được đồng bộ lại từ
+// Firebase (SSE/poll) để không bỏ sót trường hợp máy trống ra do thao
+// tác của 1 thiết bị khác. Bản thân promoteQueuedOrderToRunning() đã tự
+// no-op (không ghi/không render) nếu máy đang bận hoặc hàng đợi rỗng,
+// nên gọi hàm này thường xuyên là an toàn, không gây vòng lặp hay ghi
+// thừa lên Firebase.
+function dhAutoDispatchSweepAll(){
+  if(typeof isStaff!=='function' || !isStaff()) return; // chỉ tài khoản có quyền ghi mới tự đẩy trạng thái
+  MACHINES.forEach(m=>promoteQueuedOrderToRunning(m.id));
+}
+
 // Gán/đổi máy cho 1 công đoạn của 1 đơn hàng — CHỈ cập nhật bản ghi đã có
 // theo id (giống mọi thao tác khác của Kế hoạch SX), không tạo đơn mới.
 function assignMachine(orderId, stageKey, machineId){
@@ -16109,6 +16244,14 @@ function assignMachine(orderId, stageKey, machineId){
       showToast(m?`🏭 Đã gán ${m.name} cho công đoạn ${ASSIGN_STAGE_LABEL[stageKey]}`:'↺ Đã bỏ gán máy');
     }
     saveOrders(); // ghi Database + đồng bộ Realtime ngay — Bảng Điều hành SX tự cập nhật theo
+
+    // SỬA LỖI: nếu máy vừa được chọn ĐANG TRỐNG (không có đơn nào khác
+    // thực sự RUNNING ở đó) và đơn này đang xếp đầu hàng đợi, đẩy NGAY
+    // sang RUNNING — không bắt người dùng phải vào lại bấm "Bắt đầu sản
+    // xuất" mới chạy được (mục 8: "TJ550-1 đã trống → B chuyển ngay
+    // WAITING → RUNNING"). promoteQueuedOrderToRunning() tự no-op nếu
+    // máy đang bận hoặc đơn chưa tới lượt, nên gọi vô điều kiện là an toàn.
+    if(machineId) promoteQueuedOrderToRunning(machineId);
   });
 }
 
@@ -16472,6 +16615,15 @@ function setStatus(id, newStatus){if(guardViewer())return;
     }
   }
 
+  // Máy đang thực sự giữ đơn này (nếu có) ngay TRƯỚC khi đổi trạng thái —
+  // dùng để tự động đẩy đơn kế tiếp trong hàng đợi lên RUNNING ngay khi máy
+  // này được giải phóng bởi đơn hoàn thành (mục 3 + mục 11: AUTO DISPATCH).
+  const freedMachineId = (()=>{
+    if(newStatus!=='done' || o.status!=='running') return null;
+    const active = orderActiveAssignStage(o);
+    return active ? (orderMachineAssign(o)[active.key] || null) : null;
+  })();
+
   const before=o.status;
   o.status=newStatus;
   if(newStatus==='running'&&!o.startedAt) o.startedAt=Date.now();
@@ -16500,6 +16652,11 @@ function setStatus(id, newStatus){if(guardViewer())return;
 
   // Firebase
   saveOrders();
+
+  // AUTO DISPATCH (mục 3 + 11): đơn A vừa hoàn thành → máy vừa giải phóng ra
+  // → tự động lấy đơn đầu hàng đợi (VD "B") đẩy sang RUNNING ngay, KHÔNG
+  // cần thao tác thủ công/gán lại máy (đúng lỗi báo cáo gốc).
+  if(freedMachineId) promoteQueuedOrderToRunning(freedMachineId);
 
   if(newStatus==='done'){
     pushNotif('✅ Hoàn thành!',`${o.customer} đã xong`);
