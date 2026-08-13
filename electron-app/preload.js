@@ -39,4 +39,15 @@ contextBridge.exposeInMainWorld('tvNative', {
     ipcRenderer.on('tv-state-sync', listener);
     return () => ipcRenderer.removeListener('tv-state-sync', listener);
   },
+
+  // Lấy trạng thái "Tự khởi động cùng Windows" hiện tại (đọc thẳng từ
+  // Windows qua main process) — dùng để hiển thị đúng trạng thái nút
+  // bật/tắt trong Cài đặt ngay khi mở trang, không cần đoán.
+  getAutoStart: () => ipcRenderer.invoke('app-get-autostart'),
+
+  // Bật/tắt "Tự khởi động cùng Windows" (gọi khi người dùng bấm nút trong
+  // Cài đặt) — main process là nơi DUY NHẤT thực sự gọi
+  // app.setLoginItemSettings() để đăng ký/gỡ đăng ký login item với
+  // Windows, và trả về trạng thái mới nhất sau khi đổi.
+  setAutoStart: (enabled) => ipcRenderer.invoke('app-set-autostart', enabled),
 });

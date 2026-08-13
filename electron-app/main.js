@@ -38,6 +38,60 @@ const fs = require('fs');
 // ĐỔI URL NÀY thành đúng địa chỉ GitHub Pages của bạn nếu khác.
 const APP_URL = 'https://hungphuong1990bn-create.github.io/test/';
 
+// ── TỰ KHỞI ĐỘNG CÙNG WINDOWS + TỰ VÀO TV MODE ─────────────────────────
+// Cờ truyền vào khi đăng ký app với Windows (Settings ▸ Startup Apps) để
+// nhận biết ĐÚNG lần khởi động này là do WINDOWS tự mở app lúc đăng nhập
+// máy — chứ KHÔNG phải do người dùng tự bấm icon/Start Menu để làm việc
+// bình thường. Chỉ khi nào là Windows tự mở (AUTOSTART_ARG) mới tự thêm
+// ?tv=1 vào URL để trang web tự khoá vào "Điều hành SX" + TV Mode + Full
+// Screen ngay (cơ chế khoá TV có sẵn trong index.html, xem hàm
+// dhTvLocked()/goTab()) — không đụng gì tới hành vi mở app thủ công hiện
+// có, đúng yêu cầu không ảnh hưởng các chức năng khác. Đây cũng chính là
+// cơ chế "chỉ dùng 1 màn hình TV": khi Full Screen được bật, cửa sổ luôn
+// mở trên MỘT màn hình duy nhất (màn đã lưu lần trước, hoặc màn chính nếu
+// chưa từng lưu/màn cũ không còn) — xem resolveTargetDisplay() bên dưới.
+const AUTOSTART_ARG = '--auto-launch';
+
+function getAutoStartState() {
+  try {
+    const s = app.getLoginItemSettings({ args: [AUTOSTART_ARG] });
+    return { openAtLogin: !!s.openAtLogin };
+  } catch (e) {
+    return { openAtLogin: false };
+  }
+}
+
+function setAutoStartState(enabled) {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!enabled,
+      // Truyền lại đúng cờ AUTOSTART_ARG để lần sau Windows tự mở app,
+      // main process nhận ra được (wasOpenedAtLogin/process.argv) mà tự
+      // vào TV Mode + Full Screen ngay, không cần thao tác gì thêm.
+      args: [AUTOSTART_ARG],
+    });
+  } catch (e) {
+    // Một số môi trường (vd chạy portable, chưa cài qua Setup.exe) không hỗ
+    // trợ đăng ký login item — bỏ qua, không chặn app khởi động bình thường.
+  }
+  return getAutoStartState();
+}
+
+function wasLaunchedByWindowsStartup() {
+  try {
+    const s = app.getLoginItemSettings({ args: [AUTOSTART_ARG] });
+    return !!s.wasOpenedAtLogin || process.argv.includes(AUTOSTART_ARG);
+  } catch (e) {
+    return process.argv.includes(AUTOSTART_ARG);
+  }
+}
+
+// URL thực sự sẽ nạp cho cửa sổ — chỉ thêm ?tv=1 khi CHÍNH Windows tự mở
+// app lúc khởi động máy (đã bật "Tự khởi động cùng Windows" trong Cài đặt).
+function buildLoadUrl() {
+  return wasLaunchedByWindowsStartup() ? APP_URL + '?tv=1' : APP_URL;
+}
+
 // Đặt true nếu muốn Full Screen kiểu KIOSK THẬT (ẩn hẳn taskbar Windows,
 // chặn Alt+Tab/Esc thoát ra ngoài) — phù hợp nếu máy chỉ dùng riêng để
 // chạy TV 24/7, không ai cần thao tác Windows khác trên máy đó. Để
@@ -123,7 +177,8 @@ function createWindow() {
 
   Menu.setApplicationMenu(null);
 
-  mainWindow.loadURL(APP_URL);
+  const loadUrl = buildLoadUrl();
+  mainWindow.loadURL(loadUrl);
 
   // Mở link ngoài (nếu có) bằng trình duyệt mặc định thay vì trong app.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -134,11 +189,13 @@ function createWindow() {
     return { action: 'allow' };
   });
 
-  // Nếu mất mạng / lỗi load, tự thử lại sau vài giây.
+  // Nếu mất mạng / lỗi load, tự thử lại sau vài giây (giữ nguyên đúng URL
+  // — kể cả ?tv=1 nếu lần mở này là do Windows tự khởi động — để không bị
+  // "rơi" về giao diện thường sau khi mạng có lại).
   mainWindow.webContents.on('did-fail-load', () => {
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.loadURL(APP_URL);
+        mainWindow.loadURL(loadUrl);
       }
     }, 3000);
   });
@@ -195,6 +252,12 @@ function createWindow() {
 // ── IPC: renderer (index.html qua preload.js) gọi lên để đọc/ghi trạng
 // thái TV Mode + Full Screen thật ở tầng cửa sổ native. ─────────────────
 ipcMain.handle('tv-get-state', () => tvState);
+
+// ── IPC: renderer đọc/ghi tuỳ chọn "Tự khởi động cùng Windows" (mục Cài
+// đặt trong index.html) — main process là nơi DUY NHẤT thực sự gọi
+// app.setLoginItemSettings() để đăng ký/gỡ đăng ký với Windows. ─────────
+ipcMain.handle('app-get-autostart', () => getAutoStartState());
+ipcMain.handle('app-set-autostart', (event, enabled) => setAutoStartState(enabled));
 
 ipcMain.on('tv-set-state', (event, payload) => {
   const tvMode = !!(payload && payload.tvMode);
