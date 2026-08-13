@@ -9549,7 +9549,7 @@ function goTab(tab){
     tab='dieuHanh';
     if(!dhTvMode){
       dhTvMode=true;
-      try{ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }catch(e){}
+      dhApplyFullscreen(true, true);
     }
     dhSyncFullscreenClass();
   } else if(dhTvMode){
@@ -11943,6 +11943,45 @@ function dhSyncFullscreenClass(){
   try{ document.body.classList.toggle('dh-tv-fullscreen', !!dhTvMode); }catch(e){}
 }
 
+// ── Full Screen THẬT (native, ở tầng cửa sổ Windows) khi app đang chạy
+// trong bản .exe (Electron) — đi qua cầu nối window.tvNative do
+// preload.js expose, main.js là nơi DUY NHẤT thực gọi
+// BrowserWindow.setFullScreen()/setKiosk() và lưu trạng thái ra đĩa để
+// khôi phục đúng sau auto reset/reload/khởi động lại (xem main.js).
+// Khi KHÔNG chạy trong Electron (vd mở thẳng bằng trình duyệt để test)
+// → fallback về HTML Fullscreen API như cũ, chỉ để không bị lỗi/mất
+// chức năng lúc dev, KHÔNG dùng làm cơ chế chính trong bản đóng gói vì
+// Chromium tự thoát Fullscreen API mỗi khi trang reload/navigate.
+function dhApplyFullscreen(tvMode, fullscreen){
+  if(typeof window!=='undefined' && window.tvNative && window.tvNative.isElectron){
+    try{ window.tvNative.setState(!!tvMode, !!fullscreen); }catch(e){}
+    return;
+  }
+  try{
+    const el = document.documentElement;
+    if(fullscreen && el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    if(!fullscreen && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  }catch(e){}
+}
+
+// Khi chạy trong Electron: main process là nguồn sự thật cho trạng thái
+// Full Screen thật của cửa sổ. Lắng nghe để đồng bộ lại nếu main tự đổi
+// (vd vừa khôi phục Full Screen lúc khởi động app, hoặc người dùng nhấn
+// Esc/F11 ở tầng Windows thoát Full Screen mà không qua nút bấm trong
+// app) — chỉ đồng bộ cờ khoá TV Mode (để dhTvLocked() luôn khớp thực
+// tế), KHÔNG tự ý đổi tab người dùng đang xem.
+if(typeof window!=='undefined' && window.tvNative && window.tvNative.isElectron){
+  try{
+    window.tvNative.onStateSync(state=>{
+      if(!state) return;
+      try{
+        if(state.tvMode){ sessionStorage.setItem('sx_tv_locked','1'); localStorage.setItem('sx_tv_locked','1'); }
+      }catch(e){}
+      if(state.tvMode && !dhTvMode){ dhTvMode=true; dhSyncFullscreenClass(); }
+    });
+  }catch(e){}
+}
+
 function dhCurrentShift(){
   const h = new Date().getHours();
   if(h>=6 && h<14) return 'Ca 1 · 06:00–14:00';
@@ -12563,9 +12602,7 @@ function dhToggleTv(){
     else { sessionStorage.removeItem('sx_tv_locked'); localStorage.removeItem('sx_tv_locked'); }
   }catch(e){}
   dhSyncFullscreenClass();
-  const el = document.documentElement;
-  if(dhTvMode && el.requestFullscreen) el.requestFullscreen().catch(()=>{});
-  if(!dhTvMode && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  dhApplyFullscreen(dhTvMode, dhTvMode);
   renderDieuHanh();
 }
 
