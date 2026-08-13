@@ -23,8 +23,49 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
+      # Cache lại file nhị phân Electron + electron-builder đã tải về —
+      # đây là phần tải NẶNG NHẤT (electron tự tải file .zip ~100-150MB
+      # từ GitHub Releases sau khi npm install, không qua npm registry),
+      # cũng là nơi hay bị lỗi "socket hang up" khi mạng runner chập
+      # chờn. Có cache hợp lệ thì lần build sau không cần tải lại nữa —
+      # vừa nhanh hơn hẳn, vừa gần như không còn gặp lỗi mạng ở bước này.
+      - name: Cache Electron & electron-builder downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('electron-app/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
+      # Cài dependencies với TỰ ĐỘNG THỬ LẠI tối đa 3 lần. Lỗi
+      # "RequestError: socket hang up" khi tải binary Electron gần như
+      # luôn là lỗi mạng tạm thời của runner (không phải lỗi cấu hình
+      # hay lỗi code) — thử lại sau vài giây thường qua ngay, nên để CI
+      # tự retry thay vì phải bấm "Re-run jobs" thủ công mỗi lần.
+      - name: Install dependencies (tự retry khi lỗi mạng)
+        shell: pwsh
+        env:
+          npm_config_fetch_retries: 5
+          npm_config_fetch_retry_mintimeout: 20000
+          npm_config_fetch_retry_maxtimeout: 120000
+        run: |
+          $maxAttempts = 3
+          for ($i = 1; $i -le $maxAttempts; $i++) {
+            Write-Host "npm install — lần thử $i/$maxAttempts"
+            npm install
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "npm install thành công."
+              exit 0
+            }
+            if ($i -lt $maxAttempts) {
+              Write-Host "npm install thất bại (có thể do mạng), chờ 15 giây rồi thử lại..."
+              Start-Sleep -Seconds 15
+            }
+          }
+          Write-Host "npm install thất bại sau $maxAttempts lần thử — dừng build."
+          exit 1
 
       - name: Build & publish Setup.exe to GitHub Releases
         env:
