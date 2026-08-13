@@ -6084,8 +6084,8 @@ const MACHINES = [
 const ASSIGN_STAGES = [
   {key:'dun',      label:'Đùn',        group:'Máy đùn',        icon:'🔧'},
   {key:'rut',      label:'Rút',        group:'Máy rút',        icon:'🔩'},
-  {key:'cat',      label:'Cắt',        group:'Máy cắt',        icon:'✂️'},
-  {key:'danhbong', label:'Đánh bóng',  group:'Máy đánh bóng',  icon:'✨'}
+  {key:'danhbong', label:'Đánh bóng',  group:'Máy đánh bóng',  icon:'✨'},
+  {key:'cat',      label:'Cắt',        group:'Máy cắt',        icon:'✂️'}
 ];
 const ASSIGN_STAGE_LABEL = Object.fromEntries(ASSIGN_STAGES.map(s=>[s.key, s.label]));
 const BTM_TYPE_LABEL = {hong:'🔴 Hỏng đột xuất', baotri:'🟡 Bảo trì định kỳ', kiemtra:'🔵 Kiểm tra định kỳ'};
@@ -6118,15 +6118,16 @@ function maintTypeOfMachine(m){
   return null;
 }
 
-// Công đoạn sản xuất: Máy Đùn -> Máy Rút -> Cắt -> Đánh Bóng — SỬA LỖI: trước
-// đây danh sách này THIẾU 'Cắt' (chỉ có 3 bước) trong khi hệ thống phân công
-// máy (ASSIGN_STAGES) có đủ 4 bước — khiến o.stage (tiến độ công đoạn) không
-// bao giờ có thể bằng 'cat', làm máy Cắt luôn bị coi là "chưa tới lượt".
+// Công đoạn sản xuất: Máy Đùn -> Máy Rút -> Đánh Bóng -> Cắt (Cắt là công đoạn
+// SAU CÙNG theo đúng quy trình thực tế của xưởng). Thứ tự mảng này quyết định
+// cả thứ tự cột hiển thị trong tab "Kế hoạch SX" lẫn cách tính % tiến độ/xác
+// định công đoạn "trước/sau" (findIndex theo mảng) — nên khi đổi thứ tự ở đây,
+// toàn bộ luồng chuyển công đoạn tự động khớp theo đúng quy trình mới.
 const STAGES = [
   {key:'dun', label:'Máy Đùn', icon:'🔧'},
   {key:'rut', label:'Máy Rút', icon:'🔩'},
-  {key:'cat', label:'Cắt', icon:'✂️'},
-  {key:'danhbong', label:'Đánh Bóng', icon:'✨'}
+  {key:'danhbong', label:'Đánh Bóng', icon:'✨'},
+  {key:'cat', label:'Cắt', icon:'✂️'}
 ];
 const STAGE_LABEL = Object.fromEntries(STAGES.map(s=>[s.key, s.label]));
 
@@ -17467,8 +17468,8 @@ function showUpdateBanner(){
 const QR_STAGES = [
   {key:'dun',      label:'Đùn',         icon:'🔧'},
   {key:'rut',      label:'Rút',         icon:'🔩'},
-  {key:'cat',      label:'Cắt',         icon:'✂️'},
   {key:'danhbong', label:'Đánh bóng',   icon:'✨'},
+  {key:'cat',      label:'Cắt',         icon:'✂️'},
   {key:'kiemtra',  label:'Kiểm tra QC', icon:'🔍'},
   {key:'dongoi',   label:'Đóng gói',    icon:'📦'},
   {key:'xuatkho',  label:'Xuất kho',    icon:'🚚'}
