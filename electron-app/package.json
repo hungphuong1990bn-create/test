@@ -23,6 +23,7 @@
     "asar": true,
     "files": [
       "main.js",
+      "preload.js",
       "build/icon.png"
     ],
     "win": {
