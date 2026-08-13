@@ -4787,6 +4787,14 @@ body{letter-spacing:-.1px}
 .kh-abtn.progress{flex:1 1 120px;background:#fff;color:var(--text2);border-color:var(--border)}
 .kh-abtn.progress:hover{background:var(--bg);border-color:var(--text4);color:var(--brand)}
 
+/* Hổ phách viền — lùi trạng thái (Về chờ SX), dùng khi bấm nhầm "Bắt đầu
+   sản xuất". Cố tình để dạng viền (không tô đặc như start/finish) + luôn
+   yêu cầu xác nhận trước khi thực hiện (xem khRevertPlan) — tránh vô tình
+   bấm 2 lần nhầm gây mất dấu công đoạn/máy đang giữ. */
+.kh-abtn.revert{flex:1 1 120px;background:var(--amber-l);color:var(--amber);border-color:var(--amber-m)}
+.kh-abtn.revert:hover{background:var(--amber-m);color:#fff;border-color:var(--amber-m)}
+.kh-abtn.revert .kh-abtn-spin::before{border-color:rgba(217,119,6,.25);border-top-color:var(--amber)}
+
 .kh-plan-util{display:flex;gap:5px;margin-left:auto;flex-shrink:0}
 .kh-util-icon{width:30px;height:30px;border-radius:9px;border:1.5px solid var(--border);background:#fff;color:var(--text3);display:inline-flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:background .15s,color .15s,border-color .15s,transform .1s}
 .kh-util-icon:hover{background:var(--bg);color:var(--brand);border-color:var(--brand3)}
@@ -7493,7 +7501,7 @@ function aiHandleStatusChange(text, normText){
   if(/\b(hoan thanh|da xong|xong roi|xong het|ket thuc)\b/.test(normText)){ target='done'; verb='hoàn thành'; }
   else if(/\b(bat dau chay|cho chay|dang chay|vao chay|chay ngay|chay lien|chay het)\b/.test(normText)
      || /\b(cho|bat dau|dang|vao)\b.{0,15}\bchay\b/.test(normText)){ target='running'; verb='cho chạy'; }
-  else if(/\b(cho san xuat lai|tro lai cho|huy chay|dung chay)\b/.test(normText)){ target='pending'; verb='chuyển về chờ'; }
+  else if(/\b(cho san xuat lai|tro lai cho|huy chay|dung chay|ve cho san xuat|chuyen ve cho|bam nham|an nham)\b/.test(normText)){ target='pending'; verb='chuyển về chờ'; }
   if(!target) return null;
   const subject = aiResolveSubject(text, normText);
   if(!subject){
@@ -9037,7 +9045,7 @@ function addNotif(type, title, body, tab, fromUser){
   const n = {
     id: 'n'+Date.now()+Math.random().toString(36).slice(2,5),
     ts: Date.now(),
-    type,       // 'order_new'|'order_done'|'order_run'|'broadcast'|'system'
+    type,       // 'order_new'|'order_done'|'order_run'|'order_revert'|'broadcast'|'system'
     title, body,
     tab: tab||'',
     from: fromUser||currentUser?.name||'',
@@ -9095,7 +9103,7 @@ function closeNotifPanel(){
 
 // Render danh sách thông báo
 const NOTIF_ICO = {
-  order_new:'📦', order_done:'✅', order_run:'⚙️',
+  order_new:'📦', order_done:'✅', order_run:'⚙️', order_revert:'↩️',
   broadcast:'📢', system:'ℹ️', error:'❌', warning:'⚠️'
 };
 function renderNotifList(){
@@ -11702,6 +11710,9 @@ function khPlanCard(o, seq){
       </button>
       <button class="kh-abtn progress" onclick="khQuickProgress('${o.id}',event)" title="Cập nhật tiến độ chi tiết">
         <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">📊</span>Tiến độ</span>
+      </button>
+      <button class="kh-abtn revert" id="kh-revert-${o.id}" onclick="khRevertPlan('${o.id}',this,event)" title="Bấm nhầm &quot;Bắt đầu sản xuất&quot;? Chuyển đơn về Chờ sản xuất">
+        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">↩️</span>Về chờ SX</span>
       </button>`:''}
       <div class="kh-plan-util">
         <button class="kh-util-icon" title="Xem chi tiết" onclick="khViewDetail('${o.id}')">👁</button>
@@ -11751,6 +11762,22 @@ function khPlanAction(id, newStatus, btn, ev){
   btn.classList.add('is-loading');
   btn.disabled = true;
   setTimeout(()=>{ withPlanLock(id, ()=>setStatus(id, newStatus)); }, 360);
+}
+
+// "Về chờ SX": lùi 1 đơn đang chạy về Chờ sản xuất — dùng khi nhân viên bấm
+// NHẦM nút "Bắt đầu sản xuất" (trước đây một khi đã bấm "Bắt đầu" thì KHÔNG
+// có đường quay lại, đơn kẹt luôn ở "Đang sản xuất"). Luôn hỏi xác nhận
+// trước khi thực hiện — vì đây là thao tác lùi trạng thái, cần chắc chắn
+// trước khi làm, tránh chính nút này lại bị bấm nhầm gây nhiễu dữ liệu.
+// setStatus() lo phần nhả máy + đồng bộ hàng đợi/thông báo (xem setStatus).
+function khRevertPlan(id, btn, ev){
+  if(ev) ev.stopPropagation();
+  if(guardViewer()) return;
+  const o = DB.orders.find(x=>x.id===id); if(!o) return;
+  if(o.status!=='running') return;
+  confirm2('↩️ Chuyển về Chờ sản xuất?',
+    `Đơn ${o.customer||'—'} (${ddCode(o)}) sẽ chuyển từ "Đang sản xuất" về "Chờ sản xuất". Máy đang giữ đơn này sẽ được nhả ra cho đơn xếp hàng kế tiếp (nếu có). Dùng khi vừa bấm NHẦM "Bắt đầu sản xuất".`,
+    ()=>{ khPlanAction(id, 'pending', btn, ev); });
 }
 
 // ── State bộ lọc Kế hoạch sản xuất (ERP/MES table, đồng bộ Tab Đơn hàng) ──
@@ -16945,11 +16972,17 @@ function setStatus(id, newStatus){if(guardViewer())return;
   // Máy đang thực sự giữ đơn này (nếu có) ngay TRƯỚC khi đổi trạng thái —
   // dùng để tự động đẩy đơn kế tiếp trong hàng đợi lên RUNNING ngay khi máy
   // này được giải phóng bởi đơn hoàn thành (mục 3 + mục 11: AUTO DISPATCH).
+  // "done" (hoàn thành) HOẶC "pending" (lùi về Chờ SX — VD bấm nhầm "Bắt đầu
+  // sản xuất" rồi hủy lại) đều giải phóng máy đang giữ đơn này, để đơn kế
+  // tiếp trong hàng đợi của máy đó được tự động đẩy lên chạy ngay.
   const freedMachineId = (()=>{
-    if(newStatus!=='done' || o.status!=='running') return null;
+    if(!(newStatus==='done'||newStatus==='pending') || o.status!=='running') return null;
     const active = orderActiveAssignStage(o);
     return active ? (orderMachineAssign(o)[active.key] || null) : null;
   })();
+  // Ghi nhớ đơn đang RUNNING trước khi lùi về "pending" (chỉ dùng để dọn dấu
+  // xác nhận máy bên dưới — không đụng tới o.status thật cho tới khi gán).
+  const revertingFromRunning = (newStatus==='pending' && o.status==='running');
 
   const before=o.status;
   o.status=newStatus;
@@ -16968,6 +17001,17 @@ function setStatus(id, newStatus){if(guardViewer())return;
   if(newStatus==='done') o.stage='danhbong';
   if(newStatus==='done') o.doneBy=currentUser?.name||'—';
   if(newStatus!=='done') delete o.doneAt;
+  // Lùi Đang SX → Chờ SX (VD bấm nhầm "Bắt đầu sản xuất"): xóa mốc "Bắt đầu"
+  // (để nếu chạy lại, mốc thời gian ghi đúng lần chạy thật) và nhả dấu xác
+  // nhận "đang chạy thật tại máy" của công đoạn hiện tại — máy coi như trống
+  // trở lại ngay (dhOrderAtMachine/machineConflictOrder đều đã tự loại đơn
+  // không còn status='running' nên chỉ cần dọn machineActiveAt cho sạch dữ
+  // liệu, không bắt buộc về mặt logic). KHÔNG đụng tới o.stage/doneQty/tiến
+  // độ đã ghi nhận — đơn chạy lại sau vẫn tiếp tục đúng công đoạn cũ.
+  if(revertingFromRunning){
+    delete o.startedAt;
+    if(o.machineActiveAt) delete o.machineActiveAt[o.stage||'dun'];
+  }
   const lb={pending:'Chờ sản xuất',running:'Đang sản xuất',done:'Hoàn thành'};
   log(lb[newStatus]||newStatus,
     `${o.customer} · ${o.priority||''} · ${specStr(o)} · ${qtyLabel(o)}`,
@@ -17007,6 +17051,10 @@ function setStatus(id, newStatus){if(guardViewer())return;
   if(newStatus==='running'){
     addNotif('order_run','⚙️ Bắt đầu chạy: '+o.customer,
       `${specStr(o)} · ${qtyLabel(o)} · ${o.priority||''}`,'keHoach',currentUser?.name);
+  }
+  if(revertingFromRunning){
+    addNotif('order_revert','↩️ Đã lùi về Chờ SX: '+o.customer,
+      `${specStr(o)} · ${qtyLabel(o)} · ${o.priority||''} · huỷ thao tác "Bắt đầu sản xuất"`,'keHoach',currentUser?.name);
   }
 }
 
