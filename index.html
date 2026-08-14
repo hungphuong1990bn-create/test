@@ -5188,6 +5188,76 @@ body{letter-spacing:-.1px}
   .spec-grid{grid-template-columns:repeat(2,1fr);row-gap:6px}
   .kh-abtn-label{font-size:11px}
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   TỐI ƯU HIỂN THỊ MOBILE — bổ sung (không đổi cấu trúc/logic hiện có):
+   1) Dải ô KPI (Chờ SX / Đang SX / Ưu tiên / Trễ / Hoàn thành / Tổng kg)
+      luôn xếp ĐỦ 6 Ô TRÊN 1 HÀNG, thu gọn tối đa để không chiếm nhiều
+      không gian màn hình — áp dụng cho mọi tab dùng chung .dd-stats
+      (Đơn Hàng / Kế hoạch SX / Đơn hoàn thành).
+   2) Thẻ kế hoạch sản xuất (.kh-plan-card): giảm khoảng đệm/khoảng
+      cách giữa các khối để đỡ chiếm không gian dọc trên điện thoại.
+   ══════════════════════════════════════════════════════════════════ */
+@media(max-width:900px){
+  .dd-stats,
+  .kh-kpi-row.dd-stats{grid-template-columns:repeat(6,1fr)!important;gap:5px!important}
+  .dd-stat,
+  .kh-kpi-row.dd-stats .dd-stat{
+    flex-direction:column!important;align-items:center!important;justify-content:center!important;
+    text-align:center!important;gap:2px!important;padding:6px 2px 5px!important;border-radius:9px!important;
+  }
+  .dd-stat-ic,
+  .kh-kpi-row.dd-stats .dd-stat-ic{width:19px!important;height:19px!important;font-size:10px!important;border-radius:6px!important;margin:0 auto}
+  .dd-stat-txt,
+  .kh-kpi-row.dd-stats .dd-stat-txt{width:100%;align-items:center;gap:0!important}
+  .dd-stat-n,
+  .kh-kpi-row.dd-stats .dd-stat-n{font-size:12.5px!important;letter-spacing:-.2px;line-height:1.1!important}
+  .dd-stat-l,
+  .kh-kpi-row.dd-stats .dd-stat-l{
+    font-size:6.9px!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+    line-height:1.15!important;font-weight:800!important;
+  }
+  .kh-kpi-row.dd-stats .dd-stat-sub{display:none!important}
+}
+@media(max-width:480px){
+  .dd-stats,.kh-kpi-row.dd-stats{gap:4px!important}
+  .dd-stat,.kh-kpi-row.dd-stats .dd-stat{padding:5px 1px 4px!important}
+  .dd-stat-ic,.kh-kpi-row.dd-stats .dd-stat-ic{width:17px!important;height:17px!important;font-size:9px!important}
+  .dd-stat-n,.kh-kpi-row.dd-stats .dd-stat-n{font-size:11.5px!important}
+  .dd-stat-l,.kh-kpi-row.dd-stats .dd-stat-l{font-size:6.4px!important}
+}
+
+/* Thẻ kế hoạch SX gọn hơn trên mobile — giảm đệm dọc giữa các khối */
+@media(max-width:640px){
+  .kh-plan-grid{gap:8px!important}
+  .kh-hd{padding:8px 10px 7px!important}
+  .kh2-hd-top{gap:4px!important;margin-bottom:5px!important}
+  .kh2-cust{font-size:14px!important;margin-bottom:3px!important}
+  .kh-seq-badge{width:20px;height:20px;font-size:9.5px}
+  .kh2-badge{padding:2px 7px;font-size:9.5px}
+  .spec-grid{gap:4px!important;padding:7px 10px 3px!important}
+  .spec-box{padding:5px 2px 4px!important}
+  .spec-box-val{font-size:12px!important}
+  .spec-box-lbl{font-size:7.2px!important;margin-top:1px!important}
+  .spec-row{padding:6px 10px 8px!important;gap:5px!important}
+  .spec-tag{padding:2px 7px!important;font-size:10.5px!important}
+  .kh2-time{padding:7px 10px!important}
+  .kh2-time-col b{font-size:12px!important}
+  .kh2-time-col span{font-size:8.5px!important;margin-top:1px!important}
+  .kh-meta-row{padding:6px 10px!important;gap:5px!important}
+  .card-note{padding:6px 10px!important;font-size:11px!important}
+  .card-progress{padding:7px 10px!important}
+  .kh2-timeinfo{padding:0 10px 7px!important}
+  .card-mat-sec,.stage-tracker{padding:7px 10px 8px!important}
+  .stage-tracker-hd{margin-bottom:6px!important}
+  .stage-dot{width:21px!important;height:21px!important;font-size:9.5px!important}
+  .stage-name{font-size:8px!important}
+  .stage-line{margin:11px -2px 0!important}
+  .ai-card-warn-row{padding:6px 10px!important;font-size:10.5px!important}
+  .kh-plan-actions{padding:7px 8px!important;gap:5px!important}
+  .kh-abtn{padding:7px 6px!important;font-size:11px!important}
+  .kh-util-icon{width:28px!important;height:28px!important;font-size:13px!important}
+}
 </style>
 </head>
 <body>
