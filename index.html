@@ -4771,7 +4771,8 @@ body{letter-spacing:-.1px}
      màu theo trạng thái, hiệu ứng Hover / Ripple / Loading ── */
 .kh-plan-actions{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 10px;border-top:1px solid var(--border);background:var(--bg2)}
 .kh-abtn{position:relative;overflow:hidden;flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 12px;border-radius:10px;border:1.5px solid transparent;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:.1px;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .1s ease;-webkit-tap-highlight-color:transparent}
-.kh-abtn .kh-abtn-label{display:inline-flex;align-items:center;gap:6px;transition:opacity .15s ease}
+.kh-abtn .kh-abtn-label{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;transition:opacity .15s ease}
+.kh-abtn-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .kh-abtn .kh-abtn-ico{font-size:14px;line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.06))}
 .kh-abtn:active{transform:scale(.97)}
 
@@ -4808,9 +4809,9 @@ body{letter-spacing:-.1px}
 @keyframes kh-spin{to{transform:rotate(360deg)}}
 
 @media(max-width:480px){
-  .kh-plan-actions{flex-direction:column}
-  .kh-abtn{flex:1 1 auto}
-  .kh-plan-util{margin-left:0;width:100%;justify-content:flex-end}
+  /* Giữ nguyên 1 hàng ngang trên mobile (giống desktop) — KHÔNG xếp dọc.
+     Trước đây có flex-direction:column khiến nút vỡ hàng trên điện thoại. */
+  .kh-plan-util{margin-left:0}
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -5179,14 +5180,18 @@ body{letter-spacing:-.1px}
   .card-mat-sec,.stage-tracker{padding-left:12px;padding-right:12px}
   .stage-name{font-size:8.6px}
   .stage-dot{width:23px;height:23px;font-size:10px}
-  .kh-plan-actions{padding:9px 10px;gap:6px}
-  .kh-abtn{padding:9px 8px;font-size:11.5px}
+  .kh-plan-actions{padding:9px 10px;gap:5px}
+  .kh-abtn{padding:8px 6px;font-size:11px;gap:4px}
+  .kh-abtn .kh-abtn-label{gap:4px}
   .kh-abtn-ico{font-size:12px}
-  .kh-util-icon{width:32px;height:32px;font-size:14px}
+  .kh-util-icon{width:30px;height:30px;font-size:13px;flex-shrink:0}
 }
 @media(max-width:360px){
   .spec-grid{grid-template-columns:repeat(2,1fr);row-gap:6px}
-  .kh-abtn-label{font-size:11px}
+  .kh-plan-actions{gap:4px}
+  .kh-abtn{padding:7px 5px;font-size:10px}
+  .kh-abtn-label{font-size:10px}
+  .kh-util-icon{width:28px;height:28px;font-size:12px}
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -5254,9 +5259,12 @@ body{letter-spacing:-.1px}
   .stage-name{font-size:8px!important}
   .stage-line{margin:11px -2px 0!important}
   .ai-card-warn-row{padding:6px 10px!important;font-size:10.5px!important}
-  .kh-plan-actions{padding:7px 8px!important;gap:5px!important}
-  .kh-abtn{padding:7px 6px!important;font-size:11px!important}
-  .kh-util-icon{width:28px!important;height:28px!important;font-size:13px!important}
+  .kh-plan-actions{padding:7px 8px!important;gap:4px!important;flex-wrap:nowrap!important}
+  .kh-abtn{padding:7px 5px!important;font-size:10.5px!important;gap:3px!important;flex-shrink:1!important;min-width:0!important}
+  .kh-abtn .kh-abtn-label{gap:3px!important;min-width:0!important}
+  .kh-abtn-txt{min-width:0!important}
+  .kh-abtn-ico{font-size:11px!important}
+  .kh-util-icon{width:28px!important;height:28px!important;font-size:13px!important;flex-shrink:0!important}
 }
 </style>
 </head>
@@ -6368,6 +6376,14 @@ const ASSIGN_STAGES = [
   {key:'cat',      label:'Cắt',        group:'Máy cắt',        icon:'✂️'}
 ];
 const ASSIGN_STAGE_LABEL = Object.fromEntries(ASSIGN_STAGES.map(s=>[s.key, s.label]));
+// Vị trí (0,1,2,3...) của 1 công đoạn trong luồng Đùn→Rút→Đánh bóng→Cắt — dùng
+// để so sánh "công đoạn A có phải TRƯỚC/TRÙNG hay SAU công đoạn hiện tại của
+// đơn không" (xem dhIsOrderRunningAtStage() — cho phép công đoạn ĐÃ CHẠY QUA
+// vẫn được coi là "đang chạy song song" nếu máy đó vẫn còn giữ đúng đơn này).
+function assignStageIndex(stageKey){
+  const i = ASSIGN_STAGES.findIndex(s=>s.key===stageKey);
+  return i===-1 ? 0 : i;
+}
 const BTM_TYPE_LABEL = {hong:'🔴 Hỏng đột xuất', baotri:'🟡 Bảo trì định kỳ', kiemtra:'🔵 Kiểm tra định kỳ'};
 
 // ════════════════════════════════════════════════════════════
@@ -11963,13 +11979,13 @@ function khPlanCard(o, seq){
     ${renderAIWarn(o)}
     ${canStatus?`<div class="kh-plan-actions" onclick="event.stopPropagation()">
       ${s==='pending'?`<button class="kh-abtn start" id="kh-start-${o.id}" onclick="khPlanAction('${o.id}','running',this,event)" title="Bắt đầu sản xuất">
-        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">▶️</span>Bắt đầu sản xuất</span>
+        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">▶️</span><span class="kh-abtn-txt">Bắt đầu sản xuất</span></span>
       </button>`:''}
       ${s==='running'?`<button class="kh-abtn finish" id="kh-done-${o.id}" onclick="khPlanAction('${o.id}','done',this,event)" title="Hoàn thành">
-        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">✅</span>Hoàn thành</span>
+        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">✅</span><span class="kh-abtn-txt">Hoàn thành</span></span>
       </button>
       <button class="kh-abtn progress" onclick="khQuickProgress('${o.id}',event)" title="Cập nhật tiến độ chi tiết">
-        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">📊</span>Tiến độ</span>
+        <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">📊</span><span class="kh-abtn-txt">Tiến độ</span></span>
       </button>`:''}
       <button class="kh-util-icon kh-more" title="Thao tác khác" onclick="khToggleMenu('${o.id}',event)">⋯</button>
     </div>`:''}
@@ -12312,21 +12328,49 @@ function dhIsActiveAtMachine(o, stageKey, machineId){
   return !!(o.machineActiveAt && o.machineActiveAt[stageKey]===machineId);
 }
 
+// Công đoạn PHÂN CÔNG MÁY tương ứng với 1 máy vật lý (mỗi máy chỉ thuộc đúng
+// 1 nhóm/công đoạn — Máy rút luôn là công đoạn 'rut', v.v).
+function assignStageOfMachine(machineId){
+  const m = machineById(machineId);
+  return m ? ASSIGN_STAGES.find(s=>s.group===m.group) : null;
+}
+
+// ── NÂNG CẤP: cho phép 1 đơn "đang chạy song song ở 2 công đoạn liền nhau"
+// (VD vừa Rút vừa Đánh bóng) ──
+// Trước đây chỉ ĐÚNG công đoạn HIỆN TẠI (o.stage) của đơn mới được coi là
+// "đang chạy thật" tại máy tương ứng — công đoạn đã chạy qua (dù máy đó vẫn
+// còn giữ đúng đơn, do người dùng chủ động gán/giữ máy để tiếp tục chạy song
+// song theo thực tế sản xuất — VD vật liệu vừa rút xong tới đâu đưa qua đánh
+// bóng tới đó) bị rơi xuống "Chờ/Đơn chạy tiếp" dù máy KHÔNG hề trống và đơn
+// đó vẫn đang thực sự chiếm máy. SỬA: 1 công đoạn (đã qua HOẶC đang là công
+// đoạn hiện tại — KHÔNG áp dụng cho công đoạn CHƯA TỚI, tức sau o.stage, vẫn
+// giữ nguyên là "Chờ" như cũ) được coi là "đang chạy thật" nếu:
+//   - đơn đang o.status==='running'
+//   - đúng máy này được gán cho đúng công đoạn này (o.machineAssign[stageKey])
+//   - công đoạn này KHÔNG ở sau công đoạn hiện tại của đơn (assignStageIndex)
+//   - không có đơn KHÁC đang thực sự chiếm đúng máy này (machineActiveAt xác
+//     nhận, hoặc dữ liệu cũ/gán lại chưa có machineActiveAt thì coi là hợp lệ
+//     — fallback an toàn, giống cơ chế đã có).
+function dhIsOrderRunningAtStage(o, stageKey, machineId){
+  if(!machineId || o.status!=='running') return false;
+  if(orderMachineAssign(o)[stageKey]!==machineId) return false;
+  // Công đoạn CHƯA TỚI (ở sau công đoạn hiện tại) — đơn chưa hề chạy tới đó,
+  // dù được gán trước cũng chỉ là "Chờ" (giữ nguyên hành vi cũ, xem case 1).
+  if(assignStageIndex(stageKey) > assignStageIndex(o.stage||'dun')) return false;
+  if(o.machineActiveAt && Object.prototype.hasOwnProperty.call(o.machineActiveAt, stageKey)){
+    return o.machineActiveAt[stageKey]===machineId;
+  }
+  return true;
+}
+
 // Tìm đơn hàng đang thực sự CHẠY tại 1 máy (dựa trên phân công máy + trạng
-// thái running) — đây là nguồn suy ra toàn bộ nội dung 1 thẻ máy.
+// thái running) — đây là nguồn suy ra toàn bộ nội dung 1 thẻ máy. Từ nay 1
+// đơn có thể được trả về ĐỒNG THỜI ở 2 máy khác nhau (2 công đoạn liền kề
+// đang chạy song song) — xem dhIsOrderRunningAtStage().
 function dhOrderAtMachine(machineId){
-  return DB.orders.find(o=>{
-    if(o.status!=='running') return false;
-    const active = orderActiveAssignStage(o);
-    if(!active || orderMachineAssign(o)[active.key]!==machineId) return false;
-    // Dữ liệu CŨ (tạo trước khi có machineActiveAt) chưa từng bị 2 đơn
-    // tranh chấp 1 máy → coi là hợp lệ (fallback an toàn, tự "chốt" lại
-    // ngay lần chuyển công đoạn/đẩy hàng đợi tiếp theo).
-    if(o.machineActiveAt && Object.prototype.hasOwnProperty.call(o.machineActiveAt, active.key)){
-      return o.machineActiveAt[active.key]===machineId;
-    }
-    return true;
-  }) || null;
+  const myStage = assignStageOfMachine(machineId);
+  if(!myStage) return null;
+  return DB.orders.find(o=>dhIsOrderRunningAtStage(o, myStage.key, machineId)) || null;
 }
 function dhStageAtMachine(o, machineId){
   const a = orderMachineAssign(o);
@@ -16666,24 +16710,14 @@ function orderActiveAssignStage(o){
 }
 
 // Đơn hàng khác (không phải excludeOrderId) có đang CHIẾM máy này ở đúng
-// công đoạn này không (chỉ tính đơn đang ở trạng thái "Đang sản xuất").
+// công đoạn này không (chỉ tính đơn đang ở trạng thái "Đang sản xuất"). Dùng
+// chung dhIsOrderRunningAtStage() để nhất quán tuyệt đối với dhOrderAtMachine
+// — 1 đơn được gán trước cho công đoạn CHƯA TỚI (ở sau công đoạn hiện tại
+// của chính nó) không tính là "đang chiếm máy thật", chỉ là xếp hàng, nên
+// không được coi là xung đột chặn đơn khác.
 function machineConflictOrder(machineId, stageKey, excludeOrderId){
   if(!machineId) return null;
-  // SỬA ĐỒNG BỘ với machineActiveAt (xem dhOrderAtMachine): một đơn
-  // status='running' + machineAssign[stageKey]=machineId KHÔNG còn chắc
-  // chắn nghĩa là đơn đó đang chiếm máy thật — nó có thể chỉ là 1 đơn khác
-  // ĐANG XẾP HÀNG chờ đúng máy này (sau khi setStage() cho phép sang công
-  // đoạn dù máy còn bận). Chỉ coi là XUNG ĐỘT THẬT khi đơn đó đã được xác
-  // nhận đang chạy tại đúng máy này (hoặc dữ liệu cũ chưa có field xác nhận
-  // — coi là hợp lệ, xem fallback trong dhOrderAtMachine).
-  return DB.orders.find(o=>{
-    if(o.id===excludeOrderId || o.status!=='running') return false;
-    if(orderMachineAssign(o)[stageKey]!==machineId) return false;
-    if(o.machineActiveAt && Object.prototype.hasOwnProperty.call(o.machineActiveAt, stageKey)){
-      return o.machineActiveAt[stageKey]===machineId;
-    }
-    return true;
-  }) || null;
+  return DB.orders.find(o=>o.id!==excludeOrderId && dhIsOrderRunningAtStage(o, stageKey, machineId)) || null;
 }
 
 // ── Hàng đợi "đơn nào chạy tiếp" của 1 máy — mọi đơn CHƯA CHẠY (pending) đã
@@ -16699,19 +16733,12 @@ function dhMachineQueue(machineId, excludeOrderId){
   if(!myStage) return [];
   return DB.orders
     .filter(o=>o.id!==excludeOrderId && o.status!=='done' && orderMachineAssign(o)[myStage.key]===machineId)
-    // Loại trừ đơn ĐANG THỰC SỰ CHẠY đúng tại máy này (đó là "đơn hiện tại"
-    // hiển thị riêng bởi dhOrderAtMachine, không phải "đơn chạy tiếp"). Đơn
-    // pending hoặc đơn running nhưng công đoạn hiện tại của nó KHÁC máy này
-    // (VD: đang chạy Đùn, đã gán trước máy Rút) đều tính là đang xếp hàng.
-    .filter(o=>{
-      if(o.status!=='running') return true;
-      const active = orderActiveAssignStage(o);
-      if(!(active && active.key===myStage.key)) return true;
-      // Đơn ĐÃ sang đúng công đoạn của máy này (setStage) nhưng CHƯA được
-      // xác nhận đang chạy thật tại đây (máy còn bận lúc chuyển công đoạn)
-      // → vẫn tính là đang xếp hàng, không phải "đơn hiện tại" của máy.
-      return !dhIsActiveAtMachine(o, myStage.key, machineId);
-    })
+    // Loại trừ đúng đơn ĐANG THỰC SỰ CHẠY tại máy này (hiển thị riêng bởi
+    // dhOrderAtMachine, không phải "đơn chạy tiếp") — dùng CHUNG 1 điều kiện
+    // duy nhất dhIsOrderRunningAtStage() để không bao giờ lệch với thẻ máy:
+    // công đoạn ĐÃ CHẠY QUA (vẫn giữ đúng máy, không xung đột) HOẶC công đoạn
+    // HIỆN TẠI đều tính là "đang chạy", chỉ công đoạn CHƯA TỚI mới là "chờ".
+    .filter(o=>!dhIsOrderRunningAtStage(o, myStage.key, machineId))
     .sort((a,b)=>{
       const pa=parseInt(String(a.priority||'GẤP 9').replace('GẤP ',''))||9;
       const pb=parseInt(String(b.priority||'GẤP 9').replace('GẤP ',''))||9;
@@ -16879,8 +16906,14 @@ function assignMachine(orderId, stageKey, machineId){
       const conflict = machineConflictOrder(machineId, stageKey, orderId);
       if(conflict){
         const activeStageNow = orderActiveAssignStage(o);
-        const isCurrentActiveStage = o.status==='running' && activeStageNow && activeStageNow.key===stageKey;
-        if(isCurrentActiveStage){
+        // Công đoạn định gán là công đoạn HIỆN TẠI hoặc ĐÃ CHẠY QUA của chính
+        // đơn này (không phải công đoạn CHƯA TỚI ở phía sau) → máy đích đang
+        // thực sự bận đơn khác nghĩa là XUNG ĐỘT THẬT, phải chặn (đồng bộ với
+        // dhIsOrderRunningAtStage — công đoạn đã qua vẫn có thể đang "chạy song
+        // song", nên cũng cần được bảo vệ khỏi 2 đơn tranh 1 máy như công đoạn
+        // hiện tại, xem yêu cầu "vừa Rút vừa Đánh bóng").
+        const isCurrentOrPastStage = o.status==='running' && activeStageNow && assignStageIndex(stageKey)<=assignStageIndex(activeStageNow.key);
+        if(isCurrentOrPastStage){
           showToast(`⚠️ Máy đang chạy đơn ${ddCode(conflict)} (${conflict.customer||''}) — hãy đổi máy khác hoặc đợi đơn đó xong`, true);
           renderTab(currentTab);
           refreshKhDetailIfOpen(orderId);
