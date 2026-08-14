@@ -2426,6 +2426,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .pub-kh-sync.ok{color:#166534}
 .pub-kh-sync.danger{color:#b91c1c}
 .pub-kh-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.pub-kh-summary.pub-kh-summary-2{max-width:420px;margin-left:auto;margin-right:auto;grid-template-columns:repeat(2,1fr)}
 .pub-kh-sum-card{background:var(--card);border-radius:var(--r-sm);box-shadow:var(--sh);padding:10px 8px;text-align:center;min-width:0}
 .pub-kh-sum-n{font-size:18px;font-weight:800;color:var(--brand);font-variant-numeric:tabular-nums}
 .pub-kh-sum-card.warn .pub-kh-sum-n{color:#b45309}
@@ -18676,14 +18677,14 @@ async function renderPublicCcllv(){
 // không cần đăng nhập — xem trực tiếp danh mục kích thước khuôn và số
 // lượng khuôn tồn kho, đọc dữ liệu trực tiếp từ Firebase RTDB.
 // ════════════════════════════════════════════════════════════
-let _pubKh = { catalog:[], qty:[], qtyOk:false, search:'', catFilter:'all', loaiFilter:'all', statusFilter:'all', dbUrl:'' };
+let _pubKh = { catalog:[], search:'', catFilter:'all', dbUrl:'' };
 let _pubKhPollTimer = null;
 
-// Tải dữ liệu khuôn (danh mục + số lượng) từ Firebase RTDB công khai.
-// khuonQty có thể bị chặn bởi Rules riêng — nếu lỗi thì KHÔNG làm hỏng cả
-// trang, chỉ ẩn phần KPI/Trạng thái phụ thuộc số lượng (qtyOk=false).
+// Tải dữ liệu khuôn (chỉ Danh mục kích thước) từ Firebase RTDB công khai.
+// Theo yêu cầu, trang công khai KHÔNG còn hiển thị Số lượng/tồn kho khuôn —
+// chỉ tải & hiển thị mục Tổng hợp Khuôn (danh mục kích thước).
 async function pubKhFetchData(dbUrl){
-  let catalog=[], qty=[], qtyOk=false, errMsg=null;
+  let catalog=[], errMsg=null;
   try{
     const rc = await fetch(dbUrl + '/data/khuonCatalog.json?print=pretty', {cache:'no-store'});
     if(!rc.ok){
@@ -18697,17 +18698,7 @@ async function pubKhFetchData(dbUrl){
   }catch(e){
     errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
   }
-  if(errMsg) return {catalog, qty, qtyOk, errMsg};
-  // Số lượng khuôn (khuonQty): cố gắng tải thêm, không chặn trang nếu lỗi.
-  try{
-    const rq = await fetch(dbUrl + '/data/khuonQty.json?print=pretty', {cache:'no-store'});
-    if(rq.ok){
-      const dq = await rq.json();
-      qty = Array.isArray(dq) ? dq.filter(Boolean) : Object.values(dq||{}).filter(Boolean);
-      qtyOk = true;
-    }
-  }catch(e){ /* bỏ qua — vẫn hiển thị danh mục kích thước */ }
-  return {catalog, qty, qtyOk, errMsg:null};
+  return {catalog, errMsg: errMsg||null};
 }
 
 async function renderPublicKhuon(){
@@ -18722,30 +18713,26 @@ async function renderPublicKhuon(){
     return;
   }
 
-  const {catalog, qty, qtyOk, errMsg} = await pubKhFetchData(dbUrl);
+  const {catalog, errMsg} = await pubKhFetchData(dbUrl);
   if(errMsg){
     wrap.innerHTML = `<div class="pub-msg">${errMsg}</div>`;
     return;
   }
 
-  _pubKh = { catalog, qty, qtyOk, search:'', catFilter:'all', loaiFilter:'all', statusFilter:'all', dbUrl };
+  _pubKh = { catalog, search:'', catFilter:'all', dbUrl };
 
-  const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
-  const lowStock = qty.filter(r=>Number(r.qty)<=1 && Number(r.qty)>0).length;
-  const outStock = qty.filter(r=>Number(r.qty)<=0).length;
+  const catCount = [...new Set(catalog.map(x=>x.category))].length;
 
   wrap.innerHTML = `
     <div class="pub-header">
       <div class="pub-header-logo"><img src="${DP_LOGO_DATAURL}" alt="Logo Đông Phương" class="pub-header-logo-img"><span>CÔNG TY CP CÔNG THƯƠNG ĐÔNG PHƯƠNG</span></div>
-      <div class="pub-header-title">🧩 KHO KHUÔN — Danh mục &amp; tồn kho khuôn</div>
-      <div class="pub-header-code">Tra cứu công khai — chỉ xem, tìm kiếm, lọc — cập nhật trực tiếp từ hệ thống</div>
+      <div class="pub-header-title">🧩 KHO KHUÔN — Tổng hợp Khuôn</div>
+      <div class="pub-header-code">Tra cứu công khai danh mục kích thước khuôn — chỉ xem, tìm kiếm, lọc — cập nhật trực tiếp từ hệ thống</div>
     </div>
     <div id="pubKhSyncStatus" class="pub-kh-sync ok">🟢 Đang đồng bộ dữ liệu</div>
-    <div class="pub-kh-summary">
+    <div class="pub-kh-summary pub-kh-summary-2">
       <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${catalog.length}</div><div class="pub-kh-sum-lbl">Kích thước</div></div>
-      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${qtyOk?totalQty:'—'}</div><div class="pub-kh-sum-lbl">Tổng số khuôn</div></div>
-      <div class="pub-kh-sum-card warn"><div class="pub-kh-sum-n">${qtyOk?lowStock:'—'}</div><div class="pub-kh-sum-lbl">Sắp hết</div></div>
-      <div class="pub-kh-sum-card danger"><div class="pub-kh-sum-n">${qtyOk?outStock:'—'}</div><div class="pub-kh-sum-lbl">Hết hàng</div></div>
+      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${catCount}</div><div class="pub-kh-sum-lbl">Nhóm khuôn</div></div>
     </div>
     <div id="pubKhBody"></div>
     <div class="pub-kh-updated" id="pubKhUpdated">Cập nhật lúc ${fmtDateTime(Date.now())}</div>
@@ -18758,8 +18745,8 @@ async function renderPublicKhuon(){
     pubTrackScan('khuon');
   }
 
-  // Realtime: tự động làm mới dữ liệu định kỳ để khi Admin thay đổi số
-  // lượng khuôn, trang QR đang mở cũng tự cập nhật mà không cần quét lại.
+  // Realtime: tự động làm mới dữ liệu định kỳ để khi Admin thay đổi danh
+  // mục khuôn, trang QR đang mở cũng tự cập nhật mà không cần quét lại.
   if(_pubKhPollTimer) clearInterval(_pubKhPollTimer);
   _pubKhPollTimer = setInterval(pubKhRefresh, 20000);
 }
@@ -18769,23 +18756,19 @@ async function pubKhRefresh(){
   if(!_pubKh.dbUrl) return;
   const statusEl = $('pubKhSyncStatus');
   try{
-    const {catalog, qty, qtyOk, errMsg} = await pubKhFetchData(_pubKh.dbUrl);
+    const {catalog, errMsg} = await pubKhFetchData(_pubKh.dbUrl);
     if(errMsg){
       if(statusEl){ statusEl.className='pub-kh-sync danger'; statusEl.textContent='🔴 Không thể cập nhật dữ liệu mới'; }
       return;
     }
-    _pubKh.catalog = catalog; _pubKh.qty = qty; _pubKh.qtyOk = qtyOk;
+    _pubKh.catalog = catalog;
     if(statusEl){ statusEl.className='pub-kh-sync ok'; statusEl.textContent='🟢 Đang đồng bộ dữ liệu'; }
     const upd = $('pubKhUpdated'); if(upd) upd.textContent = 'Cập nhật lúc ' + fmtDateTime(Date.now());
-    const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
-    const lowStock = qty.filter(r=>Number(r.qty)<=1 && Number(r.qty)>0).length;
-    const outStock = qty.filter(r=>Number(r.qty)<=0).length;
+    const catCount = [...new Set(catalog.map(x=>x.category))].length;
     const nums = document.querySelectorAll('#pubWrap .pub-kh-summary .pub-kh-sum-n');
-    if(nums.length===4){
+    if(nums.length===2){
       nums[0].textContent = catalog.length;
-      nums[1].textContent = qtyOk ? totalQty : '—';
-      nums[2].textContent = qtyOk ? lowStock : '—';
-      nums[3].textContent = qtyOk ? outStock : '—';
+      nums[1].textContent = catCount;
     }
     pubKhRenderBody();
   }catch(e){
@@ -18795,100 +18778,17 @@ async function pubKhRefresh(){
 
 function pubKhSetSearch(val){ _pubKh.search = val||''; pubKhRenderBody(); }
 function pubKhSetCat(c){ _pubKh.catFilter = c; pubKhRenderBody(); }
-function pubKhSetLoai(l){ _pubKh.loaiFilter = l; pubKhRenderBody(); }
-function pubKhSetStatus(s){ _pubKh.statusFilter = s; pubKhRenderBody(); }
 
 function pubKhRenderBody(){
   const body = $('pubKhBody'); if(!body) return;
   const active = document.activeElement;
   const wasSearchFocused = active && active.classList && active.classList.contains('pub-kh-search');
   const caret = wasSearchFocused ? active.selectionStart : null;
-  if(_pubKh.qtyOk) pubKhRenderInventory(body); else pubKhRenderCatalog(body);
+  pubKhRenderCatalog(body);
   if(wasSearchFocused){
     const inp = body.querySelector('.pub-kh-search');
     if(inp){ inp.focus(); if(caret!=null) inp.setSelectionRange(caret, caret); }
   }
-}
-
-// Chế độ đầy đủ: danh sách tồn kho khuôn (khuonQty) — có Loại/Nhóm/Tình
-// trạng, Search thông minh, Sort dùng chung với Admin (sortKhuonList).
-// Desktop: bảng · Mobile: card (CSS @media chuyển đổi tự động).
-function pubKhRenderInventory(body){
-  const { qty, catalog } = _pubKh;
-  const q = _pubKh.search;
-  const cats = [...new Set(qty.map(x=>x.category))].sort((a,b)=>a.localeCompare(b,'vi'));
-  let list = qty.filter(x=>
-    (_pubKh.catFilter==='all' || x.category===_pubKh.catFilter) &&
-    (_pubKh.loaiFilter==='all' || x.loai===_pubKh.loaiFilter) &&
-    (_pubKh.statusFilter==='all' || khuonStatusOf(x.qty).cls===_pubKh.statusFilter) &&
-    khuonMatchesSearch(x, q)
-  );
-  const visibleTypes = _pubKh.loaiFilter==='all' ? KH_QTY_TYPES : KH_QTY_TYPES.filter(t=>t.key===_pubKh.loaiFilter);
-
-  body.innerHTML = `
-    <div class="pub-kh-toolbar">
-      <input class="pub-kh-search" placeholder="🔎 Tìm kích thước, nhóm, loại khuôn..." value="${pubEsc(_pubKh.search)}" oninput="pubKhSetSearch(this.value)">
-      <div class="pub-kh-chips">
-        <button class="pub-kh-chip ${_pubKh.loaiFilter==='all'?'active':''}" onclick="pubKhSetLoai('all')">🗂️ Hiển thị: Cả hai loại</button>
-        <button class="pub-kh-chip ${_pubKh.loaiFilter==='Đùn'?'active':''}" onclick="pubKhSetLoai('Đùn')">🧵 Khuôn Đùn</button>
-        <button class="pub-kh-chip ${_pubKh.loaiFilter==='Kéo'?'active':''}" onclick="pubKhSetLoai('Kéo')">🪝 Khuôn Rút (Kéo)</button>
-      </div>
-      <div class="pub-kh-chips">
-        <button class="pub-kh-chip ${_pubKh.statusFilter==='all'?'active':''}" onclick="pubKhSetStatus('all')">Tình trạng: Tất cả</button>
-        <button class="pub-kh-chip ${_pubKh.statusFilter==='ok'?'active':''}" onclick="pubKhSetStatus('ok')">✅ Có sẵn</button>
-        <button class="pub-kh-chip ${_pubKh.statusFilter==='warn'?'active':''}" onclick="pubKhSetStatus('warn')">⚠️ Sắp hết</button>
-        <button class="pub-kh-chip ${_pubKh.statusFilter==='danger'?'active':''}" onclick="pubKhSetStatus('danger')">⛔ Hết hàng</button>
-      </div>
-      <div class="pub-kh-chips">
-        <button class="pub-kh-chip ${_pubKh.catFilter==='all'?'active':''}" onclick="pubKhSetCat('all')">Nhóm: Tất cả</button>
-        ${cats.map(c=>`<button class="pub-kh-chip ${_pubKh.catFilter===c?'active':''}" onclick="pubKhSetCat('${c.replace(/'/g,"\\'")}')">${pubEsc(c)}</button>`).join('')}
-      </div>
-    </div>
-    ${list.length===0 ? `<div class="pub-kh-empty">🗂️ Không tìm thấy khuôn nào phù hợp</div>` :
-      visibleTypes.map(t=>pubKhTypeSectionHtml(t, list.filter(x=>x.loai===t.key))).join('')
-    }
-    <div class="pub-kh-cat-title" style="margin-top:18px">📋 Danh mục kích thước (${catalog.length})</div>
-    ${pubKhCatalogChipsHtml()}
-  `;
-}
-
-// Khối riêng cho từng loại (Đùn / Kéo) ở trang công khai — cùng logic sắp
-// xếp Ngày mua mới nhất lên đầu và nhãn 🆕 Mới như trang quản trị, để
-// khách quét QR luôn thấy ngay những khuôn vừa đặt gần nhất.
-function pubKhTypeSectionHtml(t, list){
-  list = sortKhuonByNgayMuaDesc(list);
-  if(!list.length) return '';
-  const totalQty = list.reduce((s,r)=>s+(Number(r.qty)||0),0);
-  const newCount = list.filter(r=>khIsRecentNgayMua(r.ngayMua)).length;
-  return `
-    <div class="pub-kh-type-section pub-kh-type-${t.accent}">
-      <div class="pub-kh-type-header">
-        <div class="pub-kh-type-title"><span class="pub-kh-type-icon">${t.icon}</span>${t.label}</div>
-        <div class="pub-kh-type-meta">
-          <span class="pub-kh-type-count">${list.length} mục · ${totalQty} khuôn</span>
-          ${newCount>0?`<span class="pub-kh-type-count pub-kh-type-count-new">🆕 ${newCount} mới đặt</span>`:''}
-        </div>
-      </div>
-      <div class="pub-kh-table-wrap">
-        <table class="pub-kh-table">
-          <thead><tr><th>Kích thước</th><th>Nhóm khuôn</th><th>SL</th><th>Ngày mua</th><th>Tình trạng</th></tr></thead>
-          <tbody>
-            ${list.map(r=>{
-              const st = khuonStatusOf(r.qty);
-              const isNew = khIsRecentNgayMua(r.ngayMua);
-              return `<tr class="${isNew?'pub-kh-row-new':''}">
-                <td class="pub-kh-col-size" data-label="Kích thước"><b>${pubEsc(r.size||'')}</b></td>
-                <td data-label="Nhóm khuôn">${pubEsc(r.category||'')}</td>
-                <td data-label="Số lượng">${r.qty??0}</td>
-                <td data-label="Ngày mua"><span class="pub-kh-date-cell">${fmtKhuonNgayMua(r.ngayMua)}${isNew?'<span class="khm-new-badge">🆕 Mới</span>':''}</span></td>
-                <td data-label="Tình trạng"><span class="khm-status-pill ${st.cls}">${st.label}</span></td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
 }
 
 function pubKhCatalogChipsHtml(){
@@ -18906,8 +18806,8 @@ function pubKhCatalogChipsHtml(){
   `).join('');
 }
 
-// Chế độ dự phòng: khi không tải được khuonQty (Rules chặn) — chỉ hiển thị
-// danh mục kích thước như trước đây, không làm hỏng trang.
+// Trang công khai: chỉ hiển thị mục Tổng hợp Khuôn (danh mục kích thước),
+// KHÔNG còn hiển thị Số lượng/tồn kho khuôn theo yêu cầu.
 function pubKhRenderCatalog(body){
   const { catalog } = _pubKh;
   const q = _pubKh.search;
