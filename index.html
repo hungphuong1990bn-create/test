@@ -9994,10 +9994,10 @@ function orderSpecGridHTML(o){
            ${isFi?'':`<div class="spec-box dim-kg"><div class="spec-box-val" style="font-size:12px">${o.kg||0}</div><div class="spec-box-lbl">KG</div></div>`}
          </div>
          <div class="spec-row">
-           <span class="spec-tag mat">Nguyên liệu: <b>${o.material||'—'}</b></span>
+           <span class="spec-tag mat">NL: <b>${o.material||'—'}</b></span>
            ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
            <span class="spec-tag" style="background:#e0f2fe;color:#075985">📏 Tổng ${o.totalMeters||0}m</span>
-           <span class="spec-tag kg">⚖️ Khối lượng: <b>${o.kg||0} kg</b></span>
+           <span class="spec-tag kg">⚖️ KL: <b>${o.kg||0} kg</b></span>
          </div>`;
   }
   if(o.isRound&&o.phi){
@@ -10009,9 +10009,9 @@ function orderSpecGridHTML(o){
            <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số cây</div></div>
          </div>
          <div class="spec-row">
-           <span class="spec-tag mat">Nguyên liệu: <b>${o.material||'—'}</b></span>
+           <span class="spec-tag mat">NL: <b>${o.material||'—'}</b></span>
            ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
-           <span class="spec-tag kg">⚖️ Khối lượng: <b>${o.kg||0} kg</b></span>
+           <span class="spec-tag kg">⚖️ KL: <b>${o.kg||0} kg</b></span>
          </div>`;
   }
   return `<div class="spec-grid">
@@ -10021,9 +10021,9 @@ function orderSpecGridHTML(o){
            <div class="spec-box dim-qty"><div class="spec-box-val">${o.qty||0}</div><div class="spec-box-lbl">Số thanh</div></div>
          </div>
          <div class="spec-row">
-           <span class="spec-tag mat">Nguyên liệu: <b>${o.material||'—'}</b></span>
+           <span class="spec-tag mat">NL: <b>${o.material||'—'}</b></span>
            ${o.type?`<span class="spec-tag">${o.type}</span>`:''}
-           <span class="spec-tag kg">⚖️ Khối lượng: <b>${o.kg||0} kg</b></span>
+           <span class="spec-tag kg">⚖️ KL: <b>${o.kg||0} kg</b></span>
          </div>`;
 }
 
