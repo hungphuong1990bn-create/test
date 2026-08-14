@@ -2421,10 +2421,13 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .pub-msg{text-align:center;color:var(--text3);padding:60px 20px;font-size:14px}
 .pub-footer{text-align:center;font-size:11px;color:var(--text4);margin-top:10px}
 
-/* ── Trang công khai: Tổng hợp Khuôn (khách quét QR xem danh mục & kho khuôn) ── */
-.pub-kh-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.pub-kh-sum-card{background:var(--card);border-radius:var(--r-sm);box-shadow:var(--sh);padding:10px 8px;text-align:center}
-.pub-kh-sum-n{font-size:18px;font-weight:800;color:var(--brand)}
+/* ── Trang công khai: KHO KHUÔN (khách quét QR xem danh mục & tồn kho khuôn) ── */
+.pub-kh-sync{display:flex;align-items:center;justify-content:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--text3);background:var(--bg2);border-radius:20px;padding:4px 10px;width:fit-content;margin:0 auto 10px}
+.pub-kh-sync.ok{color:#166534}
+.pub-kh-sync.danger{color:#b91c1c}
+.pub-kh-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.pub-kh-sum-card{background:var(--card);border-radius:var(--r-sm);box-shadow:var(--sh);padding:10px 8px;text-align:center;min-width:0}
+.pub-kh-sum-n{font-size:18px;font-weight:800;color:var(--brand);font-variant-numeric:tabular-nums}
 .pub-kh-sum-card.warn .pub-kh-sum-n{color:#b45309}
 .pub-kh-sum-card.danger .pub-kh-sum-n{color:#b91c1c}
 .pub-kh-sum-lbl{font-size:9.5px;color:var(--text3);font-weight:600;margin-top:2px;line-height:1.25}
@@ -2437,10 +2440,48 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .pub-kh-cat-title{font-size:12.5px;font-weight:800;color:var(--text2);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
 .pub-kh-cat-title:first-child{margin-top:0}
 .pub-kh-cat-count{font-size:10.5px;font-weight:600;color:var(--text4);background:var(--bg2);padding:2px 8px;border-radius:10px}
-.pub-kh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
-.pub-kh-chip-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;color:var(--text);text-align:center;box-shadow:var(--sh)}
+.pub-kh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.pub-kh-chip-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 6px;font-size:12.5px;font-weight:700;color:var(--text);text-align:center;box-shadow:var(--sh);word-break:break-word}
 .pub-kh-empty{text-align:center;color:var(--text4);font-size:13px;padding:36px 12px}
 .pub-kh-updated{text-align:center;font-size:10.5px;color:var(--text4);margin-bottom:12px}
+/* ── Trang công khai: khối tách riêng Khuôn Đùn / Khuôn Rút (Kéo) ── */
+.pub-kh-type-section{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--sh);margin-bottom:14px;overflow:hidden}
+.pub-kh-type-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 14px;background:linear-gradient(135deg,var(--bg2),var(--card))}
+.pub-kh-type-title{font-size:13.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
+.pub-kh-type-icon{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;font-size:13px;background:rgba(37,99,235,.1)}
+.pub-kh-type-dun .pub-kh-type-header{border-left:4px solid var(--brand)}
+.pub-kh-type-keo .pub-kh-type-header{border-left:4px solid #d97706}
+.pub-kh-type-dun .pub-kh-type-icon{color:var(--brand)}
+.pub-kh-type-keo .pub-kh-type-icon{background:rgba(217,119,6,.14);color:#b45309}
+.pub-kh-type-meta{display:flex;gap:6px;flex-wrap:wrap}
+.pub-kh-type-count{font-size:10px;font-weight:700;color:var(--text3);background:var(--bg2);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pub-kh-type-count-new{background:#dcfce7;color:#166534}
+.pub-kh-type-section .pub-kh-table-wrap{border:none;border-radius:0;border-top:1px solid var(--border)}
+.pub-kh-date-cell{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pub-kh-table tr.pub-kh-row-new{background:rgba(22,163,74,.05)}
+/* Bảng tồn kho khuôn — Desktop: table · Mobile (≤680px, tối ưu 360/390/414): card */
+.pub-kh-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--card)}
+.pub-kh-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:520px}
+.pub-kh-table th{background:var(--bg2);color:var(--text3);font-weight:700;text-align:left;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.pub-kh-table td{padding:9px 10px;border-top:1px solid var(--border)}
+.pub-kh-col-size{font-size:14px}
+@media (max-width:680px){
+  .pub-kh-summary{grid-template-columns:repeat(4,1fr)}
+  .pub-kh-sum-n{font-size:15px}
+  .pub-kh-sum-lbl{font-size:8.5px}
+  .pub-kh-table-wrap{border:none;background:none;overflow-x:visible}
+  .pub-kh-table{min-width:0;width:100%}
+  .pub-kh-table thead{display:none}
+  .pub-kh-table tbody{display:flex;flex-direction:column;gap:10px}
+  .pub-kh-table tr{display:block;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:var(--sh)}
+  .pub-kh-table td{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px dashed var(--border);white-space:normal;word-break:break-word;text-align:right}
+  .pub-kh-table td:first-child{border-top:none}
+  .pub-kh-table td::before{content:attr(data-label);font-size:10.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.3px;text-align:left;flex-shrink:0}
+  .pub-kh-table td.pub-kh-col-size{order:-1;font-size:16px}
+}
+@media (max-width:400px){
+  .pub-kh-summary{grid-template-columns:repeat(2,1fr)}
+}
 
 /* ── LOGIN ── */
 #loginScreen{background:linear-gradient(160deg,var(--navy),var(--navy2));align-items:center;justify-content:center;padding:24px}
@@ -3070,34 +3111,44 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .btm-hist-row b{color:var(--text);font-weight:600}
 .btm-hist-actions{display:flex;gap:6px;margin-top:8px}
 
-/* ── QUẢN LÝ KHUÔN ── */
+/* ── QUẢN LÝ KHUÔN (ERP/MES style) ── */
 .khm-tabs{display:flex;gap:8px;background:var(--bg2);padding:4px;border-radius:12px;margin-bottom:12px}
 .khm-tab-btn{flex:1;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text3);padding:9px 6px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s}
 .khm-tab-btn.active{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(16,24,40,.12)}
-.khm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
-.khm-stat-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px}
-.khm-stat-num{font-size:19px;font-weight:800;color:var(--text)}
-.khm-stat-lbl{font-size:10.5px;color:var(--text4);margin-top:2px}
+.khm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.khm-stat-card{background:linear-gradient(180deg,#fff,var(--bg2) 220%);border:1px solid var(--border);border-left:3px solid var(--brand2);border-radius:var(--r-sm);padding:12px 14px;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:transform .12s,box-shadow .12s}
+.khm-stat-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,24,40,.08)}
+.khm-stat-num{font-size:21px;font-weight:800;color:var(--text);line-height:1.15}
+.khm-stat-lbl{font-size:10.5px;color:var(--text4);margin-top:3px;font-weight:600}
+.khm-stat-card.warn{border-left-color:#d97706}
 .khm-stat-card.warn .khm-stat-num{color:#b45309}
+.khm-stat-card.danger{border-left-color:#dc2626}
 .khm-stat-card.danger .khm-stat-num{color:#b91c1c}
 .khm-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.khm-search{flex:1;min-width:150px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:inherit;background:#fff}
+.khm-search{flex:1;min-width:150px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:inherit;background:#fff;transition:border-color .12s,box-shadow .12s}
+.khm-search:focus{outline:none;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .khm-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.khm-chip{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:11.5px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap}
+.khm-chip{padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:11.5px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;transition:background .12s,color .12s,border-color .12s}
+.khm-chip:hover{border-color:var(--brand2)}
 .khm-chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
-.khm-add-btn{padding:9px 14px;border-radius:var(--r-sm);border:none;background:var(--brand);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.khm-add-btn{padding:10px 16px;border-radius:var(--r-sm);border:none;background:var(--brand);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px rgba(16,24,40,.15)}
+.khm-add-btn:hover{filter:brightness(1.06)}
 .khm-cat-section{margin-bottom:16px}
 .khm-cat-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 8px;display:flex;align-items:center;gap:6px;justify-content:space-between}
 .khm-cat-count{font-size:10.5px;font-weight:600;color:var(--text4);background:var(--bg2);padding:1px 8px;border-radius:20px}
 .khm-item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
-.khm-item-chip{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;font-size:12.5px;font-weight:700;color:var(--text);position:relative;cursor:default}
+.khm-item-chip{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px 6px;text-align:center;font-size:12.5px;font-weight:700;color:var(--text);position:relative;cursor:default;transition:border-color .12s}
+.khm-item-chip:hover{border-color:var(--brand2)}
+.khm-item-chip .khm-item-size{font-variant-numeric:tabular-nums}
 .khm-item-chip .khm-item-edit{position:absolute;top:2px;right:3px;font-size:10px;opacity:.55;cursor:pointer;padding:2px}
 .khm-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);background:#fff}
-.khm-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px}
-.khm-table th{background:var(--bg2);color:var(--text3);font-weight:700;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
-.khm-table td{padding:9px 10px;border-top:1px solid var(--border);white-space:nowrap}
+.khm-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
+.khm-table th{background:var(--bg2);color:var(--text3);font-weight:700;text-align:left;padding:10px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0}
+.khm-table td{padding:10px 10px;border-top:1px solid var(--border);white-space:nowrap}
 .khm-table tr:hover td{background:var(--bg)}
-.khm-status-pill{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px}
+.khm-table th.khm-col-stt,.khm-table td.khm-col-stt{width:36px;text-align:center;color:var(--text4)}
+.khm-col-size{font-size:13.5px}
+.khm-status-pill{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;display:inline-block}
 .khm-status-pill.ok{background:#dcfce7;color:#166534}
 .khm-status-pill.warn{background:#fef3c7;color:#92400e}
 .khm-status-pill.danger{background:#fee2e2;color:#b91c1c}
@@ -3105,6 +3156,39 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .khm-icon-btn{border:none;background:var(--bg2);color:var(--text3);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px}
 .khm-icon-btn.danger{color:#b91c1c}
 .khm-locked-note{font-size:11.5px;color:var(--text4);background:var(--bg2);padding:8px 12px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+/* ── Khối tách riêng Khuôn Đùn / Khuôn Rút (Kéo) — giao diện hiện đại ── */
+.khm-type-section{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(16,24,40,.06);margin-bottom:16px;overflow:hidden}
+.khm-type-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(135deg,var(--bg2),#fff)}
+.khm-type-title{font-size:14.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.khm-type-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;font-size:15px;background:rgba(37,99,235,.1)}
+.khm-type-dun .khm-type-icon{background:rgba(37,99,235,.12);color:var(--brand)}
+.khm-type-keo .khm-type-icon{background:rgba(217,119,6,.14);color:#b45309}
+.khm-type-dun .khm-type-header{border-left:4px solid var(--brand)}
+.khm-type-keo .khm-type-header{border-left:4px solid #d97706}
+.khm-type-meta{display:flex;gap:6px;flex-wrap:wrap}
+.khm-type-count{font-size:10.5px;font-weight:700;color:var(--text3);background:var(--bg2);padding:4px 10px;border-radius:20px;white-space:nowrap}
+.khm-type-count-new{background:#dcfce7;color:#166534}
+.khm-type-section .khm-table-wrap{border:none;border-radius:0;border-top:1px solid var(--border)}
+.khm-date-cell{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.khm-new-badge{display:inline-block;font-size:9.5px;font-weight:800;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:10px;white-space:nowrap;animation:khmNewPulse 2.2s ease-in-out infinite}
+@keyframes khmNewPulse{0%,100%{opacity:1}50%{opacity:.6}}
+.khm-table tr.khm-row-new{background:rgba(22,163,74,.04)}
+.khm-table tr.khm-row-new:hover td{background:rgba(22,163,74,.08)}
+/* Tablet/Mobile: bảng khm-table chuyển thành dạng Card, không tràn ngang, không cắt chữ */
+@media (max-width:680px){
+  .khm-table-wrap{border:none;background:none;overflow-x:visible}
+  .khm-table{min-width:0;width:100%}
+  .khm-table thead{display:none}
+  .khm-table tbody{display:flex;flex-direction:column;gap:10px}
+  .khm-table tr{display:block;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+  .khm-table td{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px dashed var(--border);white-space:normal;word-break:break-word;text-align:right}
+  .khm-table td:first-child{border-top:none}
+  .khm-table td.khm-col-stt{display:none}
+  .khm-table td::before{content:attr(data-label);font-size:10.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.3px;text-align:left;flex-shrink:0}
+  .khm-table td.khm-col-size{order:-1;font-size:16px}
+  .khm-table td.khm-col-size::before{content:'📐 Kích thước'}
+  .khm-table td .khm-row-actions{justify-content:flex-end;width:100%}
+}
 
 /* ── MODALS ── */
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;display:none;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(3px)}
@@ -16002,6 +16086,82 @@ function btmDeleteRecord(id){if(guardViewer())return;
 // Chỉ ADMIN được thêm/sửa/xóa (guardNotAdmin ở mọi hàm ghi dữ liệu).
 // Staff/Viewer chỉ xem, tìm kiếm, lọc.
 // ════════════════════════════════════════════════════════════
+// ── HELPER DÙNG CHUNG (Admin + Trang công khai QR) ─────────────────────
+// parseKhuonSize() / sortKhuonList() / normalizeKhuonSearch() / khuonMatchesSearch()
+// đảm bảo Sort & Search luôn thống nhất giữa tab Admin và trang QR công khai.
+function _khStripAccents(str){
+  return String(str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D');
+}
+// Phân tích chuỗi kích thước khuôn -> {isRound, a, b, valid}.
+// Với "A x B": a = chiều dày, b = chiều rộng. Khuôn tròn (Φ/φ/fi): a = đường kính.
+// Hỗ trợ: 2x8, 2X8, 2×8, 2 x 8, 2x8.0, 2x7,5, fi9,8, Φ20...
+function parseKhuonSize(raw){
+  const s = String(raw==null?'':raw).trim();
+  if(!s) return {isRound:false, a:null, b:null, valid:false, raw:s};
+  const norm = s.replace(/(\d),(\d)/g,'$1.$2').replace(/×/g,'x');
+  const roundMatch = norm.match(/(?:Φ|φ|fi)\s*([\d]+(?:\.[\d]+)?)/i);
+  if(roundMatch){
+    const d = parseFloat(roundMatch[1]);
+    return {isRound:true, a:d, b:0, valid:!isNaN(d), raw:s};
+  }
+  const nums = norm.match(/\d+(?:\.\d+)?/g);
+  if(!nums || !nums.length) return {isRound:false, a:null, b:null, valid:false, raw:s};
+  const a = parseFloat(nums[0]);
+  const b = nums.length>1 ? parseFloat(nums[1]) : 0;
+  return {isRound:false, a, b, valid:!isNaN(a), raw:s};
+}
+// Sắp xếp danh sách khuôn theo kích thước tăng dần: chiều dày tăng dần →
+// cùng chiều dày thì chiều rộng tăng dần. Bản ghi không đọc được kích thước
+// hợp lệ bị đẩy xuống cuối (so sánh theo chuỗi gốc để không mất dữ liệu).
+function sortKhuonList(list, sizeKey){
+  sizeKey = sizeKey || 'size';
+  return (list||[]).slice().sort((x,y)=>{
+    const px = parseKhuonSize(x[sizeKey]);
+    const py = parseKhuonSize(y[sizeKey]);
+    if(!px.valid && !py.valid) return String(x[sizeKey]||'').localeCompare(String(y[sizeKey]||''),'vi');
+    if(!px.valid) return 1;
+    if(!py.valid) return -1;
+    if(px.isRound !== py.isRound) return px.isRound ? 1 : -1;
+    if(px.a !== py.a) return px.a - py.a;
+    return (px.b||0) - (py.b||0);
+  });
+}
+// Chuẩn hóa chuỗi tìm kiếm: bỏ dấu tiếng Việt, thường hóa, chuẩn hóa x/X/×
+// thành "x" (bỏ khoảng trắng quanh x), dấu phẩy thập phân -> dấu chấm, bỏ
+// khoảng trắng thừa. Dùng chung cho cả từ khóa tìm và dữ liệu so khớp.
+function normalizeKhuonSearch(str){
+  let s = _khStripAccents(String(str||'')).toLowerCase();
+  s = s.replace(/[×*]/g,'x');
+  s = s.replace(/,(\d)/g,'.$1');
+  // Chuẩn hóa số thập phân: 8.0 -> 8, 7.50 -> 7.5 (bỏ số 0 thừa vô nghĩa)
+  s = s.replace(/\d+\.\d+/g, m=>String(parseFloat(m)));
+  s = s.replace(/\s*x\s*/g,'x');
+  s = s.replace(/\s+/g,' ').trim();
+  return s;
+}
+// "Kéo" hiển thị trong UI là "Kéo (Rút)" nên tìm "kéo" hoặc "rút" đều phải ra.
+function _khLoaiSynonyms(loai){
+  const l = (loai||'').trim();
+  if(l==='Kéo') return 'kéo rút';
+  return l;
+}
+// Bản ghi khuôn có khớp từ khóa tìm kiếm không — tìm đồng thời trong loại
+// khuôn, nhóm khuôn, kích thước và ghi chú.
+function khuonMatchesSearch(rec, query){
+  const q = normalizeKhuonSearch(query);
+  if(!q) return true;
+  const hay = normalizeKhuonSearch([rec.size||'', rec.category||'', _khLoaiSynonyms(rec.loai||''), rec.note||''].join(' '));
+  return hay.includes(q);
+}
+// Danh sách nhóm khuôn "sống" — hợp nhất nhóm hạt giống + nhóm thực tế đang
+// có trong dữ liệu hiện tại (không duplicate, có sắp xếp) để Autocomplete/
+// datalist luôn hiển thị đầy đủ nhóm mới nhất sau khi Thêm/Sửa/Xóa.
+function khLiveCategories(seedCats, list){
+  const set = new Set(seedCats||[]);
+  (list||[]).forEach(x=>{ if(x && x.category) set.add(x.category); });
+  return [...set].sort((a,b)=>a.localeCompare(b,'vi'));
+}
+
 let _khTab = 'catalog';       // 'catalog' | 'qty'
 let _khSearch = '';
 let _khCatFilter = 'all';     // lọc theo nhóm ở tab Tổng hợp Khuôn
@@ -16014,7 +16174,24 @@ function khGoSubTab(tab){
   _khTab = tab; _khSearch=''; _khCatFilter='all'; _khQtyFilter='all'; _khQtyTypeFilter='all';
   renderKhuon();
 }
-function khSetSearch(val){ _khSearch = (val||'').toLowerCase(); renderKhuon(); }
+// Gõ tìm kiếm không bị "rớt" ô input mỗi ký tự: lưu trạng thái focus + vị
+// trí con trỏ trước khi vẽ lại toàn bộ khối, rồi khôi phục lại sau đó —
+// nếu không, mỗi lần renderKhuon() dựng lại DOM sẽ tạo ô input mới,
+// khiến ô tìm kiếm mất focus và người dùng phải click lại sau mỗi ký tự.
+function khSetSearch(val){
+  _khSearch = val||'';
+  khRenderPreservingSearchFocus();
+}
+function khRenderPreservingSearchFocus(){
+  const active = document.activeElement;
+  const wasFocused = !!(active && active.classList && active.classList.contains('khm-search'));
+  const caret = wasFocused ? active.selectionStart : null;
+  renderKhuon();
+  if(wasFocused){
+    const inp = document.querySelector('#mc .khm-search');
+    if(inp){ inp.focus(); if(caret!=null) inp.setSelectionRange(caret, caret); }
+  }
+}
 function khSetCatFilter(c){ _khCatFilter = c; renderKhuon(); }
 function khSetQtyFilter(c){ _khQtyFilter = c; renderKhuon(); }
 function khSetQtyType(t){ _khQtyTypeFilter = t; renderKhuon(); }
@@ -16025,6 +16202,45 @@ function khuonStatusOf(qty){
   if(q<=0) return {cls:'danger', label:'⛔ Hết hàng'};
   if(q<=1) return {cls:'warn', label:'⚠️ Sắp hết'};
   return {cls:'ok', label:'✅ Có sẵn'};
+}
+
+// ── Ngày mua khuôn: parse "chịu lỗi" nhiều định dạng (ISO 2025-06-28,
+// dd/mm/yyyy, và cả lỗi gõ như "19/12*2025") -> trả về Date hoặc null. ──
+function khParseNgayMua(raw){
+  if(raw===null||raw===undefined) return null;
+  const s = String(raw).trim();
+  if(!s) return null;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m){ const d=new Date(+m[1],+m[2]-1,+m[3]); return isNaN(d)?null:d; }
+  m = s.match(/^(\d{1,2})[\/\-*.](\d{1,2})[\/\-*.](\d{4})$/);
+  if(m){ const d=new Date(+m[3],+m[2]-1,+m[1]); return isNaN(d)?null:d; }
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+// Hiển thị ngày mua dạng dd/mm/yyyy — chịu được cả các định dạng lỗi gõ ở trên.
+function fmtKhuonNgayMua(raw){
+  const d = khParseNgayMua(raw);
+  return d ? vnDateDMY(d) : '—';
+}
+// Khuôn được xem là "mới đặt" nếu ngày mua trong vòng 30 ngày gần nhất
+// (so với hôm nay) — dùng để gắn nhãn 🆕 nổi bật trên danh sách.
+function khIsRecentNgayMua(raw){
+  const d = khParseNgayMua(raw);
+  if(!d) return false;
+  const days = (Date.now() - d.getTime()) / 86400000;
+  return days >= -1 && days <= 30;
+}
+// Sắp xếp danh sách khuôn theo Ngày mua MỚI NHẤT lên đầu tiên (ví dụ khuôn
+// mua ngày 14/8/2026 sẽ hiển thị lên đầu). Bản ghi không có/không đọc được
+// ngày mua bị đẩy xuống cuối danh sách.
+function sortKhuonByNgayMuaDesc(list){
+  return (list||[]).slice().sort((x,y)=>{
+    const dx = khParseNgayMua(x.ngayMua), dy = khParseNgayMua(y.ngayMua);
+    if(!dx && !dy) return 0;
+    if(!dx) return 1;
+    if(!dy) return -1;
+    return dy.getTime() - dx.getTime();
+  });
 }
 
 function renderKhuon(){
@@ -16060,10 +16276,11 @@ function renderKhuon(){
 
 function renderKhuonCatalog(catalog, cats, admin){
   const q = _khSearch;
-  let list = catalog.filter(x=> (_khCatFilter==='all'||x.category===_khCatFilter) && (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q)) );
+  let list = catalog.filter(x=> (_khCatFilter==='all'||x.category===_khCatFilter) && khuonMatchesSearch(x, q));
   const groups = {};
   list.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
-  const groupNames = Object.keys(groups).sort();
+  Object.keys(groups).forEach(g=>{ groups[g] = sortKhuonList(groups[g], 'size'); });
+  const groupNames = Object.keys(groups).sort((a,b)=>a.localeCompare(b,'vi'));
 
   $('khmBody').innerHTML = `
     <div class="khm-toolbar">
@@ -16082,7 +16299,7 @@ function renderKhuonCatalog(catalog, cats, admin){
             ${groups[g].map(it=>`
               <div class="khm-item-chip">
                 ${admin?`<span class="khm-item-edit" onclick="khCatOpenEdit('${it.id}')">✏️</span>`:''}
-                ${it.size.replace(/</g,'&lt;')}
+                <span class="khm-item-size">${it.size.replace(/</g,'&lt;')}</span>
               </div>
             `).join('')}
           </div>
@@ -16092,55 +16309,86 @@ function renderKhuonCatalog(catalog, cats, admin){
   `;
 }
 
+// Danh mục loại khuôn hiển thị tách riêng — Đùn và Kéo (Rút) mỗi loại 1
+// khối bảng riêng biệt, không còn gộp chung 1 bảng như trước.
+const KH_QTY_TYPES = [
+  {key:'Đùn', icon:'🧵', label:'Khuôn Đùn', accent:'dun'},
+  {key:'Kéo', icon:'🪝', label:'Khuôn Rút (Kéo)', accent:'keo'}
+];
+
 function renderKhuonQty(qty, cats, admin){
   const q = _khSearch;
-  let list = qty.filter(x=>
+  const filtered = qty.filter(x=>
     (_khQtyFilter==='all'||x.category===_khQtyFilter) &&
-    (_khQtyTypeFilter==='all'||x.loai===_khQtyTypeFilter) &&
-    (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q) || (x.note||'').toLowerCase().includes(q))
+    khuonMatchesSearch(x, q)
   );
-  list = list.slice().sort((a,b)=> (a.category||'').localeCompare(b.category) || (a.size||'').localeCompare(b.size,undefined,{numeric:true}) );
+  const visibleTypes = _khQtyTypeFilter==='all' ? KH_QTY_TYPES : KH_QTY_TYPES.filter(t=>t.key===_khQtyTypeFilter);
 
   $('khmBody').innerHTML = `
     <div class="khm-toolbar">
-      <input class="khm-search" placeholder="🔎 Tìm kích thước, nhóm, ghi chú..." value="${(_khSearch||'').replace(/"/g,'&quot;')}" oninput="khSetSearch(this.value)">
+      <input class="khm-search" placeholder="🔎 Tìm kích thước, nhóm, loại, ghi chú..." value="${(_khSearch||'').replace(/"/g,'&quot;')}" oninput="khSetSearch(this.value)">
       ${admin?`<button class="khm-add-btn" onclick="khQtyOpenAdd()">+ Thêm khuôn vào kho</button>`:''}
     </div>
     <div class="khm-chip-row">
-      <button class="khm-chip ${_khQtyTypeFilter==='all'?'active':''}" onclick="khSetQtyType('all')">Loại: Tất cả</button>
-      <button class="khm-chip ${_khQtyTypeFilter==='Đùn'?'active':''}" onclick="khSetQtyType('Đùn')">Đùn</button>
-      <button class="khm-chip ${_khQtyTypeFilter==='Kéo'?'active':''}" onclick="khSetQtyType('Kéo')">Kéo</button>
+      <button class="khm-chip ${_khQtyTypeFilter==='all'?'active':''}" onclick="khSetQtyType('all')">🗂️ Hiển thị: Cả hai loại</button>
+      <button class="khm-chip ${_khQtyTypeFilter==='Đùn'?'active':''}" onclick="khSetQtyType('Đùn')">🧵 Khuôn Đùn</button>
+      <button class="khm-chip ${_khQtyTypeFilter==='Kéo'?'active':''}" onclick="khSetQtyType('Kéo')">🪝 Khuôn Rút (Kéo)</button>
     </div>
     <div class="khm-chip-row">
       <button class="khm-chip ${_khQtyFilter==='all'?'active':''}" onclick="khSetQtyFilter('all')">Tất cả nhóm</button>
       ${cats.map(c=>`<button class="khm-chip ${_khQtyFilter===c?'active':''}" onclick="khSetQtyFilter('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('')}
     </div>
-    ${list.length===0?`<div class="empty"><div class="empty-icon">📦</div>Không tìm thấy khuôn nào phù hợp</div>`:`
-    <div class="khm-table-wrap">
-      <table class="khm-table">
-        <thead><tr>
-          <th>Loại</th><th>Nhóm khuôn</th><th>Kích thước</th><th>SL</th><th>Ngày mua</th><th>Tình trạng</th><th>Ghi chú</th>${admin?'<th></th>':''}
-        </tr></thead>
-        <tbody>
-          ${list.map(r=>{
-            const st = khuonStatusOf(r.qty);
-            return `<tr>
-              <td>${r.loai||''}</td>
-              <td>${(r.category||'').replace(/</g,'&lt;')}</td>
-              <td><b>${(r.size||'').replace(/</g,'&lt;')}</b></td>
-              <td>${r.qty??0}</td>
-              <td>${r.ngayMua?fmtDate(r.ngayMua):'—'}</td>
-              <td><span class="khm-status-pill ${st.cls}">${st.label}</span></td>
-              <td>${(r.note||'—').replace(/</g,'&lt;')}</td>
-              ${admin?`<td><div class="khm-row-actions">
-                <button class="khm-icon-btn" title="Sửa" onclick="khQtyOpenEdit('${r.id}')">✏️</button>
-                <button class="khm-icon-btn danger" title="Xóa" onclick="khQtyDelete('${r.id}')">🗑</button>
-              </div></td>`:''}
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>`}
+    ${filtered.length===0?`<div class="empty"><div class="empty-icon">📦</div>Không tìm thấy khuôn nào phù hợp</div>`:
+      visibleTypes.map(t=>khQtyTypeSectionHtml(t, filtered.filter(x=>x.loai===t.key), admin)).join('')
+    }
+  `;
+}
+
+// Render 1 khối riêng (Đùn hoặc Kéo): sắp xếp theo Ngày mua mới nhất lên
+// đầu tiên (ví dụ khuôn mua 14/8/2026 sẽ ở trên cùng) + gắn nhãn 🆕 Mới
+// cho khuôn vừa đặt mua gần đây để dễ nhận biết.
+function khQtyTypeSectionHtml(t, list, admin){
+  list = sortKhuonByNgayMuaDesc(list);
+  const totalQty = list.reduce((s,r)=>s+(Number(r.qty)||0),0);
+  const newCount = list.filter(r=>khIsRecentNgayMua(r.ngayMua)).length;
+  return `
+    <div class="khm-type-section khm-type-${t.accent}">
+      <div class="khm-type-header">
+        <div class="khm-type-title"><span class="khm-type-icon">${t.icon}</span>${t.label}</div>
+        <div class="khm-type-meta">
+          <span class="khm-type-count">${list.length} mục</span>
+          <span class="khm-type-count">${totalQty} khuôn</span>
+          ${newCount>0?`<span class="khm-type-count khm-type-count-new">🆕 ${newCount} mới đặt</span>`:''}
+        </div>
+      </div>
+      ${list.length===0?`<div class="empty" style="padding:24px 12px"><div class="empty-icon">📦</div>Chưa có ${t.label.toLowerCase()} nào phù hợp</div>`:`
+      <div class="khm-table-wrap">
+        <table class="khm-table">
+          <thead><tr>
+            <th class="khm-col-stt">STT</th><th>Nhóm khuôn</th><th class="khm-col-size">Kích thước</th><th>SL</th><th>Ngày mua</th><th>Tình trạng</th><th>Ghi chú</th>${admin?'<th></th>':''}
+          </tr></thead>
+          <tbody>
+            ${list.map((r,i)=>{
+              const st = khuonStatusOf(r.qty);
+              const isNew = khIsRecentNgayMua(r.ngayMua);
+              return `<tr class="${isNew?'khm-row-new':''}">
+                <td class="khm-col-stt" data-label="STT">${i+1}</td>
+                <td data-label="Nhóm khuôn">${(r.category||'').replace(/</g,'&lt;')}</td>
+                <td class="khm-col-size" data-label="Kích thước"><b>${(r.size||'').replace(/</g,'&lt;')}</b></td>
+                <td data-label="Số lượng">${r.qty??0}</td>
+                <td data-label="Ngày mua"><span class="khm-date-cell">${fmtKhuonNgayMua(r.ngayMua)}${isNew?'<span class="khm-new-badge">🆕 Mới</span>':''}</span></td>
+                <td data-label="Tình trạng"><span class="khm-status-pill ${st.cls}">${st.label}</span></td>
+                <td data-label="Ghi chú">${(r.note||'—').replace(/</g,'&lt;')}</td>
+                ${admin?`<td><div class="khm-row-actions">
+                  <button class="khm-icon-btn" title="Sửa" onclick="khQtyOpenEdit('${r.id}')">✏️</button>
+                  <button class="khm-icon-btn danger" title="Xóa" onclick="khQtyDelete('${r.id}')">🗑</button>
+                </div></td>`:''}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`}
+    </div>
   `;
 }
 
@@ -16156,7 +16404,7 @@ function khCatOpenAdd(){if(guardNotAdmin())return;
   $('khCatGroup').value = _khCatFilter!=='all'?_khCatFilter:'';
   $('khCatSize').value = '';
   $('khCatErr').style.display='none';
-  khFillGroupDatalist('khCatGroupList', KHUON_CATALOG_CATS);
+  khFillGroupDatalist('khCatGroupList', khLiveCategories(KHUON_CATALOG_CATS, DB.khuonCatalog));
   openModal('khCatModal');
 }
 function khCatOpenEdit(id){if(guardNotAdmin())return;
@@ -16166,7 +16414,7 @@ function khCatOpenEdit(id){if(guardNotAdmin())return;
   $('khCatGroup').value = it.category||'';
   $('khCatSize').value = it.size||'';
   $('khCatErr').style.display='none';
-  khFillGroupDatalist('khCatGroupList', KHUON_CATALOG_CATS);
+  khFillGroupDatalist('khCatGroupList', khLiveCategories(KHUON_CATALOG_CATS, DB.khuonCatalog));
   openModal('khCatModal');
 }
 function khCatSave(){if(guardNotAdmin())return;
@@ -16211,7 +16459,7 @@ function khQtyOpenAdd(){if(guardNotAdmin())return;
   $('khQtyDate').value = new Date().toISOString().slice(0,10);
   $('khQtyNote').value = '';
   $('khQtyErr').style.display='none';
-  khFillGroupDatalist('khQtyGroupList', KHUON_QTY_CATS);
+  khFillGroupDatalist('khQtyGroupList', khLiveCategories(KHUON_QTY_CATS, DB.khuonQty));
   openModal('khQtyModal');
 }
 function khQtyOpenEdit(id){if(guardNotAdmin())return;
@@ -16225,7 +16473,7 @@ function khQtyOpenEdit(id){if(guardNotAdmin())return;
   $('khQtyDate').value = it.ngayMua||'';
   $('khQtyNote').value = it.note||'';
   $('khQtyErr').style.display='none';
-  khFillGroupDatalist('khQtyGroupList', KHUON_QTY_CATS);
+  khFillGroupDatalist('khQtyGroupList', khLiveCategories(KHUON_QTY_CATS, DB.khuonQty));
   openModal('khQtyModal');
 }
 function khQtySave(){if(guardNotAdmin())return;
@@ -18428,24 +18676,14 @@ async function renderPublicCcllv(){
 // không cần đăng nhập — xem trực tiếp danh mục kích thước khuôn và số
 // lượng khuôn tồn kho, đọc dữ liệu trực tiếp từ Firebase RTDB.
 // ════════════════════════════════════════════════════════════
-let _pubKh = { catalog:[], search:'', catFilter:'all' };
+let _pubKh = { catalog:[], qty:[], qtyOk:false, search:'', catFilter:'all', loaiFilter:'all', statusFilter:'all', dbUrl:'' };
+let _pubKhPollTimer = null;
 
-async function renderPublicKhuon(){
-  $('loginScreen').classList.remove('active');
-  $('publicScanScreen').classList.add('active');
-  const wrap = $('pubWrap');
-  const params = new URLSearchParams(location.search);
-  const dbUrl = (params.get('db') || fbUrl() || '').replace(/\/$/,'');
-
-  if(!dbUrl){
-    wrap.innerHTML = `<div class="pub-msg">⚠️ Không thể tải dữ liệu — liên kết thiếu thông tin kết nối.<br>Vui lòng liên hệ nhà máy để được hỗ trợ.</div>`;
-    return;
-  }
-
-  // Chỉ tải danh mục khuôn (khuonCatalog) — không tải kho khuôn/số lượng
-  // (khuonQty) nữa, để trang không bị lỗi "không hiển thị" nếu rules
-  // Firebase chỉ cho phép đọc công khai nhánh khuonCatalog.
-  let catalog=[], errMsg=null;
+// Tải dữ liệu khuôn (danh mục + số lượng) từ Firebase RTDB công khai.
+// khuonQty có thể bị chặn bởi Rules riêng — nếu lỗi thì KHÔNG làm hỏng cả
+// trang, chỉ ẩn phần KPI/Trạng thái phụ thuộc số lượng (qtyOk=false).
+async function pubKhFetchData(dbUrl){
+  let catalog=[], qty=[], qtyOk=false, errMsg=null;
   try{
     const rc = await fetch(dbUrl + '/data/khuonCatalog.json?print=pretty', {cache:'no-store'});
     if(!rc.ok){
@@ -18459,25 +18697,58 @@ async function renderPublicKhuon(){
   }catch(e){
     errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
   }
+  if(errMsg) return {catalog, qty, qtyOk, errMsg};
+  // Số lượng khuôn (khuonQty): cố gắng tải thêm, không chặn trang nếu lỗi.
+  try{
+    const rq = await fetch(dbUrl + '/data/khuonQty.json?print=pretty', {cache:'no-store'});
+    if(rq.ok){
+      const dq = await rq.json();
+      qty = Array.isArray(dq) ? dq.filter(Boolean) : Object.values(dq||{}).filter(Boolean);
+      qtyOk = true;
+    }
+  }catch(e){ /* bỏ qua — vẫn hiển thị danh mục kích thước */ }
+  return {catalog, qty, qtyOk, errMsg:null};
+}
 
+async function renderPublicKhuon(){
+  $('loginScreen').classList.remove('active');
+  $('publicScanScreen').classList.add('active');
+  const wrap = $('pubWrap');
+  const params = new URLSearchParams(location.search);
+  const dbUrl = (params.get('db') || fbUrl() || '').replace(/\/$/,'');
+
+  if(!dbUrl){
+    wrap.innerHTML = `<div class="pub-msg">⚠️ Không thể tải dữ liệu — liên kết thiếu thông tin kết nối.<br>Vui lòng liên hệ nhà máy để được hỗ trợ.</div>`;
+    return;
+  }
+
+  const {catalog, qty, qtyOk, errMsg} = await pubKhFetchData(dbUrl);
   if(errMsg){
     wrap.innerHTML = `<div class="pub-msg">${errMsg}</div>`;
     return;
   }
 
-  _pubKh = { catalog, search:'', catFilter:'all' };
+  _pubKh = { catalog, qty, qtyOk, search:'', catFilter:'all', loaiFilter:'all', statusFilter:'all', dbUrl };
+
+  const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
+  const lowStock = qty.filter(r=>Number(r.qty)<=1 && Number(r.qty)>0).length;
+  const outStock = qty.filter(r=>Number(r.qty)<=0).length;
 
   wrap.innerHTML = `
     <div class="pub-header">
       <div class="pub-header-logo"><img src="${DP_LOGO_DATAURL}" alt="Logo Đông Phương" class="pub-header-logo-img"><span>CÔNG TY CP CÔNG THƯƠNG ĐÔNG PHƯƠNG</span></div>
-      <div class="pub-header-title">🧩 Tổng hợp Khuôn</div>
-      <div class="pub-header-code">Danh mục kích thước khuôn — cập nhật trực tiếp từ hệ thống</div>
+      <div class="pub-header-title">🧩 KHO KHUÔN — Danh mục &amp; tồn kho khuôn</div>
+      <div class="pub-header-code">Tra cứu công khai — chỉ xem, tìm kiếm, lọc — cập nhật trực tiếp từ hệ thống</div>
     </div>
-    <div class="pub-kh-summary" style="grid-template-columns:1fr">
-      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${catalog.length}</div><div class="pub-kh-sum-lbl">Kích thước trong danh mục</div></div>
+    <div id="pubKhSyncStatus" class="pub-kh-sync ok">🟢 Đang đồng bộ dữ liệu</div>
+    <div class="pub-kh-summary">
+      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${catalog.length}</div><div class="pub-kh-sum-lbl">Kích thước</div></div>
+      <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${qtyOk?totalQty:'—'}</div><div class="pub-kh-sum-lbl">Tổng số khuôn</div></div>
+      <div class="pub-kh-sum-card warn"><div class="pub-kh-sum-n">${qtyOk?lowStock:'—'}</div><div class="pub-kh-sum-lbl">Sắp hết</div></div>
+      <div class="pub-kh-sum-card danger"><div class="pub-kh-sum-n">${qtyOk?outStock:'—'}</div><div class="pub-kh-sum-lbl">Hết hàng</div></div>
     </div>
     <div id="pubKhBody"></div>
-    <div class="pub-kh-updated">Cập nhật lúc ${fmtDateTime(Date.now())}</div>
+    <div class="pub-kh-updated" id="pubKhUpdated">Cập nhật lúc ${fmtDateTime(Date.now())}</div>
     <div class="pub-footer">Trang tra cứu khuôn công khai — vui lòng liên hệ nhà máy nếu cần đặt thêm khuôn hoặc có sai lệch số liệu.<br>Liên hệ SĐT/Zalo: 0979698351</div>
   `;
   pubKhRenderBody();
@@ -18486,34 +18757,169 @@ async function renderPublicKhuon(){
     _pubCcllvTracked.add('khuon');
     pubTrackScan('khuon');
   }
+
+  // Realtime: tự động làm mới dữ liệu định kỳ để khi Admin thay đổi số
+  // lượng khuôn, trang QR đang mở cũng tự cập nhật mà không cần quét lại.
+  if(_pubKhPollTimer) clearInterval(_pubKhPollTimer);
+  _pubKhPollTimer = setInterval(pubKhRefresh, 20000);
 }
 
-function pubKhSetSearch(val){ _pubKh.search = (val||'').toLowerCase(); pubKhRenderBody(); }
+// Làm mới dữ liệu khuôn định kỳ (giữ nguyên Search/Filter đang chọn).
+async function pubKhRefresh(){
+  if(!_pubKh.dbUrl) return;
+  const statusEl = $('pubKhSyncStatus');
+  try{
+    const {catalog, qty, qtyOk, errMsg} = await pubKhFetchData(_pubKh.dbUrl);
+    if(errMsg){
+      if(statusEl){ statusEl.className='pub-kh-sync danger'; statusEl.textContent='🔴 Không thể cập nhật dữ liệu mới'; }
+      return;
+    }
+    _pubKh.catalog = catalog; _pubKh.qty = qty; _pubKh.qtyOk = qtyOk;
+    if(statusEl){ statusEl.className='pub-kh-sync ok'; statusEl.textContent='🟢 Đang đồng bộ dữ liệu'; }
+    const upd = $('pubKhUpdated'); if(upd) upd.textContent = 'Cập nhật lúc ' + fmtDateTime(Date.now());
+    const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
+    const lowStock = qty.filter(r=>Number(r.qty)<=1 && Number(r.qty)>0).length;
+    const outStock = qty.filter(r=>Number(r.qty)<=0).length;
+    const nums = document.querySelectorAll('#pubWrap .pub-kh-summary .pub-kh-sum-n');
+    if(nums.length===4){
+      nums[0].textContent = catalog.length;
+      nums[1].textContent = qtyOk ? totalQty : '—';
+      nums[2].textContent = qtyOk ? lowStock : '—';
+      nums[3].textContent = qtyOk ? outStock : '—';
+    }
+    pubKhRenderBody();
+  }catch(e){
+    if(statusEl){ statusEl.className='pub-kh-sync danger'; statusEl.textContent='🔴 Không thể cập nhật dữ liệu mới'; }
+  }
+}
+
+function pubKhSetSearch(val){ _pubKh.search = val||''; pubKhRenderBody(); }
 function pubKhSetCat(c){ _pubKh.catFilter = c; pubKhRenderBody(); }
+function pubKhSetLoai(l){ _pubKh.loaiFilter = l; pubKhRenderBody(); }
+function pubKhSetStatus(s){ _pubKh.statusFilter = s; pubKhRenderBody(); }
 
 function pubKhRenderBody(){
   const body = $('pubKhBody'); if(!body) return;
   const active = document.activeElement;
   const wasSearchFocused = active && active.classList && active.classList.contains('pub-kh-search');
   const caret = wasSearchFocused ? active.selectionStart : null;
-  pubKhRenderCatalog(body);
+  if(_pubKh.qtyOk) pubKhRenderInventory(body); else pubKhRenderCatalog(body);
   if(wasSearchFocused){
     const inp = body.querySelector('.pub-kh-search');
     if(inp){ inp.focus(); if(caret!=null) inp.setSelectionRange(caret, caret); }
   }
 }
 
+// Chế độ đầy đủ: danh sách tồn kho khuôn (khuonQty) — có Loại/Nhóm/Tình
+// trạng, Search thông minh, Sort dùng chung với Admin (sortKhuonList).
+// Desktop: bảng · Mobile: card (CSS @media chuyển đổi tự động).
+function pubKhRenderInventory(body){
+  const { qty, catalog } = _pubKh;
+  const q = _pubKh.search;
+  const cats = [...new Set(qty.map(x=>x.category))].sort((a,b)=>a.localeCompare(b,'vi'));
+  let list = qty.filter(x=>
+    (_pubKh.catFilter==='all' || x.category===_pubKh.catFilter) &&
+    (_pubKh.loaiFilter==='all' || x.loai===_pubKh.loaiFilter) &&
+    (_pubKh.statusFilter==='all' || khuonStatusOf(x.qty).cls===_pubKh.statusFilter) &&
+    khuonMatchesSearch(x, q)
+  );
+  const visibleTypes = _pubKh.loaiFilter==='all' ? KH_QTY_TYPES : KH_QTY_TYPES.filter(t=>t.key===_pubKh.loaiFilter);
+
+  body.innerHTML = `
+    <div class="pub-kh-toolbar">
+      <input class="pub-kh-search" placeholder="🔎 Tìm kích thước, nhóm, loại khuôn..." value="${pubEsc(_pubKh.search)}" oninput="pubKhSetSearch(this.value)">
+      <div class="pub-kh-chips">
+        <button class="pub-kh-chip ${_pubKh.loaiFilter==='all'?'active':''}" onclick="pubKhSetLoai('all')">🗂️ Hiển thị: Cả hai loại</button>
+        <button class="pub-kh-chip ${_pubKh.loaiFilter==='Đùn'?'active':''}" onclick="pubKhSetLoai('Đùn')">🧵 Khuôn Đùn</button>
+        <button class="pub-kh-chip ${_pubKh.loaiFilter==='Kéo'?'active':''}" onclick="pubKhSetLoai('Kéo')">🪝 Khuôn Rút (Kéo)</button>
+      </div>
+      <div class="pub-kh-chips">
+        <button class="pub-kh-chip ${_pubKh.statusFilter==='all'?'active':''}" onclick="pubKhSetStatus('all')">Tình trạng: Tất cả</button>
+        <button class="pub-kh-chip ${_pubKh.statusFilter==='ok'?'active':''}" onclick="pubKhSetStatus('ok')">✅ Có sẵn</button>
+        <button class="pub-kh-chip ${_pubKh.statusFilter==='warn'?'active':''}" onclick="pubKhSetStatus('warn')">⚠️ Sắp hết</button>
+        <button class="pub-kh-chip ${_pubKh.statusFilter==='danger'?'active':''}" onclick="pubKhSetStatus('danger')">⛔ Hết hàng</button>
+      </div>
+      <div class="pub-kh-chips">
+        <button class="pub-kh-chip ${_pubKh.catFilter==='all'?'active':''}" onclick="pubKhSetCat('all')">Nhóm: Tất cả</button>
+        ${cats.map(c=>`<button class="pub-kh-chip ${_pubKh.catFilter===c?'active':''}" onclick="pubKhSetCat('${c.replace(/'/g,"\\'")}')">${pubEsc(c)}</button>`).join('')}
+      </div>
+    </div>
+    ${list.length===0 ? `<div class="pub-kh-empty">🗂️ Không tìm thấy khuôn nào phù hợp</div>` :
+      visibleTypes.map(t=>pubKhTypeSectionHtml(t, list.filter(x=>x.loai===t.key))).join('')
+    }
+    <div class="pub-kh-cat-title" style="margin-top:18px">📋 Danh mục kích thước (${catalog.length})</div>
+    ${pubKhCatalogChipsHtml()}
+  `;
+}
+
+// Khối riêng cho từng loại (Đùn / Kéo) ở trang công khai — cùng logic sắp
+// xếp Ngày mua mới nhất lên đầu và nhãn 🆕 Mới như trang quản trị, để
+// khách quét QR luôn thấy ngay những khuôn vừa đặt gần nhất.
+function pubKhTypeSectionHtml(t, list){
+  list = sortKhuonByNgayMuaDesc(list);
+  if(!list.length) return '';
+  const totalQty = list.reduce((s,r)=>s+(Number(r.qty)||0),0);
+  const newCount = list.filter(r=>khIsRecentNgayMua(r.ngayMua)).length;
+  return `
+    <div class="pub-kh-type-section pub-kh-type-${t.accent}">
+      <div class="pub-kh-type-header">
+        <div class="pub-kh-type-title"><span class="pub-kh-type-icon">${t.icon}</span>${t.label}</div>
+        <div class="pub-kh-type-meta">
+          <span class="pub-kh-type-count">${list.length} mục · ${totalQty} khuôn</span>
+          ${newCount>0?`<span class="pub-kh-type-count pub-kh-type-count-new">🆕 ${newCount} mới đặt</span>`:''}
+        </div>
+      </div>
+      <div class="pub-kh-table-wrap">
+        <table class="pub-kh-table">
+          <thead><tr><th>Kích thước</th><th>Nhóm khuôn</th><th>SL</th><th>Ngày mua</th><th>Tình trạng</th></tr></thead>
+          <tbody>
+            ${list.map(r=>{
+              const st = khuonStatusOf(r.qty);
+              const isNew = khIsRecentNgayMua(r.ngayMua);
+              return `<tr class="${isNew?'pub-kh-row-new':''}">
+                <td class="pub-kh-col-size" data-label="Kích thước"><b>${pubEsc(r.size||'')}</b></td>
+                <td data-label="Nhóm khuôn">${pubEsc(r.category||'')}</td>
+                <td data-label="Số lượng">${r.qty??0}</td>
+                <td data-label="Ngày mua"><span class="pub-kh-date-cell">${fmtKhuonNgayMua(r.ngayMua)}${isNew?'<span class="khm-new-badge">🆕 Mới</span>':''}</span></td>
+                <td data-label="Tình trạng"><span class="khm-status-pill ${st.cls}">${st.label}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function pubKhCatalogChipsHtml(){
+  const { catalog } = _pubKh;
+  const groups = {};
+  catalog.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
+  Object.keys(groups).forEach(g=>{ groups[g] = sortKhuonList(groups[g], 'size'); });
+  const groupNames = Object.keys(groups).sort((a,b)=>a.localeCompare(b,'vi'));
+  if(!groupNames.length) return `<div class="pub-kh-empty">🗂️ Chưa có dữ liệu danh mục</div>`;
+  return groupNames.map(g=>`
+    <div class="pub-kh-cat-title">${pubEsc(g)} <span class="pub-kh-cat-count">${groups[g].length} kích thước</span></div>
+    <div class="pub-kh-grid">
+      ${groups[g].map(it=>`<div class="pub-kh-chip-item">${pubEsc(it.size)}</div>`).join('')}
+    </div>
+  `).join('');
+}
+
+// Chế độ dự phòng: khi không tải được khuonQty (Rules chặn) — chỉ hiển thị
+// danh mục kích thước như trước đây, không làm hỏng trang.
 function pubKhRenderCatalog(body){
   const { catalog } = _pubKh;
   const q = _pubKh.search;
-  const cats = [...new Set(catalog.map(x=>x.category))].sort();
+  const cats = [...new Set(catalog.map(x=>x.category))].sort((a,b)=>a.localeCompare(b,'vi'));
   let list = catalog.filter(x=>
     (_pubKh.catFilter==='all' || x.category===_pubKh.catFilter) &&
-    (!q || (x.size||'').toLowerCase().includes(q) || (x.category||'').toLowerCase().includes(q))
+    khuonMatchesSearch(x, q)
   );
   const groups = {};
   list.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
-  const groupNames = Object.keys(groups).sort();
+  Object.keys(groups).forEach(g=>{ groups[g] = sortKhuonList(groups[g], 'size'); });
+  const groupNames = Object.keys(groups).sort((a,b)=>a.localeCompare(b,'vi'));
 
   body.innerHTML = `
     <div class="pub-kh-toolbar">
