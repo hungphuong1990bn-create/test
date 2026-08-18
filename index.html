@@ -12851,13 +12851,6 @@ function renderDorDang(){
     </div>
 
     <div class="dd-mobile-only">
-      <div class="mob-ord-head">
-        <div class="mob-ord-title">📋 Đơn hàng</div>
-        <button type="button" class="mob-ord-filter-btn" onclick="tbFilterBtnClick(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 4 21 4 14 13 14 19 10 21 10 13 3 4"/></svg>
-          Lọc
-        </button>
-      </div>
       <div class="mob-ord-stats">
         ${mobStats.map(s=>`<div class="mob-ord-stat${(!s.nav&&filterStatus===s.key)?' active':''}" style="--mob-c:${s.c}" onclick="${s.nav?`goTab('hoanThanh')`:`ddSetStatusFilter('${s.key}')`}">
           <div class="mob-ord-stat-lbl">${s.l}</div>
