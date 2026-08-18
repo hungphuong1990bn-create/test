@@ -3533,16 +3533,39 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:1080px}
 .dd-table thead th{position:sticky;top:0;z-index:5;background:var(--bg2);color:var(--text3);font-weight:800;text-transform:uppercase;font-size:10.2px;letter-spacing:.3px;padding:11px 12px;text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap}
 .dd-table tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
-/* ── Tab "Đơn hàng" (#ddTable): thu hẹp cột STT + bỏ icon đầu tên khách
-   hàng (xem ddRow) đã giải phóng chiều rộng — cho bảng co giãn linh hoạt
-   theo màn hình (thay vì luôn cố định 1080px) để hiển thị được nhiều hàng
-   ngang hơn mà không cần cuộn ngang trên các màn hình vừa/nhỏ. Dùng
-   clamp() cho font/padding để tự động mượt theo bề rộng khung nhìn. ── */
-#ddTable{min-width:0;width:100%;table-layout:auto;font-size:clamp(11px,1.05vw,12.5px)}
-#ddTable thead th{padding:clamp(6px,.7vw,11px) clamp(5px,.8vw,12px);font-size:clamp(9.3px,.82vw,10.2px)}
-#ddTable tbody td{padding:clamp(6px,.65vw,10px) clamp(5px,.8vw,12px)}
-#ddTable th:first-child,#ddTable td:first-child{width:30px;min-width:30px;max-width:34px;padding-left:6px;padding-right:2px;text-align:center;color:var(--text3);font-weight:700}
-#ddTable .ord-cust-name{max-width:clamp(90px,12vw,190px)}
+/* ── Tab "Đơn hàng" (#ddTable): table-layout:fixed + % cột cố định cho
+   TOÀN BỘ 12 cột (thay vì table-layout:auto trước đây, vốn vẫn để trình
+   duyệt nới rộng bảng theo nội dung nowrap và gây cuộn ngang trên mọi màn
+   hình desktop/laptop). Với table-layout:fixed, tổng chiều rộng bảng luôn
+   khớp đúng 100% khung chứa — nội dung dài được cắt gọn (ellipsis) kèm
+   thuộc tính title để xem đầy đủ khi rê chuột, không còn thanh cuộn ngang.
+   Dùng clamp() cho font/padding để tự động mượt theo bề rộng khung nhìn.
+   Đã BỎ cột "Ngày giao" (đã có sẵn trong khung xem chi tiết đơn hàng khi
+   bấm vào dòng), phần % rảnh ra được dồn thêm cho Quy cách và Ưu tiên để
+   hiển thị đầy đủ, ít bị cắt ellipsis hơn. ── */
+#ddTable{min-width:0;width:100%;table-layout:fixed;font-size:clamp(11px,1.05vw,12.5px)}
+#ddTable thead th{padding:clamp(6px,.7vw,11px) clamp(5px,.8vw,12px);font-size:clamp(9.3px,.82vw,10.2px);white-space:normal;word-break:break-word;line-height:1.25}
+#ddTable tbody td{padding:clamp(6px,.65vw,10px) clamp(5px,.8vw,12px);overflow:hidden}
+#ddTable th:first-child,#ddTable td:first-child{padding-left:6px;padding-right:2px;text-align:center;color:var(--text3);font-weight:700}
+#ddTable .ord-cust-name{max-width:100%}
+#ddTable .ord-po-sub,#ddTable .spec-chip,#ddTable .ord-pri,#ddTable .dd-status-pill{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:bottom}
+#ddTable td:nth-child(3),#ddTable td:nth-child(4){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ddTable .ord-progress{min-width:0}
+/* Độ rộng % cho từng cột (cộng đúng 100%) — giữ toàn bộ 12 cột luôn nằm
+   gọn trong khung nhìn, không cột nào bị đẩy tràn ra ngoài. Quy cách (cột 5)
+   và Ưu tiên (cột 10) được nới rộng hẳn để hiển thị đầy đủ, ít bị cắt chữ. */
+#ddTable th:nth-child(1),#ddTable td:nth-child(1){width:3.5%}
+#ddTable th:nth-child(2),#ddTable td:nth-child(2){width:14.5%}
+#ddTable th:nth-child(3),#ddTable td:nth-child(3){width:7%}
+#ddTable th:nth-child(4),#ddTable td:nth-child(4){width:8%}
+#ddTable th:nth-child(5),#ddTable td:nth-child(5){width:12.5%}
+#ddTable th:nth-child(6),#ddTable td:nth-child(6){width:7.5%}
+#ddTable th:nth-child(7),#ddTable td:nth-child(7){width:7.5%}
+#ddTable th:nth-child(8),#ddTable td:nth-child(8){width:10%}
+#ddTable th:nth-child(9),#ddTable td:nth-child(9){width:7.5%}
+#ddTable th:nth-child(10),#ddTable td:nth-child(10){width:9.5%}
+#ddTable th:nth-child(11),#ddTable td:nth-child(11){width:7.5%}
+#ddTable th:nth-child(12),#ddTable td:nth-child(12){width:5%}
 @media(min-width:761px) and (max-width:1360px){
   #ddTable .spec-chip{padding:2px 6px}
   #ddTable .ord-pri,#ddTable .dd-status-pill{padding:2px 7px;font-size:10.5px}
@@ -4539,12 +4562,16 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dd-table tbody tr.ht-fresh td:first-child{box-shadow:inset 3px 0 0 var(--green-m)}
 
 /* ═══ ĐÓNG BĂNG CỘT khi cuộn ngang ═══
-   Tab Đơn hàng (#ddTable): giữ cố định 2 cột đầu "Ưu tiên" + "Khách hàng".
    Tab Hoàn thành (#htTable): giữ cố định cột đầu "Khách hàng" (không còn
    cột Ưu tiên vì đơn đã hoàn thành). Đặt width cố định cho các cột này để
-   "left" luôn khớp đúng vị trí khi cuộn, tránh lệch cột. */
-#ddTable th:nth-child(1), #ddTable td:nth-child(1){position:sticky;left:0;width:52px;min-width:52px;max-width:52px;z-index:3;text-align:center;color:var(--text4);font-weight:700}
-#ddTable th:nth-child(2), #ddTable td:nth-child(2){position:sticky;left:52px;width:172px;min-width:172px;max-width:172px;z-index:3;box-shadow:2px 0 6px rgba(16,24,40,.08);overflow:hidden}
+   "left" luôn khớp đúng vị trí khi cuộn, tránh lệch cột.
+   Tab Đơn hàng (#ddTable): KHÔNG còn đóng băng cột nữa — bảng giờ dùng
+   table-layout:fixed với % cho toàn bộ 13 cột (xem khối CSS #ddTable phía
+   trên) nên không còn cuộn ngang để mà cần đóng băng; position:sticky +
+   width cố định (52px/172px) trước đây bị bỏ vì nó xung đột với % cột mới
+   (gây lệch/đè biên cột). Giữ lại màu chữ/căn giữa cho cột STT. */
+#ddTable th:nth-child(1), #ddTable td:nth-child(1){position:static;left:auto;z-index:auto;text-align:center;color:var(--text4);font-weight:700;box-shadow:none}
+#ddTable th:nth-child(2), #ddTable td:nth-child(2){position:static;left:auto;z-index:auto;box-shadow:none;overflow:hidden}
 #htTable th:nth-child(1), #htTable td:nth-child(1){position:sticky;left:0;width:190px;min-width:190px;max-width:190px;z-index:3;box-shadow:2px 0 6px rgba(16,24,40,.08);overflow:hidden}
 #ddTable td:nth-child(2) .ord-cust-name, #htTable td:nth-child(1) .ord-cust-name{max-width:100%}
 #ddTable td:nth-child(1), #ddTable td:nth-child(2), #htTable td:nth-child(1){background:var(--card)}
@@ -4853,6 +4880,13 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 @media(min-width:1400px){
   .main-content{max-width:1300px}
   .card-grid{grid-template-columns:repeat(3,1fr)}
+}
+/* Màn hình rất rộng (desktop lớn/ultrawide): nới thêm main-content để
+   bảng #ddTable (13 cột) có nhiều chỗ thở hơn, đỡ phải rút gọn quá mức,
+   thay vì luôn bị giới hạn cứng ở 1300px dù màn hình còn thừa nhiều
+   khoảng trắng hai bên. */
+@media(min-width:1700px){
+  .main-content{max-width:1560px}
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -12336,19 +12370,19 @@ function ddRow(o, stt){
   const pct = ddProgressPct(o);
   const pctColor = pct>=100?'#15966C':pct>=50?'#2856D6':pct>0?'#F59E0B':'#CBD5E1';
   const doneUnit = o.isCoil?'cuộn':(o.isRound?'cây':'thanh');
+  const tAttr = s => s?` title="${String(s).replace(/"/g,'&quot;')}"`:'';
   return `<tr class="${isNew?'is-new':''}${overdue?' is-overdue':''} st-${meta.key}" data-order-id="${o.id}" onclick="ddViewDetail('${o.id}')">
     <td>${stt!=null?stt:''}</td>
-    <td><div class="ord-cust-info"><div class="ord-cust-info-txt"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></div>${isNew?'<span class="pill-new" style="margin-top:3px" title="Đơn chưa xem chi tiết"><span class="pn-dot"></span>Mới</span>':''}</td>
-    <td>${o.type||'—'}</td>
-    <td>${ddMaterialLabel(o.material)}</td>
-    <td><span class="spec-chip">${specStr(o)}</span></td>
+    <td><div class="ord-cust-info"><div class="ord-cust-info-txt"><span class="ord-cust-name"${tAttr(o.customer)}>${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub"${tAttr('PO '+o.po)}>PO ${o.po}</span>`:''}</div></div>${isNew?'<span class="pill-new" style="margin-top:3px" title="Đơn chưa xem chi tiết"><span class="pn-dot"></span>Mới</span>':''}</td>
+    <td${tAttr(o.type)}>${o.type||'—'}</td>
+    <td${tAttr(ddMaterialLabel(o.material))}>${ddMaterialLabel(o.material)}</td>
+    <td><span class="spec-chip"${tAttr(specStr(o))}>${specStr(o)}</span></td>
     <td>${qtyLabel(o)}${o.kg?`<div style="font-size:10.5px;color:var(--text4);font-weight:600">⚖️ ${o.kg}kg</div>`:''}</td>
     <td>${o.doneQty||0} ${doneUnit}</td>
     <td><div class="ord-progress"><div class="ord-progress-pct" style="color:${pctColor}">${pct}%</div><div class="ord-progress-track"><div class="ord-progress-fill" style="width:${pct}%;background:${pctColor}"></div></div></div></td>
     <td><span class="ord-dt-main">${fmtDate(o.createdAt)}</span>${o.createdAt?`<div class="ord-dt-sub">🕐 ${vnTimeHM(new Date(o.createdAt))}</div>`:''}</td>
-    <td${overdue?' style="color:var(--red-m);font-weight:800"':''}>${fmtDate(o.deliveryDate)}${overdue?' ⚠️':''}</td>
-    <td><span class="ord-pri" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span></td>
-    <td><span class="dd-status-pill" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span></td>
+    <td><span class="ord-pri"${tAttr(o.priority)} style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span></td>
+    <td><span class="dd-status-pill"${tAttr(meta.label)} style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span></td>
     <td onclick="event.stopPropagation()" style="white-space:nowrap">
       <div class="dd-menu-wrap" style="display:inline-block"><button class="dd-act-btn icon-only" title="Thao tác" onclick="ddToggleMenu('${o.id}',event)">⋮</button></div>
     </td>
@@ -12791,7 +12825,6 @@ function renderDorDang(){
           <th>Đã sản xuất</th>
           <th>Tiến độ</th>
           <th>Ngày nhận</th>
-          <th>Ngày giao</th>
           <th>Ưu tiên</th>
           <th>Trạng thái</th>
           <th>Thao tác</th>
@@ -12958,7 +12991,6 @@ function khPlanCard(o, seq){
     ${o.note?`<div class="card-note">📝 ${o.note}</div>`:''}
     ${renderProgressBar(o)}
     ${s!=='pending'?`<div class="kh2-timeinfo ${ti.cls}"><span>${ti.lbl}</span><b${ti.id?` id="${ti.id}"`:''}>${ti.val}</b></div>`:''}
-    ${renderMaterialCodes(o)}
     ${renderStageTracker(o, canStatus)}
     ${renderAIWarn(o)}
     ${canStatus?`<div class="kh-plan-actions" onclick="event.stopPropagation()">
@@ -18107,15 +18139,6 @@ function renderProgressBar(o){
       <span style="font-size:11px;flex-shrink:0">📋</span>
       <span style="font-size:10.5px;font-weight:700;color:#1e3a8a;line-height:1.4">${o.progressNote}</span>
     </div>`:''}
-  </div>`;
-}
-
-// Khối RIÊNG: Mã nguyên liệu đầu vào — tách khỏi khối Tiến độ sản xuất
-function renderMaterialCodes(o){
-  if(!o.matCodes || !o.matCodes.length) return '';
-  return `<div class="card-mat-sec">
-    <div class="card-mat-sec-lbl">🧵 Mã nguyên liệu đầu vào</div>
-    <div class="card-mat-sec-list">${o.matCodes.map(m=>`<span class="mat-chip">🏷 ${m}</span>`).join('')}</div>
   </div>`;
 }
 
