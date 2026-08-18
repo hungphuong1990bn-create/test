@@ -11985,9 +11985,14 @@ function ddCode(o){
 
 function ddInRange(ts, from, to){
   if(!ts) return !from && !to;
-  const d = new Date(ts); d.setHours(0,0,0,0);
-  if(from && d < new Date(from)) return false;
-  if(to && d > new Date(to)) return false;
+  // So sánh theo CHUỖI ngày địa phương (yyyy-mm-dd), KHÔNG qua Date object,
+  // để tránh lỗi lệch múi giờ: "2026-08-18" bị JS hiểu là mốc UTC 00:00,
+  // trong khi đơn ghi nhận theo giờ Việt Nam (UTC+7) — so bằng Date object
+  // khiến đơn "hôm nay" luôn bị coi là "trước ngày lọc" và bị loại hết.
+  const d = new Date(ts);
+  const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(from && ds < from) return false;
+  if(to && ds > to) return false;
   return true;
 }
 
@@ -14413,7 +14418,13 @@ function htConfirmedBy(o){
 // trực tiếp vào htDoneFrom/htDoneTo đã có sẵn) + phân trang riêng cho
 // danh sách thẻ (không ảnh hưởng bảng desktop, vẫn hiển thị đủ danh
 // sách đã lọc).
-function _htmYmd(d){ const dt=new Date(d); dt.setHours(0,0,0,0); return dt.toISOString().slice(0,10); }
+// Trả về chuỗi ngày ĐỊA PHƯƠNG (giờ Việt Nam) dạng yyyy-mm-dd — TRƯỚC ĐÂY
+// dùng toISOString() (giờ UTC) nên có thể lệch sang ngày hôm trước/sau,
+// khiến tab "Hôm nay"/"Hôm qua" tính sai ngày cần lọc.
+function _htmYmd(d){
+  const dt=new Date(d);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
 
 function htmSetDateTab(key, ev){
   if(ev) ev.stopPropagation();
