@@ -3668,16 +3668,24 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
       luôn đúng khung MÀN HÌNH THẬT, độc lập hoàn toàn với DOM cha
       (app-body/main-wrap/main-content...) nên không bao giờ bị khung cha cắt.
    2) #dhWrap là 1 CỘT FLEX cao đúng 100dvh: Header (company-bar + header-row)
-      lấy đúng chiều cao nội dung (flex:0 0 auto), phần CÁC NHÓM MÁY
-      (#dhFitInner > .dh-group) chia đều hết chiều cao CÒN LẠI cho nhau
+      lấy đúng chiều cao nội dung (flex:0 0 auto), phần NỘI DUNG CHÍNH
+      (.dh2-content: khu máy + sidebar) chiếm hết chiều cao còn lại
       (flex:1 1 0 + min-height:0) — đây chính là "tự động phân bổ chiều cao
-      Header → KPI → nhóm máy" bằng CSS, không cần JS tính toán.
-   3) Trong mỗi nhóm, .dh-card-grid dùng grid-template-columns:repeat(var(--n),1fr)
-      (var(--n) = SỐ MÁY thật của đúng nhóm đó, gán inline từ JS khi render) nên
-      LUÔN đúng 1 hàng duy nhất, không bao giờ wrap xuống hàng 2 — nhờ vậy
-      grid-template-rows:1fr cho phép hàng đó chiếm trọn 100% chiều cao nhóm.
-      Font-size/padding/gap của mọi phần tử bên trong dùng clamp(min, x*dvh, max)
-      nên chữ luôn render ở kích thước THẬT (không phóng ảnh/không mờ), tự to
+      Header → KPI → nội dung chính" bằng CSS, không cần JS tính toán.
+   2b) .dh2-content dùng LƯỚI CSS GRID 5 CỘT (biến --dh-grid-cols, khai báo ở
+      .dh-wrap.dh-tv) — DÙNG CHUNG với hàng KPI phía trên (.dh2-kpi-row) — để
+      cột cuối (sidebar quản lý) LUÔN khớp tuyệt đối bề rộng ô "CẢNH BÁO".
+      Khu máy (.dh2-main) chiếm 4 cột đầu, rồi lại là 1 FLEX ROW chứa ĐÚNG 4
+      NHÓM CÔNG ĐOẠN (Đùn/Rút/Đánh bóng/Cắt) xếp CẠNH NHAU theo chiều ngang,
+      mỗi nhóm rộng theo trọng số --cols (JS gán theo số máy thật, xem
+      renderDieuHanh) — nhóm ≥4 máy rộng gấp đôi nhóm ít máy hơn.
+   3) Trong mỗi nhóm, .dh-card-grid dùng grid-template-columns:repeat(var(--cols),1fr)
+      + grid-template-rows:repeat(var(--rows),1fr) (var(--cols)/var(--rows) =
+      số cột/hàng thẻ máy thật của đúng nhóm đó, JS tính theo số máy — nhóm
+      ≥4 máy dùng 2 cột, còn lại dùng 1 cột) nên LUÔN vừa khít chiều cao nhóm,
+      không tràn/không để trống. Font-size/padding/gap của mọi phần tử bên
+      trong dùng clamp(min, x*dvh, max) nên chữ luôn render ở kích thước THẬT
+      (không phóng ảnh/không mờ), tự to
       dần theo chiều cao màn hình thật (1080p → 1440p → 4K "native", không phải
       phóng to 1 layout 1080p) mà vẫn có sàn tối thiểu để luôn đọc rõ.
    Kết quả: #dhWrap luôn overflow:hidden tuyệt đối — không còn "lưới an toàn"
@@ -3685,6 +3693,13 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
    dung không bao giờ cao hơn khung thật nữa.
    ============================================================================ */
 .dh-wrap.dh-tv{
+  /* Lưới 5 cột DÙNG CHUNG cho hàng KPI (.dh2-kpi-row) VÀ hàng nội dung chính
+     (.dh2-content: khu máy + sidebar) — xem giải thích chi tiết ở khối
+     ".dh-tv .dh-fit-inner>.dh2-content" bên dưới. Cột 1-3 (Nhà máy/Đơn
+     hàng/Nhân lực) rộng bằng nhau, cột 4 (Ca hiện tại) hẹp nhất, cột 5
+     (Cảnh báo) — cũng là bề rộng chuẩn của sidebar quản lý bên dưới. */
+  --dh-grid-cols:1.6fr 1.6fr 1.6fr 0.85fr 1.3fr;
+  --dh-grid-gap:clamp(8px,1.1dvw,20px);
   position:fixed;inset:0;z-index:9990;
   width:100vw;width:100dvw;height:100vh;height:100dvh;
   margin:0;border-radius:0;box-sizing:border-box;
@@ -3705,20 +3720,34 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
    chia hết chiều cao còn lại. */
 .dh-tv .dh-fit-inner>.dh-company-bar,
 .dh-tv .dh-fit-inner>.dh-header-row{flex:0 0 auto;min-height:0}
-.dh-tv .dh-fit-inner>.dh2-content{flex:1 1 0;min-height:0;display:flex;align-items:stretch;overflow:hidden}
-/* Cột chính (nhóm máy): mỗi nhóm máy (Máy đùn/Máy rút/Máy đánh bóng/Máy cắt)
-   chia ĐỀU phần chiều cao còn lại — cơ chế "tự động phân bổ chiều cao"
-   chính, thay hoàn toàn cho vòng lặp JS đo/co giãn cũ. */
-.dh-tv .dh2-main{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-.dh-tv .dh2-main>.dh-group{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-/* Cột phụ bên phải (sidebar): 3 khối (Trễ hạn / Hoàn thành / Hiệu suất) cũng
-   chia ĐỀU chiều cao còn lại theo đúng nguyên lý trên. THU HẸP lại (trước:
-   clamp(320px,33dvw,640px)) — panel Trễ hạn/Hoàn thành đã bỏ cột "Mã đơn"
-   nên không cần rộng như trước; phần chiều rộng tiết kiệm được dồn thẳng
-   sang .dh2-main (khu vực CÁC Ô MÁY) vì .dh2-main dùng flex:1 1 auto nên tự
-   động rộng ra tương ứng — có lợi nhất cho nhóm "Máy đùn" (nhiều máy nhất
-   trong 1 hàng nên vốn dễ bị chật/tràn chữ nhất). */
-.dh-tv .dh2-side{flex:0 0 auto;width:clamp(230px,24dvw,460px);min-height:0;display:flex;flex-direction:column;overflow:hidden}
+/* ============================================================================
+   BỐ CỤC MỚI (giống 100% bản thiết kế mẫu): khu vực nội dung chính dùng
+   CHUNG 1 LƯỚI CSS GRID 5 CỘT (--dh-grid-cols) với ĐÚNG hàng KPI phía trên
+   (.dh2-kpi-row cũng dùng lại đúng --dh-grid-cols này, xem thêm bên dưới) —
+   nhờ 2 hàng cùng chung 1 khai báo grid-template-columns + cùng 1 gap trên
+   cùng 1 chiều rộng khung, CỘT CUỐI CÙNG (sidebar quản lý) LUÔN CÓ CHIỀU
+   RỘNG BẰNG TUYỆT ĐỐI với ô "CẢNH BÁO" (cột cuối của hàng KPI) — không lệch
+   dù màn hình ở độ phân giải nào, không cần JS đo/tính toán.
+   - Khu vực máy (.dh2-main) CHIẾM 4 CỘT ĐẦU (grid-column:1/5).
+   - Sidebar (.dh2-side) CHIẾM ĐÚNG CỘT 5 (grid-column:5/6) = đúng bề rộng ô
+     CẢNH BÁO phía trên.
+   ============================================================================ */
+.dh-tv .dh-fit-inner>.dh2-content{
+  flex:1 1 0;min-height:0;overflow:hidden;align-items:stretch;
+  display:grid;grid-template-columns:var(--dh-grid-cols);gap:var(--dh-grid-gap);
+}
+/* Khu vực máy: 4 nhóm công đoạn (Máy đùn/Máy rút/Máy đánh bóng/Máy cắt) xếp
+   CẠNH NHAU THEO CHIỀU NGANG (mỗi nhóm 1 cột riêng), giống 100% ảnh mẫu —
+   thay cho bố cục cũ xếp CHỒNG THEO CHIỀU DỌC (mỗi nhóm 1 hàng ngang). Mỗi
+   nhóm rộng theo đúng TRỌNG SỐ --cols (JS gán, xem renderDieuHanh): nhóm
+   nhiều máy (≥4 máy) rộng gấp đôi nhóm ít máy, không hard-code theo tên nhóm. */
+.dh-tv .dh2-main{grid-column:1/5;min-width:0;min-height:0;height:100%;display:flex;flex-direction:row;overflow:hidden}
+.dh-tv .dh2-main>.dh-group{flex:var(--cols,1) 1 0;width:0;min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;overflow:hidden}
+/* Cột phụ bên phải (sidebar): 3 khối (Trễ hạn / Hoàn thành / Hiệu suất) chia
+   ĐỀU chiều cao còn lại. Chiều RỘNG nay do LƯỚI CHUNG với hàng KPI quyết
+   định (xem .dh2-content ở trên) — luôn khớp đúng ô "CẢNH BÁO", không còn
+   dùng clamp(dvw) riêng như trước. */
+.dh-tv .dh2-side{grid-column:5/6;width:100%;min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;overflow:hidden}
 .dh-tv .dh2-side>.dh2-side-panel{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 /* Màn hình siêu rộng (ultra-wide 21:9, ghép nhiều màn) — giới hạn nhẹ bề RỘNG
    để thẻ máy không bị kéo dài quá mức, dồn khoảng trắng 2 bên cho cân đối; đây
@@ -3985,14 +4014,17 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh-group-title{flex:0 0 auto;font-size:clamp(10px,1.3dvh,20px);margin:0 0 clamp(3px,0.6dvh,10px) clamp(2px,0.3dvw,6px)}
 .dh-tv .dh-group-title::before{width:clamp(3px,0.35dvh,6px);height:clamp(9px,1.3dvh,18px)}
 
-/* ── Lưới thẻ máy trong TV Mode: LUÔN đúng 1 hàng (không auto-fit/wrap như
-   PC) vì grid-template-columns dùng đúng var(--n) = số máy thật của nhóm đó
-   (gán inline bởi JS lúc render). grid-template-rows:1fr cho hàng duy nhất
-   đó cao đúng 100% phần còn lại của nhóm — đây là "card tự compact theo
-   chiều cao màn hình". */
+/* ── Lưới thẻ máy trong TV Mode: mỗi NHÓM (công đoạn) nay là 1 CỘT riêng
+   trong khu vực máy (xem .dh-tv .dh2-main ở trên), nên các thẻ máy BÊN
+   TRONG 1 nhóm xếp theo var(--cols)×var(--rows) (JS tính ở renderDieuHanh):
+   nhóm ≥4 máy dùng 2 cột × N hàng (ví dụ Máy đùn: 2×2), nhóm <4 máy dùng
+   đúng 1 cột (xếp thẳng theo chiều dọc, ví dụ Máy rút/Máy đánh bóng/Máy
+   cắt) — giống 100% bản thiết kế mẫu. grid-template-rows:repeat(var(--rows),1fr)
+   chia đều chiều cao còn lại của nhóm cho đúng số hàng thật, không tràn/không
+   để trống. */
 .dh-tv .dh-card-grid{
   flex:1 1 auto;min-height:0;
-  display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));grid-template-rows:1fr;
+  display:grid;grid-template-columns:repeat(var(--cols,1),minmax(0,1fr));grid-template-rows:repeat(var(--rows,1),1fr);
   gap:clamp(6px,0.9dvw,18px);
 }
 /* ── SỬA TRIỆT ĐỂ LỖI TRÀN KHUNG (bao gồm "Máy rút 100-1" và MỌI card máy) ──
@@ -4023,14 +4055,16 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh-status-chip{flex-shrink:0;font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.25dvh,4px) clamp(5px,0.7dvh,10px) clamp(1px,0.25dvh,4px) clamp(4px,0.55dvh,8px);gap:clamp(2px,0.3dvh,4px)}
 .dh-tv .dh-status-chip::before{width:clamp(4px,0.45dvh,6px);height:clamp(4px,0.45dvh,6px)}
 
-/* 2) THÂN CARD — 2 CỘT NGANG HÀNG kiểu MES/Smart Factory chuyên nghiệp:
-   CỘT TRÁI (.dh-card-main) = đơn ĐANG CHẠY (khách hàng/quy cách/vòng tiến
-   độ/sản lượng); CỘT PHẢI (.dh-card-next) = "ĐƠN CHẠY TIẾP" — được cấp
-   RIÊNG một cột dọc suốt chiều cao còn lại của card (không còn phải chia sẻ
-   chiều cao với thông tin đơn đang chạy như trước) nên hiển thị được NHIỀU
-   đơn hơn hẳn, đầy đủ khách hàng/quy cách/SL, không còn bị cắt. */
-.dh-tv .dh-card-body{flex:1 1 0;min-height:0;display:flex;flex-direction:row;overflow:hidden;gap:clamp(7px,0.9dvw,16px)}
-.dh-tv .dh-card-main{flex:1 1 0;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:clamp(2px,0.4dvh,7px)}
+/* 2) THÂN CARD — nay xếp THEO CHIỀU DỌC (không còn 2 cột ngang hàng như
+   trước) giống 100% ảnh mẫu: PHẦN TRÊN (.dh-card-main) = đơn ĐANG CHẠY
+   (khách hàng/quy cách/vòng tiến độ/sản lượng); PHẦN DƯỚI (.dh-card-next) =
+   "ĐƠN CHẠY TIẾP", ngăn cách bằng viền chấm NGANG phía trên nó. Lý do đổi:
+   sau khi khu máy chia thành 4 CỘT theo công đoạn, mỗi thẻ máy hẹp hơn hẳn
+   trước (nhất là các nhóm 1 cột như Máy rút/Máy đánh bóng/Máy cắt), xếp 2
+   cột ngang trong 1 thẻ hẹp sẽ bị dồn chữ quá mức — xếp dọc giúp mỗi phần
+   luôn đủ chiều rộng để đọc rõ. */
+.dh-tv .dh-card-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;gap:clamp(3px,0.6dvh,10px)}
+.dh-tv .dh-card-main{flex:1.6 1 0;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:clamp(2px,0.4dvh,7px)}
 .dh-tv .dh-card-empty{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8px,1dvh,13px);padding:clamp(2px,0.6dvh,10px) 0 clamp(2px,0.35dvh,6px)}
 /* Khách hàng (kèm cờ TRỄ nếu có, cùng 1 hàng) */
 .dh-tv .dh-card-cust{flex:0 1 auto;min-height:0;overflow:visible;font-size:clamp(9px,1.3dvh,18px);gap:clamp(3px,0.5dvh,8px);align-items:flex-start}
@@ -4039,7 +4073,7 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh-card-spec{flex:0 1 auto;min-height:0;max-width:100%;overflow-wrap:break-word;white-space:normal;line-height:1.18;font-size:clamp(8px,1.1dvh,14px);padding:clamp(1px,0.35dvh,5px) clamp(5px,0.75dvh,10px);border-radius:clamp(4px,0.55dvh,8px)}
 .dh-tv .dh-card-flag{flex-shrink:0;font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.5dvh,6px)}
 /* Tiến độ + sản lượng — khối "nặng" nhất (có vòng tròn %), được cấp tỉ
-   trọng co giãn lớn nhất trong cột trái để nhường chỗ trước tiên khi card
+   trọng co giãn lớn nhất trong phần trên để nhường chỗ trước tiên khi card
    thấp, nhưng vẫn luôn hiển thị đủ % và thanh sản lượng. */
 .dh-tv .dh-card-ring-row{flex:1.7 1 0;min-height:0;overflow:hidden;align-items:center;gap:clamp(4px,0.7dvw,11px)}
 .dh-tv .dh-ring{flex-shrink:0;width:clamp(18px,3.2dvh,54px);height:clamp(18px,3.2dvh,54px);font-size:clamp(7px,0.95dvh,12px)}
@@ -4048,26 +4082,26 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh-prog-wrap{flex-shrink:0;height:clamp(3px,0.55dvh,9px);border-radius:clamp(3px,0.35dvh,5px)}
 .dh-tv .dh-card-status{flex:0 1 auto;min-height:0;overflow-wrap:break-word;white-space:normal;font-size:clamp(7px,0.85dvh,12px);padding-top:clamp(1px,0.35dvh,6px);margin-top:0}
 
-/* CỘT PHẢI — ĐƠN CHẠY TIẾP. Ngăn cách với cột trái bằng viền chấm DỌC.
-   NÂNG CẤP MỚI NHẤT: chia ĐÚNG 50/50 chiều rộng với cột trái (đơn đang
-   chạy) — trước đây cột phải được ưu tiên rộng hơn (flex:1.25) khi còn hiển
-   thị bảng nhiều đơn/nhiều cột; nay CHỈ hiển thị ĐÚNG 1 đơn kế tiếp theo
-   dạng thẻ xếp dọc (Khách hàng/Quy cách/SL) nên không cần rộng hơn cột trái
-   nữa — cả 2 cột dùng chung flex:1 1 0 để chia đều tuyệt đối. */
+/* PHẦN DƯỚI — ĐƠN CHẠY TIẾP. Ngăn cách với phần trên bằng viền chấm NGANG
+   phía trên (trước đây là viền dọc bên trái do 2 cột đặt cạnh nhau — nay đổi
+   thành viền trên vì đã xếp chồng theo chiều dọc). Chiếm tỉ trọng NHỎ HƠN
+   phần đơn đang chạy (flex:1 so với 1.6 của .dh-card-main) vì chỉ cần hiển
+   thị ĐÚNG 1 đơn kế tiếp gọn gàng (Khách hàng/Quy cách/SL), không cần nhiều
+   chiều cao như phần đơn đang chạy (có thêm vòng tiến độ). */
 .dh-tv .dh-card-next{
   flex:1 1 0;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;
-  margin-top:0;padding-top:0;border-top:none;border-left:1px dashed rgba(255,255,255,.18);padding-left:clamp(7px,0.9dvw,16px);gap:clamp(4px,0.6dvh,10px)}
+  margin-top:0;padding-left:0;border-left:none;border-top:1px dashed rgba(255,255,255,.18);padding-top:clamp(3px,0.55dvh,10px);gap:clamp(2px,0.4dvh,7px)}
 .dh-tv .dh-next-hd{flex:0 0 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(7px,0.82dvh,12px);gap:clamp(2px,0.3dvh,4px)}
-.dh-tv .dh-next-list{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:clamp(3px,0.55dvh,9px)}
-.dh-tv .dh-next-row{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:clamp(1px,0.25dvh,4px);padding:clamp(3px,0.5dvh,8px) clamp(6px,0.8dvw,12px);border-radius:clamp(5px,0.7dvh,11px)}
-.dh-tv .dh-next-row-cust{font-size:clamp(9px,1.3dvh,19px);overflow-wrap:break-word;white-space:normal;line-height:1.2}
-.dh-tv .dh-next-row-spec{font-size:clamp(8px,1.1dvh,15px);overflow-wrap:break-word;white-space:normal;line-height:1.2}
-.dh-tv .dh-next-row-qty{font-size:clamp(8px,1.1dvh,15px);overflow-wrap:break-word;white-space:normal}
+.dh-tv .dh-next-list{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:clamp(2px,0.4dvh,6px)}
+.dh-tv .dh-next-row{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:clamp(1px,0.2dvh,3px);padding:clamp(2px,0.4dvh,6px) clamp(6px,0.8dvw,12px);border-radius:clamp(5px,0.7dvh,11px)}
+.dh-tv .dh-next-row-cust{font-size:clamp(9px,1.2dvh,17px);overflow-wrap:break-word;white-space:normal;line-height:1.2}
+.dh-tv .dh-next-row-spec{font-size:clamp(8px,1.05dvh,14px);overflow-wrap:break-word;white-space:normal;line-height:1.2}
+.dh-tv .dh-next-row-qty{font-size:clamp(8px,1.05dvh,14px);overflow-wrap:break-word;white-space:normal}
 .dh-tv .dh-next-more{flex:0 0 auto;font-size:clamp(7px,0.85dvh,12px)}
 
-/* Máy KHÔNG có đơn (rảnh/sự cố/bảo trì) — vẫn giữ nguyên bố cục 2 cột: cột
-   trái hiện thông báo trạng thái, cột phải vẫn hiện đầy đủ "ĐƠN CHẠY TIẾP"
-   nếu máy đã có đơn xếp sẵn hàng đợi. */
+/* Máy KHÔNG có đơn (rảnh/sự cố/bảo trì) — vẫn giữ nguyên bố cục xếp dọc:
+   phần trên hiện thông báo trạng thái, phần dưới vẫn hiện đầy đủ "ĐƠN CHẠY
+   TIẾP" nếu máy đã có đơn xếp sẵn hàng đợi. */
 .dh-tv .dh-card-body>.dh-card-main:only-child{flex:1 1 auto}
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -4137,8 +4171,18 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
    cỡ chữ theo dvh, không đổi bố cục nữa. */
 .dh2-cols-overdue,.dh2-cols-done{display:grid;align-items:center}
 .dh2-cols-overdue{grid-template-columns:1fr 1fr}
-.dh2-cols-done{grid-template-columns:1.4fr 1.3fr 1.1fr .35fr}
-.dh2-side-cols.dh2-cols-overdue span,.dh2-side-cols.dh2-cols-done span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Cột "Hoàn thành lúc" (nay hiển thị RÚT GỌN "giờ · ngày/tháng", đã bỏ năm —
+   xem fmtTimeDateShort()) được nới thêm bề rộng (.9fr, trước .35fr quá hẹp
+   khiến header "Hoàn thành lúc" và cả giá trị giờ/ngày bị cắt chữ dạng
+   "......") — dồn bớt từ cột Khách hàng/Quy cách (vẫn đủ rộng vì đã tự
+   xuống dòng qua overflow-wrap:break-word, không mất thông tin). Cột dấu ✓
+   cuối cùng chỉ cần vừa đúng 1 ký tự. */
+.dh2-cols-done{grid-template-columns:1.15fr 1.1fr .9fr .3fr}
+/* Nhãn tiêu đề cột (Khách hàng/Quy cách/Hoàn thành lúc): KHÔNG còn cắt chữ
+   kiểu "......" nữa — cho phép tự xuống dòng (overflow-wrap:break-word)
+   thay vì ép 1 dòng + text-overflow:ellipsis như trước, đảm bảo LUÔN hiển
+   thị đầy đủ nhãn dù cột hẹp ở màn hình nhỏ. */
+.dh2-side-cols.dh2-cols-overdue span,.dh2-side-cols.dh2-cols-done span{overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:break-word;line-height:1.2}
 .dh2-side-cols.dh2-cols-overdue span:last-child,
 .dh2-side-cols.dh2-cols-done span:last-child,.dh2-cols-done span:nth-child(3){text-align:right}
 .dh2-side-row.dh2-cols-overdue,.dh2-side-row.dh2-cols-done{cursor:pointer}
@@ -4146,7 +4190,10 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh2-side-date{font-size:11px;font-weight:700;color:#bcd6ff;text-align:right;white-space:nowrap}
 .dh2-side-late{font-size:13.5px;font-weight:900;color:#ff6b6b;text-align:right;white-space:nowrap}
 .dh2-side-qty{font-size:11px;font-weight:800;color:#eaf1ff;text-align:right;white-space:nowrap}
-.dh2-side-time{font-size:10px;font-weight:700;color:#9db3e0;text-align:right;white-space:nowrap}
+/* Giờ · ngày/tháng hoàn thành: cho phép xuống dòng (KHÔNG dùng nowrap +
+   ellipsis nữa) để luôn hiển thị TRỌN VẸN "HH:MM · dd/mm", không bao giờ bị
+   cắt bớt thành "......" dù cột hẹp — xuống 2 dòng vẫn còn dễ đọc hơn cắt chữ. */
+.dh2-side-time{font-size:10px;font-weight:700;color:#9db3e0;text-align:right;white-space:normal;overflow-wrap:break-word;line-height:1.25}
 .dh2-side-check{font-size:13px;font-weight:900;color:#4ade80;text-align:right}
 /* ── Bảng "Hiệu suất hôm nay" kiểu MES đầy đủ (4 ô KPI + bảng công đoạn) —
    dùng chung cho mọi chế độ, thay cho bản rút gọn (dh2-perf-bars) cũ. */
@@ -4157,10 +4204,10 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh2-perf-stats-tv .dh2-perf-stat i{font-style:normal;font-size:7.5px;color:#9db3e0}
 .dh2-perf-stats-tv .dh2-perf-stat.oee b{color:#60a5fa}
 .dh2-perf-table{display:flex;flex-direction:column;gap:5px;margin-top:6px}
-.dh2-perf-table-hd{display:grid;grid-template-columns:1.3fr .85fr .85fr .65fr 1.3fr;gap:8px;align-items:center;font-size:9px;font-weight:800;color:#9db3e0;text-transform:uppercase;letter-spacing:.3px}
+.dh2-perf-table-hd{display:grid;grid-template-columns:1.7fr .8fr .8fr .6fr 1.1fr;gap:8px;align-items:center;font-size:9px;font-weight:800;color:#9db3e0;text-transform:uppercase;letter-spacing:.3px}
 .dh2-perf-table-hd span:not(:first-child),.dh2-perf-table-row span:not(.dh2-perf-stage-lbl):not(.dh2-pt-bar-wrap){text-align:right}
 .dh2-perf-table-body{display:flex;flex-direction:column;gap:6px}
-.dh2-perf-table-row{display:grid;grid-template-columns:1.3fr .85fr .85fr .65fr 1.3fr;gap:8px;align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 10px}
+.dh2-perf-table-row{display:grid;grid-template-columns:1.7fr .8fr .8fr .6fr 1.1fr;gap:8px;align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 10px}
 .dh2-perf-stage-lbl{font-size:11px;font-weight:800;color:#eaf1ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dh2-perf-table-row span{font-size:10.5px;font-weight:700;color:#bcd6ff;overflow:hidden}
 .dh2-perf-hs{font-weight:900!important;color:#4ade80!important}
@@ -4190,8 +4237,11 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh2-tb-date{gap:1px}
 .dh-tv .dh2-tb-sync{font-size:clamp(6px,0.65dvh,10px)}
 
-.dh-tv .dh2-kpi-row{gap:clamp(8px,1.1dvw,20px)}
-.dh-tv .dh2-kpi-nhamay,.dh-tv .dh2-kpi-donhang,.dh-tv .dh2-kpi-nhanluc{flex:1.6 1 260px}
+/* Hàng KPI dùng ĐÚNG lưới 5 cột --dh-grid-cols/--dh-grid-gap (khai báo ở
+   .dh-wrap.dh-tv) — CHUNG với hàng nội dung chính (.dh2-content) bên dưới,
+   để cột cuối "CẢNH BÁO" luôn khớp bề rộng tuyệt đối với sidebar quản lý. */
+.dh-tv .dh2-kpi-row{display:grid;grid-template-columns:var(--dh-grid-cols);gap:var(--dh-grid-gap)}
+.dh-tv .dh2-kpi-nhamay,.dh-tv .dh2-kpi-donhang,.dh-tv .dh2-kpi-nhanluc,.dh-tv .dh2-kpi-ca,.dh-tv .dh2-kpi-alerts{min-width:0}
 .dh-tv .dh2-kpi{padding:clamp(10px,1.5dvh,24px) clamp(13px,1.7dvw,26px);gap:clamp(6px,1.05dvh,16px);border-radius:clamp(10px,1.3dvh,18px)}
 .dh-tv .dh2-kpi-body{gap:clamp(8px,1.2dvw,20px)}
 .dh-tv .dh2-kpi .dh-so-title{font-size:clamp(12px,1.55dvh,21px);margin-bottom:0}
@@ -4208,8 +4258,11 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh2-alert-row{font-size:clamp(8px,0.9dvh,13px);padding:clamp(2px,0.4dvh,5px) clamp(5px,0.75dvh,9px);gap:clamp(3px,0.4dvh,6px)}
 .dh-tv .dh2-alert-more{font-size:clamp(7px,0.72dvh,11px)}
 
-.dh-tv .dh2-content{gap:clamp(6px,0.9dvw,16px)}
-.dh-tv .dh2-main{gap:clamp(6px,0.9dvh,16px)}
+/* .dh2-content: gap giữa khu máy/sidebar đã do var(--dh-grid-gap) ở trên
+   quyết định (đồng bộ với hàng KPI) — không khai báo lại ở đây nữa.
+   .dh2-main: gap giữa 4 CỘT nhóm máy (Đùn/Rút/Đánh bóng/Cắt) xếp NGANG.
+   .dh2-side: gap giữa 3 khối xếp DỌC trong sidebar (Trễ hạn/Hoàn thành/Hiệu suất). */
+.dh-tv .dh2-main{gap:clamp(6px,0.9dvw,16px)}
 .dh-tv .dh2-side{gap:clamp(10px,1.3dvh,18px)}
 .dh-tv .dh2-side-panel{padding:clamp(10px,1.3dvh,18px) clamp(12px,1.4dvw,22px);gap:clamp(6px,1dvh,12px);border-radius:clamp(10px,1.2dvh,18px)}
 .dh-tv .dh2-side-hd{font-size:clamp(11px,1.35dvh,17px)}
@@ -4229,18 +4282,28 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh2-cols-overdue,.dh-tv .dh2-cols-done{display:grid;align-items:center}
 /* Chỉ còn "Khách hàng/Quy cách" ở Trễ hạn (bỏ Hạn giao + Số ngày trễ) và bỏ
    cột "SL hoàn thành" ở Hoàn thành — dồn tỉ lệ fr thừa ra cho Khách
-   hàng/Quy cách để hiển thị đầy đủ hơn. */
+   hàng/Quy cách để hiển thị đầy đủ hơn. Cột "Hoàn thành lúc" được nới thêm
+   (.9fr, trước .35fr quá hẹp) để giờ/ngày hoàn thành không bị cắt chữ. */
 .dh-tv .dh2-cols-overdue{grid-template-columns:1fr 1fr}
-.dh-tv .dh2-cols-done{grid-template-columns:1.4fr 1.3fr 1.1fr .35fr}
-.dh-tv .dh2-side-cols span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh-tv .dh2-cols-done{grid-template-columns:1.15fr 1.1fr .9fr .3fr}
+/* Nhãn tiêu đề cột: KHÔNG cắt chữ kiểu "......" nữa — cho tự xuống dòng. */
+.dh-tv .dh2-side-cols span{overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:break-word;line-height:1.2}
 .dh-tv .dh2-side-cols span:last-child,
 .dh-tv .dh2-cols-done span:nth-child(3){text-align:right}
 .dh-tv .dh2-side-row.dh2-cols-overdue,.dh-tv .dh2-side-row.dh2-cols-done{cursor:pointer}
-.dh-tv .dh2-side-spec{font-size:clamp(11px,1.25dvh,16px);font-weight:700;color:#9db3e0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Quy cách trong 2 bảng "Trễ hạn"/"Hoàn thành": XUỐNG DÒNG hiển thị ĐẦY ĐỦ
+   (giống hệt cách .dh2-side-cust xuống dòng) — KHÔNG dùng
+   overflow:hidden/ellipsis nữa (trước đây bị cắt bớt thành "......" khi quy
+   cách dài, nhất là sau khi sidebar thu hẹp lại đúng bằng bề rộng ô "CẢNH
+   BÁO"). */
+.dh-tv .dh2-side-spec{font-size:clamp(11px,1.25dvh,16px);font-weight:700;color:#9db3e0;overflow-wrap:break-word;white-space:normal;line-height:1.22}
 .dh-tv .dh2-side-date{font-size:clamp(13px,1.5dvh,19px);font-weight:700;color:#bcd6ff;text-align:right;white-space:nowrap}
 .dh-tv .dh2-side-late{font-size:clamp(12.5px,1.55dvh,20.5px);font-weight:900;color:#ff6b6b;text-align:right;white-space:nowrap;text-shadow:0 0 14px rgba(255,82,82,.45)}
 .dh-tv .dh2-side-qty{font-size:clamp(13px,1.5dvh,19px);font-weight:800;color:#eaf1ff;text-align:right;white-space:nowrap}
-.dh-tv .dh2-side-time{font-size:clamp(11px,1.25dvh,16px);font-weight:700;color:#9db3e0;text-align:right;white-space:nowrap}
+/* Giờ · ngày/tháng hoàn thành: cho phép xuống dòng thay vì nowrap+cắt chữ,
+   đảm bảo LUÔN hiển thị trọn vẹn "HH:MM · dd/mm" (đã bỏ năm, xem
+   fmtTimeDateShort) dù cột hẹp. */
+.dh-tv .dh2-side-time{font-size:clamp(11px,1.25dvh,16px);font-weight:700;color:#9db3e0;text-align:right;white-space:normal;overflow-wrap:break-word;line-height:1.22}
 .dh-tv .dh2-side-check{font-size:clamp(15px,1.8dvh,23px);font-weight:900;color:#4ade80;text-align:right}
 
 /* ── TV Mode: "HIỆU SUẤT HÔM NAY" — 3 số lớn phía trên (đã bỏ ô OEE) + bảng
@@ -4254,10 +4317,10 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
 .dh-tv .dh2-perf-stats-tv .dh2-perf-stat i{font-style:normal;font-size:clamp(6px,0.6dvh,9px);color:#9db3e0}
 .dh-tv .dh2-perf-stats-tv .dh2-perf-stat.oee b{color:#60a5fa}
 .dh-tv .dh2-perf-table{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:clamp(2px,0.4dvh,6px);margin-top:clamp(3px,0.5dvh,8px)}
-.dh-tv .dh2-perf-table-hd{flex:0 0 auto;display:grid;grid-template-columns:1.3fr 0.85fr 0.85fr 0.65fr 1.3fr;gap:clamp(6px,0.8dvw,14px);align-items:center;font-size:clamp(7.5px,0.8dvh,11px);font-weight:800;color:#9db3e0;text-transform:uppercase;letter-spacing:.3px}
+.dh-tv .dh2-perf-table-hd{flex:0 0 auto;display:grid;grid-template-columns:1.7fr 0.8fr 0.8fr 0.6fr 1.1fr;gap:clamp(6px,0.8dvw,14px);align-items:center;font-size:clamp(7.5px,0.8dvh,11px);font-weight:800;color:#9db3e0;text-transform:uppercase;letter-spacing:.3px}
 .dh-tv .dh2-perf-table-hd span:not(:first-child),.dh-tv .dh2-perf-table-row span:not(.dh2-perf-stage-lbl):not(.dh2-pt-bar-wrap){text-align:right}
 .dh-tv .dh2-perf-table-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:clamp(3px,0.5dvh,8px)}
-.dh-tv .dh2-perf-table-row{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1.3fr 0.85fr 0.85fr 0.65fr 1.3fr;gap:clamp(6px,0.8dvw,14px);align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:clamp(5px,0.6dvh,9px);padding:clamp(2px,0.5dvh,9px) clamp(7px,0.85dvw,12px)}
+.dh-tv .dh2-perf-table-row{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1.7fr 0.8fr 0.8fr 0.6fr 1.1fr;gap:clamp(6px,0.8dvw,14px);align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:clamp(5px,0.6dvh,9px);padding:clamp(2px,0.5dvh,9px) clamp(7px,0.85dvw,12px)}
 .dh-tv .dh2-perf-stage-lbl{font-size:clamp(11px,1.3dvh,17px);font-weight:800;color:#eaf1ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dh-tv .dh2-perf-table-row span{font-size:clamp(10.5px,1.25dvh,16px);font-weight:700;color:#bcd6ff;overflow:hidden}
 .dh-tv .dh2-perf-hs{font-weight:900!important;color:#4ade80!important}
@@ -4283,9 +4346,12 @@ body.dh-tv-fullscreen .main-content{padding:0!important;max-width:none!important
    KPI/vòng tiến độ), luôn giữ sàn tối thiểu để không bao giờ khó đọc. KHÔNG
    dùng transform:scale (làm mờ chữ + méo toạ độ click). Không lặp vô hạn: tối
    đa 2 nấc cố định, xem dhFitNextQueues() trong <script>. */
-.dh-tv.dh-tv-compact .dh2-kpi-row{gap:clamp(5px,0.6dvw,12px)}
+/* Co gọn lại --dh-grid-gap ở CHÍNH GỐC (.dh-wrap.dh-tv-compact) thay vì đặt
+   gap riêng cho .dh2-kpi-row/.dh2-content — nhờ vậy cả 2 hàng vẫn LUÔN dùng
+   chung đúng 1 giá trị gap, giữ nguyên "sidebar = đúng bề rộng ô Cảnh báo"
+   kể cả khi màn hình phải co gọn (nhiều máy/độ phân giải thấp). */
+.dh-wrap.dh-tv.dh-tv-compact{--dh-grid-gap:clamp(5px,0.6dvw,12px)}
 .dh-tv.dh-tv-compact .dh2-kpi{padding:clamp(7px,1dvh,16px) clamp(9px,1.1dvw,18px);gap:clamp(4px,0.7dvh,10px)}
-.dh-tv.dh-tv-compact .dh2-content{gap:clamp(4px,0.6dvw,10px)}
 .dh-tv.dh-tv-compact .dh2-main{gap:clamp(4px,0.6dvh,10px)}
 .dh-tv.dh-tv-compact .dh2-side{gap:clamp(6px,0.9dvh,12px)}
 .dh-tv.dh-tv-compact .dh2-side-panel{padding:clamp(7px,0.9dvh,12px) clamp(8px,1dvw,16px);gap:clamp(4px,0.7dvh,8px)}
@@ -12990,6 +13056,16 @@ function fmtDateTime(ts){
   return `${time} · ${date}`;
 }
 
+// Giống fmtDateTime() nhưng BỎ NĂM (chỉ ngày/tháng) — dùng cho panel sidebar
+// "ĐƠN HOÀN THÀNH" ở Bảng Điều hành SX: cột "Hoàn thành lúc" vốn khá hẹp,
+// hiển thị đủ cả năm (VD "13:46 · 18/08/2026") dễ bị dồn/tràn; vì hoàn
+// thành hôm nay chắc chắn cùng năm hiện tại nên bỏ năm không mất thông tin.
+function fmtTimeDateShort(ts){
+  if(!ts) return '—';
+  const d=new Date(ts);
+  return `${vnTimeHM(d)} · ${vnDateDM(d)}`;
+}
+
 // ── Khung "Thời gian sản xuất" hợp nhất trong thẻ Kế hoạch SX: đang chạy
 // thì đếm giờ chạy máy realtime (dùng lại đúng id clk-{id} để setInterval
 // cũ tự cập nhật mỗi giây, không cần sửa gì thêm); chưa chạy thì đếm ngược
@@ -13488,7 +13564,12 @@ function dhMachineCard(m){
     <div class="dh-card-hd"><span class="dh-card-ic">${m.icon}</span><span class="dh-card-name">${m.name}</span><span class="dh-status-chip">${rs.label}</span></div>
     <div class="dh-card-body">
       <div class="dh-card-main">
-        <div class="dh-card-cust"><span class="dh-card-cust-name">${o.customer||'—'} <span class="dh-card-cust-mat">(${o.material||'—'})</span></span>${overdue?'<span class="dh-card-flag">⚠️ TRỄ</span>':''}</div>
+        <!-- Dòng khách hàng: "Tên khách hàng | Nguyên liệu | Loại", ví dụ
+             "Á Châu | B* | Bo cạnh" — thêm "Loại" (o.type) vào SAU tên khách
+             hàng và nguyên liệu (trước đây chỉ có "Tên khách hàng (Nguyên
+             liệu)"), ngăn cách bằng dấu "|" cho dễ đọc, chỉ hiện "| Loại" khi
+             đơn CÓ dữ liệu Loại (tránh dư dấu "|" nếu thiếu). -->
+        <div class="dh-card-cust"><span class="dh-card-cust-name">${o.customer||'—'} <span class="dh-card-cust-mat">| ${o.material||'—'}${o.type?` | ${o.type}`:''}</span></span>${overdue?'<span class="dh-card-flag">⚠️ TRỄ</span>':''}</div>
         <span class="dh-card-spec">${specStr(o)}</span>
         <div class="dh-card-ring-row">
           <div class="dh-ring" style="--p:${pct}"><span>${pct}%</span></div>
@@ -13552,8 +13633,10 @@ function dhNextQueueHTML(queue){
   const rest = queue.length - shown.length;
   const rowsHTML = shown.map((q,i)=>{
     const qty = q.qty||0;
+    // Đồng bộ format với thẻ đơn đang chạy: "Tên khách hàng | Nguyên liệu |
+    // Loại" (xem giải thích chi tiết ở dhMachineCard()).
     return `<div class="dh-next-row" onclick="event.stopPropagation();khViewDetail('${q.id}')">
-      <span class="dh-next-row-cust">${q.customer||'—'} <span class="dh-next-row-mat">(${q.material||'—'})</span></span>
+      <span class="dh-next-row-cust">${q.customer||'—'} <span class="dh-next-row-mat">| ${q.material||'—'}${q.type?` | ${q.type}`:''}</span></span>
       <span class="dh-next-row-spec">${specStr(q)}</span>
       <span class="dh-next-row-qty"><b>SL:</b> ${qty.toLocaleString('vi-VN')}</span>
     </div>`;
@@ -13930,7 +14013,7 @@ function dhSidebarHTML(){
     <div class="dh2-side-row dh2-cols-done" onclick="khViewDetail('${o.id}')">
       <span class="dh2-side-cust">${o.customer||'—'}</span>
       <span class="dh2-side-spec">${specStr(o)}</span>
-      <span class="dh2-side-time">${fmtDateTime(o.doneAt)}</span>
+      <span class="dh2-side-time">${fmtTimeDateShort(o.doneAt)}</span>
       <span class="dh2-side-check">✓</span>
     </div>`).join('') : `<div class="dh2-side-empty">Chưa có đơn hoàn thành hôm nay</div>`;
 
@@ -13942,7 +14025,7 @@ function dhSidebarHTML(){
     </div>
     <div class="dh2-side-panel dh2-panel-tv" data-fit-total="${doneAll}">
       <div class="dh2-side-hd"><span>🟢 ĐƠN HOÀN THÀNH</span><b onclick="goTab('hoanThanh')">Xem tất cả (${doneAll}) →</b></div>
-      <div class="dh2-side-cols dh2-cols-done"><span>Khách hàng</span><span>Quy cách</span><span>Hoàn thành lúc</span><span></span></div>
+      <div class="dh2-side-cols dh2-cols-done"><span>Khách hàng</span><span>Quy cách</span><span>Hoàn thành</span><span></span></div>
       <div class="dh2-side-list">${doneRows}</div>
     </div>
     <div class="dh2-side-panel dh2-perf-panel dh2-perf-panel-tv">
@@ -13981,14 +14064,22 @@ function renderDieuHanh(){
         <div class="dh2-main">
           ${groups.map(g=>{
             const list = MACHINES.filter(m=>m.group===g);
-            // --n = số máy thật của ĐÚNG nhóm này, dùng cho lưới TV Mode (CSS
-            // grid-template-columns:repeat(var(--n),1fr)) để mỗi nhóm luôn xếp
-            // đúng 1 hàng duy nhất, không wrap — không ảnh hưởng PC/Mobile vì
-            // biến này chỉ được CSS trong .dh-tv sử dụng.
+            // TV Mode (bố cục theo cột — mỗi CÔNG ĐOẠN là 1 CỘT riêng, đứng cạnh
+            // nhau theo chiều NGANG, giống 100% bản thiết kế mẫu):
+            // --cols = số cột thẻ máy BÊN TRONG nhóm này (1 hoặc 2). Nhóm có
+            // TỪ 4 MÁY TRỞ LÊN dùng 2 cột (xếp 2 hàng x 2 cột) để thẻ không bị
+            // dẹt quá; nhóm có DƯỚI 4 MÁY dùng đúng 1 cột (xếp thẳng theo chiều
+            // dọc). --cols cũng chính là TRỌNG SỐ CHIỀU RỘNG của cả nhóm so với
+            // các nhóm khác trong khu vực máy (nhóm 2 cột sẽ rộng gấp đôi nhóm
+            // 1 cột) — nhờ vậy khu vực máy tự chia đúng 4 cột theo công đoạn
+            // với bề rộng cân đối theo đúng số máy thật, không cần hard-code
+            // theo tên nhóm. --rows = số hàng cần thiết để xếp hết số máy.
+            const cols = list.length>=4 ? 2 : 1;
+            const rows = Math.max(1, Math.ceil(list.length/cols));
             return `
-            <div class="dh-group">
+            <div class="dh-group" style="--cols:${cols}">
               <div class="dh-group-title">${g}</div>
-              <div class="dh-card-grid" style="--n:${list.length}">${list.map(dhMachineCard).join('')}</div>
+              <div class="dh-card-grid" style="--n:${list.length};--cols:${cols};--rows:${rows}">${list.map(dhMachineCard).join('')}</div>
             </div>
           `;}).join('')}
         </div>
