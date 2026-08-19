@@ -6042,6 +6042,10 @@ body{letter-spacing:-.1px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Quản lý Khuôn <span class="sb-badge" id="sbKhuonBadge" style="display:none">0</span>
       </button>
+      <button class="sb-item" id="sbi-checkSheet" onclick="goTab('checkSheet')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v4M16 3v4M3 9h18" stroke-linecap="round"/><path d="M8 13l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Check Sheet Thiết bị
+      </button>
       <div class="sb-section">Tài khoản</div>
       <button class="sb-item" id="sbi-nhatKy" onclick="goTab('nhatKy')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -7084,6 +7088,48 @@ const KHUON_QTY_SEED = [{"id":"kq1","loai":"Đùn","category":"Đồng thanh d�
 const KHUON_CATALOG_CATS = ['Đồng thanh dẹt','Phi tròn','Điện cực','Bo cạnh','Yêu cầu & chuẩn'];
 const KHUON_QTY_CATS = ['Đồng thanh dẹt','Phi tròn','Điện cực','Bo cạnh','Khuôn đặc biệt','Khuôn chạy bọc giấy'];
 
+// ════════════════════════════════════════════════════════════
+// CHECK SHEET THIẾT BỊ — Bảng kiểm tra thiết bị hàng ngày
+// (nhóm thiết bị → khu vực máy → hạng mục kiểm tra, tick theo từng
+// ngày trong tháng). Dữ liệu mẫu khởi tạo lấy đúng theo "BẢNG KIỂM
+// THIẾT BỊ THANH CÁI" gốc — Admin có thể thêm/sửa/xoá tự do sau đó.
+// ════════════════════════════════════════════════════════════
+const CS_STATUS = {
+  ok: {label:'Đủ điều kiện sản xuất',              short:'✓', color:'#15803d', bg:'#dcfce7', border:'#86efac'},
+  ng: {label:'Không đủ điều kiện sản xuất, cần bảo trì', short:'✗', color:'#b91c1c', bg:'#fee2e2', border:'#fca5a5'}
+};
+function csMkItems(names){ return names.map((n,i)=>({id:'i'+(i+1)+'_'+_csSlug(n), name:n, std:''})); }
+function _csSlug(s){ return _khStripAccents(String(s||'')).toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,18); }
+const CS_TEMPLATE_SEED = [
+  { id:'csg_tj300_400', name:'TJ300 & TJ400, Rút, Đánh Bóng', sections:[
+    { id:'css_tj300_400', name:'TJ300 & TJ400', items: csMkItems([
+      'Kiểm tra dầu 46','Kiểm tra dầu 150','Kiểm tra dầu 320','Kiểm tra nước làm mát Tang',
+      'Kiểm tra Tang','Kiểm tra vành nước','Kiểm tra dao gọt phoi','Kiểm tra bánh tì',
+      'Kiểm tra chốt khuôn','Kiểm tra bể nước làm mát','Kiểm tra bộ đếm Mét','Kiểm tra hệ thống thu Lô'
+    ])},
+    { id:'css_mayrut', name:'MÁY RÚT', items: csMkItems([
+      'Kiểm tra nước làm mát Tang','Kiểm tra Pittong','Kiểm tra hệ thống bơm dầu',
+      'Kiểm tra bộ định tâm khuôn','Kiểm tra đầu kẹp','Kiểm tra dầu rút',
+      'Kiểm bàn kẹp & con Lăn','Kiểm tra hệ thống máy cắt'
+    ])},
+    { id:'css_maydanhbong', name:'MÁY ĐÁNH BÓNG', items: csMkItems([
+      'Kiểm tra hệ thống băng tải','Kiểm tra các con lăn tì','Kiểm tra hệ thống trục','Kiểm tra Lô Nỉ đánh bóng'
+    ])}
+  ]},
+  { id:'csg_tj550', name:'TJ550, Rút 100', sections:[
+    { id:'css_tj550', name:'TJ550', items: csMkItems([
+      'Kiểm tra dầu 46','Kiểm tra dầu 150','Kiểm tra dầu 320','Kiểm tra nước làm mát Tang',
+      'Kiểm tra Tang','Kiểm tra vành nước','Kiểm tra dao gọt phoi','Kiểm tra bánh tì',
+      'Kiểm tra chốt khuôn','Kiểm tra bể nước làm mát','Kiểm tra bộ đếm Mét','Kiểm tra hệ thống thu Lô'
+    ])},
+    { id:'css_mayrut100', name:'MÁY RÚT 100', items: csMkItems([
+      'Kiểm tra nước làm mát','Kiểm tra Pittong','Kiểm tra hệ thống bơm dầu',
+      'Kiểm tra bộ định tâm khuôn','Kiểm tra đầu kẹp','Kiểm tra dầu rút',
+      'Kiểm bàn kẹp & con Lăn','Kiểm tra hệ thống máy cắt'
+    ])}
+  ]}
+];
+
 // ── AI cảnh báo bảo trì theo SẢN LƯỢNG (tấn) ─────────────────────────────
 // Vành nước (tang) của Máy đùn: cảnh báo khi chạy được 100–150 tấn kể từ
 // ngày thay gần nhất. Dầu máy rút (Máy rút 100 & Máy rút 50): cảnh báo khi
@@ -7119,7 +7165,7 @@ const STAGE_LABEL = Object.fromEntries(STAGES.map(s=>[s.key, s.label]));
 // ════════════════════════════════════════════════════════════
 let currentUser = null;
 let currentTab  = 'dashboard';
-let DB = { orders:[], ordersTrash:[], attendance:{}, workers:[], kyLuat:[], nghiPhep:[], lichLamViec:[], baoTri:[], qrProducts:[], khuonCatalog:[], khuonQty:[], users:[
+let DB = { orders:[], ordersTrash:[], attendance:{}, workers:[], kyLuat:[], nghiPhep:[], lichLamViec:[], baoTri:[], qrProducts:[], khuonCatalog:[], khuonQty:[], csTemplates:[], csData:{}, users:[
   {id:'u1',username:'admin',password:'admin123',role:'admin',name:'Quản trị viên',email:'admin@dongphuong.vn',phone:''},
   {id:'u2',username:'nhanvien',password:'nv123',role:'staff',name:'Nhân viên SX',email:'',phone:''}
 ]};
@@ -7226,7 +7272,7 @@ async function fbWriteETag(path, data, etag, method){
 // LOCAL STORAGE  – cache + fallback
 // ════════════════════════════════════════════════════════════
 function lsSave(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify({orders:DB.orders,ordersTrash:DB.ordersTrash,users:DB.users,attendance:DB.attendance,workers:DB.workers,kyLuat:DB.kyLuat,nghiPhep:DB.nghiPhep,lichLamViec:DB.lichLamViec,baoTri:DB.baoTri,qrProducts:DB.qrProducts,khuonCatalog:DB.khuonCatalog,khuonQty:DB.khuonQty})); }catch(e){}
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({orders:DB.orders,ordersTrash:DB.ordersTrash,users:DB.users,attendance:DB.attendance,workers:DB.workers,kyLuat:DB.kyLuat,nghiPhep:DB.nghiPhep,lichLamViec:DB.lichLamViec,baoTri:DB.baoTri,qrProducts:DB.qrProducts,khuonCatalog:DB.khuonCatalog,khuonQty:DB.khuonQty,csTemplates:DB.csTemplates,csData:DB.csData})); }catch(e){}
 }
 function lsLoad(){
   try{
@@ -7243,6 +7289,8 @@ function lsLoad(){
     if(d.qrProducts) DB.qrProducts = d.qrProducts;
     if(d.khuonCatalog && d.khuonCatalog.length) DB.khuonCatalog = d.khuonCatalog;
     if(d.khuonQty && d.khuonQty.length) DB.khuonQty = d.khuonQty;
+    if(d.csTemplates && d.csTemplates.length) DB.csTemplates = d.csTemplates;
+    if(d.csData) DB.csData = d.csData;
   }catch(e){}
 }
 function logLoad(){
@@ -7347,6 +7395,28 @@ function unflattenAttendance(map){
   return att;
 }
 let _lastSyncedAttendanceSnapshot = {};
+
+// Check Sheet Thiết bị: DB.csData[ym][itemKey][day] = 'ok'|'ng' — cùng hình
+// dạng với DB.attendance nên dùng chung cơ chế flatten/merge-theo-khoá.
+function flattenCsData(cs){
+  const m = {};
+  Object.keys(cs||{}).forEach(ym=>{
+    const items = (cs||{})[ym]||{};
+    Object.keys(items).forEach(ik=>{ m[ym+'|'+ik] = JSON.stringify(items[ik]); });
+  });
+  return m;
+}
+function unflattenCsData(map){
+  const cs = {};
+  Object.keys(map).forEach(key=>{
+    const i = key.indexOf('|');
+    const ym = key.slice(0,i), ik = key.slice(i+1);
+    if(!cs[ym]) cs[ym] = {};
+    try{ cs[ym][ik] = JSON.parse(map[key]); }catch(e){}
+  });
+  return cs;
+}
+let _lastSyncedCsDataSnapshot = {};
 
 // ── LƯỚI AN TOÀN CHỐNG NHÂN ĐÔI ĐƠN HÀNG ─────────────────────
 // Tab Kế hoạch sản xuất CHỈ ĐƯỢC PHÉP cập nhật đúng 1 bản ghi hiện có theo
@@ -7910,7 +7980,7 @@ function snapshotArrById(list){
   (list||[]).forEach(o=>{ if(o && o.id) m[o.id] = JSON.stringify(o); });
   return m;
 }
-let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{}, workers:{}, qrProducts:{}, khuonCatalog:{}, khuonQty:{} };
+let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{}, workers:{}, qrProducts:{}, khuonCatalog:{}, khuonQty:{}, csTemplates:{} };
 
 async function mergeAndSaveArrField(field, path, onSuccess){
   const localSnap = snapshotArrById(DB[field]);
@@ -7975,6 +8045,48 @@ function saveKhuonCatalog(){if(guardNotAdmin())return;
 function saveKhuonQty(){if(guardNotAdmin())return;
   lsSave();
   syncArrFieldToServer('khuonQty', '/data/khuonQty');
+}
+
+// Check Sheet Thiết bị — lưu cấu trúc (nhóm/khu vực/hạng mục): chỉ Admin.
+function saveCsTemplates(){if(guardNotAdmin())return;
+  lsSave();
+  syncArrFieldToServer('csTemplates', '/data/csTemplates');
+}
+// Check Sheet Thiết bị — lưu dữ liệu tick hàng ngày: Admin + Staff (giống
+// chấm công), Viewer chỉ xem. Dùng cơ chế merge-theo-khoá y hệt Attendance
+// để nhiều người cùng tick ở nhiều máy/thiết bị khác nhau không đè mất nhau.
+function saveCsData(){if(guardViewer())return;
+  lsSave();
+  if(!fbOk()) return;
+  setSyncDot('saving');
+  markDirty('csData');
+  beginSave();
+  mergeAndSaveCsData();
+}
+async function mergeAndSaveCsData(){
+  const localFlat = flattenCsData(DB.csData);
+  const changedKeys = new Set();
+  Object.keys(localFlat).forEach(k=>{ if(localFlat[k]!==_lastSyncedCsDataSnapshot[k]) changedKeys.add(k); });
+  const removedKeys = new Set();
+  Object.keys(_lastSyncedCsDataSnapshot).forEach(k=>{ if(!localFlat[k]) removedKeys.add(k); });
+
+  let mergedFlat;
+  try{
+    const serverRaw = await fbRead('/data/csData');
+    const serverFlat = flattenCsData(serverRaw||{});
+    mergedFlat = {...serverFlat};
+    Object.keys(localFlat).forEach(k=>{
+      if(changedKeys.has(k) || !(k in serverFlat)) mergedFlat[k] = localFlat[k];
+    });
+    removedKeys.forEach(k=>{ delete mergedFlat[k]; });
+  }catch(e){
+    mergedFlat = localFlat;
+  }
+
+  DB.csData = unflattenCsData(mergedFlat);
+  lsSave();
+  scheduleUIRefresh(false);
+  return fbSaveField('csData', '/data/csData', false, ()=>{ _lastSyncedCsDataSnapshot = flattenCsData(DB.csData); });
 }
 
 function saveLog(){
@@ -9211,6 +9323,7 @@ async function initAndStartSync(){
   lsLoad(); logLoad();
   if(!DB.khuonCatalog || !DB.khuonCatalog.length) DB.khuonCatalog = KHUON_CATALOG_SEED.map(x=>({...x}));
   if(!DB.khuonQty || !DB.khuonQty.length) DB.khuonQty = KHUON_QTY_SEED.map(x=>({...x}));
+  if(!DB.csTemplates || !DB.csTemplates.length) DB.csTemplates = CS_TEMPLATE_SEED.map(x=>JSON.parse(JSON.stringify(x)));
   _lastHash = hashOrders(DB.orders);
   DB.orders.forEach(o=>_knownIds.add(o.id));
   // FIX QUAN TRỌNG — nguồn gốc lỗi "quay về dữ liệu cũ sau 1 đêm / sau Auto
@@ -9227,6 +9340,7 @@ async function initAndStartSync(){
   _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
   _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
   _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
+  _lastSyncedCsDataSnapshot = flattenCsData(DB.csData);
   _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
 
   if(fbOk()){
@@ -9261,12 +9375,13 @@ async function initAndStartSync(){
         // nền, chỉ áp đè đúng phần cục bộ) giống hệt các nhánh khác.
         const ARR_FIELD_PATHS = {workers:'/data/workers', qrProducts:'/data/qrProducts',
           lichLamViec:'/data/lichLamViec', kyLuat:'/data/kyLuat', nghiPhep:'/data/nghiPhep', baoTri:'/data/baoTri',
-          khuonCatalog:'/data/khuonCatalog', khuonQty:'/data/khuonQty'};
+          khuonCatalog:'/data/khuonCatalog', khuonQty:'/data/khuonQty', csTemplates:'/data/csTemplates'};
         await Promise.all(dirty.map(async f=>{
           try{
             if(f==='orders'){ beginSave(); await mergeAndSaveOrders(); }
             else if(f==='users'){ beginSave(); await mergeAndSaveUsers(); }
             else if(f==='attendance'){ beginSave(); await mergeAndSaveAttendance(); }
+            else if(f==='csData'){ beginSave(); await mergeAndSaveCsData(); }
             else if(f==='ordersTrash'){ beginSave(); await mergeAndSaveOrdersTrash(); }
             else if(ARR_FIELD_PATHS[f]){ beginSave(); await mergeAndSaveArrField(f, ARR_FIELD_PATHS[f]); }
             else { await fbWrite('/data/'+f, DB[f], 'PUT'); clearDirty(f); }
@@ -9318,17 +9433,24 @@ async function initAndStartSync(){
           if(!DB.khuonQty || !DB.khuonQty.length) DB.khuonQty = KHUON_QTY_SEED.map(x=>({...x}));
           syncArrFieldToServer('khuonQty', '/data/khuonQty');
         }
+        if(data.csTemplates && data.csTemplates.length){ DB.csTemplates = Array.isArray(data.csTemplates)?data.csTemplates:Object.values(data.csTemplates); }
+        else {
+          if(!DB.csTemplates || !DB.csTemplates.length) DB.csTemplates = CS_TEMPLATE_SEED.map(x=>JSON.parse(JSON.stringify(x)));
+          syncArrFieldToServer('csTemplates', '/data/csTemplates');
+        }
+        if(data.csData){ DB.csData = data.csData; }
         lsSave();
         _lastHash = hashOrders(DB.orders);
         DB.orders.forEach(o=>_knownIds.add(o.id));
         _lastSyncedOrdersSnapshot = snapshotOrders(DB.orders);
         _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
+        _lastSyncedCsDataSnapshot = flattenCsData(DB.csData);
         _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
         _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
       } else if(!data){
         // Lần đầu: đẩy data lên (kèm cả khuonCatalog/khuonQty/qrProducts —
         // trước đây thiếu 2 nhánh khuôn nên trang công khai luôn rỗng)
-        await fbWrite('/data', {orders:DB.orders, ordersTrash:DB.ordersTrash, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri, qrProducts:DB.qrProducts, khuonCatalog:DB.khuonCatalog, khuonQty:DB.khuonQty}, 'PUT');
+        await fbWrite('/data', {orders:DB.orders, ordersTrash:DB.ordersTrash, users:DB.users, attendance:DB.attendance, workers:DB.workers, kyLuat:DB.kyLuat, nghiPhep:DB.nghiPhep, lichLamViec:DB.lichLamViec, baoTri:DB.baoTri, qrProducts:DB.qrProducts, khuonCatalog:DB.khuonCatalog, khuonQty:DB.khuonQty, csTemplates:DB.csTemplates, csData:DB.csData}, 'PUT');
       }
       // Load log
       const log = await fbRead('/log');
@@ -9542,6 +9664,8 @@ function applyDataSnapshot(data){
   if(data.baoTri && JSON.stringify(data.baoTri)!==JSON.stringify(DB.baoTri)){ DB.baoTri = data.baoTri; changed = true; }
   if(data.khuonCatalog && JSON.stringify(data.khuonCatalog)!==JSON.stringify(DB.khuonCatalog)){ DB.khuonCatalog = data.khuonCatalog; changed = true; }
   if(data.khuonQty && JSON.stringify(data.khuonQty)!==JSON.stringify(DB.khuonQty)){ DB.khuonQty = data.khuonQty; changed = true; }
+  if(data.csTemplates && JSON.stringify(data.csTemplates)!==JSON.stringify(DB.csTemplates)){ DB.csTemplates = data.csTemplates; changed = true; }
+  if(data.csData && JSON.stringify(data.csData)!==JSON.stringify(DB.csData)){ DB.csData = data.csData; _lastSyncedCsDataSnapshot = flattenCsData(DB.csData); changed = true; }
   if(data.qrProducts){
     const freshQr = Array.isArray(data.qrProducts)?data.qrProducts:Object.values(data.qrProducts);
     if(JSON.stringify(freshQr)!==JSON.stringify(DB.qrProducts)){ DB.qrProducts = freshQr; changed = true; }
@@ -10568,7 +10692,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR'};
   $('pageTitle').textContent=titles[tab]||tab;
   // Badge "Realtime" + nút "Làm mới" trên Global Header: chỉ hiện ở tab
   // Tổng quan (nơi dữ liệu cập nhật theo thời gian thực), các tab khác ẩn.
@@ -10671,7 +10795,7 @@ function updateKhuonBadge(){
 // RENDER
 // ════════════════════════════════════════════════════════════
 function renderTab(tab){
-  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,dieuHanh:renderDieuHanh,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
+  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,dieuHanh:renderDieuHanh,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,checkSheet:renderCheckSheet,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR};
   if(fns[tab]) fns[tab]();
 }
 
@@ -17708,6 +17832,398 @@ async function exportKhuonCatalogExcel(){
   }
 }
 ensureExcelJs(); // tải trước thư viện ngay khi vào app để bấm "Xuất Excel" có kết quả nhanh
+
+// ════════════════════════════════════════════════════════════
+// CHECK SHEET THIẾT BỊ — render + thao tác (Khu vực Thiết bị)
+// Admin: quản lý cấu trúc (nhóm thiết bị / khu vực máy / hạng mục).
+// Admin + Staff: tick trạng thái hàng ngày. Viewer: chỉ xem.
+// ════════════════════════════════════════════════════════════
+let _csYM = null;
+let _csActiveGroup = null;
+let _csManageMode = false;
+
+function csYM(){ return (_csYM = _csYM || todayStr().slice(0,7)); }
+function shiftCsMonth(delta){
+  const [y,m] = csYM().split('-').map(Number);
+  const d = new Date(y, m-1+delta, 1);
+  _csYM = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  renderCheckSheet();
+}
+function changeCsMonth(val){ if(!val) return; _csYM = val; renderCheckSheet(); }
+function csGoGroup(id){ _csActiveGroup = id; renderCheckSheet(); }
+function csToggleManage(){ if(guardNotAdmin())return; _csManageMode = !_csManageMode; renderCheckSheet(); }
+
+// Trạng thái 1 ô ngày, đọc từ DB.csData[ym][itemKey][day]
+function csCellStatus(itemKey, day){
+  const ym = csYM();
+  return (((DB.csData[ym]||{})[itemKey]||{})[day]) || '';
+}
+// Bấm 1 ô ngày → chuyển vòng: Trống → ✓ Đạt → ✗ Cần bảo trì → Trống.
+// Admin + Staff được thao tác (giống chấm công); Viewer chỉ xem.
+function csCycleCell(itemKey, day){
+  if(guardViewer())return;
+  const ym = csYM();
+  if(!DB.csData[ym]) DB.csData[ym] = {};
+  if(!DB.csData[ym][itemKey]) DB.csData[ym][itemKey] = {};
+  const cur = DB.csData[ym][itemKey][day] || '';
+  const next = cur==='' ? 'ok' : (cur==='ok' ? 'ng' : '');
+  if(next==='') delete DB.csData[ym][itemKey][day];
+  else DB.csData[ym][itemKey][day] = next;
+  saveCsData();
+  const el = document.getElementById('csCell_'+CSS.escape(itemKey)+'_'+day);
+  if(el) csApplyCellStyle(el, next);
+  else renderCheckSheet();
+}
+function csApplyCellStyle(el, status){
+  const st = CS_STATUS[status];
+  el.textContent = st ? st.short : '';
+  el.style.color = st ? st.color : 'var(--text4)';
+  el.style.background = st ? st.bg : '';
+  el.title = st ? st.label : 'Bấm để đánh dấu';
+}
+
+// ── Quản lý cấu trúc: nhóm thiết bị / khu vực máy / hạng mục (chỉ Admin) ──
+function csAddGroup(){
+  if(guardNotAdmin())return;
+  const name = prompt('Tên nhóm thiết bị mới (VD: TJ550, Rút 100):');
+  if(!name || !name.trim()) return;
+  const g = {id:'csg_'+Date.now(), name:name.trim(), sections:[]};
+  DB.csTemplates = DB.csTemplates || [];
+  DB.csTemplates.push(g);
+  saveCsTemplates();
+  _csActiveGroup = g.id;
+  renderCheckSheet();
+}
+function csRenameGroup(groupId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  const name = prompt('Đổi tên nhóm thiết bị:', g.name);
+  if(!name || !name.trim()) return;
+  g.name = name.trim();
+  saveCsTemplates();
+  renderCheckSheet();
+}
+function csDeleteGroup(groupId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  if(!confirm(`Xoá toàn bộ nhóm thiết bị "${g.name}" và mọi hạng mục bên trong?`)) return;
+  DB.csTemplates = (DB.csTemplates||[]).filter(x=>x.id!==groupId);
+  saveCsTemplates();
+  if(_csActiveGroup===groupId) _csActiveGroup = null;
+  renderCheckSheet();
+}
+function csAddSection(groupId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  const name = prompt('Tên khu vực máy mới (VD: MÁY RÚT):');
+  if(!name || !name.trim()) return;
+  g.sections = g.sections || [];
+  g.sections.push({id:'css_'+Date.now(), name:name.trim(), items:[]});
+  saveCsTemplates();
+  renderCheckSheet();
+}
+function csRenameSection(groupId, sectionId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  const sec = (g.sections||[]).find(x=>x.id===sectionId); if(!sec) return;
+  const name = prompt('Đổi tên khu vực máy:', sec.name);
+  if(!name || !name.trim()) return;
+  sec.name = name.trim();
+  saveCsTemplates();
+  renderCheckSheet();
+}
+function csDeleteSection(groupId, sectionId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  const sec = (g.sections||[]).find(x=>x.id===sectionId); if(!sec) return;
+  if(!confirm(`Xoá khu vực máy "${sec.name}" và toàn bộ hạng mục bên trong?`)) return;
+  g.sections = (g.sections||[]).filter(x=>x.id!==sectionId);
+  saveCsTemplates();
+  renderCheckSheet();
+}
+function csAddItem(groupId, sectionId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  const sec = (g.sections||[]).find(x=>x.id===sectionId); if(!sec) return;
+  const name = prompt('Tên hạng mục kiểm tra mới (VD: Kiểm tra dầu 46):');
+  if(!name || !name.trim()) return;
+  const std = prompt('Tiêu chuẩn kiểm tra (không bắt buộc):', '') || '';
+  sec.items = sec.items || [];
+  sec.items.push({id:'i_'+Date.now(), name:name.trim(), std:std.trim()});
+  saveCsTemplates();
+  renderCheckSheet();
+}
+function csEditItem(groupId, sectionId, itemId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  const sec = (g.sections||[]).find(x=>x.id===sectionId); if(!sec) return;
+  const it = (sec.items||[]).find(x=>x.id===itemId); if(!it) return;
+  const name = prompt('Đổi tên hạng mục:', it.name);
+  if(!name || !name.trim()) return;
+  const std = prompt('Tiêu chuẩn kiểm tra (không bắt buộc):', it.std||'');
+  it.name = name.trim();
+  it.std = (std==null?it.std:std.trim());
+  saveCsTemplates();
+  renderCheckSheet();
+}
+function csDeleteItem(groupId, sectionId, itemId){
+  if(guardNotAdmin())return;
+  const g = (DB.csTemplates||[]).find(x=>x.id===groupId); if(!g) return;
+  const sec = (g.sections||[]).find(x=>x.id===sectionId); if(!sec) return;
+  const it = (sec.items||[]).find(x=>x.id===itemId); if(!it) return;
+  if(!confirm(`Xoá hạng mục "${it.name}"?`)) return;
+  sec.items = (sec.items||[]).filter(x=>x.id!==itemId);
+  saveCsTemplates();
+  renderCheckSheet();
+}
+
+function csSectionRowsHTML(group, sec, dayCols, admin, viewer){
+  const manage = admin && _csManageMode;
+  const totalCols = 3 + dayCols.length + (manage?1:0);
+  const header = `<tr>
+    <td colspan="${totalCols}" style="border:1px solid var(--border);padding:6px 8px;background:var(--bg2,#eef2f7);font-weight:800;font-size:12px">
+      ${(sec.name||'').toString().replace(/</g,'&lt;')}
+      ${manage?` <button class="icon-btn" style="font-size:11px" onclick="csRenameSection('${group.id}','${sec.id}')" title="Đổi tên khu vực máy">✏️</button><button class="icon-btn del" style="font-size:11px" onclick="csDeleteSection('${group.id}','${sec.id}')" title="Xoá khu vực máy">🗑</button><button class="icon-btn" style="font-size:11px" onclick="csAddItem('${group.id}','${sec.id}')" title="Thêm hạng mục">➕ Hạng mục</button>`:''}
+    </td>
+  </tr>`;
+  let stt = 0;
+  const rows = (sec.items||[]).map(it=>{
+    stt++;
+    const itemKey = group.id+'|'+sec.id+'|'+it.id;
+    return `<tr>
+      <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;text-align:center">${stt}</td>
+      <td style="position:sticky;left:28px;background:var(--card);border:1px solid var(--border);padding:5px 8px">${(it.name||'').toString().replace(/</g,'&lt;')}</td>
+      <td style="border:1px solid var(--border);padding:5px 8px;font-size:11px;color:var(--text3)">${(it.std||'—').toString().replace(/</g,'&lt;')}</td>
+      ${dayCols.map(day=>{
+        const v = csCellStatus(itemKey, day);
+        const st = CS_STATUS[v];
+        return `<td id="csCell_${itemKey}_${day}" onclick="csCycleCell('${itemKey}',${day})" title="${st?st.label:'Bấm để đánh dấu'}" style="border:1px solid var(--border);padding:0;text-align:center;height:28px;width:28px;font-weight:800;font-size:12px;cursor:${viewer?'default':'pointer'};color:${st?st.color:'var(--text4)'};background:${st?st.bg:''}">${st?st.short:''}</td>`;
+      }).join('')}
+      ${manage?`<td style="border:1px solid var(--border);padding:2px;text-align:center;white-space:nowrap"><button class="icon-btn" style="font-size:11px" onclick="csEditItem('${group.id}','${sec.id}','${it.id}')" title="Sửa">✏️</button><button class="icon-btn del" style="font-size:11px" onclick="csDeleteItem('${group.id}','${sec.id}','${it.id}')" title="Xoá">🗑</button></td>`:''}
+    </tr>`;
+  }).join('');
+  return header + rows;
+}
+
+function renderCheckSheet(){
+  const admin = isAdmin();
+  const viewer = isViewer();
+  const groups = DB.csTemplates || [];
+  if(!_csActiveGroup || !groups.find(g=>g.id===_csActiveGroup)) _csActiveGroup = groups[0] ? groups[0].id : null;
+  const ym = csYM();
+  const [y,m] = ym.split('-').map(Number);
+  const nDays = daysInMonth(ym);
+  const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
+  const group = groups.find(g=>g.id===_csActiveGroup);
+
+  let totalOk=0, totalNg=0;
+  if(group){
+    (group.sections||[]).forEach(sec=>(sec.items||[]).forEach(it=>{
+      const itemKey = group.id+'|'+sec.id+'|'+it.id;
+      const data = (DB.csData[ym]||{})[itemKey] || {};
+      Object.values(data).forEach(v=>{ if(v==='ok') totalOk++; else if(v==='ng') totalNg++; });
+    }));
+  }
+
+  $('mc').innerHTML = `
+    <div class="card" style="padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Check Sheet Thiết bị — Tháng ${m}/${y}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--brand);margin-top:2px">${groups.length} nhóm thiết bị <span style="font-size:12px;font-weight:600;color:var(--text3)">· ✅ ${totalOk} lượt đạt · ⚠️ ${totalNg} lượt cần bảo trì (tháng này)</span></div>
+        </div>
+        ${!viewer?`<button class="chip" style="font-size:11.5px;padding:6px 12px;font-weight:700" onclick="goTab('baoTriMay')" title="Xem lịch sử bảo trì máy">🛠 Bảo trì máy →</button>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="chip" onclick="shiftCsMonth(-1)">←</button>
+        <input type="month" class="field-inp" style="width:auto;flex:1;min-width:130px" value="${ym}" onchange="changeCsMonth(this.value)">
+        <button class="chip" onclick="shiftCsMonth(1)">→</button>
+        <button class="chip" onclick="changeCsMonth(todayStr().slice(0,7))">Tháng này</button>
+      </div>
+      ${!viewer?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        ${group?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportCheckSheetExcel('${group.id}')">⬇️ Xuất Excel</button>`:''}
+        ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;${_csManageMode?'background:var(--brand);color:#fff;font-weight:700':''}" onclick="csToggleManage()">${_csManageMode?'✅ Xong quản lý':'⚙️ Quản lý hạng mục'}</button>`:''}
+        ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="csAddGroup()">➕ Thêm nhóm thiết bị</button>`:''}
+      </div>`:''}
+    </div>
+
+    <div class="khm-tabs" style="align-items:center">
+      ${groups.map(g=>`<button class="khm-tab-btn ${g.id===_csActiveGroup?'active':''}" onclick="csGoGroup('${g.id}')">${(g.name||'').toString().replace(/</g,'&lt;')}${(admin&&_csManageMode&&g.id===_csActiveGroup)?` <span onclick="event.stopPropagation();csRenameGroup('${g.id}')" title="Đổi tên">✏️</span> <span onclick="event.stopPropagation();csDeleteGroup('${g.id}')" title="Xoá">🗑</span>`:''}</button>`).join('')}
+    </div>
+
+    ${!group ? `<div class="card" style="padding:24px;text-align:center;color:var(--text4)">Chưa có nhóm thiết bị nào${admin?' · bấm "➕ Thêm nhóm thiết bị" để bắt đầu':''}</div>` : `
+    <div class="card" style="padding:8px;overflow-x:auto;margin-top:8px">
+      <div style="text-align:center;font-weight:700;font-size:14px;margin:4px 0 8px;text-transform:uppercase">BẢNG KIỂM THIẾT BỊ — ${(group.name||'').toString().replace(/</g,'&lt;')}</div>
+      <table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap">
+        <thead>
+          <tr>
+            <th style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;min-width:28px;z-index:2">STT</th>
+            <th style="position:sticky;left:28px;background:var(--card);border:1px solid var(--border);padding:5px 8px;min-width:170px;text-align:left;z-index:2">Hạng mục</th>
+            <th style="border:1px solid var(--border);padding:5px 8px;min-width:100px">Tiêu chuẩn</th>
+            ${dayCols.map(day=>`<th style="border:1px solid var(--border);padding:4px 2px;min-width:30px;text-align:center">
+              <div style="font-size:12px;font-weight:700">${day}</div>
+              <div style="font-weight:700;color:${weekdayVN(y,m,day)==='CN'?'var(--red-m)':'var(--brand2)'};font-size:9px;margin-top:1px">${weekdayVN(y,m,day)}</div>
+            </th>`).join('')}
+            ${admin&&_csManageMode?'<th style="border:1px solid var(--border);padding:5px 6px;min-width:30px"></th>':''}
+          </tr>
+        </thead>
+        <tbody>
+          ${(group.sections||[]).map(sec=>csSectionRowsHTML(group, sec, dayCols, admin, viewer)).join('')}
+          ${(!group.sections || !group.sections.length) ? `<tr><td colspan="${3+nDays+(admin&&_csManageMode?1:0)}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có khu vực máy nào${admin?' · bấm "➕ Thêm khu vực máy" bên dưới':''}</td></tr>` : ''}
+        </tbody>
+      </table>
+      ${admin&&_csManageMode?`<div style="padding:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="csAddSection('${group.id}')">➕ Thêm khu vực máy</button>
+        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;color:#dc2626" onclick="csDeleteGroup('${group.id}')">🗑 Xoá nhóm thiết bị này</button>
+      </div>`:''}
+    </div>
+    <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3);line-height:1.6">
+      <b>Ký hiệu:</b>
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${CS_STATUS.ok.bg};color:${CS_STATUS.ok.color};text-align:center;font-weight:800;line-height:16px;font-size:11px">${CS_STATUS.ok.short}</span> ${CS_STATUS.ok.label}</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-left:16px"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${CS_STATUS.ng.bg};color:${CS_STATUS.ng.color};text-align:center;font-weight:800;line-height:16px;font-size:11px">${CS_STATUS.ng.short}</span> ${CS_STATUS.ng.label}</span>
+      <div style="margin-top:6px">${viewer?'Bạn đang ở chế độ chỉ xem.':'Bấm vào từng ô ngày để chuyển trạng thái: Trống → ✓ Đạt → ✗ Cần bảo trì → Trống.'}</div>
+    </div>`}
+  `;
+}
+
+// Xuất Excel Check Sheet Thiết bị — dựng bảng từ đầu bằng ExcelJS (không
+// dùng file mẫu cố định vì số khu vực/hạng mục tuỳ chỉnh theo Admin), giữ
+// đúng bố cục chuyên nghiệp của file gốc: tiêu đề, tháng/năm, tên thiết bị,
+// bảng có viền đầy đủ, ô trạng thái tô màu xanh/đỏ, chú thích ký hiệu.
+async function exportCheckSheetExcel(groupId){
+  const group = (DB.csTemplates||[]).find(g=>g.id===groupId);
+  if(!group){ showToast('❌ Không tìm thấy nhóm thiết bị để xuất', true); return; }
+  showToast('⏳ Đang tạo file Excel...', false);
+  try{ await ensureExcelJs(); }
+  catch(e){ showToast('❌ Không tải được thư viện xuất Excel — kiểm tra kết nối mạng rồi thử lại', true); return; }
+  if(!window.ExcelJS){ showToast('⏳ Thư viện Excel chưa tải xong, vui lòng bấm "Xuất Excel" lại sau vài giây', true); return; }
+
+  try{
+    const ym = csYM();
+    const [y,m] = ym.split('-').map(Number);
+    const nDays = daysInMonth(ym);
+    const totalCols = 3 + nDays;
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Check Sheet', {views:[{state:'frozen', xSplit:3, ySplit:6}]});
+
+    ws.getColumn(1).width = 6;
+    ws.getColumn(2).width = 30;
+    ws.getColumn(3).width = 16;
+    for(let c=4;c<=totalCols;c++) ws.getColumn(c).width = 4.3;
+
+    const thin = {style:'thin', color:{argb:'FF888888'}};
+    const borderAll = {top:thin,left:thin,bottom:thin,right:thin};
+
+    ws.mergeCells(1,1,1,totalCols);
+    const titleCell = ws.getCell(1,1);
+    titleCell.value = 'BẢNG KIỂM THIẾT BỊ';
+    titleCell.font = {bold:true, size:16, name:'Arial'};
+    titleCell.alignment = {horizontal:'center', vertical:'middle'};
+    ws.getRow(1).height = 24;
+
+    ws.mergeCells(2,1,2,totalCols);
+    const dateCell = ws.getCell(2,1);
+    dateCell.value = `Tháng ${m}     Năm ${y}`;
+    dateCell.font = {bold:true, size:12, name:'Arial'};
+    dateCell.alignment = {horizontal:'center'};
+    ws.getRow(2).height = 18;
+
+    ws.mergeCells(3,1,3,totalCols);
+    const nameCell = ws.getCell(3,1);
+    nameCell.value = `Tên thiết bị : ${group.name}`;
+    nameCell.font = {bold:true, size:12, name:'Arial'};
+    nameCell.alignment = {horizontal:'left'};
+    ws.getRow(3).height = 18;
+    ws.getRow(4).height = 4;
+
+    const headerRow = 5, wdRow = 6;
+    ws.mergeCells(headerRow,1,wdRow,1); ws.getCell(headerRow,1).value = 'STT';
+    ws.mergeCells(headerRow,2,wdRow,2); ws.getCell(headerRow,2).value = 'Hạng mục';
+    ws.mergeCells(headerRow,3,wdRow,3); ws.getCell(headerRow,3).value = 'Tiêu chuẩn';
+    for(let d=1; d<=nDays; d++){
+      ws.getCell(headerRow, 3+d).value = d;
+      const wd = weekdayVN(y,m,d);
+      const wdCell = ws.getCell(wdRow, 3+d);
+      wdCell.value = wd;
+      wdCell.font = {size:8, name:'Arial', bold:true, color:{argb: wd==='CN'?'FFDC2626':'FF1D4ED8'}};
+      wdCell.alignment = {horizontal:'center', vertical:'middle'};
+      wdCell.border = borderAll;
+    }
+    for(let c=1;c<=totalCols;c++){
+      const cell = ws.getCell(headerRow,c);
+      cell.font = {bold:true, size:10, name:'Arial'};
+      cell.alignment = {horizontal:'center', vertical:'middle'};
+      cell.border = borderAll;
+      cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFDCE6F1'}};
+      const c2 = ws.getCell(wdRow,c);
+      c2.border = borderAll;
+      c2.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFDCE6F1'}};
+    }
+
+    let r = wdRow + 1;
+    (group.sections||[]).forEach(sec=>{
+      ws.mergeCells(r,1,r,totalCols);
+      const sCell = ws.getCell(r,1);
+      sCell.value = sec.name;
+      sCell.font = {bold:true, size:11, name:'Arial'};
+      sCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEFF2F7'}};
+      sCell.border = borderAll;
+      ws.getRow(r).height = 18;
+      r++;
+      let stt=0;
+      (sec.items||[]).forEach(it=>{
+        stt++;
+        const itemKey = group.id+'|'+sec.id+'|'+it.id;
+        const rowData = (DB.csData[ym]||{})[itemKey] || {};
+        ws.getCell(r,1).value = stt;
+        ws.getCell(r,2).value = it.name;
+        ws.getCell(r,3).value = it.std || '';
+        for(let c=1;c<=3;c++){
+          const cell = ws.getCell(r,c);
+          cell.font = {size:10, name:'Arial'};
+          cell.alignment = {horizontal: c===2?'left':'center', vertical:'middle', wrapText:c===2};
+          cell.border = borderAll;
+        }
+        for(let d=1; d<=nDays; d++){
+          const v = rowData[d] || '';
+          const st = CS_STATUS[v];
+          const cell = ws.getCell(r, 3+d);
+          cell.value = st ? st.short : '';
+          cell.alignment = {horizontal:'center', vertical:'middle'};
+          cell.border = borderAll;
+          cell.font = {bold:true, size:10, name:'Arial', color:{argb: v==='ok'?'FF15803D': v==='ng'?'FFB91C1C':'FF000000'}};
+          if(st) cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb: v==='ok'?'FFDCFCE7':'FFFEE2E2'}};
+        }
+        r++;
+      });
+    });
+
+    r++;
+    ws.mergeCells(r,1,r,totalCols);
+    const legendCell = ws.getCell(r,1);
+    legendCell.value = `Ký hiệu :     ✓ = ${CS_STATUS.ok.label}          ✗ = ${CS_STATUS.ng.label}`;
+    legendCell.font = {italic:true, size:10, name:'Arial'};
+    r++;
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const now = new Date();
+    const pad = n=>String(n).padStart(2,'0');
+    const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+    const safeName = (group.name||'CheckSheet').toString().replace(/[^a-zA-Z0-9À-ỹ ]/g,'').replace(/\s+/g,'_');
+    a.href = url; a.download = `CheckSheet_${safeName}_${ym}_${stamp}.xlsx`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ Đã xuất file Excel Check Sheet Thiết bị');
+  }catch(err){
+    console.error(err);
+    showToast('❌ Xuất Excel thất bại: ' + (err && err.message || err), true);
+  }
+}
+
 
 // Danh mục loại khuôn hiển thị tách riêng — Đùn và Kéo (Rút) mỗi loại 1
 // khối bảng riêng biệt, không còn gộp chung 1 bảng như trước.
