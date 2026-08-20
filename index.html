@@ -10832,9 +10832,25 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ════════════════════════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════════════════════════
-function applyRoleNav(){ /* không còn giới hạn tab theo vai trò — mọi tài khoản dùng đầy đủ menu như trước */ }
-function defaultTabFor(){ if(currentUser?.role==='solieu') return 'soLieu'; return dhTvLocked() ? 'dieuHanh' : 'dashboard'; }
+// Tài khoản có vai trò "solieu" (Số liệu) bị khoá cứng chỉ được dùng tab
+// 📊 Số liệu — không được xem/điều hướng sang bất kỳ tab nào khác.
+function soLieuLocked(){ return currentUser?.role==='solieu'; }
+function applyRoleNav(){
+  // Tài khoản Số liệu: ẩn hết các mục menu khác (sidebar + bottom-nav),
+  // chỉ chừa lại đúng 1 mục "📊 Số liệu" để không thể bấm sang tab khác.
+  const locked = soLieuLocked();
+  document.querySelectorAll('.sb-item').forEach(x=>{
+    x.style.display = (!locked || x.id==='sbi-soLieu') ? '' : 'none';
+  });
+  const bnav = $('bottomNav');
+  if(bnav) bnav.style.display = locked ? 'none' : '';
+}
+function defaultTabFor(){ if(soLieuLocked()) return 'soLieu'; return dhTvLocked() ? 'dieuHanh' : 'dashboard'; }
 function goTab(tab){
+  // Tài khoản Số liệu bị khoá cứng → luôn ép về tab 📊 Số liệu, bất kể tab
+  // nào được truyền vào (phòng trường hợp còn sót thao tác/link điều hướng
+  // sang tab khác).
+  if(soLieuLocked()) tab='soLieu';
   // Cửa sổ đang ở TV Mode khoá cứng → luôn ép về Điều hành SX, bất kể tab
   // nào được truyền vào (kể cả nếu có thao tác/điều hướng lỡ xảy ra ngay
   // trong chính cửa sổ TV). Tự bật lại TV Mode + fullscreen nếu vì lý do
