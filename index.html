@@ -6659,7 +6659,7 @@ body{letter-spacing:-.1px}
     </div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Mã cuộn / Heat-Lot</div><input id="nlHeatLot" class="field-inp" placeholder="VD: B190225102"></div>
-      <div class="field"><div class="field-lbl">Độ dẫn điện</div><input id="nlDoDanDien" class="field-inp" type="number" step="0.01" placeholder="VD: 0.99"></div>
+      <div class="field"><div class="field-lbl">Độ dẫn điện</div><input id="nlDoDanDien" class="field-inp" type="text" inputmode="decimal" placeholder="VD: 96.2 - 98.5"></div>
     </div>
     <div class="field"><div class="field-lbl">Số lượng (kg)</div><input id="nlSoLuong" class="field-inp" type="number" step="0.01" placeholder="VD: 2502"></div>
     <div class="modal-row">
@@ -6670,9 +6670,9 @@ body{letter-spacing:-.1px}
       <div class="field"><div class="field-lbl">Phế và đầu mẩu (kg)</div><input id="nlPhe" class="field-inp" type="number" step="0.01"></div>
       <div class="field"><div class="field-lbl">Phoi (kg)</div><input id="nlPhoi" class="field-inp" type="number" step="0.01"></div>
     </div>
-    <div class="field"><div class="field-lbl">Liên kết Đơn hàng (tuỳ chọn)</div>
-      <input id="nlDonHang" class="field-inp" list="hsOrderList" placeholder="Chọn hoặc gõ mã đơn hàng...">
-      <datalist id="hsOrderList"></datalist>
+    <div class="field"><div class="field-lbl">Khách hàng (tuỳ chọn)</div>
+      <input id="nlDonHang" class="field-inp" list="nlKhachHangList" placeholder="Gõ tên khách hàng...">
+      <datalist id="nlKhachHangList"></datalist>
     </div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">PO</div><input id="nlPO" class="field-inp"></div>
@@ -18094,6 +18094,13 @@ function slSetTo(v){ _slTo = v; renderSlBody(); }
 function hsOrderOptionsHTML(){
   return (DB.orders||[]).map(o=>`<option value="${o.id}">${(o.customer||'').replace(/"/g,'&quot;')} — ${orderSpecShort(o)}</option>`).join('');
 }
+// Gợi ý "Khách hàng" ở Sổ nguyên liệu — CHỈ ghi nhớ những tên khách hàng đã
+// từng được gõ tay ở chính field này (không lấy/gắn với mã đơn hàng thật
+// trong hệ thống Đơn hàng), để nhập nhanh & thống nhất tên gọi qua các lần.
+function nlKhachHangOptionsHTML(){
+  const set = new Set((DB.nguyenLieuLog||[]).map(r=>r.khachHang).filter(Boolean));
+  return [...set].map(v=>`<option value="${v.replace(/"/g,'&quot;')}"></option>`).join('');
+}
 function orderSpecShort(o){
   if(!o) return '';
   if(o.isCoil) return `${o.thickness||'?'}×${o.width||'?'}`;
@@ -18153,7 +18160,7 @@ function renderSlBody(){
   const filtered = list.filter(r=>{
     const dateOk = inDateRange(r.ngay, _slFrom, _slTo);
     if(!dateOk) return false;
-    if(tab==='nguyenLieu') return matchesSearch(r, ['nguyenLieu','heatLot','loaiThanhPham','ghiChu','maDonHang'], _slSearch);
+    if(tab==='nguyenLieu') return matchesSearch(r, ['nguyenLieu','heatLot','loaiThanhPham','ghiChu','khachHang','doDanDien'], _slSearch);
     return matchesSearch(r, ['quyCach','loaiNL','congDoan','nguoiSanXuat','khachHang','ghiChu'], _slSearch);
   });
 
@@ -18180,11 +18187,11 @@ function renderSlBody(){
   const admin = isSlEditor();
   let head, rows;
   if(tab==='nguyenLieu'){
-    head = `<tr><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Đơn hàng</th><th>Ghi chú</th><th></th></tr>`;
+    head = `<tr><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
     rows = filtered.map(r=>`<tr>
-        <td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${r.doDanDien??''}</td>
+        <td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
         <td>${fmtNum(r.soLuong)}</td><td>${esc(r.loaiThanhPham)}</td><td>${esc(r.soMetChay)}</td>
-        <td>${fmtNum(r.phe)}</td><td>${fmtNum(r.phoi)}</td><td>${orderRefLabel(r.maDonHang)}</td><td>${esc(r.ghiChu)}</td>
+        <td>${fmtNum(r.phe)}</td><td>${fmtNum(r.phoi)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
         <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="slDelete('${r.id}')">🗑️</button>`:''}</td>
       </tr>`).join('');
   } else {
@@ -18220,7 +18227,7 @@ function nlOpenAdd(){
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   ['nlNguyenLieu','nlHeatLot','nlDoDanDien','nlSoLuong','nlLoaiTP','nlSoMet','nlPhe','nlPhoi','nlDonHang','nlPO','nlWO','nlGhiChu'].forEach(id=>$(id).value='');
   $('nlNgay').value = todayStr();
-  $('hsOrderList').innerHTML = hsOrderOptionsHTML();
+  $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
   openModal('nlModal');
 }
 function nlOpenEdit(id){
@@ -18230,10 +18237,10 @@ function nlOpenEdit(id){
   $('nlModalTitle').textContent = 'Sửa dòng Sổ nguyên liệu';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   $('nlNgay').value=r.ngay||''; $('nlNguyenLieu').value=r.nguyenLieu||''; $('nlHeatLot').value=r.heatLot||'';
-  $('nlDoDanDien').value=r.doDanDien??''; $('nlSoLuong').value=r.soLuong??''; $('nlLoaiTP').value=r.loaiThanhPham||'';
+  $('nlDoDanDien').value=r.doDanDien||''; $('nlSoLuong').value=r.soLuong??''; $('nlLoaiTP').value=r.loaiThanhPham||'';
   $('nlSoMet').value=r.soMetChay||''; $('nlPhe').value=r.phe??''; $('nlPhoi').value=r.phoi??'';
-  $('nlDonHang').value=r.maDonHang||''; $('nlPO').value=r.po||''; $('nlWO').value=r.wo||''; $('nlGhiChu').value=r.ghiChu||'';
-  $('hsOrderList').innerHTML = hsOrderOptionsHTML();
+  $('nlDonHang').value=r.khachHang||''; $('nlPO').value=r.po||''; $('nlWO').value=r.wo||''; $('nlGhiChu').value=r.ghiChu||'';
+  $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
   openModal('nlModal');
 }
 function nlSave(){
@@ -18244,11 +18251,11 @@ function nlSave(){
   const rec = {
     id: _slEditId || uid(),
     ngay, nguyenLieu: nl, heatLot: $('nlHeatLot').value.trim(),
-    doDanDien: $('nlDoDanDien').value?Number($('nlDoDanDien').value):null,
+    doDanDien: $('nlDoDanDien').value.trim(),
     soLuong: $('nlSoLuong').value?Number($('nlSoLuong').value):0,
     loaiThanhPham: $('nlLoaiTP').value.trim(), soMetChay: $('nlSoMet').value.trim(),
     phe: $('nlPhe').value?Number($('nlPhe').value):0, phoi: $('nlPhoi').value?Number($('nlPhoi').value):0,
-    maDonHang: $('nlDonHang').value.trim(), po: $('nlPO').value.trim(), wo: $('nlWO').value.trim(),
+    khachHang: $('nlDonHang').value.trim(), po: $('nlPO').value.trim(), wo: $('nlWO').value.trim(),
     ghiChu: $('nlGhiChu').value.trim(),
     updatedAt: Date.now(), updatedBy: actorName()
   };
@@ -18480,13 +18487,13 @@ function exportSlExcel(tab){
         {header:'Ngày', key:'ngay', width:12, numFmt:'date'},
         {header:'Nguyên liệu', key:'nguyenLieu', width:16},
         {header:'Mã cuộn/Heat-Lot', key:'heatLot', width:18},
-        {header:'Độ dẫn điện', key:'doDanDien', width:12, numFmt:'num'},
+        {header:'Độ dẫn điện', key:'doDanDien', width:14},
         {header:'Số lượng (kg)', key:'soLuong', width:13, numFmt:'num'},
         {header:'Loại TP chạy', key:'loaiThanhPham', width:14},
         {header:'Số mét chạy', key:'soMetChay', width:12},
         {header:'Phế/đầu mẩu (kg)', key:'phe', width:14, numFmt:'num'},
         {header:'Phoi (kg)', key:'phoi', width:11, numFmt:'num'},
-        {header:'Mã đơn hàng', key:'maDonHang', width:16},
+        {header:'Khách hàng', key:'khachHang', width:16},
         {header:'Ghi chú', key:'ghiChu', width:22}
       ],
       rows: slArr('nguyenLieu'), totalsCols:['soLuong','phe','phoi'],
