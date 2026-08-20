@@ -6655,7 +6655,7 @@ body{letter-spacing:-.1px}
     <div id="nlErr" class="modal-err"></div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Ngày *</div><input id="nlNgay" type="date" class="field-inp"></div>
-      <div class="field"><div class="field-lbl">Nguyên liệu *</div><input id="nlNguyenLieu" class="field-inp" placeholder="VD: Fi20B"></div>
+      <div class="field"><div class="field-lbl">Nguyên liệu</div><input id="nlNguyenLieu" class="field-inp" placeholder="VD: Fi20B (để trống nếu chỉ ghi Phế/Phoi)"></div>
     </div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Mã cuộn / Heat-Lot</div><input id="nlHeatLot" class="field-inp" placeholder="VD: B190225102"></div>
@@ -18246,7 +18246,14 @@ function nlOpenEdit(id){
 function nlSave(){
   if(guardSlEdit())return;
   const ngay=$('nlNgay').value, nl=$('nlNguyenLieu').value.trim();
-  if(!ngay || !nl){ $('nlErr').textContent='⚠️ Vui lòng nhập Ngày và Nguyên liệu.'; $('nlErr').style.display='block'; return; }
+  const phe = $('nlPhe').value?Number($('nlPhe').value):0;
+  const phoi = $('nlPhoi').value?Number($('nlPhoi').value):0;
+  if(!ngay){ $('nlErr').textContent='⚠️ Vui lòng nhập Ngày.'; $('nlErr').style.display='block'; return; }
+  // Cho phép ghi ĐỘC LẬP Phế/đầu mẩu hoặc Phoi mà không cần nhập Nguyên
+  // liệu — vì thực tế phế/phoi phát sinh và được ghi nhận nhiều lần hơn
+  // hẳn so với mỗi lần nhập nguyên liệu đầu vào. Chỉ chặn khi cả 3 đều
+  // trống (tránh lưu 1 dòng hoàn toàn rỗng).
+  if(!nl && !phe && !phoi){ $('nlErr').textContent='⚠️ Vui lòng nhập Nguyên liệu, hoặc ít nhất Phế/đầu mẩu hay Phoi.'; $('nlErr').style.display='block'; return; }
   const arr = slArr('nguyenLieu');
   const rec = {
     id: _slEditId || uid(),
@@ -18254,7 +18261,7 @@ function nlSave(){
     doDanDien: $('nlDoDanDien').value.trim(),
     soLuong: $('nlSoLuong').value?Number($('nlSoLuong').value):0,
     loaiThanhPham: $('nlLoaiTP').value.trim(), soMetChay: $('nlSoMet').value.trim(),
-    phe: $('nlPhe').value?Number($('nlPhe').value):0, phoi: $('nlPhoi').value?Number($('nlPhoi').value):0,
+    phe, phoi,
     khachHang: $('nlDonHang').value.trim(), po: $('nlPO').value.trim(), wo: $('nlWO').value.trim(),
     ghiChu: $('nlGhiChu').value.trim(),
     updatedAt: Date.now(), updatedBy: actorName()
@@ -18262,7 +18269,8 @@ function nlSave(){
   const idx = arr.findIndex(x=>x.id===rec.id);
   if(idx>=0) arr[idx]=rec; else arr.push(rec);
   saveNguyenLieuLog();
-  log('Sổ nguyên liệu', `${_slEditId?'Sửa':'Thêm'} dòng ${nl} (${rec.heatLot||'—'})`, rec.id, null, null);
+  const logLabel = nl || (phe?`Phế/đầu mẩu ${fmtNum(phe)}kg`:'') || (phoi?`Phoi ${fmtNum(phoi)}kg`:'') || '(dòng trống)';
+  log('Sổ nguyên liệu', `${_slEditId?'Sửa':'Thêm'} dòng ${logLabel} (${rec.heatLot||'—'})`, rec.id, null, null);
   closeModal('nlModal');
   renderSoLieu();
   showToast(_slEditId?'✅ Đã cập nhật':'✅ Đã thêm dòng mới');
