@@ -2509,6 +2509,26 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .combo-list-empty{padding:10px 14px;font-size:12.5px;color:var(--text4)}
 .field-inp:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(24,87,201,.12);background:#fff}
 .field{margin-bottom:14px}
+/* ── Nhóm nhập nhiều "Mã + Kg" (dùng cho Phế/đầu mẩu & Phoi trong Sổ nguyên
+   liệu) — cho phép ghi nhiều mã liệu phế/phoi khác nhau kèm số kg riêng
+   ngay trong cùng 1 khu vực, thay vì chỉ gõ được đúng 1 con số tổng như
+   trước. Bố cục dùng chung cho cả Desktop lẫn Mobile: mỗi mã là 1 hàng
+   [Mã][Kg][Xoá], hàng nào cũng full-width nên gõ trên điện thoại vẫn thoải
+   mái, khi màn hình rộng thì 2 field-lbl cạnh nhau (modal-row) vẫn đủ chỗ. */
+.nl-multi-total{float:right;text-transform:none;font-weight:700;color:var(--brand2);letter-spacing:0}
+.nl-multi-list{display:flex;flex-direction:column;gap:7px;margin-bottom:8px}
+.nl-multi-row{display:flex;gap:6px;align-items:center}
+.nl-multi-row .nl-multi-code{flex:1.3;min-width:0;padding:10px 11px;font-size:13px}
+.nl-multi-row .nl-multi-kg{flex:1;min-width:0;padding:10px 11px;font-size:13px;text-align:right}
+.nl-multi-del{flex-shrink:0;width:34px;height:34px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text3);border-radius:9px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s,border-color .12s}
+.nl-multi-del:hover{background:var(--red-l);color:var(--red-m);border-color:var(--red-m)}
+.nl-multi-add{width:100%;padding:9px 10px;border:1.5px dashed var(--border);background:transparent;color:var(--brand2);border-radius:var(--r-sm);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:background .12s,border-color .12s}
+.nl-multi-add:hover{background:rgba(24,87,201,.06);border-color:var(--brand2)}
+@media (max-width:520px){
+  .nl-multi-row{flex-wrap:nowrap}
+  .nl-multi-row .nl-multi-code{flex:1.15}
+  .nl-multi-row .nl-multi-kg{flex:.85}
+}
 .login-btn{width:100%;padding:14px;background:var(--brand);color:#fff;border:none;border-radius:var(--r-sm);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px;transition:background .15s,transform .1s;box-shadow:0 1px 2px rgba(16,24,40,.15)}
 .login-btn:hover{background:var(--brand2)}
 .login-btn:active{opacity:.9;transform:scale(.99)}
@@ -3231,6 +3251,29 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .sl-tab-count{font-size:11.5px;color:var(--text4);font-weight:600;margin-top:1px}
 .sl-tab-card.active .sl-tab-count{color:var(--sl-c);font-weight:700}
 @media (max-width:720px){ .sl-tabs{grid-template-columns:1fr} }
+
+/* ── 📊 Số liệu trên MOBILE — thao tác chuyên nghiệp, gọn tay hơn:
+   thẻ thống kê 2 cột dễ đọc, thanh lọc xếp hàng rõ ràng thay vì bị bóp nhỏ,
+   nút bấm/hàng bảng đủ lớn cho ngón tay (tối thiểu ~40px chạm), khung Sổ
+   thẻ đổ bóng rõ hơn để phân biệt vùng cuộn ngang trong bảng. ── */
+@media (max-width:640px){
+  .sl-tab-card{padding:12px 14px;border-radius:14px}
+  .sl-tab-icon{width:38px;height:38px;min-width:38px;font-size:17px}
+  .sl-tab-label{font-size:13px}
+  .khm-stats{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+  .khm-stat-card{padding:10px 12px;border-radius:12px}
+  .khm-stat-num{font-size:18px}
+  .khm-stat-lbl{font-size:10px}
+  .hs-filter-row{gap:8px}
+  .hs-filter-row .khm-search{flex:1 1 100%;min-width:0;padding:11px 14px;font-size:13.5px}
+  .hs-filter-row input[type=date]{flex:1 1 calc(50% - 4px);padding:10px 10px;font-size:12.5px}
+  .hs-filter-row .khm-add-btn{flex:1 1 calc(50% - 4px);text-align:center;padding:12px 10px;font-size:13px;min-height:42px}
+  .dt-wrap{border-radius:14px;box-shadow:0 2px 10px rgba(16,24,40,.07)}
+  .dt-table{font-size:12.5px}
+  .dt-table th,.dt-table td{padding:10px 10px}
+  .dt-actbtn{padding:8px 11px;font-size:14px;min-width:38px;min-height:38px}
+  .dt-actions{gap:6px}
+}
 /* ── Khối tách riêng Khuôn Đùn / Khuôn Rút (Kéo) — giao diện hiện đại ── */
 .khm-type-section{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(16,24,40,.06);margin-bottom:16px;overflow:hidden}
 .khm-type-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(135deg,var(--bg2),#fff)}
@@ -3822,8 +3865,15 @@ body.sl-fullscreen .ann-write-btn,
 body.sl-fullscreen #announceBanner,
 body.sl-fullscreen #updateBanner{display:none!important}
 body.sl-fullscreen .app-body{overflow:hidden!important;height:100vh;height:100dvh}
-body.sl-fullscreen .main-wrap{overflow:hidden!important;padding-bottom:0!important;height:100vh;height:100dvh}
-body.sl-fullscreen .main-content{padding:0!important;max-width:none!important;margin:0!important;animation:none!important}
+/* Khung ngoài (app-body) vẫn khoá cứng để không bị bounce/kéo lệch cả trang,
+   nhưng .main-wrap BÊN TRONG phải cuộn được bình thường (overflow-y:auto)
+   — nếu không, tài khoản "Số liệu" sẽ bị kẹt không kéo lên/xuống được để
+   xem hết dữ liệu trong tab 📊 Số liệu lẫn tab Cài đặt (2 tab dùng chung
+   đúng 1 khung .main-wrap này). Bật lại thanh cuộn mượt trên mobile bằng
+   -webkit-overflow-scrolling + chặn kéo lố (overscroll-behavior). */
+body.sl-fullscreen .main-wrap{overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)!important;height:100vh;height:100dvh}
+body.sl-fullscreen .main-content{padding:16px 14px!important;max-width:1200px!important;margin:0 auto!important;animation:none!important}
+@media (min-width:900px){ body.sl-fullscreen .main-content{padding:22px 28px!important} }
 #slGearBtn{display:none;position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:14px;width:40px;height:40px;border-radius:50%;background:rgba(19,44,102,.85);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.25);align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 body.sl-fullscreen #slGearBtn{display:flex}
 
@@ -6676,9 +6726,15 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
       <div class="field"><div class="field-lbl">Loại thành phẩm chạy</div><input id="nlLoaiTP" class="field-inp" placeholder="VD: 10x100"></div>
       <div class="field"><div class="field-lbl">Số mét chạy</div><input id="nlSoMet" class="field-inp" placeholder="VD: 200m"></div>
     </div>
-    <div class="modal-row">
-      <div class="field"><div class="field-lbl">Phế và đầu mẩu (kg)</div><input id="nlPhe" class="field-inp" type="number" step="0.01"></div>
-      <div class="field"><div class="field-lbl">Phoi (kg)</div><input id="nlPhoi" class="field-inp" type="number" step="0.01"></div>
+    <div class="field">
+      <div class="field-lbl">Phế và đầu mẩu (kg) <span class="nl-multi-total" id="nlPheTotal">0 kg</span></div>
+      <div class="nl-multi-list" id="nlPheList"></div>
+      <button type="button" class="nl-multi-add" onclick="nlMultiAdd('phe')">+ Thêm mã phế/đầu mẩu khác</button>
+    </div>
+    <div class="field">
+      <div class="field-lbl">Phoi (kg) <span class="nl-multi-total" id="nlPhoiTotal">0 kg</span></div>
+      <div class="nl-multi-list" id="nlPhoiList"></div>
+      <button type="button" class="nl-multi-add" onclick="nlMultiAdd('phoi')">+ Thêm mã phoi khác</button>
     </div>
     <div class="field"><div class="field-lbl">Khách hàng (tuỳ chọn)</div>
       <input id="nlDonHang" class="field-inp" list="nlKhachHangList" placeholder="Gõ tên khách hàng...">
@@ -17926,7 +17982,7 @@ function renderSlBody(){
     rows = filtered.map(r=>`<tr>
         <td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
         <td>${fmtNum(r.soLuong)}</td><td>${esc(r.loaiThanhPham)}</td><td>${esc(r.soMetChay)}</td>
-        <td>${fmtNum(r.phe)}</td><td>${fmtNum(r.phoi)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
+        <td>${nlMultiCellHTML(r.phe,r.pheItems)}</td><td>${nlMultiCellHTML(r.phoi,r.phoiItems)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
         <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="slDelete('${r.id}')">🗑️</button>`:''}</td>
       </tr>`).join('');
   } else {
@@ -17947,17 +18003,83 @@ function renderSlBody(){
 }
 
 function esc(s){ return s==null?'':String(s).replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+// Hiện số kg tổng trong ô bảng; nếu có từ 2 mã trở lên thì thêm dấu 🔖 và
+// tooltip (hover/chạm giữ) liệt kê từng mã kèm kg để không phải mở Sửa
+// mới xem được chi tiết đã ghi nhiều mã trong cùng 1 dòng.
+function nlMultiCellHTML(total, items){
+  const t = fmtNum(total);
+  if(!Array.isArray(items) || items.length<2) return t;
+  const detail = items.map(it=>`${it.ma?esc(it.ma)+': ':''}${fmtNum(it.kg)}kg`).join(' • ');
+  return `<span title="${esc(detail)}">${t} <span style="opacity:.6;font-size:10px">🔖${items.length}</span></span>`;
+}
 function fmtNum(n){ n=Number(n)||0; return n.toLocaleString('vi-VN',{maximumFractionDigits:2}); }
 
 
 // ── Thêm / Sửa Sổ nguyên liệu ─────────────────────────────────────────
+// ── Nhóm nhập nhiều "Mã + Kg" cho Phế/đầu mẩu & Phoi ──────────────────
+// _nlPheItems / _nlPhoiItems: mảng {ma, kg} đang chỉnh trong modal.
+let _nlPheItems = [{ma:'',kg:''}], _nlPhoiItems = [{ma:'',kg:''}];
+function nlMultiArr(type){ return type==='phe' ? _nlPheItems : _nlPhoiItems; }
+function nlMultiRender(type){
+  const items = nlMultiArr(type);
+  const listEl = $(type==='phe'?'nlPheList':'nlPhoiList');
+  listEl.innerHTML = items.map((it,i)=>`
+    <div class="nl-multi-row">
+      <input class="field-inp nl-multi-code" placeholder="Mã (VD: Fi20B — tuỳ chọn)" value="${esc(it.ma)}" oninput="nlMultiUpdate('${type}',${i},'ma',this.value)">
+      <input class="field-inp nl-multi-kg" type="number" step="0.01" placeholder="Kg" value="${it.kg===''?'':it.kg}" oninput="nlMultiUpdate('${type}',${i},'kg',this.value)">
+      <button type="button" class="nl-multi-del" title="Xoá mã này" onclick="nlMultiDel('${type}',${i})">✕</button>
+    </div>`).join('');
+  const total = items.reduce((s,it)=>s+(Number(it.kg)||0),0);
+  $(type==='phe'?'nlPheTotal':'nlPhoiTotal').textContent = `${fmtNum(total)} kg`;
+}
+function nlMultiUpdate(type, i, field, val){
+  const items = nlMultiArr(type);
+  if(!items[i]) return;
+  items[i][field] = field==='kg' ? val : val;
+  // Chỉ cập nhật lại tổng kg hiển thị, không render lại toàn bộ (để không
+  // mất focus/con trỏ đang gõ dở trên input).
+  const total = items.reduce((s,it)=>s+(Number(it.kg)||0),0);
+  $(type==='phe'?'nlPheTotal':'nlPhoiTotal').textContent = `${fmtNum(total)} kg`;
+}
+function nlMultiAdd(type){
+  const items = nlMultiArr(type);
+  items.push({ma:'',kg:''});
+  nlMultiRender(type);
+  // Focus ngay vào ô Mã vừa thêm để gõ tiếp cho nhanh.
+  const listEl = $(type==='phe'?'nlPheList':'nlPhoiList');
+  const rows = listEl.querySelectorAll('.nl-multi-code');
+  if(rows.length) rows[rows.length-1].focus();
+}
+function nlMultiDel(type, i){
+  const items = nlMultiArr(type);
+  items.splice(i,1);
+  if(!items.length) items.push({ma:'',kg:''}); // luôn chừa lại ít nhất 1 hàng trống
+  nlMultiRender(type);
+}
+function nlMultiSetFromRecord(items, total){
+  // items: mảng chi tiết đã lưu (nếu có) — dùng khi Sửa dòng cũ.
+  // total: số phe/phoi tổng kiểu cũ (dòng ghi từ trước khi có tính năng
+  // này) — nếu chưa có chi tiết thì hiển thị lại đúng 1 hàng bằng số tổng.
+  if(Array.isArray(items) && items.length) return items.map(x=>({ma:x.ma||'', kg:(x.kg===0?0:(x.kg||''))}));
+  if(total) return [{ma:'', kg:total}];
+  return [{ma:'',kg:''}];
+}
+function nlMultiPack(type){
+  // Gói lại mảng {ma,kg} khi Lưu: bỏ các hàng hoàn toàn trống (không mã,
+  // không kg) để không lưu rác vào dữ liệu.
+  return nlMultiArr(type).filter(it=>String(it.ma||'').trim()!=='' || (Number(it.kg)||0)!==0)
+    .map(it=>({ma:String(it.ma||'').trim(), kg:Number(it.kg)||0}));
+}
+
 function nlOpenAdd(){
   if(guardSlEdit())return;
   _slEditId = null;
   $('nlModalTitle').textContent = 'Thêm dòng Sổ nguyên liệu';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
-  ['nlNguyenLieu','nlHeatLot','nlDoDanDien','nlSoLuong','nlLoaiTP','nlSoMet','nlPhe','nlPhoi','nlDonHang','nlPO','nlWO','nlGhiChu'].forEach(id=>$(id).value='');
+  ['nlNguyenLieu','nlHeatLot','nlDoDanDien','nlSoLuong','nlLoaiTP','nlSoMet','nlDonHang','nlPO','nlWO','nlGhiChu'].forEach(id=>$(id).value='');
   $('nlNgay').value = todayStr();
+  _nlPheItems = [{ma:'',kg:''}]; _nlPhoiItems = [{ma:'',kg:''}];
+  nlMultiRender('phe'); nlMultiRender('phoi');
   $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
   openModal('nlModal');
 }
@@ -17969,7 +18091,10 @@ function nlOpenEdit(id){
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   $('nlNgay').value=r.ngay||''; $('nlNguyenLieu').value=r.nguyenLieu||''; $('nlHeatLot').value=r.heatLot||'';
   $('nlDoDanDien').value=r.doDanDien||''; $('nlSoLuong').value=r.soLuong??''; $('nlLoaiTP').value=r.loaiThanhPham||'';
-  $('nlSoMet').value=r.soMetChay||''; $('nlPhe').value=r.phe??''; $('nlPhoi').value=r.phoi??'';
+  $('nlSoMet').value=r.soMetChay||'';
+  _nlPheItems = nlMultiSetFromRecord(r.pheItems, r.phe);
+  _nlPhoiItems = nlMultiSetFromRecord(r.phoiItems, r.phoi);
+  nlMultiRender('phe'); nlMultiRender('phoi');
   $('nlDonHang').value=r.khachHang||''; $('nlPO').value=r.po||''; $('nlWO').value=r.wo||''; $('nlGhiChu').value=r.ghiChu||'';
   $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
   openModal('nlModal');
@@ -17977,8 +18102,9 @@ function nlOpenEdit(id){
 function nlSave(){
   if(guardSlEdit())return;
   const ngay=$('nlNgay').value, nl=$('nlNguyenLieu').value.trim();
-  const phe = $('nlPhe').value?Number($('nlPhe').value):0;
-  const phoi = $('nlPhoi').value?Number($('nlPhoi').value):0;
+  const pheItems = nlMultiPack('phe'), phoiItems = nlMultiPack('phoi');
+  const phe = pheItems.reduce((s,it)=>s+it.kg,0);
+  const phoi = phoiItems.reduce((s,it)=>s+it.kg,0);
   if(!ngay){ $('nlErr').textContent='⚠️ Vui lòng nhập Ngày.'; $('nlErr').style.display='block'; return; }
   // Cho phép ghi ĐỘC LẬP Phế/đầu mẩu hoặc Phoi mà không cần nhập Nguyên
   // liệu — vì thực tế phế/phoi phát sinh và được ghi nhận nhiều lần hơn
@@ -17992,7 +18118,7 @@ function nlSave(){
     doDanDien: $('nlDoDanDien').value.trim(),
     soLuong: $('nlSoLuong').value?Number($('nlSoLuong').value):0,
     loaiThanhPham: $('nlLoaiTP').value.trim(), soMetChay: $('nlSoMet').value.trim(),
-    phe, phoi,
+    phe, phoi, pheItems, phoiItems,
     khachHang: $('nlDonHang').value.trim(), po: $('nlPO').value.trim(), wo: $('nlWO').value.trim(),
     ghiChu: $('nlGhiChu').value.trim(),
     updatedAt: Date.now(), updatedBy: actorName()
@@ -18215,6 +18341,10 @@ async function exportProfessionalExcel(opts){
   }
 }
 
+function nlDetailText(items){
+  if(!Array.isArray(items) || !items.length) return '';
+  return items.map(it=>`${it.ma?it.ma+': ':''}${fmtNum(it.kg)}kg`).join('; ');
+}
 function exportSlExcel(tab){
   const meta = SL_META[tab];
   const now = new Date(); const pad=n=>String(n).padStart(2,'0');
@@ -18231,11 +18361,14 @@ function exportSlExcel(tab){
         {header:'Loại TP chạy', key:'loaiThanhPham', width:14},
         {header:'Số mét chạy', key:'soMetChay', width:12},
         {header:'Phế/đầu mẩu (kg)', key:'phe', width:14, numFmt:'num'},
+        {header:'Chi tiết mã Phế/đầu mẩu', key:'pheDetail', width:26},
         {header:'Phoi (kg)', key:'phoi', width:11, numFmt:'num'},
+        {header:'Chi tiết mã Phoi', key:'phoiDetail', width:26},
         {header:'Khách hàng', key:'khachHang', width:16},
         {header:'Ghi chú', key:'ghiChu', width:22}
       ],
-      rows: slArr('nguyenLieu'), totalsCols:['soLuong','phe','phoi'],
+      rows: slArr('nguyenLieu').map(r=>({...r, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems)})),
+      totalsCols:['soLuong','phe','phoi'],
       filename:`So_nguyen_lieu_${stamp}.xlsx`
     });
   } else {
