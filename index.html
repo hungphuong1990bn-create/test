@@ -3233,6 +3233,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dt-actbtn:hover{background:var(--bg2);color:var(--brand2)}
 .dt-actbtn.danger:hover{background:var(--red-l);color:var(--red-m);border-color:var(--red-m)}
 .dt-empty{text-align:center;color:var(--text4);padding:30px 12px;font-size:13px}
+.dt-table tr.dt-row-clickable{cursor:pointer}
 .dt-foot-row td{font-weight:700;background:var(--bg2)}
 .hs-filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .hs-filter-row input,.hs-filter-row select{padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit}
@@ -4595,7 +4596,7 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-sched-rows-v::-webkit-scrollbar{display:none}
 .dh3-sched-block{display:flex;flex-direction:column;gap:6px}
 .dh3-sched-dept-hd{font-size:11.5px;font-weight:800;color:#bcd6ff;text-transform:uppercase;letter-spacing:.3px}
-.dh3-sched-period{font-size:10.5px;font-weight:700;color:#9db3e0}
+.dh3-sched-period{font-size:10.5px;font-weight:700;color:#9db3e0;flex:0 0 auto}
 .dh3-sched-group{display:flex;flex-direction:column;gap:5px;border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:6px;background:rgba(255,255,255,.02)}
 .dh3-sched-group-hd{font-size:10.5px;font-weight:800;border-radius:6px;padding:3px 8px;text-transform:uppercase;letter-spacing:.3px}
 .dh3-sched-row-v{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:#eaf1ff;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:5px 9px;cursor:pointer}
@@ -7076,6 +7077,22 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('mcModal')">Huỷ</button>
       <button class="btn btn-primary" onclick="mcSave()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- 📊 Số liệu — Chi tiết 1 dòng (bấm vào dòng trong bảng) — xem ĐẦY ĐỦ toàn
+     bộ thông tin (kể cả các trường bị ẩn/rút gọn trên bảng), có thể Sửa
+     hoặc Xoá ngay tại đây. -->
+<div class="modal kh-drawer" id="slDetailModal" onclick="if(event.target===this)closeModal('slDetailModal');">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="slDetailTitle">Chi tiết dòng dữ liệu</div>
+    <div id="slDetailBody" style="font-size:13px;color:var(--text2);line-height:1.6"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('slDetailModal')">Đóng</button>
+      <button class="btn danger" id="slDetailDeleteBtn" style="background:var(--red-l);color:var(--red-m);border:1px solid var(--red-m)" onclick="">🗑️ Xoá</button>
+      <button class="btn" style="background:var(--brand);color:#fff;flex:1" id="slDetailEditBtn" onclick="">✏️ Sửa</button>
     </div>
   </div>
 </div>
@@ -14510,11 +14527,18 @@ function dhSchedulePanelV3HTML(){
   const sheets = (DB.lichLamViec||[]).filter(s=>(s.rows||[]).length);
   const multiDept = sheets.length > 1;
   let totalCount = 0;
+  // ── "📅 Thời gian áp dụng" (sheet.period) giờ ĐÓNG BĂNG — tách khỏi khung
+  // cuộn (dhScheduleScrollBox), đặt CỐ ĐỊNH ngay dưới tiêu đề panel, KHÔNG
+  // bị cuốn trôi mất khi danh sách nhân viên tự cuộn. Nếu nhiều bộ phận có
+  // period khác nhau, liệt kê từng dòng kèm tên bộ phận để phân biệt.
+  const periodsFixedHTML = sheets.filter(s=>s.period).map(s=>{
+    const label = multiDept ? `${(s.name||'Bộ phận').replace(/</g,'&lt;')}: ` : '';
+    return `<div class="dh3-sched-period">📅 ${label}${(s.period||'').replace(/</g,'&lt;')}</div>`;
+  }).join('');
   const blocksHTML = sheets.length ? sheets.map(s=>{
     const groups = llvGroupRows(s.rows||[]);
     totalCount += (s.rows||[]).length;
     const deptHd = multiDept ? `<div class="dh3-sched-dept-hd">${(s.name||'Bộ phận').replace(/</g,'&lt;')}</div>` : '';
-    const periodHd = s.period ? `<div class="dh3-sched-period">📅 ${(s.period||'').replace(/</g,'&lt;')}</div>` : '';
     const groupsHTML = groups.map(g=>{
       const rowsHTML = g.items.map(({r},gi)=>{
         const leaveRec = llvActiveLeave(r.name, null, s);
@@ -14536,11 +14560,12 @@ function dhSchedulePanelV3HTML(){
         ${rowsHTML}
       </div>`;
     }).join('');
-    return `<div class="dh3-sched-block">${deptHd}${periodHd}${groupsHTML}</div>`;
+    return `<div class="dh3-sched-block">${deptHd}${groupsHTML}</div>`;
   }).join('') : `<div class="dh3-next-empty">Chưa có lịch làm việc nào · vào tab "Lịch làm việc" để tạo</div>`;
   return `
     <div class="dh3-panel">
       <div class="dh3-panel-hd">📅 LỊCH LÀM VIỆC <b style="font-size:10.5px;color:#8fc0ff;font-weight:700">· ${totalCount} người</b></div>
+      ${periodsFixedHTML}
       <div class="dh3-sched-rows-v" id="dhScheduleScrollBox">${blocksHTML}</div>
     </div>`;
 }
@@ -14557,7 +14582,7 @@ function dhSchedulePanelV3HTML(){
 // CHỈ cuộn khi danh sách THỰC SỰ tràn khung (còn chỗ để cuộn) — nếu ít, vừa
 // khít khung thì đứng yên, không cuộn thừa.
 var DH_AUTOSCROLL_BOXES = [
-  {id:'dhScheduleScrollBox', pauseTop:1800, pauseBottom:2600, speed:32, backMs:900},
+  {id:'dhScheduleScrollBox', pauseTop:2600, pauseBottom:3600, speed:18, backMs:1400},
   {id:'dhNextScrollBox',  pauseTop:1800, pauseBottom:2600, speed:32, backMs:900}
 ];
 var _dhAutoScrollCycleStart = {};
@@ -18524,20 +18549,20 @@ function renderSlBody(){
   let head, rows;
   if(tab==='nguyenLieu'){
     head = `<tr><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
-    rows = filtered.map(r=>`<tr>
+    rows = filtered.map(r=>`<tr class="dt-row-clickable" onclick="slViewDetail('nguyenLieu','${r.id}')">
         <td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
         <td>${fmtNum(r.soLuong)}</td><td>${esc(r.loaiThanhPham)}</td><td>${esc(r.soMetChay)}</td>
         <td>${nlMultiCellHTML(r.phe,r.pheItems)}</td><td>${nlMultiCellHTML(r.phoi,r.phoiItems)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
-        <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="slDelete('${r.id}')">🗑️</button>`:''}</td>
+        <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="event.stopPropagation();slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="event.stopPropagation();slDelete('${r.id}')">🗑️</button>`:''}</td>
       </tr>`).join('');
   } else {
     head = `<tr><th>STT</th><th>Ngày</th><th>Quy cách</th><th>Loại NL</th><th>Hàng</th><th>Số thanh</th><th>Công đoạn</th><th>Ca SX</th><th>Người SX</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
-    rows = filtered.map((r,i)=>`<tr>
+    rows = filtered.map((r,i)=>`<tr class="dt-row-clickable" onclick="slViewDetail('${tab}','${r.id}')">
         <td class="dt-stt">${i+1}</td><td>${fmtDate(r.ngay)}</td><td>${esc(r.quyCach)}</td><td>${esc(r.loaiNL)}</td>
         <td><span class="dt-pill">${esc(r.hang)||'—'}</span></td><td>${fmtNum(r.soThanh)}</td>
         <td><span class="dt-pill" style="background:${meta.colorLight};color:${meta.color}">${esc(r.congDoan)||'—'}</span></td>
         <td>${r.ca?('Ca '+esc(r.ca)):'—'}</td><td>${esc(r.nguoiSanXuat)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
-        <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="slDelete('${r.id}')">🗑️</button>`:''}</td>
+        <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="event.stopPropagation();slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="event.stopPropagation();slDelete('${r.id}')">🗑️</button>`:''}</td>
       </tr>`).join('');
   }
 
@@ -18688,6 +18713,68 @@ function slDelete(id){
   log(SL_META[tab].label, 'Xoá 1 dòng dữ liệu', id, null, null);
   renderSoLieu();
   showToast('🗑️ Đã xoá');
+}
+
+// ── Chi tiết 1 dòng Số liệu — bấm vào bất kỳ đâu trên dòng (ngoài 2 nút
+// ✏️/🗑️ ở cuối bảng) sẽ mở bảng chi tiết ĐẦY ĐỦ toàn bộ thông tin của dòng
+// đó (kể cả các trường không đủ chỗ hiển thị trên bảng như PO/WO, chi tiết
+// từng mã Phế/Phoi, người & thời điểm cập nhật gần nhất...), có nút Sửa/Xoá
+// ngay tại đây — không cần quay lại bảng tìm đúng dòng rồi bấm icon nhỏ.
+let _slDetailTab = null, _slDetailId = null;
+function slDetailField(label, value){
+  return `<div><b>${label}</b><span>${value==null||value===''?'—':value}</span></div>`;
+}
+function slViewDetail(tab, id){
+  const r = slArr(tab).find(x=>x.id===id); if(!r) return;
+  _slDetailTab = tab; _slDetailId = id;
+  const meta = SL_META[tab];
+  $('slDetailTitle').textContent = `${meta.icon} ${meta.label} · ${fmtDate(r.ngay)}`;
+  let fieldsHTML;
+  if(tab==='nguyenLieu'){
+    fieldsHTML = `<div class="kh-detail-grid">
+      ${slDetailField('Ngày', fmtDate(r.ngay))}
+      ${slDetailField('Nguyên liệu', esc(r.nguyenLieu))}
+      ${slDetailField('Mã cuộn/Heat-Lot', esc(r.heatLot))}
+      ${slDetailField('Độ dẫn điện', esc(r.doDanDien))}
+      ${slDetailField('Số lượng', fmtNum(r.soLuong)+' kg')}
+      ${slDetailField('Loại thành phẩm chạy', esc(r.loaiThanhPham))}
+      ${slDetailField('Số mét chạy', esc(r.soMetChay))}
+      ${slDetailField('Tổng phế/đầu mẩu', fmtNum(r.phe)+' kg')}
+      ${slDetailField('Chi tiết mã phế/đầu mẩu', esc(nlDetailText(r.pheItems)))}
+      ${slDetailField('Tổng phoi', fmtNum(r.phoi)+' kg')}
+      ${slDetailField('Chi tiết mã phoi', esc(nlDetailText(r.phoiItems)))}
+      ${slDetailField('Khách hàng', esc(r.khachHang))}
+      ${slDetailField('PO', esc(r.po))}
+      ${slDetailField('WO', esc(r.wo))}
+    </div>
+    ${r.ghiChu?`<div style="margin-top:10px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${esc(r.ghiChu)}</div>`:''}`;
+  } else {
+    fieldsHTML = `<div class="kh-detail-grid">
+      ${slDetailField('Ngày', fmtDate(r.ngay))}
+      ${slDetailField('Quy cách', esc(r.quyCach))}
+      ${slDetailField('Loại NL', esc(r.loaiNL))}
+      ${slDetailField('Hàng', esc(r.hang))}
+      ${slDetailField('Số thanh', fmtNum(r.soThanh))}
+      ${slDetailField('Công đoạn', esc(r.congDoan))}
+      ${slDetailField('Ca SX', r.ca?('Ca '+esc(r.ca)):'—')}
+      ${slDetailField('Người SX', esc(r.nguoiSanXuat))}
+      ${slDetailField('Khách hàng', esc(r.khachHang))}
+    </div>
+    ${r.ghiChu?`<div style="margin-top:10px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${esc(r.ghiChu)}</div>`:''}`;
+  }
+  const updHTML = (r.updatedAt||r.updatedBy) ? `<div class="kh-detail-sec"><div class="kh-detail-sec-title">🕐 Cập nhật gần nhất</div>
+    <div class="kh-detail-grid">
+      ${slDetailField('Thời điểm', r.updatedAt?fmtDateTime(r.updatedAt):'—')}
+      ${slDetailField('Người cập nhật', esc(r.updatedBy))}
+    </div></div>` : '';
+  $('slDetailBody').innerHTML = fieldsHTML + updHTML;
+  const admin = isSlEditor();
+  const editBtn = $('slDetailEditBtn'), delBtn = $('slDetailDeleteBtn');
+  editBtn.style.display = admin ? '' : 'none';
+  delBtn.style.display = admin ? '' : 'none';
+  editBtn.onclick = ()=>{ closeModal('slDetailModal'); slOpenEdit(id); };
+  delBtn.onclick = ()=>{ closeModal('slDetailModal'); slDelete(id); };
+  openModal('slDetailModal');
 }
 
 // ── Thêm / Sửa Sổ máy Rút / Đánh bóng + Cắt (form dùng chung) ─────────
