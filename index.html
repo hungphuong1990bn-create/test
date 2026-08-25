@@ -4505,6 +4505,13 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;flex:0 0 auto}
 @media (max-width:1400px){.dh3-kpi-row{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:760px){.dh3-kpi-row{grid-template-columns:repeat(2,1fr)}}
+/* TV Mode: LUÔN giữ ĐÚNG 1 hàng 6 thẻ KPI bất kể độ rộng màn hình thật của
+   TV (không áp dụng lại các mốc max-width:1400/760px ở trên — các mốc đó
+   chỉ dành cho desktop/mobile ngoài TV Mode) — tránh lỗi 6 ô KPI bị vỡ
+   xuống 3/2 cột trên TV như phản ánh. Card/chữ bên trong tự co theo
+   clamp(dvw/dvh) + nấc compact (xem khối .dh-tv-compact bên dưới) để luôn
+   vừa khít 1 hàng, không tràn/không cắt. */
+.dh-tv .dh3-kpi-row{grid-template-columns:repeat(6,1fr)!important;gap:clamp(5px,0.7dvw,14px)}
 .dh3-kpi-card{background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.14);border-left:4px solid var(--kc,#4d9bff);border-radius:12px;padding:11px 14px;display:flex;flex-direction:column;gap:5px;min-width:0;cursor:pointer;transition:background .15s}
 .dh3-kpi-card:hover{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.04))}
 .dh3-kpi-top{display:flex;align-items:center;gap:8px}
@@ -4514,10 +4521,22 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-kpi-delta{font-size:10.5px;font-weight:700;color:#9db3e0}
 .dh3-kpi-delta.up{color:#4ade80}
 .dh3-kpi-delta.warn{color:#ff9b9b}
-.dh-tv .dh3-kpi-card{padding:clamp(8px,1.3dvh,16px) clamp(10px,1.3dvw,18px)}
-.dh-tv .dh3-kpi-val{font-size:clamp(17px,2.2dvh,28px)}
-.dh-tv .dh3-kpi-lbl{font-size:clamp(9px,1.05dvh,13px)}
-.dh-tv .dh3-kpi-delta{font-size:clamp(8px,0.9dvh,12px)}
+.dh-tv .dh3-kpi-card{padding:clamp(6px,1.3dvh,16px) clamp(7px,1.3dvw,18px);gap:clamp(2px,0.5dvh,5px);min-width:0}
+.dh-tv .dh3-kpi-top{gap:clamp(4px,0.5dvw,8px);min-width:0}
+.dh-tv .dh3-kpi-ic{width:clamp(16px,2.4dvh,26px);height:clamp(16px,2.4dvh,26px);font-size:clamp(8px,1.2dvh,13px);flex-shrink:0}
+.dh-tv .dh3-kpi-val{font-size:clamp(12px,2.2dvh,28px);overflow-wrap:break-word;line-height:1.1}
+.dh-tv .dh3-kpi-lbl{font-size:clamp(6.5px,1.05dvh,13px);white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:break-word;line-height:1.15}
+.dh-tv .dh3-kpi-delta{font-size:clamp(6px,0.9dvh,12px);overflow-wrap:break-word}
+/* Các nấc thu gọn tự động (do dhFitNextQueues() gắn class khi nội dung
+   TRÀN thật — xem JS) — thu nhỏ dần hàng KPI TRƯỚC khi đụng tới khu máy/
+   bảng bên dưới, đúng thứ tự ưu tiên "padding/gap trước → chữ nặng nhất
+   (KPI) trước" đã mô tả ở dhFitNextQueues(). */
+.dh-tv.dh-tv-compact .dh3-kpi-row{gap:clamp(3px,0.45dvw,10px)}
+.dh-tv.dh-tv-compact .dh3-kpi-card{padding:clamp(4px,0.9dvh,11px) clamp(5px,0.9dvw,12px);gap:clamp(1px,0.3dvh,3px)}
+.dh-tv.dh-tv-compact-2 .dh3-kpi-val{font-size:clamp(10px,1.7dvh,21px)}
+.dh-tv.dh-tv-compact-2 .dh3-kpi-lbl{font-size:clamp(6px,0.85dvh,10.5px)}
+.dh-tv.dh-tv-compact-2 .dh3-kpi-ic{width:clamp(13px,1.9dvh,20px);height:clamp(13px,1.9dvh,20px);font-size:clamp(7px,1dvh,10px)}
+.dh-tv.dh-tv-compact-3 .dh3-kpi-delta{display:none}
 
 /* ── Khu máy (4 cột) + cột "Đơn trễ hạn" (cột 5, cùng hàng, dùng lại style
    .dh-group/.dh-group-title/.dh-card-grid đã có) — .dh3-overdue-col tái dùng
@@ -4576,14 +4595,56 @@ body.sl-fullscreen #slGearBtn{display:flex}
    dh3-wrap có overflow-y:auto — flexbox co giãn TRƯỚC KHI xét tới cuộn) ⇒
    khu vực máy "biến mất" hoàn toàn trên các màn hình có nhiều đơn hàng thật.
    Cách sửa: (1) ép TRẦN chiều cao cho hàng dưới trong TV Mode + để DANH SÁCH
-   BÊN TRONG mỗi panel tự cuộn riêng (đã có overflow-y:auto ở dh3-shift-table/
-   dh3-next-table/dh3-notif-list-v, chỉ cần thêm min-height:0 để được phép co
+   BÊN TRONG mỗi panel tự cuộn riêng (overflow-y:auto ở dh3-shift-table/
+   dh3-next-table/dh3-notif-list-v, cộng min-height:0 để được phép co
    nhỏ hơn nội dung), và (2) cho khu vực máy 1 SÀN chiều cao tối thiểu chắc
-   chắn (không bao giờ về 0), đảm bảo LUÔN hiển thị rõ dù dữ liệu nhiều/ít. */
-.dh-tv .dh3-bottom-row{flex:0 0 auto;max-height:32dvh}
-.dh-tv .dh3-panel{overflow:hidden}
-.dh-tv .dh3-shift-table,.dh-tv .dh3-next-table{min-height:0}
-.dh-tv .dh3-machine-row{flex:1 1 auto;min-height:clamp(240px,40dvh,900px)}
+   chắn (không bao giờ về 0), đảm bảo LUÔN hiển thị rõ dù dữ liệu nhiều/ít.
+   Trần hàng dưới được nâng lên (30dvh) sau khi khối "Tiến độ SX toàn nhà
+   máy" cuối trang được thu gọn lại còn 1 dải mỏng — phần chiều cao tiết
+   kiệm được nhường lại đúng cho 3 khối Ca làm việc/Đơn kế tiếp/Thông báo. */
+.dh-tv .dh3-bottom-row{flex:0 0 auto;max-height:30dvh}
+.dh-tv .dh3-panel{overflow:hidden;padding:clamp(7px,1dvh,14px) clamp(9px,1.1dvw,16px);gap:clamp(4px,0.6dvh,8px)}
+/* Ô "THÔNG TIN CA LÀM VIỆC" PHẢI hiển thị ĐẦY ĐỦ: header ca + khối ca hiện
+   tại + 3 ô điểm danh luôn cố định (flex:0 0 auto), riêng bảng danh sách
+   ca (có thể nhiều ca) được co giãn lấp đầy phần còn lại và TỰ CUỘN nội bộ
+   nếu vẫn còn dư — không bao giờ bị cắt mất bởi overflow:hidden của panel
+   cha như trước (trước đây thiếu flex:1 + overflow-y:auto nên các dòng ca
+   dư ra bị ẩn mất, không có cách nào xem lại). */
+.dh-tv .dh3-shift-current{flex:0 0 auto}
+.dh-tv .dh3-att-grid{flex:0 0 auto}
+.dh-tv .dh3-shift-table{flex:1 1 0;min-height:0;overflow-y:auto}
+.dh-tv .dh3-next-table{min-height:0}
+.dh-tv .dh3-shift-table::-webkit-scrollbar,.dh-tv .dh3-next-table::-webkit-scrollbar{width:6px}
+.dh-tv .dh3-shift-table::-webkit-scrollbar-thumb,.dh-tv .dh3-next-table::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:5px}
+.dh-tv .dh3-machine-row{flex:1 1 auto;min-height:clamp(260px,48dvh,900px)}
+/* Nấc thu gọn tự động cho PHẦN CÒN LẠI của bố cục v3 (khu máy/hàng dưới/
+   đơn trễ hạn/thông báo) — áp dụng SAU khi đã thu KPI (bước trên) vẫn chưa
+   đủ, để dhFitNextQueues() có "chỗ" để giải phóng thật sự thay vì chỉ dựa
+   vào cuộn nội bộ .dh3-wrap. Sàn chiều cao khu máy được hạ dần qua từng
+   nấc nhưng KHÔNG BAO GIỜ về 0 (đúng nguyên tắc "khu máy luôn hiển thị"). */
+.dh-tv.dh-tv-compact .dh3-wrap{gap:clamp(6px,0.8dvh,10px)}
+.dh-tv.dh-tv-compact .dh3-machine-row{gap:clamp(4px,0.6dvw,10px);min-height:clamp(200px,40dvh,900px)}
+.dh-tv.dh-tv-compact .dh3-bottom-row{max-height:25dvh;gap:clamp(4px,0.6dvw,10px)}
+.dh-tv.dh-tv-compact .dh3-panel{padding:clamp(5px,0.75dvh,11px) clamp(6px,0.85dvw,12px);gap:clamp(3px,0.45dvh,6px)}
+.dh-tv.dh-tv-compact .dh3-overdue-col{padding:clamp(6px,0.8dvh,10px) clamp(7px,0.9dvw,10px)}
+.dh-tv.dh-tv-compact-2 .dh3-machine-row{min-height:clamp(160px,32dvh,900px)}
+.dh-tv.dh-tv-compact-2 .dh3-bottom-row{max-height:21dvh}
+.dh-tv.dh-tv-compact-2 .dh3-panel-hd,.dh-tv.dh-tv-compact-2 .dh3-overdue-hd,.dh-tv.dh-tv-compact-2 .dh3-notif-hd{font-size:clamp(8px,1.05dvh,12px)}
+.dh-tv.dh-tv-compact-2 .dh3-shift-row,.dh-tv.dh-tv-compact-2 .dh3-next-row,.dh-tv.dh-tv-compact-2 .dh3-overdue-row,.dh-tv.dh-tv-compact-2 .dh3-notif-row-v{font-size:clamp(8px,1dvh,11px);padding:clamp(3px,0.45dvh,6px) clamp(5px,0.6dvw,8px)}
+.dh-tv.dh-tv-compact-2 .dh3-shift-current{padding:clamp(4px,0.6dvh,8px) clamp(6px,0.85dvw,10px)}
+.dh-tv.dh-tv-compact-2 .dh3-shift-current-lbl{font-size:clamp(9px,1.1dvh,12.5px)}
+.dh-tv.dh-tv-compact-2 .dh3-shift-current-time{font-size:clamp(8px,0.95dvh,11px)}
+.dh-tv.dh-tv-compact-2 .dh3-shift-current-remain{font-size:clamp(11px,1.4dvh,16px)}
+.dh-tv.dh-tv-compact-2 .dh3-att-grid{gap:clamp(4px,0.6dvw,8px)}
+.dh-tv.dh-tv-compact-2 .dh3-att-stat{padding:clamp(3px,0.5dvh,7px) 4px}
+.dh-tv.dh-tv-compact-2 .dh3-att-stat b{font-size:clamp(11px,1.5dvh,18px)}
+.dh-tv.dh-tv-compact-2 .dh3-att-stat span{font-size:clamp(6px,0.75dvh,9px)}
+.dh-tv.dh-tv-compact-3 .dh3-machine-row{min-height:clamp(130px,26dvh,900px)}
+.dh-tv.dh-tv-compact-3 .dh3-bottom-row{max-height:19dvh}
+.dh-tv.dh-tv-compact-3 .dh3-att-grid{gap:clamp(3px,0.4dvw,6px)}
+.dh-tv.dh-tv-compact-3 .dh3-att-stat{padding:clamp(2px,0.35dvh,5px) 3px}
+.dh-tv.dh-tv-compact-3 .dh3-att-stat b{font-size:clamp(9.5px,1.3dvh,15px)}
+.dh-tv.dh-tv-compact-3 .dh3-att-stat span{font-size:clamp(5.5px,0.65dvh,8px)}
 .dh3-panel{flex:1 1 0;min-width:0;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:11px 14px;display:flex;flex-direction:column;gap:8px}
 .dh3-panel-hd{font-size:12px;font-weight:800;color:#bcd6ff;text-transform:uppercase;letter-spacing:.3px}
 
@@ -4607,12 +4668,15 @@ body.sl-fullscreen #slGearBtn{display:flex}
 
 /* Đơn kế tiếp */
 .dh3-next-table{display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow:hidden}
-.dh3-next-cols{display:grid;grid-template-columns:.8fr 1fr 1.1fr .8fr;gap:6px;font-size:9px;font-weight:800;color:#9db3e0;text-transform:uppercase;padding:0 2px}
-.dh3-next-row{display:grid;grid-template-columns:.8fr 1fr 1.1fr .8fr;gap:6px;align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px}
+.dh3-next-cols{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,.75fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,.55fr) minmax(0,.5fr);gap:6px;font-size:9px;font-weight:800;color:#9db3e0;text-transform:uppercase;padding:0 2px}
+.dh3-next-row{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,.75fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,.55fr) minmax(0,.5fr);gap:6px;align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px}
 .dh3-next-row:hover{background:rgba(255,255,255,.09)}
+.dh3-next-stage,.dh3-next-machine,.dh3-next-cust,.dh3-next-typespec,.dh3-next-mat,.dh3-next-qty{min-width:0}
 .dh3-next-stage{font-weight:800;color:#8fc0ff}
 .dh3-next-machine{font-weight:700;color:#9db3e0;overflow-wrap:break-word;line-height:1.2}
 .dh3-next-cust{font-weight:800;color:#eaf1ff;overflow-wrap:break-word;line-height:1.2}
+.dh3-next-typespec{font-weight:700;color:#9db3e0;overflow-wrap:break-word;line-height:1.2}
+.dh3-next-mat{font-weight:700;color:#8fc0ff;overflow-wrap:break-word;line-height:1.2}
 .dh3-next-qty{font-weight:700;color:#bcd6ff;text-align:right}
 .dh3-next-empty{font-size:11.5px;color:#6f88bd;text-align:center;padding:14px 0}
 .dh3-next-more{font-size:10.5px;font-weight:800;color:#8fc0ff;text-align:center;padding:4px 0 0;flex:0 0 auto}
@@ -4641,6 +4705,22 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-total-legend{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:700;color:#9db3e0}
 .dh3-total-legend span{display:flex;align-items:center;gap:5px}
 .dh3-total-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dh-tv .dh3-total-panel{padding:clamp(5px,0.85dvh,11px) clamp(10px,1.4dvw,18px);gap:clamp(10px,1.4dvw,20px);flex-wrap:nowrap;overflow:hidden}
+.dh-tv .dh3-total-hd{font-size:clamp(8px,1.05dvh,11.5px)}
+.dh-tv .dh3-total-stats{gap:clamp(8px,1.2dvw,18px);min-width:0}
+.dh-tv .dh3-total-stat b{font-size:clamp(10px,1.6dvh,16px)}
+.dh-tv .dh3-total-stat span{font-size:clamp(5.5px,0.7dvh,8px)}
+.dh-tv .dh3-total-bar-wrap{height:clamp(4px,0.65dvh,7px)}
+.dh-tv .dh3-total-donut-wrap{gap:clamp(5px,0.7dvw,8px)}
+/* Donut riêng của khối tổng — thu nhỏ hẳn (không đụng .dh2-donut ở nơi
+   khác) vì đây chỉ còn là 1 dải mỏng cuối trang, không cần donut lớn như
+   trước — phần chiều cao tiết kiệm được nhường lại cho 3 khối Ca làm việc/
+   Đơn kế tiếp/Thông báo phía trên. */
+.dh-tv .dh3-total-panel .dh2-donut{width:clamp(22px,3.2dvh,34px);height:clamp(22px,3.2dvh,34px)}
+.dh-tv .dh3-total-panel .dh2-donut-hole b{font-size:clamp(7px,1.05dvh,11px)}
+.dh-tv .dh3-total-panel .dh2-donut-hole span{font-size:clamp(4.5px,0.55dvh,6.5px)}
+.dh-tv .dh3-total-legend{font-size:clamp(5.5px,0.7dvh,8px);gap:1px}
+.dh-tv .dh3-total-legend i{width:6px;height:6px}
 
 /* ── Header v3: date box + nút Đồng bộ + chuông thông báo + tài khoản ── */
 .dh3-tb-datebox{font-size:11px;font-weight:700;color:#9db3e0;display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:4px 10px}
@@ -14077,7 +14157,13 @@ function dhFitNextQueues(){
       moreEl.style.display = rest>0 ? '' : 'none';
     }
   });
-  const isOverflowing = ()=> wrap.scrollHeight > wrap.clientHeight + 1 || wrap.scrollWidth > wrap.clientWidth + 1;
+  // dh3Wrap (bố cục v3 hiện tại) tự có overflow-y:auto riêng nên PHẦN TRÀN
+  // bị "nuốt" âm thầm vào thanh cuộn nội bộ của chính nó — nếu chỉ đo
+  // wrap (#dhWrap) như trước, wrap sẽ KHÔNG BAO GIỜ báo tràn và các nấc
+  // thu gọn (dh-tv-compact/-2/-3) sẽ không bao giờ được kích hoạt. Đo
+  // thêm cả dh3Wrap để phát hiện đúng tình trạng tràn thật.
+  const dh3Wrap = wrap.querySelector('.dh3-wrap');
+  const isOverflowing = ()=> wrap.scrollHeight > wrap.clientHeight + 1 || wrap.scrollWidth > wrap.clientWidth + 1 || (dh3Wrap && (dh3Wrap.scrollHeight > dh3Wrap.clientHeight + 1 || dh3Wrap.scrollWidth > dh3Wrap.clientWidth + 1));
   // Bước 1: chỉ padding/gap/spacing — chưa đụng chữ.
   if(isOverflowing()){
     wrap.classList.add('dh-tv-compact');
@@ -14460,13 +14546,39 @@ function dhShiftPanelV3HTML(){
     </div>`;
 }
 
+// ── Tên máy RÚT GỌN cho khu vực "ĐƠN KẾ TIẾP" (TV Mode) — cột "Máy" chỉ cần
+// đủ để NHẬN DIỆN đúng máy, không cần lặp lại cả cụm dài (đã có cột "Công
+// đoạn" đứng ngay trước rồi nên chữ "Máy" là dư). Quy tắc:
+//   1. Luôn bỏ chữ "Máy " ở đầu.
+//   2. Riêng nhóm "Máy đùn": mã máy (TJ550/TJ400/TJ300...) đã đủ nhận diện,
+//      bỏ luôn từ "đùn" — VD "Máy đùn TJ550 (1)" → "TJ550 (1)".
+//   3. Các nhóm còn lại (Rút/Đánh bóng/Cắt): giữ tên nhóm (viết hoa chữ đầu)
+//      + số hiệu, chuẩn hoá thành dạng gọn "Tên nhóm - số (chỉ số)" —
+//      VD "Máy rút 100 - 1" → "Rút - 100 (1)", "Máy cắt 1" → "Cắt - 1".
+function dhShortMachineName(m){
+  if(!m || !m.name) return m?m.group||'':'';
+  let rest = String(m.name).replace(/^Máy\s+/i, '').trim();
+  if(m.group === 'Máy đùn'){
+    return rest.replace(/^đùn\s+/i, '').trim() || rest;
+  }
+  const groupWord = String(m.group||'').replace(/^Máy\s+/i, '').trim();
+  if(!groupWord) return rest;
+  let suffix = rest.replace(new RegExp('^'+groupWord+'\\s*','i'), '').trim();
+  suffix = suffix.replace(/^-\s*/, '').trim();
+  suffix = suffix.replace(/^(\d+)\s*-\s*(\d+)$/, '$1 ($2)');
+  const groupLabel = groupWord.charAt(0).toUpperCase() + groupWord.slice(1);
+  return suffix ? `${groupLabel} - ${suffix}` : groupLabel;
+}
+
 // ── "ĐƠN KẾ TIẾP (SẮP CHẠY)" — TỰ ĐỘNG lấy đúng từ hàng đợi phân công máy
 // (dhMachineQueue/machineRuntimeStatus, CÙNG NGUỒN với khu vực máy) nên luôn
 // đồng bộ 100% với phân công thực tế — không lưu số liệu riêng nào khác. Từ
 // khi khu vực máy không còn hiển thị "ĐƠN CHẠY TIẾP" riêng trên từng thẻ nữa,
 // khối này liệt kê ĐẦY ĐỦ TẤT CẢ đơn đang chờ của MỌI máy (không chỉ đơn kế
 // tiếp gần nhất mỗi máy), sắp theo mức ưu tiên/ngày tạo. Chỉ hiển thị TÊN
-// KHÁCH HÀNG, không hiển thị mã đơn hàng.
+// KHÁCH HÀNG, không hiển thị mã đơn hàng. Cột "Máy" hiển thị tên RÚT GỌN
+// (xem dhShortMachineName ở trên) — VD "TJ550 (1)" / "Rút - 100 (1)" — thay
+// vì tên đầy đủ, cho gọn & dễ đọc từ xa trên màn TV.
 function dhNextQueueListV3(){
   const rows = [];
   MACHINES.forEach(m=>{
@@ -14474,7 +14586,7 @@ function dhNextQueueListV3(){
     const runningOrder = dhOrderAtMachine(m.id);
     const queue = (rs.queue||[]).filter(q=>!runningOrder || q.id!==runningOrder.id);
     const st = ASSIGN_STAGES.find(s=>s.group===m.group);
-    queue.forEach(q=>rows.push({stage: st?st.label:m.group, machine:m.name, order:q}));
+    queue.forEach(q=>rows.push({stage: st?st.label:m.group, machine:dhShortMachineName(m), order:q}));
   });
   rows.sort((a,b)=>{
     const pa=parseInt(String(a.order.priority||'GẤP 9').replace('GẤP ',''))||9;
@@ -14494,13 +14606,15 @@ function dhNextQueuePanelV3HTML(){
       <span class="dh3-next-stage">${r.stage}</span>
       <span class="dh3-next-machine">${r.machine}</span>
       <span class="dh3-next-cust">${(r.order.customer||'—').replace(/</g,'&lt;')}</span>
+      <span class="dh3-next-typespec">${r.order.type?`${r.order.type} | `:''}${specStr(r.order)}</span>
+      <span class="dh3-next-mat">${r.order.material||'—'}</span>
       <span class="dh3-next-qty">${(r.order.qty||0).toLocaleString('vi-VN')}</span>
     </div>`).join('') : `<div class="dh3-next-empty">Không có đơn chờ chạy tiếp</div>`;
   return `
     <div class="dh3-panel">
       <div class="dh3-panel-hd">⏭️ ĐƠN KẾ TIẾP (SẮP CHẠY) <b style="font-size:10.5px;color:#8fc0ff;font-weight:700">· ${all.length} đơn</b></div>
       <div class="dh3-next-table">
-        <div class="dh3-next-cols"><span>Công đoạn</span><span>Máy</span><span>Khách hàng</span><span>SL</span></div>
+        <div class="dh3-next-cols"><span>Công đoạn</span><span>Máy</span><span>Khách hàng</span><span>Loại / Quy cách</span><span>Nguyên liệu</span><span>SL</span></div>
         ${rowsHTML}
         ${rest>0?`<div class="dh3-next-more">+${rest} đơn khác trong hàng đợi</div>`:''}
       </div>
