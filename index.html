@@ -4576,7 +4576,8 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh-tv .dh3-notif-row{font-size:clamp(9.5px,1.05dvh,14px)}
 /* Biến thể DỌC dùng trong cột "Thông báo" ở hàng dưới (thay cho khối full-
    width cũ) — mỗi dòng cho phép xuống dòng (không cắt "..."), cuộn nếu nhiều. */
-.dh3-notif-list-v{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;overflow-y:auto}
+.dh3-notif-list-v{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.dh3-notif-list-v::-webkit-scrollbar{display:none}
 .dh3-notif-row-v{display:flex;align-items:flex-start;gap:7px;font-size:11px;font-weight:700;color:#eaf1ff;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 9px;cursor:pointer}
 .dh3-notif-row-v:hover{background:rgba(255,255,255,.09)}
 .dh3-notif-txt-v{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25}
@@ -4614,8 +4615,8 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh-tv .dh3-att-grid{flex:0 0 auto}
 .dh-tv .dh3-shift-table{flex:1 1 0;min-height:0;overflow-y:auto}
 .dh-tv .dh3-next-table{min-height:0}
-.dh-tv .dh3-shift-table::-webkit-scrollbar,.dh-tv .dh3-next-table::-webkit-scrollbar{width:6px}
-.dh-tv .dh3-shift-table::-webkit-scrollbar-thumb,.dh-tv .dh3-next-table::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:5px}
+.dh-tv .dh3-shift-table::-webkit-scrollbar{width:6px}
+.dh-tv .dh3-shift-table::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:5px}
 .dh-tv .dh3-machine-row{flex:1 1 auto;min-height:clamp(260px,48dvh,900px)}
 /* Nấc thu gọn tự động cho PHẦN CÒN LẠI của bố cục v3 (khu máy/hàng dưới/
    đơn trễ hạn/thông báo) — áp dụng SAU khi đã thu KPI (bước trên) vẫn chưa
@@ -4668,7 +4669,12 @@ body.sl-fullscreen #slGearBtn{display:flex}
 
 /* Đơn kế tiếp */
 .dh3-next-table{display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow:hidden}
-.dh3-next-cols{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,.75fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,.55fr) minmax(0,.5fr);gap:6px;font-size:9px;font-weight:800;color:#9db3e0;text-transform:uppercase;padding:0 2px}
+.dh3-next-cols{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,.75fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,.55fr) minmax(0,.5fr);gap:6px;font-size:9px;font-weight:800;color:#9db3e0;text-transform:uppercase;padding:0 2px;flex:0 0 auto}
+/* .dh3-next-rows = khung CUỘN riêng (header .dh3-next-cols ở trên đứng cố
+   định, không cuộn theo) — auto-scroll (xem DH_AUTOSCROLL_BOXES) chỉ tác
+   động lên khung này qua id="dhNextScrollBox". */
+.dh3-next-rows{display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.dh3-next-rows::-webkit-scrollbar{display:none}
 .dh3-next-row{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,.75fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,.55fr) minmax(0,.5fr);gap:6px;align-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px}
 .dh3-next-row:hover{background:rgba(255,255,255,.09)}
 .dh3-next-stage,.dh3-next-machine,.dh3-next-cust,.dh3-next-typespec,.dh3-next-mat,.dh3-next-qty{min-width:0}
@@ -4680,7 +4686,6 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-next-qty{font-weight:700;color:#bcd6ff;text-align:right}
 .dh3-next-empty{font-size:11.5px;color:#6f88bd;text-align:center;padding:14px 0}
 .dh3-next-more{font-size:10.5px;font-weight:800;color:#8fc0ff;text-align:center;padding:4px 0 0;flex:0 0 auto}
-.dh-tv .dh3-next-table{overflow-y:auto}
 
 /* Tổng hợp công đoạn */
 .dh3-stage-table{display:flex;flex-direction:column;gap:5px}
@@ -14483,9 +14488,63 @@ function dhNotifPanelV3HTML(){
   return `
     <div class="dh3-panel">
       <div class="dh3-panel-hd">🔔 THÔNG BÁO</div>
-      <div class="dh3-notif-list-v">${rows}</div>
+      <div class="dh3-notif-list-v" id="dhNotifScrollBox">${rows}</div>
     </div>`;
 }
+
+// ── TỰ ĐỘNG CUỘN các ô danh sách dài (Thông báo, Đơn kế tiếp...) — cuộn dần
+// xuống hết danh sách, dừng lại đọc ở cuối, cuộn ngược lên đầu, dừng lại ở
+// đầu, rồi lặp lại vô hạn. Chạy như MỘT VÒNG LẶP ĐỘC LẬP theo mốc THỜI GIAN
+// THẬT (Date.now()) cho TỪNG Ô riêng biệt (đăng ký qua DH_AUTOSCROLL_BOXES
+// bên dưới), KHÔNG gắn vào vòng đời của 1 phần tử DOM cụ thể — vì
+// renderDieuHanh() có thể dựng lại toàn bộ khung bất cứ lúc nào khi có dữ
+// liệu mới, nên nếu tính theo phần tử sẽ bị giật/nhảy lại từ đầu mỗi lần
+// re-render. Nhờ tính theo thời gian, dù phần tử bị thay mới giữa chừng,
+// hiệu ứng cuộn vẫn liền mạch, không giật.
+// CHỈ cuộn khi danh sách THỰC SỰ tràn khung (còn chỗ để cuộn) — nếu ít, vừa
+// khít khung thì đứng yên, không cuộn thừa.
+var DH_AUTOSCROLL_BOXES = [
+  {id:'dhNotifScrollBox', pauseTop:1800, pauseBottom:2600, speed:32, backMs:900},
+  {id:'dhNextScrollBox',  pauseTop:1800, pauseBottom:2600, speed:32, backMs:900}
+];
+var _dhAutoScrollCycleStart = {};
+function _dhAutoScrollTick(){
+  DH_AUTOSCROLL_BOXES.forEach(cfg=>{
+    const el = document.getElementById(cfg.id);
+    if(!el){
+      _dhAutoScrollCycleStart[cfg.id] = null; // ô không có mặt (đang ở tab khác) — lần sau xuất hiện sẽ bắt đầu lại từ đầu chu kỳ cho tự nhiên
+      return;
+    }
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    if(maxScroll <= 4){
+      if(el.scrollTop !== 0) el.scrollTop = 0;
+      _dhAutoScrollCycleStart[cfg.id] = null; // không có gì để cuộn — giữ chu kỳ ở trạng thái nghỉ
+      return;
+    }
+    // Thời lượng cuộn xuống tỉ lệ với độ dài thực tế cần cuộn (danh sách
+    // càng dài cuộn càng lâu để vẫn đọc kịp), có trần/sàn tránh quá
+    // nhanh/quá chậm.
+    const downMs = Math.max(2500, Math.min(20000, (maxScroll / cfg.speed) * 1000));
+    const total = cfg.pauseTop + downMs + cfg.pauseBottom + cfg.backMs;
+    if(_dhAutoScrollCycleStart[cfg.id]==null) _dhAutoScrollCycleStart[cfg.id] = Date.now();
+    const t = (Date.now() - _dhAutoScrollCycleStart[cfg.id]) % total;
+    const ease = p => 0.5 - 0.5*Math.cos(Math.PI*p); // ease-in-out, cuộn êm không giật
+    let pos;
+    if(t < cfg.pauseTop){
+      pos = 0;
+    } else if(t < cfg.pauseTop + downMs){
+      pos = maxScroll * ease((t - cfg.pauseTop) / downMs);
+    } else if(t < cfg.pauseTop + downMs + cfg.pauseBottom){
+      pos = maxScroll;
+    } else {
+      const p = (t - cfg.pauseTop - downMs - cfg.pauseBottom) / cfg.backMs;
+      pos = maxScroll * (1 - ease(p));
+    }
+    el.scrollTop = pos;
+  });
+  requestAnimationFrame(_dhAutoScrollTick);
+}
+requestAnimationFrame(_dhAutoScrollTick);
 
 // ── "THÔNG TIN CA LÀM VIỆC" — chia đúng 3 ca × 8 giờ (06:00-14:00 /
 // 14:00-22:00 / 22:00-06:00), ca hiện tại nổi bật + đếm ngược thời gian còn
@@ -14596,7 +14655,7 @@ function dhNextQueueListV3(){
   });
   return rows;
 }
-var DH3_NEXT_QUEUE_MAX_SHOW = 10;
+var DH3_NEXT_QUEUE_MAX_SHOW = 40; // trần an toàn (phòng dữ liệu lỗi/vô hạn) — bình thường danh sách cuộn hết, không còn cắt bớt như trước
 function dhNextQueuePanelV3HTML(){
   const all = dhNextQueueListV3();
   const rows = all.slice(0, DH3_NEXT_QUEUE_MAX_SHOW);
@@ -14615,8 +14674,10 @@ function dhNextQueuePanelV3HTML(){
       <div class="dh3-panel-hd">⏭️ ĐƠN KẾ TIẾP (SẮP CHẠY) <b style="font-size:10.5px;color:#8fc0ff;font-weight:700">· ${all.length} đơn</b></div>
       <div class="dh3-next-table">
         <div class="dh3-next-cols"><span>Công đoạn</span><span>Máy</span><span>Khách hàng</span><span>Loại / Quy cách</span><span>Nguyên liệu</span><span>SL</span></div>
-        ${rowsHTML}
-        ${rest>0?`<div class="dh3-next-more">+${rest} đơn khác trong hàng đợi</div>`:''}
+        <div class="dh3-next-rows" id="dhNextScrollBox">
+          ${rowsHTML}
+          ${rest>0?`<div class="dh3-next-more">+${rest} đơn khác trong hàng đợi</div>`:''}
+        </div>
       </div>
     </div>`;
 }
