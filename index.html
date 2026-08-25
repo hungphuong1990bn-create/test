@@ -4603,6 +4603,8 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-sched-stt{flex:0 0 auto;min-width:16px;text-align:center;font-weight:800;color:#8fc0ff}
 .dh3-sched-name{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25}
 .dh3-sched-badge{flex:0 0 auto;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.dh3-sched-meta{font-weight:600;color:#9db3e0;font-size:.92em}
+.dh3-sched-sep{color:#5a6d94;font-weight:600;margin:0 5px}
 .dh-tv .dh3-sched-row-v{font-size:clamp(9.5px,1.05dvh,14px)}
 .dh-tv .dh3-sched-group-hd{font-size:clamp(8.5px,0.95dvh,12px)}
 .dh-tv.dh-tv-compact-2 .dh3-sched-row-v{font-size:clamp(8px,1dvh,11px);padding:clamp(3px,0.45dvh,6px) clamp(5px,0.6dvw,8px)}
@@ -14517,9 +14519,15 @@ function dhSchedulePanelV3HTML(){
       const rowsHTML = g.items.map(({r},gi)=>{
         const leaveRec = llvActiveLeave(r.name, null, s);
         const badge = leaveRec ? `<span class="dh3-sched-badge" style="background:#cffafe;color:#0e7490">🏖️ ${(leaveRec.loai||'Nghỉ').toString().replace(/</g,'&lt;')}</span>` : '';
+        const dept = llvWorkerDept(r.name);
+        const shiftShort = LLV_SHIFT_SHORT[g.key] || '';
+        const deptHtml = dept ? `<span class="dh3-sched-sep">|</span><span class="dh3-sched-meta">${dept.replace(/</g,'&lt;')}</span>` : '';
+        const shiftHtml = shiftShort ? `<span class="dh3-sched-sep">|</span><span class="dh3-sched-meta">${shiftShort}</span>` : '';
         return `<div class="dh3-sched-row-v" onclick="goTab('lichLamViec')">
           <span class="dh3-sched-stt">${gi+1}</span>
           <span class="dh3-sched-name">${(r.name||'—').replace(/</g,'&lt;')}</span>
+          ${deptHtml}
+          ${shiftHtml}
           ${badge}
         </div>`;
       }).join('');
@@ -17381,6 +17389,21 @@ function llvGroupRows(rows){
   const groups = {};
   rows.forEach((r,i)=>{ const k = llvShiftKey(r.time); (groups[k]=groups[k]||[]).push({r,i}); });
   return LLV_SHIFT_ORDER.filter(k=>groups[k] && groups[k].length).map(k=>({key:k, meta:LLV_SHIFT_META[k], items:groups[k]}));
+}
+
+// Nhãn CA rút gọn (không icon) — dùng để in kèm tên từng người, ví dụ "Ca 2",
+// khác với LLV_SHIFT_META.label (bản đầy đủ có icon, dùng cho tiêu đề nhóm).
+const LLV_SHIFT_SHORT = { ca1:'Ca 1', ca2:'Ca 2', ca3:'Ca 3', hc:'HC', tangca:'Tăng ca', nghi:'Nghỉ', khac:'Chưa phân ca' };
+
+// ── Dò BỘ PHẬN của 1 nhân viên, lấy TRỰC TIẾP từ DB.workers (mục "Danh sách
+// NV" ở tab Quản lý nhân sự — w.boPhan), khớp theo TÊN (không phân biệt
+// hoa/thường, bỏ khoảng trắng thừa). Không tự suy diễn — nếu không tìm thấy
+// hồ sơ nhân viên khớp tên thì trả về '' (không hiển thị).
+function llvWorkerDept(name){
+  const nm = (name||'').trim().toLowerCase();
+  if(!nm) return '';
+  const w = (DB.workers||[]).find(x=>(x.name||'').trim().toLowerCase()===nm);
+  return w && w.boPhan ? w.boPhan.toString().trim() : '';
 }
 
 function llvAttIcon(type, name){
