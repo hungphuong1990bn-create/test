@@ -4026,14 +4026,22 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh-card-main{display:flex;flex-direction:column;gap:7px}
 
 /* Khách hàng — nổi bật nhất, to rõ nhất trên thẻ; cờ TRỄ (nếu có) nằm gọn bên phải cùng hàng */
-.dh-card-cust{display:flex;align-items:center;gap:8px;font-size:16.5px;font-weight:800;color:#fff;line-height:1.22;position:relative;z-index:1;letter-spacing:.1px}
+.dh-card-cust{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;color:#fff;line-height:1.25;position:relative;z-index:1;letter-spacing:.1px}
 .dh-card-cust::before{content:'👤 '}
-.dh-card-cust-name{overflow-wrap:break-word;white-space:normal;flex:1;min-width:0;line-height:1.2}
-.dh-card-cust-mat{font-size:.78em;font-weight:700;color:#9db3e0}
+.dh-card-cust-name{overflow-wrap:break-word;word-break:break-word;white-space:normal;flex:1;min-width:0;line-height:1.25}
+.dh-card-cust-mat{font-size:.76em;font-weight:700;color:#9db3e0}
+
+/* Hàng "Quy cách | Khối lượng | Ưu tiên" — 3 chip xếp ngang, TỰ XUỐNG DÒNG
+   (flex-wrap:wrap) khi không đủ bề rộng, không bao giờ cắt chữ hay tràn ra
+   ngoài viền thẻ (mỗi chip max-width:100% + overflow-wrap:break-word). */
+.dh-card-spec-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;position:relative;z-index:1}
 
 /* Quy cách — to, rõ, dạng pill nổi bật */
-.dh-card-spec{font-size:14.5px;font-weight:800;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
-  border-radius:9px;padding:5px 10px;display:inline-block;width:fit-content;max-width:100%;letter-spacing:.1px;position:relative;z-index:1}
+.dh-card-spec{font-size:16px;font-weight:800;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:9px;padding:5px 11px;display:inline-block;width:fit-content;max-width:100%;overflow-wrap:break-word;white-space:normal;letter-spacing:.1px;position:relative;z-index:1}
+.dh-card-kg{font-size:13.5px;font-weight:800;color:#bcd6ff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
+  border-radius:9px;padding:5px 11px;display:inline-block;width:fit-content;max-width:100%;overflow-wrap:break-word;white-space:normal}
+.dh-card-pri{font-size:13.5px;font-weight:800;border:1px solid;border-radius:9px;padding:5px 11px;display:inline-block;width:fit-content;max-width:100%;overflow-wrap:break-word;white-space:normal}
 
 .dh-card-flag{margin-left:auto;flex-shrink:0;font-size:10px;font-weight:800;color:#fde68a;background:rgba(245,158,11,.18);border:1px solid #f59e0b77;border-radius:6px;padding:2px 7px;animation:dhAlertBlink 1.4s ease-in-out infinite}
 
@@ -4171,10 +4179,15 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh-tv .dh-card-main{flex:1.6 1 0;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:clamp(2px,0.4dvh,7px)}
 .dh-tv .dh-card-empty{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8px,1dvh,13px);padding:clamp(2px,0.6dvh,10px) 0 clamp(2px,0.35dvh,6px)}
 /* Khách hàng (kèm cờ TRỄ nếu có, cùng 1 hàng) */
-.dh-tv .dh-card-cust{flex:0 1 auto;min-height:0;overflow:visible;font-size:clamp(9px,1.3dvh,18px);gap:clamp(3px,0.5dvh,8px);align-items:flex-start}
-.dh-tv .dh-card-cust-name{overflow-wrap:break-word;white-space:normal;line-height:1.18}
+.dh-tv .dh-card-cust{flex:0 1 auto;min-height:0;overflow:visible;font-size:clamp(9.5px,1.45dvh,20px);gap:clamp(3px,0.5dvh,8px);align-items:flex-start}
+.dh-tv .dh-card-cust-name{overflow-wrap:break-word;white-space:normal;line-height:1.2}
+/* Hàng "Quy cách | Khối lượng | Ưu tiên" — flex-wrap để KHÔNG BAO GIỜ bị cắt
+   hay tràn viền, kể cả khi thẻ hẹp: chip nào không đủ chỗ tự xuống dòng
+   tiếp theo thay vì bị ép co lại tới mức không đọc được. */
+.dh-tv .dh-card-spec-row{flex:0 1 auto;min-height:0;overflow:visible;gap:clamp(3px,0.4dvh,6px) clamp(4px,0.5dvh,8px)}
 /* Quy cách */
-.dh-tv .dh-card-spec{flex:0 1 auto;min-height:0;max-width:100%;overflow-wrap:break-word;white-space:normal;line-height:1.18;font-size:clamp(8px,1.1dvh,14px);padding:clamp(1px,0.35dvh,5px) clamp(5px,0.75dvh,10px);border-radius:clamp(4px,0.55dvh,8px)}
+.dh-tv .dh-card-spec{flex:0 1 auto;min-height:0;max-width:100%;overflow-wrap:break-word;white-space:normal;line-height:1.2;font-size:clamp(8.5px,1.25dvh,16px);padding:clamp(1px,0.35dvh,5px) clamp(5px,0.75dvh,10px);border-radius:clamp(4px,0.55dvh,8px)}
+.dh-tv .dh-card-kg,.dh-tv .dh-card-pri{flex:0 1 auto;min-height:0;max-width:100%;overflow-wrap:break-word;white-space:normal;line-height:1.2;font-size:clamp(7.5px,1.05dvh,13.5px);padding:clamp(1px,0.35dvh,5px) clamp(5px,0.75dvh,10px);border-radius:clamp(4px,0.55dvh,8px)}
 .dh-tv .dh-card-flag{flex-shrink:0;font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.2dvh,3px) clamp(3px,0.5dvh,6px)}
 /* Tiến độ + sản lượng — khối "nặng" nhất (có vòng tròn %), được cấp tỉ
    trọng co giãn lớn nhất trong phần trên để nhường chỗ trước tiên khi card
@@ -4480,6 +4493,7 @@ body.sl-fullscreen #slGearBtn{display:flex}
    nhỏ tới mức khó đọc. */
 .dh-tv.dh-tv-compact-3 .dh-card-cust{font-size:clamp(8px,1.15dvh,16px)}
 .dh-tv.dh-tv-compact-3 .dh-card-spec{font-size:clamp(7px,0.95dvh,12px)}
+.dh-tv.dh-tv-compact-3 .dh-card-kg,.dh-tv.dh-tv-compact-3 .dh-card-pri{font-size:clamp(6.5px,0.85dvh,11px)}
 .dh-tv.dh-tv-compact-3 .dh-card-status{font-size:clamp(6px,0.75dvh,10.5px)}
 .dh-tv.dh-tv-compact-3 .dh-card-qty span{font-size:clamp(6px,0.8dvh,10.5px)}
 .dh-tv.dh-tv-compact-3 .dh-ring{width:clamp(14px,2.4dvh,42px);height:clamp(14px,2.4dvh,42px);font-size:clamp(6px,0.8dvh,10px)}
@@ -14096,6 +14110,7 @@ function dhMachineCard(m){
   const qty = o.qty||0, done = o.doneQty||0;
   const qtyPct = qty ? Math.min(100,Math.round(done/qty*100)) : 0;
   const overdue = khIsOverdue(o);
+  const pc = PRI_COLOR[o.priority]||'#64748b';
   return `<div class="dh-card ${statusCls}${overdue?' dh-card-overdue':''}" onclick="khViewDetail('${o.id}')">
     <div class="dh-card-hd"><span class="dh-card-ic">${m.icon}</span><span class="dh-card-name">${m.name}</span><span class="dh-status-chip">${rs.label}</span></div>
     <div class="dh-card-body">
@@ -14104,9 +14119,18 @@ function dhMachineCard(m){
              "Á Châu | B* | Bo cạnh" — thêm "Loại" (o.type) vào SAU tên khách
              hàng và nguyên liệu (trước đây chỉ có "Tên khách hàng (Nguyên
              liệu)"), ngăn cách bằng dấu "|" cho dễ đọc, chỉ hiện "| Loại" khi
-             đơn CÓ dữ liệu Loại (tránh dư dấu "|" nếu thiếu). -->
+             đơn CÓ dữ liệu Loại (tránh dư dấu "|" nếu thiếu). LUÔN xuống dòng
+             tự nhiên (white-space:normal + break-word ở CSS) — KHÔNG cắt/
+             ellipsis dù tên dài, card tự cao lên theo nội dung. -->
         <div class="dh-card-cust"><span class="dh-card-cust-name">${o.customer||'—'} <span class="dh-card-cust-mat">| ${o.material||'—'}${o.type?` | ${o.type}`:''}</span></span>${overdue?'<span class="dh-card-flag">⚠️ TRỄ</span>':''}</div>
-        <span class="dh-card-spec">${specStr(o)}</span>
+        <!-- Hàng "Quy cách | Khối lượng | Ưu tiên" — cả 3 đều hiển thị ĐẦY ĐỦ,
+             to hơn trước, tự xuống dòng (flex-wrap) khi không đủ chỗ ngang,
+             không bao giờ bị cắt chữ hay tràn ra ngoài viền thẻ. -->
+        <div class="dh-card-spec-row">
+          <span class="dh-card-spec">${specStr(o)}</span>
+          <span class="dh-card-kg">⚖️ ${fmtNum(o.kg)||0} kg</span>
+          <span class="dh-card-pri" style="background:${pc}22;color:${pc};border-color:${pc}77">🚩 ${o.priority||'—'}</span>
+        </div>
         <div class="dh-card-ring-row">
           <div class="dh-ring" style="--p:${pct}"><span>${pct}%</span></div>
           <div class="dh-card-qty">
