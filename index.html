@@ -4583,6 +4583,20 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-notif-txt-v{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25}
 .dh-tv .dh3-notif-row-v{font-size:clamp(9.5px,1.05dvh,14px)}
 
+/* ── Khối "LỊCH LÀM VIỆC" ở cột thứ 3 hàng dưới (thay khối "Thông báo" cũ)
+   — mỗi dòng 1 nhân viên: Tên (+ Bộ phận nếu có nhiều bộ phận) bên trái,
+   badge Ca/Tình trạng nghỉ bên phải; cuộn dọc TỰ ĐỘNG (xem DH_AUTOSCROLL_
+   BOXES) khi danh sách tràn khung, ẩn thanh cuộn thủ công. */
+.dh3-sched-rows-v{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.dh3-sched-rows-v::-webkit-scrollbar{display:none}
+.dh3-sched-row-v{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:700;color:#eaf1ff;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 9px;cursor:pointer}
+.dh3-sched-row-v:hover{background:rgba(255,255,255,.09)}
+.dh3-sched-name{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25}
+.dh3-sched-dept{font-weight:600;color:#9db3e0}
+.dh3-sched-badge{flex:0 0 auto;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.dh-tv .dh3-sched-row-v{font-size:clamp(9.5px,1.05dvh,14px)}
+.dh-tv.dh-tv-compact-2 .dh3-sched-row-v{font-size:clamp(8px,1dvh,11px);padding:clamp(3px,0.45dvh,6px) clamp(5px,0.6dvw,8px)}
+
 /* ── Hàng dưới: 3 cột (Ca làm việc / Đơn kế tiếp / Tổng hợp công đoạn) */
 .dh3-bottom-row{display:flex;gap:12px;flex:0 0 auto}
 @media (max-width:1100px){.dh3-bottom-row{flex-direction:column}}
@@ -14464,31 +14478,48 @@ function dhOverdueColV3HTML(){
     </div>`;
 }
 
-// ── Khối "THÔNG BÁO" — nay đặt Ở VỊ TRÍ cột thứ 3 hàng dưới (thay cho "Tổng
-// hợp theo công đoạn" đã bỏ), kết hợp cảnh báo thực tế (đơn trễ/máy sự cố-bảo
-// trì/đơn chưa phân công) với nhật ký thao tác gần nhất (actLog), sắp theo
-// thời gian mới nhất trước — tự động, không hard-code nội dung.
-function dhNotifListV3(){
-  const items = [];
-  dhAlertsList().forEach(a=>items.push({ts:Date.now(), ic:'⚠️', txt:a.text, onclick:a.onclick||''}));
-  (typeof actLog!=='undefined' ? actLog : []).slice(0,10).forEach(l=>{
-    const txt = `${l.user||'?'} ${l.action||''}${l.detail?' · '+String(l.detail).slice(0,40):''}`;
-    items.push({ts:l.ts||0, ic:'📝', txt, onclick:"goTab('nhatKy')"});
+// ── Khối "LỊCH LÀM VIỆC" — nay đặt Ở VỊ TRÍ cột thứ 3 hàng dưới (thay cho
+// khối "THÔNG BÁO" cũ). Lấy TRỰC TIẾP từ DB.lichLamViec (CÙNG NGUỒN với tab
+// Lịch làm việc — xem renderLichLamViec/llvGroupRows/llvActiveLeave) nên
+// luôn đồng bộ 100% với dữ liệu đã cập nhật ở tab đó, không lưu số liệu
+// riêng nào khác. Gộp TẤT CẢ bộ phận (nếu có nhiều lịch), sắp theo thứ tự
+// ca (Ca 1 → Ca 2 → Ca 3 → HC → Tăng ca → Nghỉ → Chưa phân ca — theo đúng
+// LLV_SHIFT_ORDER dùng chung với tab Lịch làm việc), hiển thị ĐẦY ĐỦ toàn bộ
+// nhân viên — không cắt bớt "+N người khác" như panel cũ, mà CUỘN TỰ ĐỘNG
+// (xem DH_AUTOSCROLL_BOXES) khi danh sách tràn khung.
+function dhScheduleListV3(){
+  const rows = [];
+  (DB.lichLamViec||[]).forEach(s=>{
+    (s.rows||[]).forEach(r=>{
+      if(!r || !r.name) return;
+      rows.push({dept:s.name||'', name:r.name, time:r.time||'', shiftKey:llvShiftKey(r.time), leaveRec:llvActiveLeave(r.name, null, s)});
+    });
   });
-  return items.sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,10);
+  rows.sort((a,b)=>{
+    const ia = LLV_SHIFT_ORDER.indexOf(a.shiftKey), ib = LLV_SHIFT_ORDER.indexOf(b.shiftKey);
+    if(ia!==ib) return ia-ib;
+    if(a.dept!==b.dept) return (a.dept||'').localeCompare(b.dept||'','vi');
+    return (a.name||'').localeCompare(b.name||'','vi');
+  });
+  return rows;
 }
-function dhNotifPanelV3HTML(){
-  const items = dhNotifListV3();
-  const rows = items.length ? items.map(n=>`
-    <div class="dh3-notif-row-v" onclick="${n.onclick}">
-      <span class="dh3-notif-ic">${n.ic}</span>
-      <span class="dh3-notif-txt-v">${(n.txt||'').replace(/</g,'&lt;')}</span>
-      <span class="dh3-notif-time">${n.ts?onlineTimeAgo(n.ts):''}</span>
-    </div>`).join('') : `<div class="dh3-next-empty">Không có thông báo mới</div>`;
+function dhSchedulePanelV3HTML(){
+  const rows = dhScheduleListV3();
+  const multiDept = new Set(rows.map(r=>r.dept)).size > 1;
+  const rowsHTML = rows.length ? rows.map(r=>{
+    const meta = LLV_SHIFT_META[r.shiftKey] || LLV_SHIFT_META.khac;
+    const badge = r.leaveRec
+      ? `<span class="dh3-sched-badge" style="background:#cffafe;color:#0e7490">🏖️ ${(r.leaveRec.loai||'Nghỉ').toString().replace(/</g,'&lt;')}</span>`
+      : `<span class="dh3-sched-badge" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>`;
+    return `<div class="dh3-sched-row-v" onclick="goTab('lichLamViec')">
+      <span class="dh3-sched-name">${(r.name||'—').replace(/</g,'&lt;')}${multiDept&&r.dept?` <span class="dh3-sched-dept">· ${r.dept.replace(/</g,'&lt;')}</span>`:''}</span>
+      ${badge}
+    </div>`;
+  }).join('') : `<div class="dh3-next-empty">Chưa có lịch làm việc nào · vào tab "Lịch làm việc" để tạo</div>`;
   return `
     <div class="dh3-panel">
-      <div class="dh3-panel-hd">🔔 THÔNG BÁO</div>
-      <div class="dh3-notif-list-v" id="dhNotifScrollBox">${rows}</div>
+      <div class="dh3-panel-hd">📅 LỊCH LÀM VIỆC <b style="font-size:10.5px;color:#8fc0ff;font-weight:700">· ${rows.length} người</b></div>
+      <div class="dh3-sched-rows-v" id="dhScheduleScrollBox">${rowsHTML}</div>
     </div>`;
 }
 
@@ -14504,7 +14535,7 @@ function dhNotifPanelV3HTML(){
 // CHỈ cuộn khi danh sách THỰC SỰ tràn khung (còn chỗ để cuộn) — nếu ít, vừa
 // khít khung thì đứng yên, không cuộn thừa.
 var DH_AUTOSCROLL_BOXES = [
-  {id:'dhNotifScrollBox', pauseTop:1800, pauseBottom:2600, speed:32, backMs:900},
+  {id:'dhScheduleScrollBox', pauseTop:1800, pauseBottom:2600, speed:32, backMs:900},
   {id:'dhNextScrollBox',  pauseTop:1800, pauseBottom:2600, speed:32, backMs:900}
 ];
 var _dhAutoScrollCycleStart = {};
@@ -14683,7 +14714,7 @@ function dhNextQueuePanelV3HTML(){
 }
 
 // ── (Đã bỏ khối "TỔNG HỢP THEO CÔNG ĐOẠN" theo yêu cầu — vị trí này nay do
-// khối "THÔNG BÁO" đảm nhiệm, xem dhNotifPanelV3HTML() ở trên.)
+// khối "LỊCH LÀM VIỆC" đảm nhiệm, xem dhSchedulePanelV3HTML() ở trên.)
 
 // ── "TIẾN ĐỘ SẢN XUẤT TOÀN NHÀ MÁY" — full width, cuối trang.
 function dhTotalProgressV3HTML(){
@@ -14741,7 +14772,7 @@ function renderDieuHanh(){
         <div class="dh3-bottom-row">
           ${dhShiftPanelV3HTML()}
           ${dhNextQueuePanelV3HTML()}
-          ${dhNotifPanelV3HTML()}
+          ${dhSchedulePanelV3HTML()}
         </div>
         ${dhTotalProgressV3HTML()}
       </div>
