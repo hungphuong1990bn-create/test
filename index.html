@@ -4567,6 +4567,23 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-bottom-row{display:flex;gap:12px;flex:0 0 auto}
 @media (max-width:1100px){.dh3-bottom-row{flex-direction:column}}
 .dh-tv .dh3-bottom-row{gap:clamp(6px,0.9dvw,16px)}
+/* ── SỬA LỖI "khu vực máy biến mất" trên TV thật (đơn hàng nhiều → bảng
+   "Đơn kế tiếp"/"Thông báo" liệt kê nhiều dòng) — TRƯỚC ĐÂY .dh3-bottom-row
+   dùng flex:0 0 auto (KHÔNG được phép co lại) trong khi .dh3-machine-row
+   dùng flex:1 1 auto + min-height:0 (ĐƯỢC PHÉP co tới 0). Khi tổng nội dung
+   3 khối dưới (Ca làm việc/Đơn kế tiếp/Thông báo) đủ dài, flexbox ưu tiên
+   giữ NGUYÊN chiều cao khối dưới rồi ép khu vực máy co lại gần bằng 0 (dù
+   dh3-wrap có overflow-y:auto — flexbox co giãn TRƯỚC KHI xét tới cuộn) ⇒
+   khu vực máy "biến mất" hoàn toàn trên các màn hình có nhiều đơn hàng thật.
+   Cách sửa: (1) ép TRẦN chiều cao cho hàng dưới trong TV Mode + để DANH SÁCH
+   BÊN TRONG mỗi panel tự cuộn riêng (đã có overflow-y:auto ở dh3-shift-table/
+   dh3-next-table/dh3-notif-list-v, chỉ cần thêm min-height:0 để được phép co
+   nhỏ hơn nội dung), và (2) cho khu vực máy 1 SÀN chiều cao tối thiểu chắc
+   chắn (không bao giờ về 0), đảm bảo LUÔN hiển thị rõ dù dữ liệu nhiều/ít. */
+.dh-tv .dh3-bottom-row{flex:0 0 auto;max-height:32dvh}
+.dh-tv .dh3-panel{overflow:hidden}
+.dh-tv .dh3-shift-table,.dh-tv .dh3-next-table{min-height:0}
+.dh-tv .dh3-machine-row{flex:1 1 auto;min-height:clamp(240px,40dvh,900px)}
 .dh3-panel{flex:1 1 0;min-width:0;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:11px 14px;display:flex;flex-direction:column;gap:8px}
 .dh3-panel-hd{font-size:12px;font-weight:800;color:#bcd6ff;text-transform:uppercase;letter-spacing:.3px}
 
