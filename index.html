@@ -14606,7 +14606,7 @@ function dhSchedulePanelV3HTML(){
 // CHỈ cuộn khi danh sách THỰC SỰ tràn khung (còn chỗ để cuộn) — nếu ít, vừa
 // khít khung thì đứng yên, không cuộn thừa.
 var DH_AUTOSCROLL_BOXES = [
-  {id:'dhScheduleScrollBox', pauseTop:3200, pauseBottom:4500, speed:9, backMs:2000},
+  {id:'dhScheduleScrollBox', pauseTop:3500, pauseBottom:5000, speed:5, backMs:2800, minDownMs:5000, maxDownMs:30000},
   {id:'dhNextScrollBox',  pauseTop:1800, pauseBottom:2600, speed:32, backMs:900}
 ];
 var _dhAutoScrollCycleStart = {};
@@ -14625,8 +14625,10 @@ function _dhAutoScrollTick(){
     }
     // Thời lượng cuộn xuống tỉ lệ với độ dài thực tế cần cuộn (danh sách
     // càng dài cuộn càng lâu để vẫn đọc kịp), có trần/sàn tránh quá
-    // nhanh/quá chậm.
-    const downMs = Math.max(2500, Math.min(20000, (maxScroll / cfg.speed) * 1000));
+    // nhanh/quá chậm — mỗi ô có thể tự đặt riêng minDownMs/maxDownMs (xem
+    // DH_AUTOSCROLL_BOXES) để cuộn chậm hơn hẳn cho danh sách quan trọng
+    // như lịch làm việc; nếu không đặt thì dùng mặc định chung 2500–20000ms.
+    const downMs = Math.max(cfg.minDownMs||2500, Math.min(cfg.maxDownMs||20000, (maxScroll / cfg.speed) * 1000));
     const total = cfg.pauseTop + downMs + cfg.pauseBottom + cfg.backMs;
     if(_dhAutoScrollCycleStart[cfg.id]==null) _dhAutoScrollCycleStart[cfg.id] = Date.now();
     const t = (Date.now() - _dhAutoScrollCycleStart[cfg.id]) % total;
