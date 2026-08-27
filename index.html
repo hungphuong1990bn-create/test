@@ -7612,6 +7612,18 @@ const FB_KEY  = 'sx_fb_url';
 const LS_KEY  = 'sx_db_v2';
 const LOG_KEY = 'sx_log_v2';
 
+// ── NÂNG CẤP BẢO MẬT FIREBASE (xem thêm ở khối "FIREBASE HELPERS" bên dưới) ──
+// FB_API_KEY: apiKey Web của dự án Firebase — KHÔNG phải bí mật cần giấu,
+// nó chỉ giúp trình duyệt định danh đúng dự án khi gọi Firebase Authentication
+// (bảo mật thật sự nằm ở Rules + việc bắt buộc phải có auth token, xem dưới).
+// FB_DEFAULT_URL: Database URL mặc định — CHỈ được dùng khi máy/thiết bị đó
+// CHƯA từng cấu hình Firebase (localStorage rỗng). Máy nào đã có sẵn URL riêng
+// (kể cả URL khác) vẫn giữ nguyên URL đã lưu, không bị ghi đè — không ảnh
+// hưởng tài khoản/dữ liệu đang dùng của các máy hiện tại.
+const FB_API_KEY     = 'AIzaSyBAqkO_gkcmB7HKH3fQn1kORMTph8wQfz0';
+const FB_DEFAULT_URL = 'https://hung-6fc47-default-rtdb.asia-southeast1.firebasedatabase.app';
+const FB_REFRESH_LS  = 'sx_fb_refresh_v1'; // refresh token của phiên đăng nhập ẩn danh, lưu riêng theo máy
+
 // Logo Đông Phương (nhúng base64 để dùng offline: hiện ở trang tra cứu công khai + in trên tem)
 
 // Font WorkSans (đã cắt gọn, chỉ giữ ký tự Latin + tiếng Việt cần dùng) nhúng
@@ -7819,21 +7831,106 @@ function endSave(){
 // ════════════════════════════════════════════════════════════
 // FIREBASE HELPERS  – tất cả user đều ghi được
 // ════════════════════════════════════════════════════════════
-function fbUrl(){ return (localStorage.getItem(FB_KEY)||'').replace(/__skip__/,''); }
+// Trả về Database URL đang dùng: URL máy này đã tự cấu hình (nếu có), nếu
+// chưa từng cấu hình gì thì dùng URL mặc định của nhà máy. Nếu người dùng
+// từng bấm "Bỏ qua" (__skip__), tôn trọng lựa chọn đó (chế độ offline).
+function fbUrl(){
+  const raw = localStorage.getItem(FB_KEY);
+  if(raw === '__skip__') return '';
+  if(raw && raw.trim()) return raw.replace(/__skip__/,'');
+  return FB_DEFAULT_URL;
+}
 function fbOk(){
-  const u = localStorage.getItem(FB_KEY)||'';
-  return u && u !== '__skip__';
+  const raw = localStorage.getItem(FB_KEY);
+  return raw !== '__skip__'; // luôn có URL dùng được: đã lưu hoặc mặc định
+}
+
+// ════════════════════════════════════════════════════════════
+// FIREBASE ANONYMOUS AUTH — nâng cấp bảo mật
+// ════════════════════════════════════════════════════════════
+// Trước đây app gọi thẳng REST API của Realtime Database mà KHÔNG kèm bất
+// kỳ token nào — bảo mật lúc đó phụ thuộc 100% vào việc Rules để mở public
+// (".read": true, ".write": true), nghĩa là AI CÓ URL đều đọc/ghi được.
+// Từ giờ, mọi request sẽ tự động kèm theo 1 "auth token" ẩn danh (Anonymous
+// Authentication) lấy được bằng apiKey của dự án. Sau khi khoá Rules lại
+// (yêu cầu auth != null — xem hướng dẫn đổi Rules), chỉ những request có
+// token hợp lệ mới đọc/ghi được, chặn được người ngoài có URL nhưng không
+// qua ứng dụng. Việc đăng nhập này diễn ra NGẦM, không cần người dùng nhập
+// gì thêm, không ảnh hưởng tài khoản nội bộ (users/mật khẩu trong app vẫn
+// hoạt động y hệt như cũ — đây là lớp xác thực RIÊNG ở tầng Firebase).
+let _fbIdToken = null;     // idToken hiện có, cache trong RAM
+let _fbIdTokenExp = 0;     // thời điểm hết hạn (ms epoch)
+let _fbAuthPromise = null; // gộp nhiều lượt xin token đồng thời thành 1 request
+
+async function fbEnsureAuth(){
+  const now = Date.now();
+  if(_fbIdToken && now < _fbIdTokenExp - 60000) return _fbIdToken; // còn hạn, chừa 60s an toàn
+  if(_fbAuthPromise) return _fbAuthPromise; // đang có 1 lượt xin token khác chạy, dùng chung kết quả
+  _fbAuthPromise = (async()=>{
+    try{
+      const savedRefresh = localStorage.getItem(FB_REFRESH_LS);
+      if(savedRefresh){
+        try{
+          const rr = await fetch(`https://securetoken.googleapis.com/v1/token?key=${FB_API_KEY}`, {
+            method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(savedRefresh)
+          });
+          if(rr.ok){
+            const d = await rr.json();
+            _fbIdToken = d.id_token;
+            _fbIdTokenExp = now + (parseInt(d.expires_in,10)||3600)*1000;
+            localStorage.setItem(FB_REFRESH_LS, d.refresh_token);
+            return _fbIdToken;
+          }
+        }catch(e){ /* refresh lỗi (mất mạng/refresh token hết hạn) → tạo phiên ẩn danh mới bên dưới */ }
+      }
+      // Chưa có refresh token hoặc refresh thất bại → tạo 1 tài khoản ẩn danh mới.
+      // Đây KHÔNG phải tài khoản người dùng của app — chỉ là "vé" để Firebase
+      // Rules biết request này đến từ ứng dụng hợp lệ, không phải người lạ.
+      const sr = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB_API_KEY}`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({returnSecureToken:true})
+      });
+      const d = await sr.json();
+      if(!sr.ok) throw new Error((d && d.error && d.error.message) || ('HTTP '+sr.status));
+      _fbIdToken = d.idToken;
+      _fbIdTokenExp = now + (parseInt(d.expiresIn,10)||3600)*1000;
+      localStorage.setItem(FB_REFRESH_LS, d.refreshToken);
+      return _fbIdToken;
+    }catch(e){
+      console.warn('[fbEnsureAuth] Không lấy được token xác thực Firebase:', e.message||e);
+      _fbIdToken = null; _fbIdTokenExp = 0;
+      return null; // request phía sau sẽ gọi KHÔNG kèm auth — nếu Rules bắt buộc, Firebase sẽ tự trả lỗi quyền truy cập rõ ràng
+    } finally {
+      _fbAuthPromise = null;
+    }
+  })();
+  return _fbAuthPromise;
+}
+
+// Gắn thêm ?auth=TOKEN (hoặc &auth=TOKEN nếu URL đã có dấu ?) vào 1 URL gọi
+// Firebase REST. Dùng cho MỌI lệnh gọi Firebase trong app (đọc/ghi/SSE/…)
+async function fbAppendAuth(url){
+  const token = await fbEnsureAuth();
+  if(!token) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(token);
+}
+// Bản đồng bộ (không await) dùng riêng cho sendBeacon lúc đóng trang/tab —
+// thời điểm đó không thể chờ xin token mới, chỉ dùng token đang có sẵn trong RAM.
+function fbAppendAuthSync(url){
+  if(!_fbIdToken) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(_fbIdToken);
 }
 
 async function fbRead(path){
-  const r = await fetch(fbUrl()+path+'.json?print=pretty', {cache:'no-store'});
+  const r = await fetch(await fbAppendAuth(fbUrl()+path+'.json?print=pretty'), {cache:'no-store'});
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
 
 async function fbWrite(path, data, method='PUT'){
   if(!fbOk()) return;
-  const r = await fetch(fbUrl()+path+'.json', {
+  const r = await fetch(await fbAppendAuth(fbUrl()+path+'.json'), {
     method,
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify(data)
@@ -7853,7 +7950,7 @@ async function fbWrite(path, data, method='PUT'){
 // gửi đúng 1 bản ghi thay đổi thay vì cả mảng đơn), vừa phát hiện xung đột
 // ngay tại tầng ghi thay vì phải tải cả nhánh về so sánh mỗi lần lưu.
 async function fbReadETag(path){
-  const r = await fetch(fbUrl()+path+'.json', {headers:{'X-Firebase-ETag':'true'}, cache:'no-store'});
+  const r = await fetch(await fbAppendAuth(fbUrl()+path+'.json'), {headers:{'X-Firebase-ETag':'true'}, cache:'no-store'});
   if(!r.ok) throw new Error('HTTP '+r.status);
   const etag = r.headers.get('ETag') || '*';
   const data = await r.json();
@@ -7862,7 +7959,7 @@ async function fbReadETag(path){
 // method PUT để ghi/cập nhật, DELETE để xoá. Trả {ok:true} nếu ghi thành
 // công, {ok:false, conflict:true} nếu bị 412 (ai đó vừa ghi trước mình).
 async function fbWriteETag(path, data, etag, method){
-  const r = await fetch(fbUrl()+path+'.json', {
+  const r = await fetch(await fbAppendAuth(fbUrl()+path+'.json'), {
     method: method||'PUT',
     headers:{'Content-Type':'application/json', 'if-match': etag||'*'},
     body: method==='DELETE' ? undefined : JSON.stringify(data===undefined?null:data)
@@ -10173,7 +10270,7 @@ async function claimBackupLock(force){
 // (ngày backup), không tải nội dung — rất nhẹ, không tốn băng thông đáng kể.
 async function pruneOldBackups(){
   try{
-    const r = await fetch(fbUrl()+'/backups.json?shallow=true', {cache:'no-store'});
+    const r = await fetch(await fbAppendAuth(fbUrl()+'/backups.json?shallow=true'), {cache:'no-store'});
     if(!r.ok) return;
     const keys = await r.json();
     if(!keys) return;
@@ -10433,11 +10530,13 @@ function shouldUseSSE(){
   return true;
 }
 
-function startRealtimeStream(){
+let _sseRefreshTimer = null;
+async function startRealtimeStream(){
   if(!fbOk() || !currentUser || _sse || document.hidden) return;
   if(!shouldUseSSE()){ startPolling(); return; }
   try{
-    _sse = new EventSource(fbUrl()+'/.json');
+    const streamUrl = await fbAppendAuth(fbUrl()+'/.json');
+    _sse = new EventSource(streamUrl);
     _sse.addEventListener('put', e=>{
       try{ const {path,data}=JSON.parse(e.data); handleRealtimeChange(path, data); }catch(err){}
     });
@@ -10457,6 +10556,16 @@ function startRealtimeStream(){
       // để dữ liệu không bị "đứng" trong lúc chờ kết nối lại
       startPolling();
     };
+    // Token xác thực ẩn danh (idToken) chỉ sống ~1 giờ. Với Rules đã khoá lại
+    // (yêu cầu auth != null), kết nối SSE mở lâu hơn thời hạn này có thể bị
+    // máy chủ từ chối các phiên đọc kế tiếp. Cứ 50 phút, chủ động đóng và mở
+    // lại kết nối với token mới để không bị gián đoạn đồng bộ thời gian thực.
+    if(_sseRefreshTimer) clearInterval(_sseRefreshTimer);
+    _sseRefreshTimer = setInterval(()=>{
+      if(!_sse) return;
+      stopSSE();
+      startRealtimeStream();
+    }, 50*60*1000);
   }catch(e){
     startPolling();
   }
@@ -10928,7 +11037,7 @@ async function updateOnline(){
   try{
     const dev = deviceInfo();
     // Bắt giờ máy chủ từ header Date để bù trừ lệch đồng hồ máy khách
-    const wRes = await fetch(fbUrl()+'/presence/'+_devId+'.json', {
+    const wRes = await fetch(await fbAppendAuth(fbUrl()+'/presence/'+_devId+'.json'), {
       method:'PUT', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({name:currentUser.name,role:currentUser.role,uid:currentUser.username,tab:currentTab,ts:nowSrv(),since:_sessionStart,device:dev.type})
     });
@@ -10944,7 +11053,7 @@ async function updateOnline(){
   }catch(e){ console.warn('[updateOnline] lỗi khi tải danh sách đang truy cập:', e); }
 }
 window.addEventListener('beforeunload',()=>{
-  if(fbOk()) navigator.sendBeacon(fbUrl()+'/presence/'+_devId+'.json', JSON.stringify(null));
+  if(fbOk()) navigator.sendBeacon(fbAppendAuthSync(fbUrl()+'/presence/'+_devId+'.json'), JSON.stringify(null));
 });
 
 // ════════════════════════════════════════════════════════════
@@ -11378,8 +11487,11 @@ async function doLogin(){
       $('appScreen').classList.add('active');
       updateTopbarProfile(user);
       log('Đăng nhập','Đăng nhập thành công','');
-      const fbCfg=localStorage.getItem(FB_KEY)||'';
-      if(!fbCfg) setTimeout(()=>$('fbSetup').style.display='flex',600);
+      // Trước đây: nếu máy CHƯA từng cấu hình Firebase, ép hiện màn hình
+      // "Cấu hình Firebase" ngay sau khi đăng nhập. Giờ app đã có sẵn URL
+      // mặc định (FB_DEFAULT_URL) nên tự động kết nối luôn, không cần hỏi —
+      // người dùng vẫn có thể vào Cài đặt ▸ Cấu hình Firebase Sync để đổi
+      // sang URL/dự án khác bất cứ lúc nào nếu muốn.
       notifLoad();
       initAndStartSync().then(()=>{
         updateOnline();
@@ -11410,7 +11522,7 @@ async function doLogin(){
 
 function doLogout(){
   log('Đăng xuất','','');
-  if(fbOk()) navigator.sendBeacon(fbUrl()+'/presence/'+_devId+'.json',JSON.stringify(null));
+  if(fbOk()) navigator.sendBeacon(fbAppendAuthSync(fbUrl()+'/presence/'+_devId+'.json'),JSON.stringify(null));
   clearInterval(_pollTimer); _pollTimer=null;
   currentUser=null; currentTab='dashboard';
   document.body.classList.remove('sl-fullscreen');
@@ -21217,12 +21329,12 @@ async function saveFbCfg(){if(guardViewer())return;
     // (2) Rules cho phép đọc/ghi công khai — nếu không, mã QR sau này
     // sẽ không thể tra cứu được từ điện thoại khách hàng.
     const testPath = url + '/data/_conn_test.json';
-    const wr = await fetch(testPath, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Date.now())});
+    const wr = await fetch(await fbAppendAuth(testPath), {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Date.now())});
     if(!wr.ok) throw new Error('Ghi thất bại (HTTP '+wr.status+')');
-    const rd = await fetch(testPath, {cache:'no-store'});
+    const rd = await fetch(await fbAppendAuth(testPath), {cache:'no-store'});
     if(!rd.ok) throw new Error('Đọc thất bại (HTTP '+rd.status+')');
   }catch(e){
-    alert('❌ Không kết nối được tới Firebase với URL này.\n\nLỗi: '+e.message+'\n\nKiểm tra lại:\n• URL Firebase Realtime Database có đúng không\n• Quy tắc bảo mật (Rules) đã cho phép đọc/ghi (vd: ".read": true, ".write": true)\n\nNếu không sửa, các mã QR sẽ KHÔNG quét được từ điện thoại khách hàng.');
+    alert('❌ Không kết nối được tới Firebase với URL này.\n\nLỗi: '+e.message+'\n\nKiểm tra lại:\n• URL Firebase Realtime Database có đúng không\n• Rules đã đổi sang yêu cầu đăng nhập (vd: ".read": "auth != null", ".write": "auth != null") và Anonymous Authentication đã được BẬT trong Firebase Console\n• URL này có thuộc đúng dự án Firebase gắn với apiKey đang cấu hình trong app hay không\n\nNếu không sửa, các mã QR sẽ KHÔNG quét được từ điện thoại khách hàng.');
     return;
   }
   localStorage.setItem(FB_KEY,url);
@@ -21713,13 +21825,13 @@ async function pubTrackScan(type){
     const url = dbUrl + '/data/scanStats/' + type + '.json';
     let cur = {};
     try{
-      const r = await fetch(url, {cache:'no-store'});
+      const r = await fetch(await fbAppendAuth(url), {cache:'no-store'});
       if(r.ok) cur = (await r.json()) || {};
     }catch(e){ /* dùng cur rỗng nếu không đọc được */ }
     const days = cur.days || {};
     days[today] = (days[today]||0) + 1;
     const payload = { total: (cur.total||0) + 1, days, lastAt: Date.now() };
-    await fetch(url, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    await fetch(await fbAppendAuth(url), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
   }catch(e){ /* im lặng bỏ qua — không ảnh hưởng trang tra cứu công khai */ }
 }
 
@@ -21728,7 +21840,7 @@ async function fetchScanStats(type){
   try{
     const dbUrl = fbUrl();
     if(!dbUrl) return null;
-    const r = await fetch(dbUrl.replace(/\/$/,'') + '/data/scanStats/' + type + '.json', {cache:'no-store'});
+    const r = await fetch(await fbAppendAuth(dbUrl.replace(/\/$/,'') + '/data/scanStats/' + type + '.json'), {cache:'no-store'});
     if(!r.ok) return null;
     const d = await r.json();
     if(!d) return {total:0, today:0};
@@ -21759,7 +21871,7 @@ async function renderPublicScan(code){
     // (.indexOn)" hoặc lỗi cú pháp query từng khiến trang báo "không tìm
     // thấy" dù dữ liệu thực ra vẫn có trên máy chủ.
     const url = dbUrl + '/data/qrProducts.json?print=pretty';
-    const r = await fetch(url, {cache:'no-store'});
+    const r = await fetch(await fbAppendAuth(url), {cache:'no-store'});
     if(!r.ok){
       errMsg = `⚠️ Không kết nối được tới máy chủ dữ liệu (mã lỗi HTTP ${r.status}).<br>`
         + (r.status===401||r.status===403
@@ -22075,11 +22187,13 @@ async function renderPublicCcllv(){
 
   let workers=[], attendance={}, lichLamViec=[], nghiPhep=[], errMsg=null;
   try{
+    const _authQs = await fbAppendAuth(''); // '' hoặc '?auth=TOKEN' — ghép chung cho cả 4 URL bên dưới
+    const _wq = u => u + (_authQs ? (u.includes('?')?_authQs.replace('?','&'):_authQs) : '');
     const [rw, ra, rl, rn] = await Promise.all([
-      fetch(dbUrl + '/data/workers.json?print=pretty', {cache:'no-store'}),
-      fetch(dbUrl + '/data/attendance.json?print=pretty', {cache:'no-store'}),
-      fetch(dbUrl + '/data/lichLamViec.json?print=pretty', {cache:'no-store'}),
-      fetch(dbUrl + '/data/nghiPhep.json?print=pretty', {cache:'no-store'})
+      fetch(_wq(dbUrl + '/data/workers.json?print=pretty'), {cache:'no-store'}),
+      fetch(_wq(dbUrl + '/data/attendance.json?print=pretty'), {cache:'no-store'}),
+      fetch(_wq(dbUrl + '/data/lichLamViec.json?print=pretty'), {cache:'no-store'}),
+      fetch(_wq(dbUrl + '/data/nghiPhep.json?print=pretty'), {cache:'no-store'})
     ]);
     if(!rw.ok || !ra.ok || !rl.ok){
       const badStatus = [rw,ra,rl].map(r=>r.status).find(s=>s===401||s===403);
@@ -22194,7 +22308,7 @@ let _pubKhPollTimer = null;
 async function pubKhFetchData(dbUrl){
   let catalog=[], errMsg=null;
   try{
-    const rc = await fetch(dbUrl + '/data/khuonCatalog.json?print=pretty', {cache:'no-store'});
+    const rc = await fetch(await fbAppendAuth(dbUrl + '/data/khuonCatalog.json?print=pretty'), {cache:'no-store'});
     if(!rc.ok){
       errMsg = (rc.status===401||rc.status===403)
         ? `⚠️ Không kết nối được tới máy chủ dữ liệu (mã lỗi HTTP ${rc.status}).<br>Có thể quy tắc bảo mật (Rules) của Firebase đang chặn truy cập công khai.`
