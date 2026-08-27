@@ -12317,7 +12317,11 @@ function buildWorkforceData(){
 
 
 // Panel riêng cho Người lao động: chỉ hiện những gì họ cần biết trong ngày
+// → Theo yêu cầu, ĐÃ TẮT ô "Hôm nay của bạn" trên Tổng quan của tài khoản
+// nhân viên (return '' ngay từ đầu). Giữ nguyên phần code bên dưới (không
+// xoá) để dễ bật lại sau này nếu cần, chỉ cần bỏ dòng return '' này đi.
 function buildWorkerTodayPanel(orders){
+  return '';
   if(!currentUser || currentUser.role!=='staff') return '';
   const today0 = new Date(); today0.setHours(0,0,0,0);
   const runningCount = orders.filter(o=>o.status==='running'||o.status==='cutting').length;
