@@ -3133,7 +3133,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .online-strip-breakdown{font-size:10px;font-weight:700;color:var(--text4);display:none}
 @media(min-width:520px){.online-strip-breakdown{display:inline}}
 .online-avatar-stack{display:flex;margin-left:auto;padding-right:2px}
-.online-avatar-sm{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;margin-left:-8px;flex-shrink:0}
+.online-avatar-sm{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;margin-left:-8px;flex-shrink:0;overflow:hidden}
 .online-avatar-sm:first-child{margin-left:0}
 .online-avatar-more{background:var(--bg);color:var(--text3)}
 .online-strip-chevron{width:15px;height:15px;stroke:var(--text4);stroke-width:2.2;transition:transform .15s;flex-shrink:0}
@@ -3152,7 +3152,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
    để dễ nhận ra ngay trong danh sách. */
 .online-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #86efac;border-radius:9px;padding:6px 9px}
 .online-row.me{border-color:var(--brand3);background:#f8fbff}
-.online-avatar{width:28px;height:28px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.online-avatar{width:28px;height:28px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
 .online-avatar::after{content:'';position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:var(--green-m);border:2px solid #fff}
 .online-row-body{min-width:0;flex:1}
 .online-row-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3172,7 +3172,8 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .sb-online-offline{font-size:11px;font-weight:600;color:var(--amber-m);background:var(--amber-l);border-radius:8px;padding:6px 8px;line-height:1.4}
 .sb-online-list{display:flex;flex-direction:column;gap:4px}
 .sb-online-row{display:flex;align-items:center;gap:7px;padding:4px 2px}
-.sb-online-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.sb-online-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
+.online-avatar-sm img,.online-avatar img,.sb-online-avatar img,.dh3-tb-account-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .sb-online-avatar::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--green-m);border:1.5px solid #fff}
 .sb-online-body{min-width:0;flex:1}
 .sb-online-name{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -4817,7 +4818,7 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-tb-bell{position:relative;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
 .dh3-tb-bell-badge{position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:#dc2626;color:#fff;font-size:9px;font-weight:800;line-height:15px;text-align:center}
 .dh3-tb-account{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 10px 4px 4px}
-.dh3-tb-account-av{width:24px;height:24px;border-radius:50%;background:var(--brand,#2856D6);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dh3-tb-account-av{width:24px;height:24px;border-radius:50%;background:var(--brand,#2856D6);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .dh3-tb-account-name{font-size:11px;font-weight:800;color:#eaf1ff;line-height:1.2}
 .dh3-tb-account-role{font-size:9px;font-weight:700;color:#9db3e0;line-height:1.2}
 
@@ -10847,6 +10848,19 @@ function scanStatsSidebarHtml(s){
     </div>`;
 }
 
+// Tra avatar THẬT của 1 người trong danh sách "Đang truy cập" — presence
+// (nhịp tim online) chỉ gửi tên/vai trò để nhẹ, KHÔNG gửi kèm ảnh avatar mỗi
+// 20s; avatar luôn được lấy tươi từ DB.users (đã đồng bộ Firebase) theo
+// "uid" (username) gửi kèm presence, fallback so tên nếu thiết bị cũ chưa
+// gửi uid. Nhờ vậy khi 1 người đổi avatar, MỌI nơi hiển thị người đó —
+// kể cả trên thiết bị khác — tự cập nhật theo, không cần sửa gì thêm.
+function presenceAvatarHTML(u){
+  const match = (typeof DB!=='undefined' && DB.users)
+    ? DB.users.find(x=>(u.uid && x.username===u.uid) || x.name===u.name)
+    : null;
+  const avatar = match && match.avatar;
+  return avatar ? `<img src="${avatar}" alt="avatar">` : userInitials(u.name);
+}
 function renderPresenceLists(online){
   renderSidebarScanStats();
   const sb = document.getElementById('sbOnline');
@@ -10861,7 +10875,7 @@ function renderPresenceLists(online){
            const tip = `${u.name} · ${roleLabel(u.role)} · Đang xem: ${tabTxt} · ${d.label} · Online ${durTxt}`.replace(/"/g,'&quot;');
            return `
            <div class="sb-online-row" title="${tip}">
-             <div class="sb-online-avatar" style="box-shadow:0 0 0 2px ${roleColor(u.role)}">${userInitials(u.name)}</div>
+             <div class="sb-online-avatar" style="box-shadow:0 0 0 2px ${roleColor(u.role)}">${presenceAvatarHTML(u)}</div>
              <div class="sb-online-body">
                <div class="sb-online-name">${u.name}${isMe?' <span class="sb-online-me">Bạn</span>':''}</div>
                <div class="sb-online-tab">${roleIcon(u.role)} ${d.icon} ${tabTxt} · ⏱ ${durTxt}</div>
@@ -10916,7 +10930,7 @@ async function updateOnline(){
     // Bắt giờ máy chủ từ header Date để bù trừ lệch đồng hồ máy khách
     const wRes = await fetch(fbUrl()+'/presence/'+_devId+'.json', {
       method:'PUT', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name:currentUser.name,role:currentUser.role,tab:currentTab,ts:nowSrv(),since:_sessionStart,device:dev.type})
+      body: JSON.stringify({name:currentUser.name,role:currentUser.role,uid:currentUser.username,tab:currentTab,ts:nowSrv(),since:_sessionStart,device:dev.type})
     });
     if(!wRes.ok) throw new Error('HTTP '+wRes.status+' khi ghi presence');
     const srvDate = wRes.headers.get('date');
@@ -12691,7 +12705,7 @@ function renderOnlineStrip(){
         <span class="online-strip-breakdown">${roleBreakdownTxt(online)}</span>
       </div>
       <div class="online-avatar-stack">
-        ${online.slice(0,5).map(u=>`<div class="online-avatar-sm" style="box-shadow:0 0 0 2px #fff,0 0 0 3px ${roleColor(u.role)}" title="${tip(u)}">${userInitials(u.name)}</div>`).join('')}
+        ${online.slice(0,5).map(u=>`<div class="online-avatar-sm" style="box-shadow:0 0 0 2px #fff,0 0 0 3px ${roleColor(u.role)}" title="${tip(u)}">${presenceAvatarHTML(u)}</div>`).join('')}
         ${online.length>5?`<div class="online-avatar-sm online-avatar-more">+${online.length-5}</div>`:''}
       </div>
       <svg class="online-strip-chevron${_onlineExpanded?' open':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
@@ -12702,7 +12716,7 @@ function renderOnlineStrip(){
       const durTxt = u.since ? fmtOnlineDuration(u.since) : onlineTimeAgo(u.ts);
       return `
       <div class="online-row${isMe?' me':''}">
-        <div class="online-avatar" style="background:linear-gradient(135deg,${roleColor(u.role)},${roleColor(u.role)}cc)">${userInitials(u.name)}</div>
+        <div class="online-avatar" style="background:linear-gradient(135deg,${roleColor(u.role)},${roleColor(u.role)}cc)">${presenceAvatarHTML(u)}</div>
         <div class="online-row-body">
           <div class="online-row-name">${u.name}${isMe?' <span class="online-row-me">Bạn</span>':''}</div>
           <div class="online-row-meta">
@@ -14750,6 +14764,7 @@ function dhTopbarV3HTML(){
   const roleTxt = (typeof roleLabel==='function' && currentUser) ? roleLabel(currentUser.role) : '';
   const nameTxt = (currentUser && currentUser.name) ? currentUser.name : '—';
   const initials = (typeof userInitials==='function') ? userInitials(nameTxt) : (nameTxt[0]||'?').toUpperCase();
+  const avatarHTML = (currentUser && currentUser.avatar) ? `<img src="${currentUser.avatar}" alt="avatar">` : initials;
   const now = new Date();
   const dateStr = `${VN_WEEKDAYS[now.getDay()]} • ${vnDateDMY(now)}`;
   return `
@@ -14767,7 +14782,7 @@ function dhTopbarV3HTML(){
         <button class="dh3-tb-sync-btn" onclick="renderDieuHanh();showToast&&showToast('Đã đồng bộ dữ liệu mới nhất')">🔄 Đồng bộ</button>
         <button class="dh3-tb-bell" onclick="goTab('nhatKy')" title="Thông báo">🔔${notifCount>0?`<span class="dh3-tb-bell-badge">${notifCount>9?'9+':notifCount}</span>`:''}</button>
         <div class="dh3-tb-account" onclick="goTab('settings')">
-          <div class="dh3-tb-account-av">${initials}</div>
+          <div class="dh3-tb-account-av">${avatarHTML}</div>
           <div>
             <div class="dh3-tb-account-name">${(nameTxt||'').replace(/</g,'&lt;')}</div>
             <div class="dh3-tb-account-role">${roleTxt}</div>
