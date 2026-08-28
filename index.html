@@ -21200,13 +21200,47 @@ function deleteOrder(id){if(guardViewer())return;
     }
   });
 }
-// Tự động thăng cấp ưu tiên: khi GẤP N xong hết → nâng GẤP N+1 lên GẤP N
-function aiAutoPromote(){if(guardViewer())return;
+// Tự động thăng cấp ưu tiên: mỗi mức GẤP luôn phải duy trì ĐỦ ÍT NHẤT 6 đơn
+// đang active. Khi 1 đơn CHẠY XONG làm mức GẤP N hiện tại TỤT XUỐNG DƯỚI 6
+// đơn (kể cả tụt về 0 khi "chạy hết" hoàn toàn) → tự kéo VỪA ĐỦ số đơn còn
+// thiếu từ mức kế tiếp (GẤP N+1) lên GẤP N cho đủ 6, phòng trường hợp admin
+// quên đổi ưu tiên thủ công. Nếu mức đó vẫn còn đủ 6 đơn trở lên (hoặc nhiều
+// hơn) thì KHÔNG đẩy gì cả. Áp dụng đồng nhất cho MỌI mức GẤP, cascade nhiều
+// bậc (GẤP2 thiếu do vừa bị kéo lên GẤP1 → tự kéo tiếp từ GẤP3...). Được gọi
+// qua scheduleAiAutoPromoteCheck() ngay sau khi setStatus() chuyển 1 đơn sang
+// 'done' (xem điểm gọi bên dưới).
+function aiAutoPromote(){
+  // Đây là tự-kiểm-tra chạy NGẦM ở nhiều thời điểm khác nhau, không phải do
+  // người dùng chủ động bấm nút → không dùng guardViewer() (hàm đó hiện toast
+  // "chỉ được xem", vô lý khi chẳng ai bấm gì). Tài khoản Xem/Chỉ nhập Số
+  // liệu vốn không có quyền ghi dữ liệu nên lặng lẽ bỏ qua ở đây — chỉ cần 1
+  // thiết bị Admin/Nhân viên đang mở app là đủ để việc thăng cấp tự chạy và
+  // đồng bộ sang mọi thiết bị khác (kể cả tài khoản Xem) qua Firebase.
+  if(!currentUser || isViewer()) return false;
   // Lấy số ưu tiên từ string "GẤP N"
   const getPri = o => parseInt((o.priority||'GẤP 9').replace('GẤP ',''))||9;
 
-  // Cascade: lặp liên tục đến khi không còn thăng cấp nào nữa
-  // VD: GẤP1 xong → GẤP2→GẤP1, rồi kiểm tra GẤP1 mới xong hết chưa → GẤP3→GẤP2...
+  // Ngưỡng tối thiểu mỗi mức GẤP phải duy trì — dưới mức này mới tự đẩy bù.
+  const AI_MIN_ACTIVE_PER_PRIORITY = 6;
+  // Mức GẤP cao nhất hệ thống hỗ trợ (xem tbGlobalSearch: "GẤP 1".."GẤP 8"),
+  // +1 để còn phủ luôn mức mặc định "GẤP 9" (fallback khi thiếu/sai giá trị).
+  const AI_MAX_PRIORITY_LEVEL = 9;
+
+  // Trong số các đơn ở mức kế tiếp, đơn nào được kéo lên TRƯỚC khi chỉ cần bù
+  // 1 phần (không phải cả mức)? Ưu tiên đơn có HẠN GIAO gần nhất; nếu không có
+  // hạn giao hoặc bằng nhau thì đơn được TẠO SỚM NHẤT (chờ lâu nhất) lên trước.
+  const promoteSortKey = o => {
+    const d = o.deliveryDate ? Date.parse(o.deliveryDate) : NaN;
+    return [isNaN(d) ? Infinity : d, Number(o.createdAt) || 0];
+  };
+  const cmpPromote = (a, b) => {
+    const ka = promoteSortKey(a), kb = promoteSortKey(b);
+    return ka[0]-kb[0] || ka[1]-kb[1];
+  };
+
+  // Cascade: lặp liên tục đến khi không còn mức nào cần bù nữa.
+  // VD: GẤP1 chỉ còn 2 đơn (thiếu 4) → kéo 4 đơn GẤP2 (sớm hạn/chờ lâu nhất)
+  // lên GẤP1 cho đủ 6 → GẤP2 tụt xuống dưới 6 → tự kéo tiếp từ GẤP3 lên GẤP2...
   const allPromoted = [];
   let changed = true;
 
@@ -21215,23 +21249,27 @@ function aiAutoPromote(){if(guardViewer())return;
     const active = DB.orders.filter(o=>o.status!=='done');
     if(!active.length) break;
 
-    // Tìm tất cả mức ưu tiên đang còn active
-    const priNums = [...new Set(active.map(getPri))].sort((a,b)=>a-b);
-    if(!priNums.length) break;
+    // QUAN TRỌNG: xét ĐỦ mọi mức từ 1 đến AI_MAX_PRIORITY_LEVEL theo đúng
+    // trình tự — kể cả mức đang TRỐNG HOÀN TOÀN (0 đơn active, VD "GẤP1 chạy
+    // hết sạch"). Nếu chỉ xét các mức hiện đang có đơn (như bản trước) thì
+    // mức trống hẳn sẽ không xuất hiện trong danh sách đó → bị bỏ sót đúng
+    // trường hợp cần xử lý nhất.
+    for(let pri=1; pri<AI_MAX_PRIORITY_LEVEL; pri++){
+      const atThisLevel = active.filter(o=>getPri(o)===pri);
+      // Mức này vẫn ĐỦ 6 đơn trở lên (hoặc nhiều hơn) → không tự đẩy, bỏ qua
+      if(atThisLevel.length >= AI_MIN_ACTIVE_PER_PRIORITY) continue;
 
-    // Với mỗi mức hiện có, kiểm tra từ thấp nhất lên
-    for(const pri of priNums){
-      // Đơn GẤP pri còn active không?
-      const stillActive = active.filter(o=>getPri(o)===pri);
-      if(stillActive.length > 0) break; // còn đơn ở mức này → không thăng cấp mức sau
+      // Thiếu (kể cả về 0 khi chạy hết hoàn toàn) → CHỈ kéo bù từ ĐÚNG mức
+      // liền kề sau nó (pri+1), không nhảy cóc qua nhiều mức trong 1 lần. Nếu
+      // mức liền kề đó cũng đang thiếu/trống thì vòng lặp while sẽ tự bù cho
+      // NÓ trước ở lượt kế tiếp (khi for chạy tới đúng mức đó), rồi quay lại
+      // bù tiếp cho mức hiện tại — đúng trình tự "GẤP3 → GẤP2 → GẤP1".
+      const nextPri = pri + 1;
+      const candidates = active.filter(o=>getPri(o)===nextPri).sort(cmpPromote);
+      if(!candidates.length) continue; // mức kế cũng trống/không có gì để kéo
 
-      // GẤP pri đã done hết → tìm mức kế tiếp để thăng
-      const nextPri = priNums.find(p=>p > pri);
-      if(!nextPri) break;
-
-      const toPromote = active.filter(o=>getPri(o)===nextPri);
-      if(!toPromote.length) continue;
-
+      const need = AI_MIN_ACTIVE_PER_PRIORITY - atThisLevel.length;
+      const toPromote = candidates.slice(0, need); // chỉ lấy VỪA ĐỦ số còn thiếu
       const newPriStr = 'GẤP '+pri;
       toPromote.forEach(o=>{
         allPromoted.push({customer:o.customer, from:o.priority, to:newPriStr});
@@ -21239,8 +21277,8 @@ function aiAutoPromote(){if(guardViewer())return;
         o.priority = newPriStr;
         o.aiPromoted = true;
       });
-      changed = true; // Có thăng cấp → chạy lại vòng lặp
-      break; // Restart while để re-check từ đầu
+      changed = true; // Có thăng cấp → chạy lại vòng lặp để re-check đúng trình tự
+      break; // Restart while để luôn xét lại từ GẤP1 trước
     }
   }
 
@@ -21269,6 +21307,20 @@ function aiAutoPromote(){if(guardViewer())return;
     return true;
   }
   return false;
+}
+
+// Gộp nhiều lần "có thể cần kiểm tra thăng cấp" xảy ra gần nhau (VD 1 loạt
+// sự kiện đồng bộ SSE dồn về cùng lúc, hoặc xoá/sửa nhiều đơn liên tiếp)
+// thành ĐÚNG 1 lần chạy aiAutoPromote() sau 400ms yên ắng — tránh quét lại
+// DB.orders thừa nhiều lần cho cùng 1 thay đổi thực tế. Gọi hàm NÀY (thay vì
+// gọi thẳng aiAutoPromote()) ở mọi nơi có thể làm cạn/hồi phục 1 mức GẤP.
+let _aiPromoteTimer = null;
+function scheduleAiAutoPromoteCheck(){
+  if(_aiPromoteTimer) clearTimeout(_aiPromoteTimer);
+  _aiPromoteTimer = setTimeout(()=>{
+    _aiPromoteTimer = null;
+    if(aiAutoPromote()){ renderTab(currentTab); updateBadges(); }
+  }, 400);
 }
 
 function setStatus(id, newStatus){if(guardViewer())return;
@@ -21353,8 +21405,9 @@ function setStatus(id, newStatus){if(guardViewer())return;
     alertUser('done');
     addNotif('order_done','✅ Hoàn thành: '+o.customer,
       `${specStr(o)} · ${qtyLabel(o)} · ${o.priority||''}`,'hoanThanh',currentUser?.name);
-    // Kiểm tra thăng cấp tự động sau 500ms (để UI render xong)
-    setTimeout(()=>{ aiAutoPromote(); renderTab(currentTab); updateBadges(); },500);
+    // Kiểm tra thăng cấp tự động (gộp qua scheduleAiAutoPromoteCheck — xem
+    // giải thích ở khai báo hàm phía trên)
+    scheduleAiAutoPromoteCheck();
     // Đơn vừa hoàn thành → hỏi có muốn cấp mã QR truy xuất cho từng thanh/cuộn không
     if(isStaff()) setTimeout(()=>openQrGenForOrder(id), 700);
   }
