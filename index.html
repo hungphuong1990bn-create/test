@@ -3998,8 +3998,17 @@ body.sl-fullscreen #slGearBtn{display:flex}
 
 @keyframes dhAlertBlink{0%,100%{box-shadow:0 0 0 rgba(220,38,38,0)}50%{box-shadow:0 0 16px rgba(239,68,68,.5)}}
 
-.dh-group-title{font-size:13.5px;font-weight:800;color:#bcd6ff;letter-spacing:.6px;text-transform:uppercase;margin:2px 0 8px 4px;display:flex;align-items:center;gap:8px}
-.dh-group-title::before{content:'';width:4px;height:14px;border-radius:3px;background:linear-gradient(180deg,#8fc0ff,#3b7bf0)}
+/* ── Tiêu đề khu vực máy: nay dùng --gc (màu riêng của từng khu vực: Đùn/
+   Rút/Đánh bóng/Cắt — set inline qua JS ở renderDieuHanh) thay cho màu xanh
+   cố định trước đây, kèm 1 "viên nhộng" nền mờ theo màu khu vực bọc quanh
+   chữ để nổi bật, dễ nhận biết ngay cả khi nhìn lướt/từ xa trên màn TV. */
+.dh-group-title{font-size:14.5px;font-weight:900;color:var(--gc,#bcd6ff);letter-spacing:.6px;text-transform:uppercase;margin:2px 0 10px 2px;display:flex;align-items:center;gap:9px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--gc,#3b7bf0) 20%,transparent),transparent);
+  border:1px solid color-mix(in srgb,var(--gc,#3b7bf0) 45%,transparent);border-left:5px solid var(--gc,#3b7bf0);
+  border-radius:10px;padding:7px 12px 7px 10px;width:fit-content;max-width:100%;
+  text-shadow:0 0 14px color-mix(in srgb,var(--gc,#3b7bf0) 65%,transparent)}
+.dh-group-title::before{content:'';width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--gc,#3b7bf0);box-shadow:0 0 9px 2px color-mix(in srgb,var(--gc,#3b7bf0) 85%,transparent)}
+.dh-group-count{margin-left:2px;font-size:10.5px;font-weight:800;color:var(--dh-text2);text-transform:none;letter-spacing:0}
 .dh-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 /* Màn hình TV rộng/4K: cho phép nhiều thẻ hơn trên 1 hàng thay vì thẻ bị kéo
    giãn to bất thường; màn hình dọc/hẹp: thu nhỏ ngưỡng để vẫn đủ ≥2 cột */
@@ -4020,11 +4029,16 @@ body.sl-fullscreen #slGearBtn{display:flex}
    đúng nội dung (overflow:visible), không cần và không nên clip. */
 .dh-card{--dh-accent:var(--glow-ready);
   background:linear-gradient(160deg,var(--dh-card),var(--dh-card2));border:1.5px solid color-mix(in srgb,var(--dh-accent) 55%,var(--dh-border));
-  border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:7px;position:relative;overflow:visible;
+  border-radius:18px;padding:14px 14px 14px 19px;display:flex;flex-direction:column;gap:7px;position:relative;overflow:visible;
   transition:transform .12s,box-shadow .12s;
   box-shadow:0 0 0 1px color-mix(in srgb,var(--dh-accent) 25%,transparent),0 0 18px -3px color-mix(in srgb,var(--dh-accent) 55%,transparent),0 10px 22px rgba(0,0,10,.35)}
 .dh-card::after{content:'';position:absolute;inset:0;border-radius:18px;pointer-events:none;
   background:linear-gradient(160deg,color-mix(in srgb,var(--dh-accent) 12%,transparent),transparent 55%)}
+/* Dải màu dọc bên trái mỗi thẻ = màu KHU VỰC MÁY (--gc, kế thừa từ .dh-group
+   cha) — độc lập với --dh-accent (màu TRẠNG THÁI máy) để 1 lần nhìn là biết
+   ngay thẻ thuộc khu Đùn/Rút/Đánh bóng/Cắt nào, không phải đọc chữ. */
+.dh-card::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:5px;border-radius:5px;z-index:1;
+  background:var(--gc,transparent);box-shadow:0 0 10px 1px color-mix(in srgb,var(--gc,transparent) 70%,transparent)}
 .dh-card[onclick]{cursor:pointer}
 .dh-card[onclick]:hover{transform:translateY(-3px);box-shadow:0 0 0 1px color-mix(in srgb,var(--dh-accent) 45%,transparent),0 0 26px -2px color-mix(in srgb,var(--dh-accent) 75%,transparent),0 14px 28px rgba(0,0,10,.4)}
 
@@ -4044,7 +4058,9 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh-card.dh-card-overdue{box-shadow:0 0 0 2px #f59e0bcc,0 0 22px -2px #f59e0bcc,0 10px 22px rgba(0,0,10,.35)}
 
 .dh-card-hd{display:flex;align-items:center;gap:8px;position:relative;z-index:1}
-.dh-card-ic{font-size:18px}
+.dh-card-ic{font-size:16px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:8px;background:color-mix(in srgb,var(--gc,#8fc0ff) 22%,transparent);
+  border:1px solid color-mix(in srgb,var(--gc,#8fc0ff) 55%,transparent)}
 .dh-card-name{font-weight:800;font-size:13.5px;flex:1;color:#dfe9ff}
 .dh-status-chip{margin-left:auto;font-size:10px;font-weight:800;padding:3px 9px 3px 7px;border-radius:20px;letter-spacing:.3px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
   background:color-mix(in srgb,var(--dh-accent) 20%,transparent);color:var(--dh-accent);border:1px solid color-mix(in srgb,var(--dh-accent) 55%,transparent)}
@@ -4202,9 +4218,13 @@ body.sl-fullscreen #slGearBtn{display:flex}
 }
 /* 1) Header máy + trạng thái — luôn giữ nguyên kích thước, không co, vì đây
    là thông tin định danh máy tối quan trọng và vốn đã rất nhỏ gọn. */
-.dh-tv .dh-card-hd{flex:0 0 auto;min-height:0;min-width:0;overflow:hidden;gap:clamp(4px,0.6dvw,10px)}
-.dh-tv .dh-card-ic{flex-shrink:0;font-size:clamp(10px,1.4dvh,19px)}
-.dh-tv .dh-card-name{min-width:0;font-size:clamp(8px,1.1dvh,15px);overflow-wrap:break-word;white-space:normal;line-height:1.15}
+.dh-tv .dh-card-hd{flex:0 0 auto;min-height:0;min-width:0;overflow:hidden;gap:clamp(5px,0.7dvw,12px)}
+.dh-tv .dh-card-ic{flex-shrink:0;font-size:clamp(11px,1.6dvh,22px);width:clamp(20px,2.6dvh,34px);height:clamp(20px,2.6dvh,34px);border-radius:clamp(5px,0.7dvh,9px)}
+/* Tên máy ở TV Mode: TO, RÕ, ĐẬM hơn hẳn trước đây (từ 15px trần tăng lên
+   26px) + viết hoa toàn bộ + thêm bóng chữ nhẹ để đọc được từ xa, kể cả khi
+   phòng có ánh sáng chói hoặc màn TV lớn/đặt xa người xem. */
+.dh-tv .dh-card-name{min-width:0;font-size:clamp(11px,1.9dvh,26px);font-weight:900;letter-spacing:.3px;text-transform:uppercase;
+  color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.55);overflow-wrap:break-word;white-space:normal;line-height:1.15}
 .dh-tv .dh-status-chip{flex-shrink:0;font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.25dvh,4px) clamp(5px,0.7dvh,10px) clamp(1px,0.25dvh,4px) clamp(4px,0.55dvh,8px);gap:clamp(2px,0.3dvh,4px)}
 .dh-tv .dh-status-chip::before{width:clamp(4px,0.45dvh,6px);height:clamp(4px,0.45dvh,6px)}
 .dh-tv .dh-card-empty-queue-hint{font-size:clamp(8px,1dvh,13px)}
@@ -4668,6 +4688,69 @@ body.sl-fullscreen #slGearBtn{display:flex}
 
 
 /* ── Hàng dưới: 3 cột (Ca làm việc / Đơn kế tiếp / Tổng hợp công đoạn) */
+/* ── Panel "KHÁCH HÀNG ĐANG SẢN XUẤT & MỨC ƯU TIÊN" — mỗi khách hàng 1
+   "chip" gọn, viền/nhãn ưu tiên tô theo đúng thang màu PRI_COLOR đang dùng
+   toàn app (đỏ đậm = khẩn cấp nhất, xám-xanh = ít khẩn cấp) qua biến --pc
+   set inline theo từng chip, để nhận biết ngay khách hàng nào cần ưu tiên
+   xử lý mà không cần mở từng thẻ máy/hàng đợi. */
+.dh3-cust-panel{flex:0 0 auto}
+.dh3-cust-chips{display:flex;flex-wrap:wrap;gap:8px}
+.dh3-cust-chip{display:flex;align-items:center;gap:8px;background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border:1px solid color-mix(in srgb,var(--pc,#64748B) 55%,rgba(255,255,255,.15));border-left:4px solid var(--pc,#64748B);
+  border-radius:10px;padding:6px 11px;box-shadow:0 0 0 1px color-mix(in srgb,var(--pc,#64748B) 18%,transparent)}
+.dh3-cust-name{font-size:12.5px;font-weight:800;color:#eef3ff;white-space:nowrap}
+.dh3-cust-meta{font-size:10.5px;font-weight:700;color:var(--dh-text2);white-space:nowrap}
+.dh3-cust-pri{font-size:10.5px;font-weight:800;border:1px solid;border-radius:8px;padding:2px 8px;white-space:nowrap}
+.dh-tv .dh3-cust-panel{max-height:12dvh;overflow:hidden auto;flex:0 0 auto}
+.dh-tv .dh3-cust-name{font-size:clamp(9px,1.15dvh,15px)}
+.dh-tv .dh3-cust-meta,.dh-tv .dh3-cust-pri{font-size:clamp(7.5px,0.95dvh,12px)}
+@media (max-width:900px){.dh3-cust-chip{flex-wrap:wrap}}
+
+/* ── Tab "Khách hàng" (chỉ Admin) — thẻ tổng hợp tình trạng từng khách
+   hàng, tính trực tiếp từ DB.orders. Dùng lại tông màu/khoảng cách chung
+   của app (var(--card)/var(--border)/var(--text2) v.v.) để đồng bộ với
+   các tab khác (Báo cáo, Đơn hàng...). */
+.khc-chip-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}
+.khc-chip{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--text2);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .15s,border-color .15s,color .15s}
+.khc-chip b{font-weight:800}
+.khc-chip:hover{border-color:var(--brand2)}
+.khc-chip.active{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.khc-sort-select{margin-left:auto;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--text2);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer}
+.khc-grid{display:flex;flex-direction:column;gap:10px}
+.khc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;transition:border-color .15s}
+.khc-card-overdue{border-color:var(--red-l);background:linear-gradient(180deg,var(--red-l) 0%,var(--card) 18%)}
+.khc-card-top{display:flex;align-items:center;gap:12px;cursor:pointer}
+.khc-avatar{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:var(--brand2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.khc-card-main{flex:1;min-width:0}
+.khc-card-name{font-size:14.5px;font-weight:700;color:var(--text1);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.khc-card-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.khc-pri-badge{font-size:10.5px;font-weight:800;border:1px solid;border-radius:8px;padding:1px 7px;white-space:nowrap}
+.khc-card-pct{flex:0 0 auto;text-align:center}
+.khc-card-pct-num{font-size:17px;font-weight:800;color:var(--green-m)}
+.khc-card-pct-lbl{font-size:9.5px;color:var(--text3);font-weight:600}
+.khc-chevron{flex:0 0 auto;width:18px;height:18px;color:var(--text3);transition:transform .15s}
+.khc-chevron.open{transform:rotate(180deg)}
+.khc-progress{margin-top:10px;height:6px;border-radius:4px;background:var(--border);overflow:hidden}
+.khc-progress-fill{height:100%;background:var(--green-m);border-radius:4px;transition:width .2s}
+.khc-stats-row{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:9px}
+.khc-stat{font-size:11.5px;font-weight:600;color:var(--text2);background:var(--bg2);border-radius:7px;padding:3px 8px}
+.khc-stat-done{color:var(--green-m)}
+.khc-stat-run{color:var(--brand2)}
+.khc-stat-wait{color:var(--amber-m)}
+.khc-stat-overdue{color:var(--red-m);background:var(--red-l)}
+.khc-order-list{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.khc-order-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;padding:6px 8px;border-radius:8px;background:var(--bg2);cursor:pointer;transition:background .15s}
+.khc-order-row:hover{background:var(--border)}
+.khc-order-spec{font-weight:700;color:var(--text1)}
+.khc-order-type{color:var(--text2);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-size:11px}
+.khc-order-mat{color:var(--text2);font-weight:600}
+.khc-order-qty{color:var(--text2)}
+.khc-order-badge{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px}
+.khc-order-pri{font-weight:700}
+.khc-order-kg{color:var(--text3)}
+.khc-order-date{color:var(--text3);margin-left:auto}
+@media (max-width:640px){.khc-card-top{flex-wrap:wrap}.khc-card-pct{margin-left:48px}.khc-order-date{margin-left:0}}
+
 .dh3-bottom-row{display:flex;gap:12px;flex:0 0 auto}
 @media (max-width:1100px){.dh3-bottom-row{flex-direction:column}}
 .dh-tv .dh3-bottom-row{gap:clamp(6px,0.9dvw,16px)}
@@ -6455,6 +6538,10 @@ body{letter-spacing:-.1px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Báo cáo
       </button>
+      <button class="sb-item" id="sbi-khachHang" onclick="goTab('khachHang')" style="display:none">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-3.5a3.5 3.5 0 00-2.5-3.36M16 3.6a3.5 3.5 0 010 6.8"/></svg>
+        Khách hàng <span class="sb-badge" style="display:none" id="sbKhcBadge">0</span>
+      </button>
       <div class="sb-section">Truy xuất</div>
       <button class="sb-item" id="sbi-qrCode" onclick="goTab('qrCode')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
@@ -7682,6 +7769,20 @@ const ASSIGN_STAGES = [
   {key:'cat',      label:'Cắt',        group:'Máy cắt',        icon:'✂️'}
 ];
 const ASSIGN_STAGE_LABEL = Object.fromEntries(ASSIGN_STAGES.map(s=>[s.key, s.label]));
+
+// ── Màu nhận diện riêng cho từng KHU VỰC MÁY ở tab Điều hành SX (mỗi công
+// đoạn Đùn/Rút/Đánh bóng/Cắt có 1 tông màu cố định, KHÔNG trùng với các màu
+// trạng thái máy đang dùng — trắng=Chạy, đỏ=Sự cố, tím=Bảo trì, xanh dương
+// nhạt=Sẵn sàng, vàng=Chờ — để không gây nhầm lẫn giữa "màu khu vực" và "màu
+// trạng thái". Dùng để tô viền/tiêu đề/nhãn khu vực máy — chuyên nghiệp,
+// hiện đại, dễ phân biệt cả khi nhìn từ xa trên màn TV.
+const GROUP_COLOR = {
+  'Máy đùn':        '#06B6D4', // Cyan
+  'Máy rút':        '#6366F1', // Indigo
+  'Máy đánh bóng':  '#EC4899', // Pink/Magenta
+  'Máy cắt':        '#22C55E'  // Emerald
+};
+function dhGroupColor(g){ return GROUP_COLOR[g] || '#8fc0ff'; }
 // Vị trí (0,1,2,3...) của 1 công đoạn trong luồng Đùn→Rút→Đánh bóng→Cắt — dùng
 // để so sánh "công đoạn A có phải TRƯỚC/TRÙNG hay SAU công đoạn hiện tại của
 // đơn không" (xem dhIsOrderRunningAtStage() — cho phép công đoạn ĐÃ CHẠY QUA
@@ -10697,6 +10798,9 @@ function updateTopbarProfile(user){
   const abName=$('abName'); if(abName) abName.textContent=user.name;
   const abRole=$('abRole'); if(abRole) abRole.textContent=user.position||roleLabel(user.role);
   renderAvatarInto($('avatarBtnImg'), $('abInitials'), user);
+  // Tab "Khách hàng" chỉ dành riêng cho Admin quan sát tình trạng khách
+  // hàng toàn hệ thống — ẩn hẳn khỏi sidebar với mọi vai trò khác.
+  const sbiKhc=$('sbi-khachHang'); if(sbiKhc) sbiKhc.style.display = isAdmin() ? 'flex' : 'none';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -11684,6 +11788,9 @@ function slToggleSettings(){
 }
 function defaultTabFor(){ if(soLieuLocked()) return 'soLieu'; return dhTvLocked() ? 'dieuHanh' : 'dashboard'; }
 function goTab(tab){
+  // Tab "Khách hàng" chỉ dành cho Admin — chặn cả khi bị gọi trực tiếp
+  // (không chỉ ẩn nút), tránh Nhân viên/Xem/Số liệu cố tình điều hướng tới.
+  if(tab==='khachHang' && !isAdmin()) tab = defaultTabFor();
   // Tài khoản Số liệu bị khoá cứng → luôn ép về tab 📊 Số liệu, CHỈ trừ khi
   // chính người dùng chủ động mở Cài đặt (qua nút bánh răng) để đăng xuất.
   if(soLieuLocked() && tab!=='settings') tab='soLieu';
@@ -11712,7 +11819,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR',soLieu:'📊 Số liệu'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',khachHang:'🧑\u200d🤝\u200d🧑 Khách hàng',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR',soLieu:'📊 Số liệu'};
   $('pageTitle').textContent=titles[tab]||tab;
   // Badge "Realtime" + nút "Làm mới" trên Global Header: chỉ hiện ở tab
   // Tổng quan (nơi dữ liệu cập nhật theo thời gian thực), các tab khác ẩn.
@@ -11824,7 +11931,7 @@ function updateKhuonBadge(){
 // RENDER
 // ════════════════════════════════════════════════════════════
 function renderTab(tab){
-  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,dieuHanh:renderDieuHanh,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,checkSheet:renderCheckSheet,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR,soLieu:renderSoLieu};
+  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,dieuHanh:renderDieuHanh,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,khachHang:renderKhachHang,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,checkSheet:renderCheckSheet,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR,soLieu:renderSoLieu};
   if(fns[tab]) fns[tab]();
 }
 
@@ -13991,13 +14098,12 @@ function mocCard(o){
   const pc = PRI_COLOR[o.priority]||'#64748b';
   return `<div class="moc-card" data-order-id="${o.id}" onclick="ddViewDetail('${o.id}')">
     <div class="moc-head">
-      <span class="moc-code">${ddCode(o)}</span>
+      <span class="moc-code">${o.customer||'—'}</span>
       <span class="moc-badge" style="background:${badge.bg};color:${badge.color};border-color:${badge.border}">${badge.label}</span>
     </div>
     <div class="moc-body">
       <div class="moc-left">
         ${o.priority?`<div class="moc-row"><span class="moc-lbl">Ưu tiên:</span><span class="moc-val"><span class="moc-pri-chip" style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority}</span></span></div>`:''}
-        <div class="moc-row"><span class="moc-lbl">Khách hàng:</span><span class="moc-val moc-val-strong">${o.customer||'—'}</span></div>
         <div class="moc-row"><span class="moc-lbl">Nguyên liệu:</span><span class="moc-val">${ddMaterialLabel(o.material)}</span></div>
         <div class="moc-row"><span class="moc-lbl">Loại:</span><span class="moc-val">${o.type||'—'}</span></div>
         <div class="moc-row"><span class="moc-lbl">Sản phẩm:</span><span class="moc-val">${specStr(o)}</span></div>
@@ -15347,9 +15453,10 @@ function renderDieuHanh(){
             // cho đúng nhóm có tên chứa "đùn".
             const isDun = /đùn/i.test(g);
             const gw = isDun ? 1.55 : 1;
+            const gc = dhGroupColor(g);
             return `
-            <div class="dh-group" style="--cols:${cols};--gw:${gw}">
-              <div class="dh-group-title">${g}</div>
+            <div class="dh-group" style="--cols:${cols};--gw:${gw};--gc:${gc}">
+              <div class="dh-group-title">${g}<span class="dh-group-count">· ${list.length} máy</span></div>
               <div class="dh-card-grid" style="--n:${list.length};--cols:${cols};--rows:${rows}">${list.map(dhMachineCard).join('')}</div>
             </div>
           `;}).join('')}
@@ -16478,6 +16585,188 @@ function renderBaoCao(){
         return `<div class="cust-row"><span style="font-weight:600">${c.name}</span><span style="color:var(--text3);font-size:12.5px">${c.count} đơn · ${c.kg.toFixed(1)}kg · ${c.done} xong</span></div>`;
       }).join(''):'<div class="empty" style="padding:16px 0">Chưa có dữ liệu</div>'}
     </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB "KHÁCH HÀNG" (chỉ Admin) — quan sát tình trạng TỪNG khách hàng đã
+// từng có đơn trong hệ thống: bao nhiêu đơn, bao nhiêu đã xong/chưa xong,
+// đang có đơn trễ hạn hay không, mức ưu tiên cao nhất hiện tại... Toàn bộ
+// số liệu được TÍNH TRỰC TIẾP từ DB.orders (tab Đơn hàng) mỗi lần render,
+// nên luôn khớp 100% với dữ liệu đơn hàng, không lưu trùng ở đâu khác.
+// ════════════════════════════════════════════════════════════
+let khcSearchQ = '';       // ô tìm kiếm theo tên khách hàng
+let khcFilter  = 'all';    // all | active | overdue | done
+let khcSort    = 'recent'; // recent | orders | kg | name
+let khcExpanded = new Set(); // tên khách hàng đang mở rộng xem chi tiết đơn
+
+function khcBuildStats(){
+  const now = Date.now();
+  const map = new Map(); // customer -> stats
+  (DB.orders||[]).forEach(o=>{
+    const name = (o.customer||'').trim();
+    if(!name) return;
+    if(!map.has(name)) map.set(name, {
+      name, orders:[], total:0, done:0, running:0, pending:0, overdue:0,
+      kgTotal:0, kgDone:0, bestRank:99, bestPriority:null,
+      lastOrderAt:0, nextDelivery:null
+    });
+    const r = map.get(name);
+    const st = rptStatusOf(o);
+    r.orders.push(o);
+    r.total++;
+    r.kgTotal += (parseFloat(o.kg)||0);
+    if(st==='done'){ r.done++; r.kgDone += (parseFloat(o.kg)||0); }
+    else{
+      if(st==='running') r.running++; else r.pending++;
+      if(o.deliveryDate){
+        const due = new Date(o.deliveryDate).getTime();
+        if(due < now) r.overdue++;
+        if(!r.nextDelivery || due < r.nextDelivery) r.nextDelivery = due;
+      }
+      const rank = parseInt(String(o.priority||'GẤP 9').replace('GẤP ',''))||9;
+      if(rank < r.bestRank){ r.bestRank = rank; r.bestPriority = o.priority || null; }
+    }
+    if(o.createdAt && o.createdAt > r.lastOrderAt) r.lastOrderAt = o.createdAt;
+  });
+  const rows = [...map.values()].map(r=>{
+    r.notDone = r.total - r.done;
+    r.pct = r.total ? Math.round(r.done / r.total * 100) : 0;
+    r.orders.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    return r;
+  });
+  return rows;
+}
+
+function khcSetFilter(f){ khcFilter = f; renderKhachHang(); }
+function khcSetSort(v){ khcSort = v; renderKhachHang(); }
+function khcSearch(v){ khcSearchQ = v; renderKhachHang(); }
+function khcToggleExpand(name){
+  if(khcExpanded.has(name)) khcExpanded.delete(name); else khcExpanded.add(name);
+  renderKhachHang();
+}
+
+function renderKhachHang(){
+  // Phòng thủ 2 lớp: dù nút sidebar đã ẩn, vẫn chặn thẳng nếu không phải Admin.
+  if(!isAdmin()){
+    $('mc').innerHTML = `<div class="empty" style="padding:40px 0"><div class="empty-icon">🔒</div>Chỉ Quản trị viên (Admin) mới được xem tab này</div>`;
+    return;
+  }
+  let rows = khcBuildStats();
+
+  // Bộ lọc nhanh
+  if(khcFilter==='active') rows = rows.filter(r=>r.running+r.pending>0);
+  else if(khcFilter==='overdue') rows = rows.filter(r=>r.overdue>0);
+  else if(khcFilter==='done') rows = rows.filter(r=>r.notDone===0);
+
+  // Tìm kiếm theo tên
+  if(khcSearchQ.trim()){
+    const q = khcSearchQ.trim().toLowerCase();
+    rows = rows.filter(r=>r.name.toLowerCase().includes(q));
+  }
+
+  // Sắp xếp
+  if(khcSort==='orders') rows.sort((a,b)=>b.total-a.total);
+  else if(khcSort==='kg') rows.sort((a,b)=>b.kgTotal-a.kgTotal);
+  else if(khcSort==='name') rows.sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+  else rows.sort((a,b)=>(b.lastOrderAt||0)-(a.lastOrderAt||0)); // recent
+
+  // Ưu tiên khách có đơn trễ hạn hoặc GẤP 1/2 lên đầu danh sách, dù chọn sort gì
+  rows.sort((a,b)=> (b.overdue>0?1:0)-(a.overdue>0?1:0) || (a.bestRank||99)-(b.bestRank||99) || 0);
+
+  const allRows = khcBuildStats();
+  const totalCustomers = allRows.length;
+  const totalOrders = allRows.reduce((s,r)=>s+r.total,0);
+  const totalDone = allRows.reduce((s,r)=>s+r.done,0);
+  const totalActive = allRows.reduce((s,r)=>s+r.running+r.pending,0);
+  const totalOverdueCust = allRows.filter(r=>r.overdue>0).length;
+  const overallPct = totalOrders ? Math.round(totalDone/totalOrders*100) : 0;
+
+  const filterChips = [
+    {key:'all', label:'Tất cả', n:allRows.length},
+    {key:'active', label:'Đang có đơn chạy', n:allRows.filter(r=>r.running+r.pending>0).length},
+    {key:'overdue', label:'Có đơn trễ hạn', n:totalOverdueCust},
+    {key:'done', label:'Đã hoàn tất hết', n:allRows.filter(r=>r.notDone===0).length},
+  ];
+
+  const cardsHTML = rows.length ? rows.map(r=>{
+    const pc = PRI_COLOR[r.bestPriority] || '#64748B';
+    const isExp = khcExpanded.has(r.name);
+    const initials = userInitials(r.name);
+    return `
+    <div class="khc-card${r.overdue>0?' khc-card-overdue':''}">
+      <div class="khc-card-top" onclick="khcToggleExpand('${r.name.replace(/'/g,"\\'")}')">
+        <div class="khc-avatar">${esc(initials)}</div>
+        <div class="khc-card-main">
+          <div class="khc-card-name">${esc(r.name)}${r.bestPriority?`<span class="khc-pri-badge" style="background:${pc}22;color:${pc};border-color:${pc}77">🚩 ${r.bestPriority}</span>`:''}</div>
+          <div class="khc-card-sub">${r.total} đơn · Đơn gần nhất ${r.lastOrderAt?fmtDate(r.lastOrderAt):'—'}${r.nextDelivery?` · Giao gần nhất ${fmtDate(r.nextDelivery)}`:''}</div>
+        </div>
+        <div class="khc-card-pct"><div class="khc-card-pct-num">${r.pct}%</div><div class="khc-card-pct-lbl">hoàn thành</div></div>
+        <svg class="khc-chevron${isExp?' open':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="khc-progress"><div class="khc-progress-fill" style="width:${r.pct}%"></div></div>
+      <div class="khc-stats-row">
+        <span class="khc-stat khc-stat-done">✅ ${r.done} xong</span>
+        <span class="khc-stat khc-stat-run">⚙️ ${r.running} đang chạy</span>
+        <span class="khc-stat khc-stat-wait">⏳ ${r.pending} chờ SX</span>
+        ${r.overdue?`<span class="khc-stat khc-stat-overdue">⚠️ ${r.overdue} trễ hạn</span>`:''}
+        <span class="khc-stat khc-stat-kg">⚖️ ${r.kgTotal.toFixed(1)}kg (${r.kgDone.toFixed(1)}kg đã giao)</span>
+      </div>
+      ${isExp?`<div class="khc-order-list">
+        ${r.orders.map(o=>{
+          const si = statusInfo(o.status);
+          const opc = PRI_COLOR[o.priority] || '#64748B';
+          return `<div class="khc-order-row" onclick="event.stopPropagation();ddViewDetail('${o.id}')">
+            <span class="khc-order-spec">${esc(specStr(o))}</span>
+            ${o.type?`<span class="khc-order-type">${esc(o.type)}</span>`:''}
+            <span class="khc-order-mat">${esc(ddMaterialLabel(o.material))}</span>
+            <span class="khc-order-qty">${esc(qtyLabel(o))}</span>
+            <span class="khc-order-badge ${si.cls}">${si.label}</span>
+            ${o.priority?`<span class="khc-order-pri" style="color:${opc}">🚩 ${o.priority}</span>`:''}
+            <span class="khc-order-kg">${(parseFloat(o.kg)||0).toFixed(1)}kg</span>
+            <span class="khc-order-date">${o.deliveryDate?('Giao '+fmtDate(o.deliveryDate)):''}</span>
+          </div>`;
+        }).join('')}
+      </div>`:''}
+    </div>`;
+  }).join('') : `<div class="empty" style="padding:36px 0"><div class="empty-icon">🔍</div>${khcSearchQ?`Không tìm thấy khách hàng "${esc(khcSearchQ)}"`:'Chưa có khách hàng nào có đơn trong hệ thống'}</div>`;
+
+  $('mc').innerHTML = `
+    <div class="dd-page-head">
+      <div>
+        <div class="dd-page-title">🧑‍🤝‍🧑 Khách hàng</div>
+        <div class="dd-page-sub">Theo dõi tình trạng từng khách hàng — cập nhật trực tiếp từ tab Đơn hàng · Chỉ Admin xem được</div>
+      </div>
+    </div>
+
+    <div class="rpt-grid">
+      <div class="rpt-item"><div class="rpt-num">${totalCustomers}</div><div class="rpt-lbl">Khách hàng</div></div>
+      <div class="rpt-item"><div class="rpt-num">${totalOrders}</div><div class="rpt-lbl">Tổng đơn</div></div>
+      <div class="rpt-item"><div class="rpt-num">${totalActive}</div><div class="rpt-lbl">Đơn chưa xong</div></div>
+      <div class="rpt-item"><div class="rpt-num" style="color:${totalOverdueCust?'var(--red-m)':'inherit'}">${totalOverdueCust}</div><div class="rpt-lbl">Khách có đơn trễ</div></div>
+    </div>
+
+    <div class="card" style="padding:14px;margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px"><span>Tỉ lệ hoàn thành chung</span><span style="color:var(--green-m)">${overallPct}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${overallPct}%"></div></div>
+    </div>
+
+    <div class="search-wrap" style="margin:12px 0 8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-inp" type="search" placeholder="🔍 Tìm theo tên khách hàng..." value="${esc(khcSearchQ)}" oninput="khcSearch(this.value)" autocomplete="off">
+    </div>
+
+    <div class="khc-chip-row">
+      ${filterChips.map(c=>`<button class="khc-chip${khcFilter===c.key?' active':''}" onclick="khcSetFilter('${c.key}')">${c.label} <b>${c.n}</b></button>`).join('')}
+      <select class="khc-sort-select" onchange="khcSetSort(this.value)">
+        <option value="recent" ${khcSort==='recent'?'selected':''}>Mới nhất</option>
+        <option value="orders" ${khcSort==='orders'?'selected':''}>Nhiều đơn nhất</option>
+        <option value="kg" ${khcSort==='kg'?'selected':''}>Sản lượng cao nhất</option>
+        <option value="name" ${khcSort==='name'?'selected':''}>Tên A-Z</option>
+      </select>
+    </div>
+
+    <div class="khc-grid">${cardsHTML}</div>
   `;
 }
 
