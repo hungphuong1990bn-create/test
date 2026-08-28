@@ -15961,24 +15961,57 @@ function htViewDetail(id){
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   if(htIsFresh(o)){ o.viewedDoneAt=Date.now(); saveOrders(); }
   const st = htStage(o);
+
+  // Đúng hạn / trễ hạn — so hạn giao (deliveryDate) với thời điểm hoàn
+  // thành thực tế (doneAt), dùng đúng công thức đã dùng để tính "Hiệu suất
+  // đúng hạn" ở Tổng quan (chừa 1 ngày, tính đủ cả ngày giao hàng).
+  let onTimeInfo = '';
+  if(o.deliveryDate && o.doneAt){
+    const late = o.doneAt > new Date(o.deliveryDate).getTime()+86400000;
+    onTimeInfo = late
+      ? `<span class="dd-status-pill" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5">⚠️ Trễ hạn giao</span>`
+      : `<span class="dd-status-pill" style="background:#E3F5EE;color:#0C7A54;border-color:#86EFAC">✅ Đúng hạn giao</span>`;
+  }
+
+  // Thời gian sản xuất thực tế (bắt đầu → hoàn thành)
+  const prodDuration = (o.startedAt && o.doneAt) ? fmtDuration(o.doneAt-o.startedAt) : null;
+
+  // Số lượng kế hoạch vs thực tế — chỉ hiện dòng riêng khi có sự khác biệt
+  // đáng chú ý (đơn thiếu/dư so với kế hoạch ban đầu), tránh lặp thông tin
+  // khi 2 số bằng nhau (trường hợp phổ biến nhất).
+  const qtyPlan = Number(o.qty)||0, qtyDone = Number(o.doneQty)||0;
+  const qtyDiffRow = (qtyPlan && qtyDone && qtyDone!==qtyPlan)
+    ? `<div><b>Số lượng thực tế:</b> ${qtyDone.toLocaleString('vi-VN')} / kế hoạch ${qtyPlan.toLocaleString('vi-VN')}${o.unit?' '+o.unit:''}</div>` : '';
+
   $('htDetailTitle').textContent = `${o.customer||'—'} · ${htCode(o)}`;
   $('htDetailBody').innerHTML = `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
       <span class="dd-status-pill" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.icon} ${st.label}</span>
       ${htIsFresh(o)?'<span class="ht-fresh-pill">🆕 Mới hoàn thành</span>':''}
+      ${o.priority?`<span class="dd-status-pill" style="background:var(--purple-l);color:var(--purple-m);border-color:transparent">⭐ ${o.priority}</span>`:''}
+      ${onTimeInfo}
     </div>
+    <div><b>Mã đơn:</b> ${htCode(o)}</div>
     <div><b>Khách hàng:</b> ${o.customer||'—'}</div>
     <div><b>Sản phẩm:</b> ${o.type||'—'}</div>
     <div><b>Nguyên liệu:</b> ${ddMaterialLabel(o.material)}</div>
     <div><b>Quy cách:</b> ${specStr(o)}</div>
     <div><b>Số lượng:</b> ${qtyLabel(o)}${o.kg?' · ⚖️ '+o.kg+'kg':''}</div>
+    ${qtyDiffRow}
     ${o.po?`<div><b>Số PO:</b> ${o.po}</div>`:''}
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <div><b>Ngày đặt đơn:</b> ${fmtDateTime(o.createdAt)}${ddOwner(o)!=='—'?` · người tạo: <b>${ddOwner(o)}</b>`:''}</div>
+      ${o.deliveryDate?`<div><b>Hạn giao:</b> ${fmtDate(o.deliveryDate)}</div>`:''}
+      ${prodDuration?`<div><b>Thời gian sản xuất:</b> ${prodDuration}${o.startedAt?` (bắt đầu ${fmtDateTime(o.startedAt)})`:''}</div>`:''}
+      ${o.address?`<div><b>Địa chỉ giao:</b> ${o.address}</div>`:''}
+    </div>
     <div class="ht-timeline" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
       <div class="ht-timeline-row">✅ Hoàn thành: <b>${fmtDateTime(o.doneAt)}</b>${o.doneBy?` · người xác nhận: <b>${o.doneBy}</b>`:''}</div>
       <div class="ht-timeline-row">📦 Nhập kho: <b>${o.whIn?fmtDateTime(o.whAt):'Chưa nhập kho'}</b>${o.whBy?` · <b>${o.whBy}</b>`:''}${o.whLocation?` · vị trí: <b>${o.whLocation}</b>`:''}</div>
       <div class="ht-timeline-row">🚚 Giao hàng: <b>${o.delivered?fmtDateTime(o.deliveredAt):'Chưa giao'}</b>${o.deliveredBy?` · <b>${o.deliveredBy}</b>`:''}${o.exportSlipNo?` · phiếu xuất: <b>${o.exportSlipNo}</b>`:''}</div>
       ${o.returned?`<div class="ht-timeline-row" style="color:var(--red-m)">🔄 Hoàn trả: <b>${fmtDateTime(o.returnedAt)}</b></div>`:''}
     </div>
+    ${o.progressNote?`<div style="margin-top:8px;padding:8px 10px;background:var(--card2,#f5f6f8);border-left:3px solid var(--border);border-radius:0 8px 8px 0;line-height:1.5"><b>🛠 Ghi chú tiến độ SX:</b> ${o.progressNote}</div>`:''}
     ${o.note?`<div style="margin-top:8px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${o.note}</div>`:''}
   `;
   const pb = $('htDetailPrintBtn');
@@ -16013,14 +16046,22 @@ function htPrintOrder(id, ev){
   <div class="pill" style="background:${st.bg};color:${st.color}">${st.icon} ${st.label}</div>
   <table>
     <tr><td class="lbl">Khách hàng</td><td>${o.customer||'—'}</td></tr>
+    ${o.po?`<tr><td class="lbl">Số PO</td><td>${o.po}</td></tr>`:''}
     <tr><td class="lbl">Sản phẩm</td><td>${o.type||'—'}</td></tr>
     <tr><td class="lbl">Nguyên liệu</td><td>${ddMaterialLabel(o.material)}</td></tr>
     <tr><td class="lbl">Quy cách</td><td>${specStr(o)}</td></tr>
     <tr><td class="lbl">Số lượng</td><td>${qtyLabel(o)}${o.kg?' · '+o.kg+'kg':''}</td></tr>
+    ${o.priority?`<tr><td class="lbl">Mức ưu tiên</td><td>${o.priority}</td></tr>`:''}
+    <tr><td class="lbl">Ngày đặt đơn</td><td>${fmtDateTime(o.createdAt)}${ddOwner(o)!=='—'?' · người tạo: '+ddOwner(o):''}</td></tr>
+    ${o.deliveryDate?`<tr><td class="lbl">Hạn giao</td><td>${fmtDate(o.deliveryDate)}</td></tr>`:''}
+    ${(o.startedAt&&o.doneAt)?`<tr><td class="lbl">Thời gian sản xuất</td><td>${fmtDuration(o.doneAt-o.startedAt)} (bắt đầu ${fmtDateTime(o.startedAt)})</td></tr>`:''}
     <tr><td class="lbl">Ngày hoàn thành</td><td>${fmtDateTime(o.doneAt)}${o.doneBy?' · '+o.doneBy:''}</td></tr>
-    <tr><td class="lbl">Ngày nhập kho</td><td>${o.whIn?fmtDateTime(o.whAt)+(o.whBy?' · '+o.whBy:''):'Chưa nhập kho'}</td></tr>
+    <tr><td class="lbl">Ngày nhập kho</td><td>${o.whIn?fmtDateTime(o.whAt)+(o.whBy?' · '+o.whBy:''):'Chưa nhập kho'}${o.whLocation?' · vị trí: '+o.whLocation:''}</td></tr>
     <tr><td class="lbl">Ngày giao</td><td>${o.delivered?fmtDateTime(o.deliveredAt)+(o.deliveredBy?' · '+o.deliveredBy:''):'Chưa giao'}</td></tr>
     ${o.exportSlipNo?`<tr><td class="lbl">Số phiếu xuất</td><td>${o.exportSlipNo}</td></tr>`:''}
+    ${o.address?`<tr><td class="lbl">Địa chỉ giao</td><td>${o.address}</td></tr>`:''}
+    ${o.returned?`<tr><td class="lbl">Hoàn trả</td><td>${fmtDateTime(o.returnedAt)}</td></tr>`:''}
+    ${o.progressNote?`<tr><td class="lbl">Ghi chú tiến độ SX</td><td>${o.progressNote}</td></tr>`:''}
     ${o.note?`<tr><td class="lbl">Ghi chú</td><td>${o.note}</td></tr>`:''}
   </table>
   </body></html>`);
