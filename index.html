@@ -10827,10 +10827,11 @@ function updateTopbarProfile(user){
   const abName=$('abName'); if(abName) abName.textContent=user.name;
   const abRole=$('abRole'); if(abRole) abRole.textContent=user.position||roleLabel(user.role);
   renderAvatarInto($('avatarBtnImg'), $('abInitials'), user);
-  // Tab "Khách hàng" chỉ dành riêng cho Admin quan sát tình trạng khách
-  // hàng toàn hệ thống — ẩn hẳn khỏi sidebar VÀ bottom-nav với mọi vai trò khác.
-  const sbiKhc=$('sbi-khachHang'); if(sbiKhc) sbiKhc.style.display = isAdmin() ? 'flex' : 'none';
-  const bnKhc=$('bn-khachHang'); if(bnKhc) bnKhc.style.display = isAdmin() ? 'flex' : 'none';
+  // Tab "Khách hàng": trước đây chỉ Admin xem được, nay mở thêm cho tài
+  // khoản Nhân viên SX cùng xem/sử dụng (dùng isStaff() = admin||staff),
+  // vẫn ẩn hẳn với tài khoản Chỉ xem/Số liệu.
+  const sbiKhc=$('sbi-khachHang'); if(sbiKhc) sbiKhc.style.display = isStaff() ? 'flex' : 'none';
+  const bnKhc=$('bn-khachHang'); if(bnKhc) bnKhc.style.display = isStaff() ? 'flex' : 'none';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -11818,9 +11819,9 @@ function slToggleSettings(){
 }
 function defaultTabFor(){ if(soLieuLocked()) return 'soLieu'; return dhTvLocked() ? 'dieuHanh' : 'dashboard'; }
 function goTab(tab){
-  // Tab "Khách hàng" chỉ dành cho Admin — chặn cả khi bị gọi trực tiếp
-  // (không chỉ ẩn nút), tránh Nhân viên/Xem/Số liệu cố tình điều hướng tới.
-  if(tab==='khachHang' && !isAdmin()) tab = defaultTabFor();
+  // Tab "Khách hàng" — Admin và Nhân viên SX đều được phép mở (isStaff()),
+  // chặn cả khi bị gọi trực tiếp, chỉ Chỉ xem/Số liệu mới bị ép về tab khác.
+  if(tab==='khachHang' && !isStaff()) tab = defaultTabFor();
   // Tài khoản Số liệu bị khoá cứng → luôn ép về tab 📊 Số liệu, CHỈ trừ khi
   // chính người dùng chủ động mở Cài đặt (qua nút bánh răng) để đăng xuất.
   if(soLieuLocked() && tab!=='settings') tab='soLieu';
@@ -16677,9 +16678,10 @@ function khcToggleExpand(name){
 }
 
 function renderKhachHang(){
-  // Phòng thủ 2 lớp: dù nút sidebar đã ẩn, vẫn chặn thẳng nếu không phải Admin.
-  if(!isAdmin()){
-    $('mc').innerHTML = `<div class="empty" style="padding:40px 0"><div class="empty-icon">🔒</div>Chỉ Quản trị viên (Admin) mới được xem tab này</div>`;
+  // Phòng thủ 2 lớp: dù nút sidebar/bottom-nav đã ẩn, vẫn chặn thẳng nếu
+  // không phải Admin/Nhân viên SX (isStaff() = admin||staff).
+  if(!isStaff()){
+    $('mc').innerHTML = `<div class="empty" style="padding:40px 0"><div class="empty-icon">🔒</div>Chỉ Quản trị viên / Nhân viên SX mới được xem tab này</div>`;
     return;
   }
   let rows = khcBuildStats();
@@ -16765,7 +16767,7 @@ function renderKhachHang(){
     <div class="dd-page-head">
       <div>
         <div class="dd-page-title">🧑‍🤝‍🧑 Khách hàng</div>
-        <div class="dd-page-sub">Theo dõi tình trạng từng khách hàng — cập nhật trực tiếp từ tab Đơn hàng · Chỉ Admin xem được</div>
+        <div class="dd-page-sub">Theo dõi tình trạng từng khách hàng — cập nhật trực tiếp từ tab Đơn hàng · Admin & Nhân viên SX xem được</div>
       </div>
     </div>
 
