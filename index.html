@@ -7419,7 +7419,7 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
 
 <!-- Modal: Xem chi tiết đơn hàng (Tab Đơn đang làm) -->
 <div class="modal" id="ddDetailModal">
-  <div class="modal-box" style="max-width:480px">
+  <div class="modal-box" style="max-width:560px">
     <div class="modal-handle"></div>
     <div class="modal-title" id="ddDetailTitle">Chi tiết đơn hàng</div>
     <div id="ddDetailBody" style="font-size:13px;color:var(--text2);line-height:1.9"></div>
@@ -11262,6 +11262,18 @@ function showToast(msg, isErr){
 }
 function openModal(id){ $(id).classList.add('open'); }
 function closeModal(id){ $(id).classList.remove('open'); }
+
+// ── Bấm ra ngoài (vùng nền mờ phía sau) sẽ tự đóng modal ──
+// Dùng "event delegation" (1 listener duy nhất gắn ở document) thay vì gắn
+// riêng từng modal, để tự áp dụng luôn cho MỌI modal hiện có lẫn modal thêm
+// mới sau này mà không cần sửa lại chỗ khác. Chỉ đóng khi bấm ĐÚNG vào lớp
+// nền mờ (div.modal) — bấm bên trong nội dung modal (modal-box) hoặc bất kỳ
+// phần tử con nào bên trong đó sẽ KHÔNG bị đóng nhầm.
+document.addEventListener('click', function(e){
+  if(e.target.classList && e.target.classList.contains('modal') && e.target.classList.contains('open')){
+    closeModal(e.target.id);
+  }
+});
 function confirm2(title,body,cb){
   $('cfTitle').textContent=title;
   $('cfBody').textContent=body;
@@ -13094,25 +13106,93 @@ function ddViewDetail(id){
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
   if(ddIsNew(o)){ o.viewedNewAt=Date.now(); saveOrders(); updateBadges(); }
   const meta = ddStatusMeta(o), overdue = ddOverdue(o);
+  const s = o.status==='cutting'?'running':o.status;
+  const pct = ddProgressPct(o);
+  const tInfo = khTimeInfo(o, s);
+
+  // Máy đang gán cho công đoạn hiện tại (nếu đơn đang chạy) — tra tên đầy
+  // đủ từ danh mục MACHINES thay vì chỉ hiện mã máy khô khan.
+  let machineTxt = '';
+  if(s==='running' && o.stage && o.machineAssign && o.machineAssign[o.stage]){
+    const m = MACHINES.find(x=>x.id===o.machineAssign[o.stage]);
+    machineTxt = m ? `${m.icon} ${m.name}` : o.machineAssign[o.stage];
+  }
+
+  // Lịch sử thao tác RIÊNG của đơn này — lọc từ nhật ký chung theo orderId,
+  // giúp biết đơn đã qua những bước nào, ai làm, lúc nào mà không cần rời
+  // khỏi modal để mở tab Nhật ký thao tác rồi tự tìm kiếm theo mã đơn.
+  const orderLog = actLog.filter(l=>l.orderId===id).slice(0,8);
+
   $('ddDetailTitle').textContent = `${o.customer||'—'} · ${ddCode(o)}`;
   $('ddDetailBody').innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
       <span class="dd-status-pill" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span>
       ${ddIsNew(o)?'<span class="dd-new-pill">MỚI</span>':''}
       ${overdue?'<span class="dd-status-pill" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5">⚠️ Quá hạn giao</span>':''}
+      ${o.priority?`<span class="dd-status-pill" style="background:var(--purple-l);color:var(--purple-m);border-color:transparent">⭐ ${o.priority}</span>`:''}
     </div>
-    <div><b>Khách hàng:</b> ${o.customer||'—'}</div>
-    <div><b>Sản phẩm:</b> ${o.type||'—'}</div>
-    <div><b>Nguyên liệu:</b> ${ddMaterialLabel(o.material)}</div>
-    <div><b>Quy cách:</b> ${specStr(o)}</div>
-    <div><b>Số lượng:</b> ${qtyLabel(o)}${o.kg?' · ⚖️ '+o.kg+'kg':''}</div>
-    <div><b>Mức ưu tiên:</b> ${o.priority||'—'}</div>
-    ${o.po?`<div><b>Số PO:</b> ${o.po}</div>`:''}
-    <div><b>Ngày đặt đơn:</b> ${fmtDateTime(o.createdAt)}</div>
-    <div><b>Hạn giao:</b> ${fmtDate(o.deliveryDate)}</div>
-    <div><b>Người phụ trách:</b> ${ddOwner(o)}</div>
-    ${o.address?`<div><b>Địa chỉ giao:</b> ${o.address}</div>`:''}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin-bottom:4px">
+      <div><b>Mã đơn:</b> ${ddCode(o)}</div>
+      <div><b>Khách hàng:</b> ${o.customer||'—'}</div>
+      ${o.po?`<div><b>Số PO:</b> ${o.po}</div>`:''}
+      <div><b>Người phụ trách:</b> ${ddOwner(o)}</div>
+    </div>
+
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📦 Sản phẩm</div>
+      <div><b>Loại:</b> ${o.type||'—'}</div>
+      <div><b>Nguyên liệu:</b> ${ddMaterialLabel(o.material)}</div>
+      <div><b>Quy cách:</b> ${specStr(o)}</div>
+      <div><b>Số lượng kế hoạch:</b> ${qtyLabel(o)}${o.kg?' · ⚖️ '+o.kg+'kg':''}</div>
+    </div>
+
+    ${s!=='pending' ? `
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🏭 Tiến độ sản xuất</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="flex:1;height:8px;border-radius:5px;background:var(--bg2);overflow:hidden">
+          <div style="height:100%;width:${Math.max(2,pct)}%;background:${s==='done'?'var(--green-m)':'var(--brand)'};border-radius:5px"></div>
+        </div>
+        <span style="font-size:12px;font-weight:800;color:${s==='done'?'var(--green-m)':'var(--brand)'}">${pct}%</span>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:2px">${(o.doneQty||0).toLocaleString('vi-VN')} / ${(o.qty||0).toLocaleString('vi-VN')} ${o.isCoil?'cuộn':(o.isRound?'cây':'thanh')} đã hoàn thành${machineTxt?` · đang chạy tại ${machineTxt}`:''}</div>
+      ${renderStageTracker(o, false)}
+    </div>` : ''}
+
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🗓 Mốc thời gian</div>
+      <div><b>Ngày đặt đơn:</b> ${fmtDateTime(o.createdAt)}</div>
+      <div><b>Hạn giao:</b> ${fmtDate(o.deliveryDate)}${o.deliveryDate?` · <span style="font-weight:700">${tInfo.val}</span>`:''}</div>
+      ${o.startedAt?`<div><b>Bắt đầu sản xuất:</b> ${fmtDateTime(o.startedAt)}</div>`:''}
+      ${(s==='done'&&o.startedAt&&o.doneAt)?`<div><b>Thời gian sản xuất:</b> ${fmtDuration(o.doneAt-o.startedAt)}</div>`:''}
+    </div>
+
+    ${o.address?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><b>📍 Địa chỉ giao:</b> ${o.address}</div>`:''}
+    ${o.progressNote?`<div style="margin-top:8px;padding:8px 10px;background:var(--card2,#f5f6f8);border-left:3px solid var(--border);border-radius:0 8px 8px 0;line-height:1.5"><b>🛠 Ghi chú tiến độ SX:</b> ${o.progressNote}</div>`:''}
     ${o.note?`<div style="margin-top:8px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${o.note}</div>`:''}
+
+    ${orderLog.length ? `
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">🕘 Lịch sử thao tác đơn này</div>
+      ${orderLog.map(l=>{
+        const t = vnDateTimeShort(new Date(l.ts));
+        const bTxt = fmtLogChange(l.before), aTxt = fmtLogChange(l.after);
+        return `<div class="act-row">
+          <div class="act-icon-wrap">${ACT_ICO[l.action]||'📌'}</div>
+          <div class="act-body">
+            <div class="act-main">${l.action}</div>
+            ${l.detail?`<div class="act-detail">${l.detail}</div>`:''}
+            ${(bTxt||aTxt)?`<div style="margin-top:4px;display:flex;flex-direction:column;gap:3px">
+              ${bTxt?`<div style="font-size:11px;background:var(--amber-l);padding:3px 8px;border-radius:5px;border-left:2px solid var(--amber-m);color:var(--amber)">← ${bTxt}</div>`:''}
+              ${aTxt?`<div style="font-size:11px;background:var(--green-l);padding:3px 8px;border-radius:5px;border-left:2px solid var(--green-m);color:var(--green-m)">→ ${aTxt}</div>`:''}
+            </div>`:''}
+            <div class="act-meta" style="margin-top:3px">👤 <b>${l.user}</b> · 🕐 ${t}</div>
+          </div>
+        </div>`;
+      }).join('')}
+      ${actLog.filter(l=>l.orderId===id).length>8?`<div style="text-align:center;margin-top:4px"><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="closeModal('ddDetailModal');goTab('nhatKy');setTimeout(()=>{const si=document.getElementById('logSearch'); if(si){si.value='${id}'; si.dispatchEvent(new Event('input'));}},250)">Xem toàn bộ lịch sử →</button></div>`:''}
+    </div>` : ''}
   `;
   // Nút "Chỉnh sửa" chỉ dành cho admin — TRƯỚC ĐÂY nút này luôn hiện & luôn
   // gán sẵn onclick trong modal xem chi tiết bất kể vai trò, trong khi ở
