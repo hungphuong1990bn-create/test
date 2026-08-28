@@ -2737,6 +2737,22 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .bn-dot{position:absolute;top:4px;right:50%;transform:translateX(12px);width:8px;height:8px;border-radius:50%;background:var(--red-m);border:1.5px solid #fff;display:none}
 .bn-dot.show{display:block}
 
+/* ── BOTTOM NAV MOBILE: 1 HÀNG DUY NHẤT, vuốt ngang để xem hết tab ──
+   Giữ nguyên đúng như thiết kế gốc: .bottom-nav là 1 hàng ngang cuộn được
+   (overflow-x:auto ở khai báo phía trên), KHÔNG xuống 2 dòng. Toàn bộ danh
+   sách tab đầy đủ vẫn luôn truy cập được nhanh qua nút "3 gạch" ở góc trên
+   bên trái (.topbar-menu → mở .sidebar, xem toggleSB()) — sidebar liệt kê
+   TẤT CẢ mục menu (kể cả các mục không có trên bottom-nav như Khách hàng,
+   Lịch làm việc, Bảo trì máy, Khuôn, Check Sheet, Số liệu…), nên bottom-nav
+   chỉ cần giữ các tab hay dùng nhất và có thể vuốt ngang thoải mái, không
+   cần ép vừa 1 màn hình. Thêm dải mờ 2 bên mép để gợi ý còn tab ẩn khi vuốt. */
+.bottom-nav{position:relative}
+.bottom-nav::before,.bottom-nav::after{
+  content:'';position:absolute;top:0;bottom:var(--safe-b);width:14px;z-index:5;pointer-events:none;
+}
+.bottom-nav::before{left:0;background:linear-gradient(90deg,var(--card),transparent)}
+.bottom-nav::after{right:0;background:linear-gradient(270deg,var(--card),transparent)}
+
 /* ── FAB ── */
 #fab{position:fixed;right:20px;bottom:calc(var(--nav) + var(--safe-b) + 14px);width:56px;height:56px;border-radius:50%;background:var(--brand);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 6px 18px rgba(11,95,203,.35);display:none;align-items:center;justify-content:center;z-index:150;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 #fab.show{display:flex !important}
@@ -6710,6 +6726,13 @@ body{letter-spacing:-.1px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Báo cáo
       </button>
+      <!-- Tab "Khách hàng" chỉ dành riêng cho Admin (đồng bộ đúng logic với
+           .sb-item#sbi-khachHang trong sidebar) — mặc định ẩn, được bật ở
+           updateTopbarProfile() nếu isAdmin(). -->
+      <button class="bn" id="bn-khachHang" onclick="goTab('khachHang')" style="display:none">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-3.5a3.5 3.5 0 00-2.5-3.36M16 3.6a3.5 3.5 0 010 6.8"/></svg>
+        Khách hàng
+      </button>
       <button class="bn" id="bn-qrCode" onclick="goTab('qrCode')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
         Mã QR
@@ -7776,11 +7799,17 @@ const ASSIGN_STAGE_LABEL = Object.fromEntries(ASSIGN_STAGES.map(s=>[s.key, s.lab
 // nhạt=Sẵn sàng, vàng=Chờ — để không gây nhầm lẫn giữa "màu khu vực" và "màu
 // trạng thái". Dùng để tô viền/tiêu đề/nhãn khu vực máy — chuyên nghiệp,
 // hiện đại, dễ phân biệt cả khi nhìn từ xa trên màn TV.
+// Bảng màu khu vực máy (Bảng điều hành SX — TV Mode): trước đây dùng các màu
+// "neon" tương phản mạnh (cyan/indigo/hồng magenta/emerald) rời rạc, đặt cạnh
+// nhau trên nền navy tạo cảm giác sặc sỡ, thiếu chuyên nghiệp. Bảng màu mới
+// dùng chung 1 "họ" tông lạnh (xanh dương → ngọc lam → tím than) + đúng 1 màu
+// ấm (cam) làm điểm nhấn cho công đoạn cuối — vẫn đủ tương phản để phân biệt
+// nhanh 4 khu vực, nhưng hài hoà, đồng bộ hơn với nền/khung TV Mode.
 const GROUP_COLOR = {
-  'Máy đùn':        '#06B6D4', // Cyan
-  'Máy rút':        '#6366F1', // Indigo
-  'Máy đánh bóng':  '#EC4899', // Pink/Magenta
-  'Máy cắt':        '#22C55E'  // Emerald
+  'Máy đùn':        '#3B9EFF', // Xanh dương (đồng bộ với brand)
+  'Máy rút':        '#7C8CF8', // Chàm/tím than nhạt
+  'Máy đánh bóng':  '#2DD4BF', // Ngọc lam (teal)
+  'Máy cắt':        '#F0924A'  // Cam đất — điểm nhấn duy nhất
 };
 function dhGroupColor(g){ return GROUP_COLOR[g] || '#8fc0ff'; }
 // Vị trí (0,1,2,3...) của 1 công đoạn trong luồng Đùn→Rút→Đánh bóng→Cắt — dùng
@@ -10799,8 +10828,9 @@ function updateTopbarProfile(user){
   const abRole=$('abRole'); if(abRole) abRole.textContent=user.position||roleLabel(user.role);
   renderAvatarInto($('avatarBtnImg'), $('abInitials'), user);
   // Tab "Khách hàng" chỉ dành riêng cho Admin quan sát tình trạng khách
-  // hàng toàn hệ thống — ẩn hẳn khỏi sidebar với mọi vai trò khác.
+  // hàng toàn hệ thống — ẩn hẳn khỏi sidebar VÀ bottom-nav với mọi vai trò khác.
   const sbiKhc=$('sbi-khachHang'); if(sbiKhc) sbiKhc.style.display = isAdmin() ? 'flex' : 'none';
+  const bnKhc=$('bn-khachHang'); if(bnKhc) bnKhc.style.display = isAdmin() ? 'flex' : 'none';
 }
 
 // ════════════════════════════════════════════════════════════
