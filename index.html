@@ -4074,10 +4074,10 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh-card.dh-card-overdue{box-shadow:0 0 0 2px #f59e0bcc,0 0 22px -2px #f59e0bcc,0 10px 22px rgba(0,0,10,.35)}
 
 .dh-card-hd{display:flex;align-items:center;gap:8px;position:relative;z-index:1}
-.dh-card-ic{font-size:16px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
-  width:26px;height:26px;border-radius:8px;background:color-mix(in srgb,var(--gc,#8fc0ff) 22%,transparent);
+.dh-card-ic{font-size:14px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
+  width:23px;height:23px;border-radius:7px;background:color-mix(in srgb,var(--gc,#8fc0ff) 22%,transparent);
   border:1px solid color-mix(in srgb,var(--gc,#8fc0ff) 55%,transparent)}
-.dh-card-name{font-weight:800;font-size:13.5px;flex:1;color:#dfe9ff}
+.dh-card-name{font-weight:700;font-size:12px;flex:1;color:#dfe9ff;letter-spacing:0}
 .dh-status-chip{margin-left:auto;font-size:10px;font-weight:800;padding:3px 9px 3px 7px;border-radius:20px;letter-spacing:.3px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
   background:color-mix(in srgb,var(--dh-accent) 20%,transparent);color:var(--dh-accent);border:1px solid color-mix(in srgb,var(--dh-accent) 55%,transparent)}
 .dh-status-chip::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--dh-accent);box-shadow:0 0 6px 1px var(--dh-accent)}
@@ -4235,11 +4235,11 @@ body.sl-fullscreen #slGearBtn{display:flex}
 /* 1) Header máy + trạng thái — luôn giữ nguyên kích thước, không co, vì đây
    là thông tin định danh máy tối quan trọng và vốn đã rất nhỏ gọn. */
 .dh-tv .dh-card-hd{flex:0 0 auto;min-height:0;min-width:0;overflow:hidden;gap:clamp(5px,0.7dvw,12px)}
-.dh-tv .dh-card-ic{flex-shrink:0;font-size:clamp(11px,1.6dvh,22px);width:clamp(20px,2.6dvh,34px);height:clamp(20px,2.6dvh,34px);border-radius:clamp(5px,0.7dvh,9px)}
+.dh-tv .dh-card-ic{flex-shrink:0;font-size:clamp(10px,1.3dvh,18px);width:clamp(17px,2.1dvh,28px);height:clamp(17px,2.1dvh,28px);border-radius:clamp(5px,0.6dvh,8px)}
 /* Tên máy ở TV Mode: TO, RÕ, ĐẬM hơn hẳn trước đây (từ 15px trần tăng lên
    26px) + viết hoa toàn bộ + thêm bóng chữ nhẹ để đọc được từ xa, kể cả khi
    phòng có ánh sáng chói hoặc màn TV lớn/đặt xa người xem. */
-.dh-tv .dh-card-name{min-width:0;font-size:clamp(11px,1.9dvh,26px);font-weight:900;letter-spacing:.3px;text-transform:uppercase;
+.dh-tv .dh-card-name{min-width:0;font-size:clamp(10px,1.5dvh,20px);font-weight:800;letter-spacing:.2px;text-transform:uppercase;
   color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.55);overflow-wrap:break-word;white-space:normal;line-height:1.15}
 .dh-tv .dh-status-chip{flex-shrink:0;font-size:clamp(6.5px,0.75dvh,11px);padding:clamp(1px,0.25dvh,4px) clamp(5px,0.7dvh,10px) clamp(1px,0.25dvh,4px) clamp(4px,0.55dvh,8px);gap:clamp(2px,0.3dvh,4px)}
 .dh-tv .dh-status-chip::before{width:clamp(4px,0.45dvh,6px);height:clamp(4px,0.45dvh,6px)}
