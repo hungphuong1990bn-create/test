@@ -17639,7 +17639,7 @@ function renderChamCong(){
               <td style="position:sticky;left:24px;background:var(--card);border:1px solid var(--border);padding:2px 4px">
                 <input id="wkName_${w.id}" value="${w.name||''}" placeholder="Tên người lao động" ${admin?'':'readonly'} onchange="renameWorker('${w.id}', this.value)" style="width:130px;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px 2px;outline:none;color:var(--text)">
               </td>
-              <td style="border:1px solid var(--border);padding:5px 6px;text-align:center;font-size:11.5px;color:var(--text3)">${(w.boPhan||'—').toString().replace(/</g,'&lt;')}</td>
+              <td style="border:1px solid var(--border);padding:5px 6px;text-align:center">${llvDeptBadgeHtml(w.boPhan)}</td>
               ${dayCols.map(day=>{
                 const v = rowData[day]!==undefined ? rowData[day] : '';
                 return `<td style="border:1px solid var(--border);padding:0">
@@ -22665,7 +22665,7 @@ function pubCcBuildAttTable(ym){
             const rowData = monthData[w.id] || {};
             return `<tr>
               <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:4px 6px;text-align:left;font-weight:700">${pubEsc(w.name||'—')}</td>
-              <td style="border:1px solid var(--border);padding:4px 6px;text-align:center;color:var(--text3)">${pubEsc(w.boPhan||'—')}</td>
+              <td style="border:1px solid var(--border);padding:4px 6px;text-align:center">${llvDeptBadgeHtml(w.boPhan, pubEsc)}</td>
               ${dayCols.map(d=>`<td style="border:1px solid var(--border);padding:3px;text-align:center">${pubEsc(rowData[d]!==undefined?rowData[d]:'')}</td>`).join('')}
               <td style="border:1px solid var(--border);padding:4px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${pubComputeTotal(rowData)}</td>
             </tr>`;
