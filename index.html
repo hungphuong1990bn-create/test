@@ -3476,6 +3476,17 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .rpt-item{background:var(--card);border-radius:var(--r-sm);padding:14px;text-align:center;box-shadow:var(--sh)}
 .rpt-num{font-size:26px;font-weight:800;color:var(--brand)}
 .rpt-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+/* Tab Khách hàng: 4 ô KPI gộp về đúng 1 hàng duy nhất (thay vì 2x2) cho
+   gọn, đỡ chiếm diện tích màn hình — chỉ áp dụng riêng lớp bổ trợ này,
+   không ảnh hưởng .rpt-grid mặc định (2 cột) đang dùng ở tab Báo cáo. */
+.rpt-grid.rpt-grid-4col{grid-template-columns:repeat(4,1fr);gap:6px}
+.rpt-grid.rpt-grid-4col .rpt-item{padding:9px 3px;border-radius:10px}
+.rpt-grid.rpt-grid-4col .rpt-num{font-size:17px}
+.rpt-grid.rpt-grid-4col .rpt-lbl{font-size:9px;margin-top:1px;line-height:1.2}
+@media(max-width:380px){
+  .rpt-grid.rpt-grid-4col .rpt-num{font-size:15px}
+  .rpt-grid.rpt-grid-4col .rpt-lbl{font-size:8.2px}
+}
 .cust-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
 .cust-row:last-child{border-bottom:none}
 
@@ -4755,6 +4766,9 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .khc-stat-wait{color:var(--amber-m)}
 .khc-stat-overdue{color:var(--red-m);background:var(--red-l)}
 .khc-order-list{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.khc-order-divider{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--text3);
+  margin:4px 0 -1px;padding-top:6px;border-top:1px dashed var(--border)}
+.khc-order-row-done{opacity:.6}
 .khc-order-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;padding:6px 8px;border-radius:8px;background:var(--bg2);cursor:pointer;transition:background .15s}
 .khc-order-row:hover{background:var(--border)}
 .khc-order-spec{font-weight:700;color:var(--text1)}
@@ -16564,7 +16578,7 @@ function renderBaoCao(){
 
   $('mc').innerHTML=`
     <div class="sec-title">Tổng quan</div>
-    <div class="rpt-grid">
+    <div class="rpt-grid rpt-grid-4col">
       <div class="rpt-item"><div class="rpt-num">${orders.length}</div><div class="rpt-lbl">Tổng đơn</div></div>
       <div class="rpt-item"><div class="rpt-num">${done.length}</div><div class="rpt-lbl">Hoàn thành</div></div>
       <div class="rpt-item"><div class="rpt-num">${totalKg.toFixed(1)}</div><div class="rpt-lbl">Tổng KG</div></div>
@@ -16663,7 +16677,15 @@ function khcBuildStats(){
   const rows = [...map.values()].map(r=>{
     r.notDone = r.total - r.done;
     r.pct = r.total ? Math.round(r.done / r.total * 100) : 0;
-    r.orders.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    // Sắp xếp đơn trong từng khách hàng: đơn CHƯA XONG lên trên (dễ theo
+    // dõi việc cần làm), đơn ĐÃ HOÀN THÀNH đẩy xuống dưới cùng. Trong mỗi
+    // nhóm vẫn ưu tiên đơn mới tạo gần đây lên trước.
+    r.orders.sort((a,b)=>{
+      const aDone = rptStatusOf(a)==='done' ? 1 : 0;
+      const bDone = rptStatusOf(b)==='done' ? 1 : 0;
+      if(aDone!==bDone) return aDone-bDone;
+      return (b.createdAt||0)-(a.createdAt||0);
+    });
     return r;
   });
   return rows;
@@ -16745,10 +16767,16 @@ function renderKhachHang(){
         <span class="khc-stat khc-stat-kg">⚖️ ${r.kgTotal.toFixed(1)}kg (${r.kgDone.toFixed(1)}kg đã giao)</span>
       </div>
       ${isExp?`<div class="khc-order-list">
-        ${r.orders.map(o=>{
+        ${r.orders.map((o,idx)=>{
           const si = statusInfo(o.status);
           const opc = PRI_COLOR[o.priority] || '#64748B';
-          return `<div class="khc-order-row" onclick="event.stopPropagation();ddViewDetail('${o.id}')">
+          const isDone = rptStatusOf(o)==='done';
+          // Chèn dải phân cách ngay trước đơn ĐÃ XONG đầu tiên trong danh
+          // sách (đơn chưa xong đã được sắp lên trên từ khcBuildStats),
+          // giúp mắt nhận ra ngay ranh giới "việc cần làm" vs "đã xong".
+          const prevDone = idx>0 ? rptStatusOf(r.orders[idx-1])==='done' : false;
+          const divider = (isDone && !prevDone) ? `<div class="khc-order-divider">✅ Đã hoàn thành</div>` : '';
+          return `${divider}<div class="khc-order-row${isDone?' khc-order-row-done':''}" onclick="event.stopPropagation();ddViewDetail('${o.id}')">
             <span class="khc-order-spec">${esc(specStr(o))}</span>
             ${o.type?`<span class="khc-order-type">${esc(o.type)}</span>`:''}
             <span class="khc-order-mat">${esc(ddMaterialLabel(o.material))}</span>
@@ -16771,7 +16799,7 @@ function renderKhachHang(){
       </div>
     </div>
 
-    <div class="rpt-grid">
+    <div class="rpt-grid rpt-grid-4col">
       <div class="rpt-item"><div class="rpt-num">${totalCustomers}</div><div class="rpt-lbl">Khách hàng</div></div>
       <div class="rpt-item"><div class="rpt-num">${totalOrders}</div><div class="rpt-lbl">Tổng đơn</div></div>
       <div class="rpt-item"><div class="rpt-num">${totalActive}</div><div class="rpt-lbl">Đơn chưa xong</div></div>
