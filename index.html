@@ -16677,13 +16677,21 @@ function khcBuildStats(){
   const rows = [...map.values()].map(r=>{
     r.notDone = r.total - r.done;
     r.pct = r.total ? Math.round(r.done / r.total * 100) : 0;
-    // Sắp xếp đơn trong từng khách hàng: đơn CHƯA XONG lên trên (dễ theo
-    // dõi việc cần làm), đơn ĐÃ HOÀN THÀNH đẩy xuống dưới cùng. Trong mỗi
-    // nhóm vẫn ưu tiên đơn mới tạo gần đây lên trước.
+    // Sắp xếp đơn trong từng khách hàng theo 3 tầng ưu tiên:
+    // 1) Đơn CHƯA XONG lên trên hết, đơn ĐÃ HOÀN THÀNH đẩy xuống dưới cùng.
+    // 2) Trong nhóm chưa xong: đơn "GẤP" số càng nhỏ càng khẩn cấp → GẤP 1
+    //    luôn nằm trên cùng, rồi tới GẤP 2, GẤP 3... và đơn không gắn mức
+    //    ưu tiên xếp cuối nhóm.
+    // 3) Cùng mức ưu tiên: đơn tạo gần đây nhất lên trước.
+    const prRank = o => o.priority ? (parseInt(String(o.priority).replace('GẤP ',''))||9) : 99;
     r.orders.sort((a,b)=>{
       const aDone = rptStatusOf(a)==='done' ? 1 : 0;
       const bDone = rptStatusOf(b)==='done' ? 1 : 0;
       if(aDone!==bDone) return aDone-bDone;
+      if(!aDone){
+        const pr = prRank(a)-prRank(b);
+        if(pr!==0) return pr;
+      }
       return (b.createdAt||0)-(a.createdAt||0);
     });
     return r;
