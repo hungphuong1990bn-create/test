@@ -18362,11 +18362,30 @@ const LLV_SHIFT_SHORT = { ca1:'Ca 1', ca2:'Ca 2', ca3:'Ca 3', hc:'HC', tangca:'T
 // NV" ở tab Quản lý nhân sự — w.boPhan), khớp theo TÊN (không phân biệt
 // hoa/thường, bỏ khoảng trắng thừa). Không tự suy diễn — nếu không tìm thấy
 // hồ sơ nhân viên khớp tên thì trả về '' (không hiển thị).
-function llvWorkerDept(name){
+function llvWorkerDept(name, list){
   const nm = (name||'').trim().toLowerCase();
   if(!nm) return '';
-  const w = (DB.workers||[]).find(x=>(x.name||'').trim().toLowerCase()===nm);
+  const src = list || DB.workers || [];
+  const w = src.find(x=>(x.name||'').trim().toLowerCase()===nm);
   return w && w.boPhan ? w.boPhan.toString().trim() : '';
+}
+
+// ── Badge màu cho cột "Bộ phận" trong Lịch làm việc — mỗi tên bộ phận được
+// gán 1 màu cố định (hash theo tên) để dễ phân biệt trực quan giữa các
+// bộ phận khác nhau trong cùng 1 bảng. escFn cho phép dùng chung cho cả bản
+// quản trị (escape &lt;) lẫn trang công khai (pubEsc).
+const LLV_DEPT_PALETTE = [
+  ['#eef2ff','#4338ca'], ['#ecfeff','#0e7490'], ['#f0fdf4','#15803d'],
+  ['#fff7ed','#c2410c'], ['#fdf4ff','#a21caf'], ['#fef2f2','#b91c1c'],
+  ['#f0f9ff','#0369a1'], ['#fefce8','#a16207']
+];
+function llvDeptBadgeHtml(dept, escFn){
+  const esc = escFn || (v=>(v||'').toString().replace(/</g,'&lt;'));
+  if(!dept) return '<span style="color:var(--text4);font-size:11px">—</span>';
+  let hash = 0;
+  for(let i=0;i<dept.length;i++) hash = (hash*31 + dept.charCodeAt(i)) >>> 0;
+  const [bg,fg] = LLV_DEPT_PALETTE[hash % LLV_DEPT_PALETTE.length];
+  return `<span style="display:inline-block;padding:3px 9px;border-radius:8px;background:${bg};color:${fg};font-weight:700;font-size:11px;white-space:nowrap">${esc(dept)}</span>`;
 }
 
 function llvAttIcon(type, name){
@@ -18418,30 +18437,6 @@ function renderLichLamViec(){
         ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;color:var(--red-m)" onclick="llvDeleteSheet('${sheet.id}')">🗑 Xóa bộ phận này</button>`:''}
       </div>
     </div>
-    <div class="card" style="padding:12px 14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">📎 Danh sách đính kèm</label>
-        ${admin?`<label class="set-btn" style="width:auto;padding:7px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:var(--brand);color:#fff;font-weight:700">
-            📎 Thêm tệp đính kèm
-            <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="llvUploadAttachment('${sheet.id}', this)">
-          </label>`:''}
-      </div>
-      ${(sheet.attachments&&sheet.attachments.length) ? `
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${sheet.attachments.map(a=>`
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--border);border-radius:8px">
-              <span style="font-size:17px">${llvAttIcon(a.type,a.name)}</span>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(a.name||'Tệp đính kèm').replace(/</g,'&lt;')}</div>
-                <div style="font-size:11px;color:var(--text4)">${llvFormatBytes(a.size)} · ${new Date(a.uploadedAt).toLocaleString('vi-VN')}${a.uploadedBy?' · '+a.uploadedBy.replace(/</g,'&lt;'):''}</div>
-              </div>
-              <button class="set-btn" style="width:auto;padding:6px 10px;font-size:11.5px" onclick="llvOpenAttachment('${sheet.id}','${a.id}')">👁 Xem</button>
-              ${admin?`<button class="icon-btn del" onclick="llvDeleteAttachment('${sheet.id}','${a.id}')" style="font-size:12px">🗑</button>`:''}
-            </div>
-          `).join('')}
-        </div>
-      ` : `<div style="font-size:12px;color:var(--text4);padding:6px 0">Chưa có tệp đính kèm nào${admin?' · bấm "📎 Thêm tệp đính kèm" để tải lên ảnh, PDF, Word hoặc Excel (tối đa 3MB/tệp)':''}</div>`}
-    </div>
     <div class="card" style="padding:8px;overflow-x:auto;margin-top:0">
       <div id="llvCaptureArea_${sheet.id}" style="background:#fff;padding:6px">
       <div style="text-align:center;font-weight:700;font-size:14px;margin-bottom:4px;text-transform:uppercase">Lịch làm việc bộ phận ${(sheet.name||'').replace(/</g,'&lt;')}</div>
@@ -18454,6 +18449,7 @@ function renderLichLamViec(){
             <th style="border:1px solid var(--border);padding:6px;min-width:36px">STT</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:150px;text-align:left">Họ và tên</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:80px">Giới tính</th>
+            <th style="border:1px solid var(--border);padding:6px;min-width:110px">🏭 Bộ phận</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:150px">Thời gian</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:140px">🏖️ Tình trạng nghỉ</th>
             <th style="border:1px solid var(--border);padding:6px;min-width:120px">Ghi chú</th>
@@ -18463,7 +18459,7 @@ function renderLichLamViec(){
         <tbody>
           ${groups.map(g=>`
             <tr>
-              <td colspan="${admin?7:6}" style="border:1px solid var(--border);padding:7px 10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700;font-size:12.5px;text-align:left">
+              <td colspan="${admin?8:7}" style="border:1px solid var(--border);padding:7px 10px;background:${g.meta.bg};color:${g.meta.color};font-weight:700;font-size:12.5px;text-align:left">
                 ${g.meta.label} <span style="font-weight:500;opacity:.8">— ${g.items.length} người</span>
               </td>
             </tr>
@@ -18476,6 +18472,9 @@ function renderLichLamViec(){
               </td>
               <td style="border:1px solid var(--border);padding:2px">
                 <input value="${(r.gender||'').replace(/"/g,'&quot;')}" placeholder="Nam/Nữ" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'gender',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text);text-align:center">
+              </td>
+              <td style="border:1px solid var(--border);padding:4px;text-align:center">
+                ${llvDeptBadgeHtml(llvWorkerDept(r.name))}
               </td>
               <td style="border:1px solid var(--border);padding:2px">
                 <select ${admin?'':'disabled'} onchange="llvSetCell2('${sheet.id}',${i},'time',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text);cursor:${admin?'pointer':'default'};-webkit-appearance:menulist">
@@ -18493,7 +18492,7 @@ function renderLichLamViec(){
               ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="llvDeleteRow('${sheet.id}',${i})" style="font-size:12px">🗑</button></td>`:''}
             </tr>`;}).join('')}
           `).join('')}
-          ${sheet.rows.length===0?`<tr><td colspan="${admin?7:6}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</td></tr>`:''}
+          ${sheet.rows.length===0?`<tr><td colspan="${admin?8:7}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</td></tr>`:''}
         </tbody>
       </table>
       </div>
@@ -18666,14 +18665,14 @@ function llvExportExcel(sheetId){if(guardViewer())return;
   if(s.period) rows.push([`Ngày/tháng: ${s.period}`]);
   if(s.warning) rows.push([s.warning]);
   rows.push([]);
-  rows.push(['STT','HỌ VÀ TÊN','GIỚI TÍNH','THỜI GIAN','TÌNH TRẠNG NGHỈ','GHI CHÚ']);
+  rows.push(['STT','HỌ VÀ TÊN','GIỚI TÍNH','BỘ PHẬN','THỜI GIAN','TÌNH TRẠNG NGHỈ','GHI CHÚ']);
   groups.forEach(g=>{
     sectionRowIdxs.push(rows.length);
-    rows.push([`${g.meta.label.replace(/^\S+\s/,'')} — ${g.items.length} người`,'','','','','']);
+    rows.push([`${g.meta.label.replace(/^\S+\s/,'')} — ${g.items.length} người`,'','','','','','']);
     g.items.forEach(({r},gi)=>{
       const leaveRec = llvActiveLeave(r.name, null, s);
       const leaveTxt = leaveRec ? `Đang nghỉ: ${leaveRec.loai||''}${leaveRec.toDate?` (đến ${leaveRec.toDate})`:''}` : (r.leave||'');
-      rows.push([gi+1, r.name||'', r.gender||'', r.time||'', leaveTxt, r.note||'']);
+      rows.push([gi+1, r.name||'', r.gender||'', llvWorkerDept(r.name)||'', r.time||'', leaveTxt, r.note||'']);
     });
   });
   rows.push([]);
@@ -18687,14 +18686,14 @@ function llvExportExcel(sheetId){if(guardViewer())return;
   }
 
   const headerRowIdx = rows.findIndex(r=>r[0]==='STT');
-  const nCols = 6;
+  const nCols = 7;
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const merges = [{s:{r:0,c:0}, e:{r:0,c:nCols-1}}];
   if(s.period) merges.push({s:{r:1,c:0}, e:{r:1,c:nCols-1}});
   if(s.warning) merges.push({s:{r:s.period?2:1,c:0}, e:{r:s.period?2:1,c:nCols-1}});
   sectionRowIdxs.forEach(ri=>merges.push({s:{r:ri,c:0}, e:{r:ri,c:nCols-1}}));
   ws['!merges'] = merges;
-  ws['!cols'] = [{wch:6},{wch:26},{wch:12},{wch:20},{wch:22},{wch:22}];
+  ws['!cols'] = [{wch:6},{wch:26},{wch:12},{wch:16},{wch:20},{wch:22},{wch:22}];
   ws['!freeze'] = {xSplit:0, ySplit:headerRowIdx+1};
   const range = XLSX.utils.decode_range(ws['!ref']);
   for(let R=headerRowIdx; R<=range.e.r-2; R++){
@@ -18741,14 +18740,14 @@ function llvPrint(sheetId, size){if(guardViewer())return;
     ${s.period?`<div class="sub">📅 Ngày/tháng: ${esc(s.period)}</div>`:''}
     ${s.warning?`<div class="warn">⚠️ ${esc(s.warning)}</div>`:''}
     <table>
-      <thead><tr><th>STT</th><th>Họ và tên</th><th>Giới tính</th><th>Thời gian</th><th>Tình trạng nghỉ</th><th>Ghi chú</th></tr></thead>
+      <thead><tr><th>STT</th><th>Họ và tên</th><th>Giới tính</th><th>Bộ phận</th><th>Thời gian</th><th>Tình trạng nghỉ</th><th>Ghi chú</th></tr></thead>
       <tbody>
         ${groups.map(g=>`
-          <tr class="section"><td colspan="6">${esc(g.meta.label.replace(/^\S+\s/,''))} — ${g.items.length} người</td></tr>
+          <tr class="section"><td colspan="7">${esc(g.meta.label.replace(/^\S+\s/,''))} — ${g.items.length} người</td></tr>
           ${g.items.map(({r},gi)=>{
             const leaveRec = llvActiveLeave(r.name, null, s);
             const leaveTxt = leaveRec ? `Đang nghỉ: ${leaveRec.loai||''}${leaveRec.toDate?` (đến ${leaveRec.toDate})`:''}` : (r.leave||'');
-            return `<tr><td>${gi+1}</td><td class="name">${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(r.time)}</td><td>${esc(leaveTxt)}</td><td>${esc(r.note)}</td></tr>`;
+            return `<tr><td>${gi+1}</td><td class="name">${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(llvWorkerDept(r.name))}</td><td>${esc(r.time)}</td><td>${esc(leaveTxt)}</td><td>${esc(r.note)}</td></tr>`;
           }).join('')}
         `).join('')}
       </tbody>
@@ -22774,10 +22773,12 @@ async function renderPublicCcllv(){
               ${g.items.map(({r},gi)=>{
                 const leaveRec = llvActiveLeave(r.name, nghiPhep, sheet);
                 const leaveTxt = leaveRec ? `${leaveRec.loai||'Đang nghỉ'}${leaveRec.toDate?` · đến ${pubEsc(leaveRec.toDate)}`:''}` : (r.leave||'');
+                const dept = llvWorkerDept(r.name, workers);
                 return `
-                <div style="display:flex;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border);font-size:12.5px">
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border);font-size:12.5px">
                   <span style="color:var(--text4);min-width:18px">${gi+1}.</span>
                   <span style="flex:1;font-weight:700;color:var(--text)">${pubEsc(r.name||'—')}${r.gender?` <span style="font-weight:500;color:var(--text4)">(${pubEsc(r.gender)})</span>`:''}</span>
+                  ${dept?llvDeptBadgeHtml(dept, pubEsc):''}
                   <span style="color:var(--text3)">${pubEsc(r.time||'')}</span>
                 </div>
                 ${leaveTxt?`<div style="font-size:11px;color:#0e7490;font-weight:700;padding:0 0 2px 26px">🏖️ ${pubEsc(leaveTxt)}</div>`:''}
