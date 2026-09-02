@@ -7189,6 +7189,14 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
       <div class="field"><div class="field-lbl">Loại thành phẩm chạy</div><input id="nlLoaiTP" class="field-inp" placeholder="VD: 10x100"></div>
       <div class="field"><div class="field-lbl">Số mét chạy</div><input id="nlSoMet" class="field-inp" placeholder="VD: 200m"></div>
     </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Khu máy 🏭</div>
+        <select id="nlKhuMay" class="field-inp" onchange="nlOnKhuMayChange()"></select>
+      </div>
+      <div class="field"><div class="field-lbl">Máy <span style="font-weight:400;color:var(--text4)">(nhớ khu máy)</span></div>
+        <select id="nlMay" class="field-inp" onchange="nlOnMayChange()"></select>
+      </div>
+    </div>
     <div class="field">
       <div class="field-lbl">Phế và đầu mẩu (kg) <span class="nl-multi-total" id="nlPheTotal">0 kg</span></div>
       <div class="nl-multi-list" id="nlPheList"></div>
@@ -7241,14 +7249,20 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Số thanh *</div><input id="mcSoThanh" class="field-inp" type="number"></div>
       <div class="field"><div class="field-lbl">Công đoạn</div>
-        <select id="mcCongDoan" class="field-inp"></select>
+        <select id="mcCongDoan" class="field-inp" onchange="mcOnCongDoanChange()"></select>
       </div>
     </div>
     <div class="modal-row">
+      <div class="field"><div class="field-lbl">Máy 🏭 <span style="font-weight:400;color:var(--text4)">(nhớ khu máy)</span></div>
+        <select id="mcMay" class="field-inp" onchange="mcOnMayChange()"></select>
+      </div>
       <div class="field"><div class="field-lbl">Ca SX</div>
         <select id="mcCa" class="field-inp"><option value="">—</option><option value="1">Ca 1</option><option value="2">Ca 2</option><option value="3">Ca 3</option></select>
       </div>
+    </div>
+    <div class="modal-row">
       <div class="field"><div class="field-lbl">Người SX *</div><input id="mcNguoiSX" class="field-inp"></div>
+      <div class="field"></div>
     </div>
     <div class="field"><div class="field-lbl">Khách hàng</div>
       <input id="mcKhachHang" class="field-inp" list="mcKhachHangList" placeholder="Chọn hoặc gõ tên khách hàng...">
@@ -8673,6 +8687,70 @@ async function autoCleanupDoneOrders(){
     console.warn('[autoCleanupDoneOrders] lỗi khi dọn dẹp:', e);
   }finally{
     _autoCleanRunning = false;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// AUTO CLEANUP tab 📊 Số liệu (Sổ nguyên liệu / Sổ máy Rút / Sổ máy Đánh
+// bóng + Cắt) — TỰ ĐỘNG XOÁ hẳn (không qua Thùng rác, vì các sổ này chỉ
+// là nhật ký ghi nhanh hàng ngày) các dòng có "Ngày" quá 32 ngày, để sổ
+// luôn gọn nhẹ, dễ tìm dòng gần đây. Dùng lại đúng cơ chế khoá chống
+// chạy chồng lấn + tối đa 1 lần/24h/thiết bị như autoCleanupDoneOrders()
+// ở trên, để không đụng vào dữ liệu khi đang sync/ghi dở dang.
+const SL_AUTOCLEAN_LOCK_KEY = 'sx_sl_autoclean_last_run_v1';
+const SL_AUTOCLEAN_DAYS = 32;
+let _slAutoCleanRunning = false;
+
+function slAutoCleanLastRun(){
+  try{ return Number(localStorage.getItem(SL_AUTOCLEAN_LOCK_KEY))||0; }catch(e){ return 0; }
+}
+function canRunSlAutoClean(){
+  if(_slAutoCleanRunning) return false;
+  if(!fbOk()) return false;
+  if(_pendingSaves>0) return false;
+  if(getDirtyFields().length>0) return false;
+  if(Date.now() - slAutoCleanLastRun() < AUTOCLEAN_MIN_INTERVAL_MS) return false;
+  return true;
+}
+async function autoCleanupSoLieu(){
+  if(!canRunSlAutoClean()) return;
+  _slAutoCleanRunning = true;
+  try{ localStorage.setItem(SL_AUTOCLEAN_LOCK_KEY, String(Date.now())); }catch(e){}
+
+  try{
+    if(_pendingSaves>0 || getDirtyFields().length>0) return;
+
+    const cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate()-SL_AUTOCLEAN_DAYS);
+    const pad = n=>String(n).padStart(2,'0');
+    const cutoffStr = `${cutoffDate.getFullYear()}-${pad(cutoffDate.getMonth()+1)}-${pad(cutoffDate.getDate())}`;
+
+    let totalRemoved = 0;
+    const removedByTab = [];
+    Object.keys(SL_META).forEach(tab=>{
+      const field = SL_META[tab].field;
+      const arr = DB[field]||[];
+      // Chỉ xoá dòng CÓ ghi Ngày và ngày đó đã quá hạn — dòng thiếu Ngày (hiếm,
+      // dữ liệu lỗi) được giữ nguyên để không xoá nhầm.
+      const kept = arr.filter(r=> !(r && r.ngay && r.ngay < cutoffStr));
+      const removed = arr.length - kept.length;
+      if(removed>0){
+        DB[field] = kept;
+        totalRemoved += removed;
+        removedByTab.push(`${SL_META[tab].label}: ${removed} dòng`);
+        slDoSave(tab);
+      }
+    });
+
+    if(totalRemoved>0){
+      log('Tự động dọn Số liệu quá 32 ngày',
+        `${totalRemoved} dòng dữ liệu cũ hơn ${SL_AUTOCLEAN_DAYS} ngày (theo Ngày ghi) đã tự động bị xoá — ${removedByTab.join('; ')}`,
+        null, null, {deletedBy:'AUTO_32_DAYS'});
+      if(currentTab==='soLieu') renderSoLieu();
+    }
+  }catch(e){
+    console.warn('[autoCleanupSoLieu] lỗi khi dọn dẹp:', e);
+  }finally{
+    _slAutoCleanRunning = false;
   }
 }
 
@@ -10339,7 +10417,7 @@ async function initAndStartSync(){
   // hiểu lầm "cứ Auto Cleanup chạy là mất dữ liệu". Trễ thêm vài giây và tự
   // kiểm tra lại _pendingSaves/dirty ngay trong autoCleanupDoneOrders() để
   // chắc chắn đồng bộ đã thực sự ổn định trước khi đụng tới dữ liệu.
-  setTimeout(()=>{ autoCleanupDoneOrders(); }, 5000);
+  setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); }, 5000);
   renderTab(currentTab);
   updateBadges();
   // Chức năng sao lưu tự động đã được TẮT theo yêu cầu (xem ghi chú ở khối
@@ -10357,16 +10435,17 @@ document.addEventListener('visibilitychange', ()=>{
     startRealtimeStream();
     updateOnline();
     setTimeout(()=>{ doPoll(); if(!_sseConnected) startPolling(); }, 300);
-    // Auto Cleanup 30 ngày: thử lại khi app được mở lại (VD để qua đêm ở nền
-    // rồi mở lại) — autoCleanupDoneOrders() tự bỏ qua nếu chưa tới hạn 24h,
-    // chưa đồng bộ xong hoặc đang có ghi dở dang, nên gọi lại đây an toàn.
-    setTimeout(()=>{ autoCleanupDoneOrders(); }, 3000);
+    // Auto Cleanup 30 ngày / 32 ngày: thử lại khi app được mở lại (VD để qua
+    // đêm ở nền rồi mở lại) — cả 2 hàm tự bỏ qua nếu chưa tới hạn 24h, chưa
+    // đồng bộ xong hoặc đang có ghi dở dang, nên gọi lại đây an toàn.
+    setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); }, 3000);
   }
 });
-// Auto Cleanup 30 ngày: kiểm tra định kỳ mỗi giờ cho các phiên mở app kéo
-// dài nhiều ngày liên tục không tải lại trang — bản thân hàm tự bỏ qua nếu
-// chưa tới hạn 24h/thiết bị hoặc đồng bộ chưa ổn định (xem canRunAutoClean()).
-setInterval(()=>{ if(currentUser && fbOk()) autoCleanupDoneOrders(); }, 60*60*1000);
+// Auto Cleanup 30 ngày (Đơn hoàn thành) / 32 ngày (tab Số liệu): kiểm tra
+// định kỳ mỗi giờ cho các phiên mở app kéo dài nhiều ngày liên tục không
+// tải lại trang — bản thân từng hàm tự bỏ qua nếu chưa tới hạn 24h/thiết
+// bị hoặc đồng bộ chưa ổn định (xem canRunAutoClean()/canRunSlAutoClean()).
+setInterval(()=>{ if(currentUser && fbOk()){ autoCleanupDoneOrders(); autoCleanupSoLieu(); } }, 60*60*1000);
 window.addEventListener('online', ()=>{ if(currentUser && fbOk()){ startRealtimeStream(); doPoll(); updateOnline(); } });
 window.addEventListener('offline', ()=>{ setSyncDot('error'); });
 
@@ -19385,6 +19464,81 @@ const SL_META = {
 function slArr(tab){ return DB[SL_META[tab].field] || (DB[SL_META[tab].field]=[]); }
 function slDoSave(tab){ window[SL_META[tab].save](); }
 
+// ── Cột "Máy" — nhớ theo khu máy (nhóm máy trong MACHINES) ────────────
+// Mỗi Công đoạn (Rút/Đánh bóng/Cắt) khớp đúng 1 khu máy (group) trong
+// MACHINES đã khai báo ở đầu file (dùng chung với tab Bảo trì máy/Điều
+// hành SX) — để danh sách máy chọn ở Sổ Rút/Đánh bóng+Cắt luôn khớp
+// đúng máy thật đang có trong xưởng, không phải gõ tay/tự bịa tên máy.
+const CONGDOAN_MACHINE_GROUP = {'Rút':'Máy rút', 'Đánh bóng':'Máy đánh bóng', 'Cắt':'Máy cắt'};
+function mcMachinesForCongDoan(congDoan){
+  const group = CONGDOAN_MACHINE_GROUP[congDoan];
+  return group ? MACHINES.filter(m=>m.group===group) : [];
+}
+function mcMachineOptionsHTML(congDoan, selected){
+  return machineOptionsHTMLByGroup(CONGDOAN_MACHINE_GROUP[congDoan], selected);
+}
+// ── Chọn máy TRỰC TIẾP theo khu máy (group) — dùng cho Sổ nguyên liệu, nơi
+// không có sẵn "Công đoạn" để suy ra khu máy như Sổ Rút/Đánh bóng+Cắt, nên
+// người dùng tự chọn "Khu máy" trước rồi mới chọn đúng máy trong khu đó.
+const MACHINE_GROUPS = [...new Set(MACHINES.map(m=>m.group))];
+function machineGroupOptionsHTML(selected){
+  return '<option value="">— Chọn khu máy —</option>' +
+    MACHINE_GROUPS.map(g=>`<option value="${esc(g)}" ${g===selected?'selected':''}>${esc(g)}</option>`).join('');
+}
+function machinesInGroup(group){ return group ? MACHINES.filter(m=>m.group===group) : []; }
+function machineOptionsHTMLByGroup(group, selected){
+  const list = machinesInGroup(group);
+  if(!list.length) return '<option value="">— Chọn máy —</option>';
+  return '<option value="">— Chọn máy —</option>' +
+    list.map(m=>`<option value="${esc(m.name)}" ${m.name===selected?'selected':''}>${m.icon||''} ${esc(m.name)}</option>`).join('');
+}
+// "Nhớ khu máy": lưu lại máy vừa chọn gần nhất CHO TỪNG KHU MÁY (group)
+// vào localStorage trên thiết bị đang dùng — lần thêm dòng mới kế tiếp ở
+// cùng khu máy đó (VD cùng mở Sổ máy Rút) sẽ tự điền sẵn đúng máy vừa
+// dùng, đỡ phải chọn lại mỗi lần nếu vẫn đang thao tác trên cùng 1 máy.
+const SL_LAST_MAY_KEY = 'sx_sl_last_may_v1';
+// "Nhớ khu máy" riêng cho Sổ nguyên liệu — vì sổ này không có sẵn Công
+// đoạn để tự suy ra khu máy như Sổ Rút/Đánh bóng+Cắt, nên cần nhớ luôn cả
+// Khu máy vừa chọn (không chỉ máy cụ thể) để lần thêm dòng kế tiếp đỡ
+// phải chọn lại từ đầu nếu vẫn đang ghi nhận trên cùng khu máy.
+const NL_LAST_KHU_KEY = 'sx_nl_last_khu_v1';
+function nlLastKhuGet(){ try{ return localStorage.getItem(NL_LAST_KHU_KEY)||''; }catch(e){ return ''; } }
+function nlLastKhuSet(khu){ if(!khu) return; try{ localStorage.setItem(NL_LAST_KHU_KEY, khu); }catch(e){} }
+function nlOnKhuMayChange(){
+  const khu = $('nlKhuMay').value;
+  $('nlMay').innerHTML = machineOptionsHTMLByGroup(khu, slLastMayGet(khu));
+}
+function nlOnMayChange(){
+  const khu = $('nlKhuMay').value, may = $('nlMay').value;
+  if(may) slLastMaySet(khu, may);
+}
+function slLastMayGet(group){
+  if(!group) return '';
+  try{ const obj = JSON.parse(localStorage.getItem(SL_LAST_MAY_KEY)||'{}'); return obj[group]||''; }
+  catch(e){ return ''; }
+}
+function slLastMaySet(group, may){
+  if(!group || !may) return;
+  try{
+    const obj = JSON.parse(localStorage.getItem(SL_LAST_MAY_KEY)||'{}');
+    obj[group] = may;
+    localStorage.setItem(SL_LAST_MAY_KEY, JSON.stringify(obj));
+  }catch(e){}
+}
+// Đổi Công đoạn (chỉ Sổ Đánh bóng + Cắt mới có 2 lựa chọn) → nạp lại đúng
+// danh sách máy của khu máy tương ứng, tự điền máy dùng gần nhất ở khu đó.
+function mcOnCongDoanChange(){
+  const congDoan = $('mcCongDoan').value;
+  const group = CONGDOAN_MACHINE_GROUP[congDoan];
+  $('mcMay').innerHTML = mcMachineOptionsHTML(congDoan, slLastMayGet(group));
+}
+// Chọn máy xong → nhớ ngay cho khu máy đó, không cần đợi bấm Lưu, để nếu
+// đổi ý Công đoạn qua lại thì máy vừa chọn không bị mất "trí nhớ".
+function mcOnMayChange(){
+  const congDoan = $('mcCongDoan').value, may = $('mcMay').value;
+  if(may) slLastMaySet(CONGDOAN_MACHINE_GROUP[congDoan], may);
+}
+
 function goSlTab(tab){ _slTab = tab; _slSearch=''; _slFrom=''; _slTo=''; renderSoLieu(); }
 function slSetSearch(v){ _slSearch = v; renderSlBody(); }
 function slSetFrom(v){ _slFrom = v; renderSlBody(); }
@@ -19445,8 +19599,10 @@ function renderSoLieu(){
       <input type="date" value="${_slFrom}" onchange="slSetFrom(this.value)" title="Từ ngày">
       <input type="date" value="${_slTo}" onchange="slSetTo(this.value)" title="Đến ngày">
       <button class="khm-add-btn" style="background:${SL_META[_slTab].color}" onclick="exportSlExcel('${_slTab}')">📥 Xuất Excel</button>
+      <button class="khm-add-btn" style="background:#334155" onclick="slPrintExport('${_slTab}')">🖨️ In / Xuất PDF</button>
       ${isSlEditor()?`<button class="khm-add-btn" style="background:${SL_META[_slTab].color}" onclick="slOpenAdd()">+ Thêm dòng</button>`:''}
     </div>
+    <div style="font-size:11.5px;color:var(--text4);margin:-4px 0 10px">⏳ Dữ liệu quá <b>32 ngày</b> (tính theo Ngày ghi) sẽ tự động bị xoá khỏi sổ để gọn nhẹ — hãy xuất Excel/PDF lưu trữ định kỳ nếu cần giữ lại lâu dài.</div>
     <div id="slBody"></div>
   `;
   renderSlBody();
@@ -19458,7 +19614,7 @@ function renderSlBody(){
   const filtered = list.filter(r=>{
     const dateOk = inDateRange(r.ngay, _slFrom, _slTo);
     if(!dateOk) return false;
-    if(tab==='nguyenLieu') return matchesSearch(r, ['nguyenLieu','heatLot','loaiThanhPham','ghiChu','khachHang','doDanDien'], _slSearch);
+    if(tab==='nguyenLieu') return matchesSearch(r, ['nguyenLieu','heatLot','loaiThanhPham','ghiChu','khachHang','doDanDien','may','khuMay'], _slSearch);
     return matchesSearch(r, ['quyCach','loaiNL','congDoan','nguoiSanXuat','khachHang','ghiChu'], _slSearch);
   });
 
@@ -19473,6 +19629,7 @@ function renderSlBody(){
       <div class="khm-stat-card" style="border-left-color:${c}"><div class="khm-stat-num">${fmtNum(totalKg)}</div><div class="khm-stat-lbl">Tổng số lượng (kg)</div></div>
       <div class="khm-stat-card warn"><div class="khm-stat-num">${fmtNum(totalPhe)}</div><div class="khm-stat-lbl">Tổng phế/đầu mẩu (kg)</div></div>
       <div class="khm-stat-card warn"><div class="khm-stat-num">${fmtNum(totalPhoi)}</div><div class="khm-stat-lbl">Tổng phoi (kg)</div></div>`;
+    $('slStats').innerHTML += slMachineBreakdownHTML(list, c);
   } else {
     const totalThanh = list.reduce((s,r)=>s+(Number(r.soThanh)||0),0);
     const dacBiet = list.filter(r=>r.hang==='Đặc biệt').length;
@@ -19480,32 +19637,36 @@ function renderSlBody(){
       <div class="khm-stat-card" style="border-left-color:${c}"><div class="khm-stat-num">${list.length}</div><div class="khm-stat-lbl">Dòng đã ghi</div></div>
       <div class="khm-stat-card" style="border-left-color:${c}"><div class="khm-stat-num">${fmtNum(totalThanh)}</div><div class="khm-stat-lbl">Tổng số thanh</div></div>
       <div class="khm-stat-card" style="border-left-color:${c}"><div class="khm-stat-num">${dacBiet}</div><div class="khm-stat-lbl">Số dòng hàng Đặc biệt</div></div>`;
+    $('slStats').innerHTML += slMachineBreakdownHTML(list, c);
   }
 
   const admin = isSlEditor();
   let head, rows;
   if(tab==='nguyenLieu'){
-    head = `<tr><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
+    head = `<tr><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Máy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
     rows = filtered.map(r=>`<tr class="dt-row-clickable" onclick="slViewDetail('nguyenLieu','${r.id}')">
         <td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
         <td>${fmtNum(r.soLuong)}</td><td>${esc(r.loaiThanhPham)}</td><td>${esc(r.soMetChay)}</td>
+        <td>${r.may?`🏭 ${esc(r.may)}`:'<span style="color:var(--text4)">—</span>'}</td>
         <td>${nlMultiCellHTML(r.phe,r.pheItems)}</td><td>${nlMultiCellHTML(r.phoi,r.phoiItems)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
         <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="event.stopPropagation();slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="event.stopPropagation();slDelete('${r.id}')">🗑️</button>`:''}</td>
       </tr>`).join('');
   } else {
-    head = `<tr><th>STT</th><th>Ngày</th><th>Quy cách</th><th>Loại NL</th><th>Hàng</th><th>Số thanh</th><th>Công đoạn</th><th>Ca SX</th><th>Người SX</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
+    head = `<tr><th>STT</th><th>Ngày</th><th>Quy cách</th><th>Loại NL</th><th>Hàng</th><th>Số thanh</th><th>Công đoạn</th><th>Máy</th><th>Ca SX</th><th>Người SX</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
     rows = filtered.map((r,i)=>`<tr class="dt-row-clickable" onclick="slViewDetail('${tab}','${r.id}')">
         <td class="dt-stt">${i+1}</td><td>${fmtDate(r.ngay)}</td><td>${esc(r.quyCach)}</td><td>${esc(r.loaiNL)}</td>
         <td><span class="dt-pill">${esc(r.hang)||'—'}</span></td><td>${fmtNum(r.soThanh)}</td>
         <td><span class="dt-pill" style="background:${meta.colorLight};color:${meta.color}">${esc(r.congDoan)||'—'}</span></td>
+        <td>${r.may?`🏭 ${esc(r.may)}`:'<span style="color:var(--text4)">—</span>'}</td>
         <td>${r.ca?('Ca '+esc(r.ca)):'—'}</td><td>${esc(r.nguoiSanXuat)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
         <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="event.stopPropagation();slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="event.stopPropagation();slDelete('${r.id}')">🗑️</button>`:''}</td>
       </tr>`).join('');
   }
 
+  const nCols = tab==='nguyenLieu' ? 13 : 13;
   $('slBody').innerHTML = `
     <div class="dt-wrap" style="--sl-accent:${c}"><table class="dt-table"><thead>${head}</thead>
-      <tbody>${filtered.length?rows:`<tr><td colspan="12" class="dt-empty">📭 Chưa có dữ liệu — bấm "+ Thêm dòng" để bắt đầu ghi ${meta.label.toLowerCase()}</td></tr>`}</tbody>
+      <tbody>${filtered.length?rows:`<tr><td colspan="${nCols}" class="dt-empty">📭 Chưa có dữ liệu — bấm "+ Thêm dòng" để bắt đầu ghi ${meta.label.toLowerCase()}</td></tr>`}</tbody>
     </table></div>`;
 }
 
@@ -19520,6 +19681,33 @@ function nlMultiCellHTML(total, items){
   return `<span title="${esc(detail)}">${t} <span style="opacity:.6;font-size:10px">🔖${items.length}</span></span>`;
 }
 function fmtNum(n){ n=Number(n)||0; return n.toLocaleString('vi-VN',{maximumFractionDigits:2}); }
+
+// Thống kê nhanh theo khu máy (nhóm máy) — gộp toàn bộ máy trong cùng 1
+// khu (VD "Máy rút 100 - 1" + "Máy rút 100 - 2" + "Máy rút 50" đều thuộc
+// khu "Máy rút") để thấy ngay khu nào chạy nhiều thanh nhất, dòng nào
+// chưa ghi máy cụ thể (hiển thị "Chưa ghi máy") để nhắc bổ sung.
+function slMachineBreakdownHTML(list, color){
+  const byGroup = {};
+  list.forEach(r=>{
+    const may = r.may && r.may.trim();
+    const m = may ? MACHINES.find(x=>x.name===may) : null;
+    const key = m ? m.group : (may ? may : 'Chưa ghi máy');
+    if(!byGroup[key]) byGroup[key] = {soThanh:0, count:0};
+    byGroup[key].soThanh += Number(r.soThanh)||0;
+    byGroup[key].count += 1;
+  });
+  const keys = Object.keys(byGroup);
+  if(!keys.length) return '';
+  keys.sort((a,b)=> byGroup[b].soThanh - byGroup[a].soThanh);
+  const chips = keys.map(k=>{
+    const g = byGroup[k];
+    const missing = k==='Chưa ghi máy';
+    return `<span class="dt-pill" style="background:${missing?'#FEF3C7':color+'1A'};color:${missing?'#92400E':color};font-weight:600;margin:2px 4px 2px 0">
+      ${missing?'⚠️ ':'🏭 '}${esc(k)} · ${g.count} dòng · ${fmtNum(g.soThanh)} thanh
+    </span>`;
+  }).join('');
+  return `<div style="grid-column:1/-1;padding:8px 2px 0"><div style="font-size:11.5px;color:var(--text4);margin-bottom:4px;font-weight:600">📊 Theo khu máy:</div>${chips}</div>`;
+}
 
 
 // ── Thêm / Sửa Sổ nguyên liệu ─────────────────────────────────────────
@@ -19587,6 +19775,9 @@ function nlOpenAdd(){
   $('nlNgay').value = todayStr();
   _nlPheItems = [{ma:'',kg:''}]; _nlPhoiItems = [{ma:'',kg:''}];
   nlMultiRender('phe'); nlMultiRender('phoi');
+  const dfKhu = nlLastKhuGet();
+  $('nlKhuMay').innerHTML = machineGroupOptionsHTML(dfKhu);
+  $('nlMay').innerHTML = machineOptionsHTMLByGroup(dfKhu, slLastMayGet(dfKhu));
   $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
   openModal('nlModal');
 }
@@ -19602,6 +19793,9 @@ function nlOpenEdit(id){
   _nlPheItems = nlMultiSetFromRecord(r.pheItems, r.phe);
   _nlPhoiItems = nlMultiSetFromRecord(r.phoiItems, r.phoi);
   nlMultiRender('phe'); nlMultiRender('phoi');
+  const rKhu = r.khuMay || (r.may ? ((MACHINES.find(m=>m.name===r.may)||{}).group||'') : '');
+  $('nlKhuMay').innerHTML = machineGroupOptionsHTML(rKhu);
+  $('nlMay').innerHTML = machineOptionsHTMLByGroup(rKhu, r.may||'');
   $('nlDonHang').value=r.khachHang||''; $('nlPO').value=r.po||''; $('nlWO').value=r.wo||''; $('nlGhiChu').value=r.ghiChu||'';
   $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
   openModal('nlModal');
@@ -19619,12 +19813,14 @@ function nlSave(){
   // trống (tránh lưu 1 dòng hoàn toàn rỗng).
   if(!nl && !phe && !phoi){ $('nlErr').textContent='⚠️ Vui lòng nhập Nguyên liệu, hoặc ít nhất Phế/đầu mẩu hay Phoi.'; $('nlErr').style.display='block'; return; }
   const arr = slArr('nguyenLieu');
+  const khuMay = $('nlKhuMay').value, may = $('nlMay').value;
   const rec = {
     id: _slEditId || uid(),
     ngay, nguyenLieu: nl, heatLot: $('nlHeatLot').value.trim(),
     doDanDien: $('nlDoDanDien').value.trim(),
     soLuong: $('nlSoLuong').value?Number($('nlSoLuong').value):0,
     loaiThanhPham: $('nlLoaiTP').value.trim(), soMetChay: $('nlSoMet').value.trim(),
+    khuMay, may,
     phe, phoi, pheItems, phoiItems,
     khachHang: $('nlDonHang').value.trim(), po: $('nlPO').value.trim(), wo: $('nlWO').value.trim(),
     ghiChu: $('nlGhiChu').value.trim(),
@@ -19632,6 +19828,7 @@ function nlSave(){
   };
   const idx = arr.findIndex(x=>x.id===rec.id);
   if(idx>=0) arr[idx]=rec; else arr.push(rec);
+  nlLastKhuSet(khuMay); slLastMaySet(khuMay, may); // nhớ khu máy + máy vừa dùng
   saveNguyenLieuLog();
   const logLabel = nl || (phe?`Phế/đầu mẩu ${fmtNum(phe)}kg`:'') || (phoi?`Phoi ${fmtNum(phoi)}kg`:'') || '(dòng trống)';
   log('Sổ nguyên liệu', `${_slEditId?'Sửa':'Thêm'} dòng ${logLabel} (${rec.heatLot||'—'})`, rec.id, null, null);
@@ -19676,6 +19873,8 @@ function slViewDetail(tab, id){
       ${slDetailField('Số lượng', fmtNum(r.soLuong)+' kg')}
       ${slDetailField('Loại thành phẩm chạy', esc(r.loaiThanhPham))}
       ${slDetailField('Số mét chạy', esc(r.soMetChay))}
+      ${slDetailField('Khu máy', esc(r.khuMay))}
+      ${slDetailField('Máy sản xuất', r.may?('🏭 '+esc(r.may)):'—')}
       ${slDetailField('Tổng phế/đầu mẩu', fmtNum(r.phe)+' kg')}
       ${slDetailField('Chi tiết mã phế/đầu mẩu', esc(nlDetailText(r.pheItems)))}
       ${slDetailField('Tổng phoi', fmtNum(r.phoi)+' kg')}
@@ -19693,6 +19892,7 @@ function slViewDetail(tab, id){
       ${slDetailField('Hàng', esc(r.hang))}
       ${slDetailField('Số thanh', fmtNum(r.soThanh))}
       ${slDetailField('Công đoạn', esc(r.congDoan))}
+      ${slDetailField('Máy sản xuất', r.may?('🏭 '+esc(r.may)):'—')}
       ${slDetailField('Ca SX', r.ca?('Ca '+esc(r.ca)):'—')}
       ${slDetailField('Người SX', esc(r.nguoiSanXuat))}
       ${slDetailField('Khách hàng', esc(r.khachHang))}
@@ -19728,7 +19928,9 @@ function mcOpenAdd(){
   $('mcErr').style.display='none'; $('mcErr').textContent='';
   ['mcQuyCach','mcLoaiNL','mcSoThanh','mcNguoiSX','mcKhachHang','mcGhiChu'].forEach(id=>$(id).value='');
   $('mcNgay').value = todayStr(); $('mcHang').value='Bo cạnh'; $('mcCa').value='';
-  $('mcCongDoan').innerHTML = mcCongDoanOptionsHTML(_slTab, SL_META[_slTab].congDoan[0]);
+  const dfCongDoan = SL_META[_slTab].congDoan[0];
+  $('mcCongDoan').innerHTML = mcCongDoanOptionsHTML(_slTab, dfCongDoan);
+  $('mcMay').innerHTML = mcMachineOptionsHTML(dfCongDoan, slLastMayGet(CONGDOAN_MACHINE_GROUP[dfCongDoan]));
   $('mcLoaiNLList').innerHTML = mcLoaiNlOptionsHTML();
   $('mcKhachHangList').innerHTML = mcKhachHangOptionsHTML();
   openModal('mcModal');
@@ -19742,7 +19944,9 @@ function mcOpenEdit(id){
   $('mcNgay').value=r.ngay||''; $('mcQuyCach').value=r.quyCach||''; $('mcLoaiNL').value=r.loaiNL||'';
   $('mcHang').value=r.hang||'Bo cạnh'; $('mcSoThanh').value=r.soThanh??''; $('mcCa').value=r.ca||'';
   $('mcNguoiSX').value=r.nguoiSanXuat||''; $('mcKhachHang').value=r.khachHang||''; $('mcGhiChu').value=r.ghiChu||'';
-  $('mcCongDoan').innerHTML = mcCongDoanOptionsHTML(_slTab, r.congDoan||SL_META[_slTab].congDoan[0]);
+  const edCongDoan = r.congDoan||SL_META[_slTab].congDoan[0];
+  $('mcCongDoan').innerHTML = mcCongDoanOptionsHTML(_slTab, edCongDoan);
+  $('mcMay').innerHTML = mcMachineOptionsHTML(edCongDoan, r.may||slLastMayGet(CONGDOAN_MACHINE_GROUP[edCongDoan]));
   $('mcLoaiNLList').innerHTML = mcLoaiNlOptionsHTML();
   $('mcKhachHangList').innerHTML = mcKhachHangOptionsHTML();
   openModal('mcModal');
@@ -19753,15 +19957,17 @@ function mcSave(){
   const nguoiSX=$('mcNguoiSX').value.trim();
   if(!ngay || !qc || !soThanh || !nguoiSX){ $('mcErr').textContent='⚠️ Vui lòng nhập đủ Ngày, Quy cách, Số thanh, Người SX.'; $('mcErr').style.display='block'; return; }
   const tab = _slTab, arr = slArr(tab);
+  const congDoan = $('mcCongDoan').value, may = $('mcMay').value;
   const rec = {
     id: _slEditId || uid(),
     ngay, quyCach: qc, loaiNL: $('mcLoaiNL').value.trim(), hang: $('mcHang').value,
-    soThanh: Number(soThanh), congDoan: $('mcCongDoan').value, ca: $('mcCa').value,
+    soThanh: Number(soThanh), congDoan, may, ca: $('mcCa').value,
     nguoiSanXuat: nguoiSX, khachHang: $('mcKhachHang').value.trim(), ghiChu: $('mcGhiChu').value.trim(),
     updatedAt: Date.now(), updatedBy: actorName()
   };
   const idx = arr.findIndex(x=>x.id===rec.id);
   if(idx>=0) arr[idx]=rec; else arr.push(rec);
+  slLastMaySet(CONGDOAN_MACHINE_GROUP[congDoan], may); // nhớ máy vừa dùng cho khu máy này
   slDoSave(tab);
   log(SL_META[tab].label, `${_slEditId?'Sửa':'Thêm'} dòng ${qc} (${rec.congDoan})`, rec.id, null, null);
   closeModal('mcModal');
@@ -19846,7 +20052,12 @@ async function exportProfessionalExcel(opts){
     ws.getRow(headerRow).height = 32;
     ws.getRow(7).height = 1; // dòng đệm mỏng để AutoFilter neo ngay dưới header
 
-    let r = headerRow+1;
+    // Dữ liệu phải bắt đầu từ hàng 8 (SAU dòng đệm ở hàng 7) — trước đây
+    // là headerRow+1 = 7, tức là dòng dữ liệu ĐẦU TIÊN của mỗi sổ bị ghi
+    // đè lên đúng dòng đệm cao 1px này, khiến toàn bộ dữ liệu dòng đó (ngày,
+    // fi20/quy cách, mã, độ dẫn điện, loại thành phẩm...) tuy vẫn nằm trong
+    // file nhưng bị ép dẹt gần như vô hình khi mở Excel — nhìn như bị thiếu.
+    let r = headerRow+2;
     (opts.rows||[]).forEach(row=>{
       cols.forEach((c,i)=>{
         const cell = ws.getCell(r, i+1);
@@ -19929,20 +20140,27 @@ function exportSlExcel(tab){
         {header:'Số lượng (kg)', key:'soLuong', width:13, numFmt:'num'},
         {header:'Loại TP chạy', key:'loaiThanhPham', width:14},
         {header:'Số mét chạy', key:'soMetChay', width:12},
+        {header:'Khu máy', key:'khuMay', width:14},
+        {header:'Máy', key:'may', width:18},
         {header:'Phế/đầu mẩu (kg)', key:'phe', width:14, numFmt:'num'},
         {header:'Chi tiết mã Phế/đầu mẩu', key:'pheDetail', width:26},
         {header:'Phoi (kg)', key:'phoi', width:11, numFmt:'num'},
         {header:'Chi tiết mã Phoi', key:'phoiDetail', width:26},
         {header:'Khách hàng', key:'khachHang', width:16},
-        {header:'Ghi chú', key:'ghiChu', width:22}
+        {header:'PO', key:'po', width:12},
+        {header:'WO', key:'wo', width:12},
+        {header:'Ghi chú', key:'ghiChu', width:22},
+        {header:'Người cập nhật', key:'updatedBy', width:16},
+        {header:'Cập nhật lúc', key:'updatedAtText', width:16}
       ],
-      rows: slArr('nguyenLieu').map(r=>({...r, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems)})),
+      rows: slArr('nguyenLieu').slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0))
+        .map(r=>({...r, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems), updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''})),
       totalsCols:['soLuong','phe','phoi'],
       filename:`So_nguyen_lieu_${stamp}.xlsx`
     });
   } else {
     const sorted = slArr(tab).slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0));
-    const rows = sorted.map((r,i)=>({...r, stt:i+1, caLabel: r.ca?('Ca '+r.ca):''}));
+    const rows = sorted.map((r,i)=>({...r, stt:i+1, caLabel: r.ca?('Ca '+r.ca):'', updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''}));
     exportProfessionalExcel({
       docTitle: 'SỔ GHI THÀNH PHẨM '+(tab==='mayRut'?'RÚT':'ĐÁNH BÓNG + CẮT'), docCode: meta.code, sheetName: tab==='mayRut'?'SoMayRut':'SoMayDanhBongCat',
       columns:[
@@ -19953,15 +20171,92 @@ function exportSlExcel(tab){
         {header:'Hàng', key:'hang', width:12},
         {header:'Số thanh', key:'soThanh', width:10, numFmt:'num'},
         {header:'Công đoạn', key:'congDoan', width:12},
+        {header:'Máy', key:'may', width:18},
         {header:'Ca SX', key:'caLabel', width:9},
         {header:'Người SX', key:'nguoiSanXuat', width:16},
         {header:'Khách hàng', key:'khachHang', width:16},
-        {header:'Ghi chú', key:'ghiChu', width:20}
+        {header:'Ghi chú', key:'ghiChu', width:20},
+        {header:'Người cập nhật', key:'updatedBy', width:16},
+        {header:'Cập nhật lúc', key:'updatedAtText', width:16}
       ],
       rows, totalsCols:['soThanh'],
       filename:`So_may_${tab==='mayRut'?'rut':'danh_bong_cat'}_${stamp}.xlsx`
     });
   }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// IN / XUẤT PDF CHUYÊN NGHIỆP — dựng khung in A4 ngang có tiêu đề công
+// ty, tên sổ, mã hồ sơ, người/ngày xuất, bảng đầy đủ cột (kể cả cột Máy
+// mới), dòng tổng cộng và 3 ô chữ ký Người lập/Người kiểm tra/QA — mở
+// cửa sổ in để người dùng bấm "Lưu dưới dạng PDF" ngay trên trình
+// duyệt, giống hệt cách xuất PDF Lịch làm việc đã có sẵn trong app.
+// Tôn trọng đúng bộ lọc (tìm kiếm/khoảng ngày) đang áp dụng trên tab.
+// ════════════════════════════════════════════════════════════════════
+function slPrintExport(tab){
+  const meta = SL_META[tab];
+  const list = slArr(tab).slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0));
+  const filtered = list.filter(r=>{
+    if(!inDateRange(r.ngay, _slFrom, _slTo)) return false;
+    if(tab==='nguyenLieu') return matchesSearch(r, ['nguyenLieu','heatLot','loaiThanhPham','ghiChu','khachHang','doDanDien','may','khuMay'], _slSearch);
+    return matchesSearch(r, ['quyCach','loaiNL','congDoan','nguoiSanXuat','khachHang','ghiChu','may'], _slSearch);
+  });
+  if(!filtered.length){ showToast('📭 Không có dữ liệu để xuất', true); return; }
+
+  const now = new Date(); const pad=n=>String(n).padStart(2,'0');
+  const docCode = `${meta.code}-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+  const e2 = v=>(v==null?'':String(v)).replace(/</g,'&lt;');
+
+  let head, rows, totalLabel, totalVal;
+  if(tab==='nguyenLieu'){
+    head = ['Ngày','Nguyên liệu','Mã cuộn/Heat-Lot','Độ dẫn điện','Số lượng (kg)','Loại TP chạy','Số mét chạy','Khu máy','Máy','Phế/đầu mẩu (kg)','Phoi (kg)','Khách hàng','PO','WO','Ghi chú'];
+    rows = filtered.map(r=>[fmtDate(r.ngay), e2(r.nguyenLieu), e2(r.heatLot), e2(r.doDanDien), fmtNum(r.soLuong), e2(r.loaiThanhPham), e2(r.soMetChay), e2(r.khuMay)||'—', e2(r.may)||'—', fmtNum(r.phe), fmtNum(r.phoi), e2(r.khachHang), e2(r.po), e2(r.wo), e2(r.ghiChu)]);
+    totalLabel = 'Tổng số lượng (kg)';
+    totalVal = fmtNum(filtered.reduce((s,r)=>s+(Number(r.soLuong)||0),0));
+  } else {
+    head = ['STT','Ngày','Quy cách','Loại NL','Hàng','Số thanh','Công đoạn','Máy','Ca SX','Người SX','Khách hàng','Ghi chú'];
+    rows = filtered.map((r,i)=>[i+1, fmtDate(r.ngay), e2(r.quyCach), e2(r.loaiNL), e2(r.hang)||'—', fmtNum(r.soThanh), e2(r.congDoan)||'—', e2(r.may)||'—', r.ca?('Ca '+r.ca):'—', e2(r.nguoiSanXuat), e2(r.khachHang), e2(r.ghiChu)]);
+    totalLabel = 'Tổng số thanh';
+    totalVal = fmtNum(filtered.reduce((s,r)=>s+(Number(r.soThanh)||0),0));
+  }
+  const docTitle = tab==='nguyenLieu' ? 'SỔ GHI NGUYÊN LIỆU PHẾ PHOI VÀ CHẠY CÁC KÍCH CỠ'
+    : 'SỔ GHI THÀNH PHẨM '+(tab==='mayRut'?'RÚT':'ĐÁNH BÓNG + CẮT');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${e2(meta.label)}</title>
+  <style>
+    @page{ size:A4 landscape; margin:10mm; }
+    body{ font-family:Arial,Helvetica,sans-serif; color:#000; }
+    h1{ text-align:center; font-size:15px; margin:0 0 2px; text-transform:uppercase }
+    h2{ text-align:center; font-size:12.5px; margin:0 0 8px; color:${meta.color} }
+    .meta{ display:flex; justify-content:space-between; font-size:10.5px; margin-bottom:8px; color:#333 }
+    table{ border-collapse:collapse; width:100%; font-size:10px }
+    th,td{ border:1px solid #000; padding:4px 5px; text-align:center }
+    th{ background:${meta.color}; color:#fff; font-weight:bold }
+    td:last-child{ text-align:left }
+    tfoot td{ font-weight:bold; background:#EFF2F7 }
+    .sign{ margin-top:28px; display:flex; justify-content:space-between; text-align:center; font-size:11px }
+    .sign div{ width:32%; }
+    .sign .tt{ font-weight:bold; margin-bottom:42px }
+    .sub{ font-style:italic; color:#9096A5; font-size:9.5px }
+  </style></head><body>
+    <h1>Công ty Cổ phần Công Thương Đông Phương</h1>
+    <h2>${e2(docTitle)}</h2>
+    <div class="meta"><span>Mã hồ sơ: ${docCode}</span><span>Người xuất: ${e2(actorName())}</span><span>Ngày xuất: ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}</span></div>
+    <table>
+      <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(row=>`<tr>${row.map(c=>`<td>${c===''||c==null?'—':c}</td>`).join('')}</tr>`).join('')}</tbody>
+      <tfoot><tr><td colspan="${head.length-1}" style="text-align:right">${totalLabel}</td><td>${totalVal}</td></tr></tfoot>
+    </table>
+    <div class="sign">
+      <div><div class="tt">Người lập</div><div class="sub">(Ký, ghi rõ họ tên)</div></div>
+      <div><div class="tt">Người kiểm tra</div><div class="sub">(Ký, ghi rõ họ tên)</div></div>
+      <div><div class="tt">QA xác nhận</div><div class="sub">(Ký, ghi rõ họ tên)</div></div>
+    </div>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if(!w){ showToast('❌ Trình duyệt chặn cửa sổ in, vui lòng cho phép popup', true); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+  w.onload = ()=>{ w.focus(); w.print(); };
 }
 
 
