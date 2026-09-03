@@ -8701,6 +8701,77 @@ const SL_AUTOCLEAN_LOCK_KEY = 'sx_sl_autoclean_last_run_v1';
 const SL_AUTOCLEAN_DAYS = 32;
 let _slAutoCleanRunning = false;
 
+// ── NHẮC XUẤT EXCEL TRƯỚC KHI BỊ TỰ ĐỘNG XOÁ ──────────────────────────
+// Dòng dữ liệu nào sắp tới hạn bị autoCleanupSoLieu() xoá (còn ≤5 ngày
+// nữa) thì cần nhắc người dùng xuất Excel lưu trữ trước — tránh việc
+// dữ liệu tự mất mà không ai kịp lưu.
+const SL_REMIND_DAYS_BEFORE = 5;
+const SL_REMIND_LOCK_KEY = 'sx_sl_remind_export_last_run_v1';
+
+// Số ngày còn lại trước khi 1 dòng (theo "Ngày ghi") bị tự động xoá.
+// Trả về null nếu dòng không có Ngày hợp lệ (không xoá tự động nên
+// cũng không cần nhắc).
+function slDaysUntilAutoDelete(ngay){
+  if(!ngay) return null;
+  const rowDate = new Date(ngay+'T00:00:00');
+  if(isNaN(rowDate)) return null;
+  const daysSince = Math.floor((new Date() - rowDate)/86400000);
+  return SL_AUTOCLEAN_DAYS - daysSince;
+}
+// Với 1 sổ (tab): đếm số dòng sắp bị xoá trong SL_REMIND_DAYS_BEFORE
+// ngày tới + số ngày còn lại ít nhất (dòng cũ nhất sẽ bị xoá sớm nhất).
+function slSoonExpireInfo(tab){
+  const arr = slArr(tab);
+  let count=0, minLeft=Infinity;
+  arr.forEach(r=>{
+    const left = slDaysUntilAutoDelete(r && r.ngay);
+    if(left!=null && left>=0 && left<=SL_REMIND_DAYS_BEFORE){
+      count++;
+      if(left<minLeft) minLeft = left;
+    }
+  });
+  return count>0 ? {count, daysLeft:minLeft} : null;
+}
+// Banner cảnh báo hiển thị NGAY TRÊN đầu tab 📊 Số liệu (luôn đúng thời
+// điểm thực tế vì tính lại mỗi lần render, không phụ thuộc thông báo
+// có bị bỏ lỡ hay không) — kèm nút xuất Excel nhanh cho đúng sổ đó.
+function slRemindBannerHTML(){
+  const parts = Object.keys(SL_META).map(k=>{
+    const info = slSoonExpireInfo(k);
+    if(!info) return '';
+    const m = SL_META[k];
+    const whenTxt = info.daysLeft<=0 ? 'HÔM NAY' : `trong ${info.daysLeft} ngày nữa`;
+    return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;border-radius:10px;background:#FFF7ED;border:1px solid #FDBA74;margin-bottom:8px">
+      <span style="flex:1;min-width:220px;font-size:12.5px;color:#9A3412;line-height:1.5">⏰ <b>${info.count} dòng</b> của <b>${m.icon} ${m.label}</b> sẽ tự động bị xoá <b>${whenTxt}</b> (đã ghi hơn ${SL_AUTOCLEAN_DAYS-SL_REMIND_DAYS_BEFORE} ngày) — xuất Excel lưu trữ ngay kẻo mất dữ liệu!</span>
+      <button class="khm-add-btn" style="background:${m.color};flex:0 0 auto" onclick="exportSlExcel('${k}')">📥 Xuất Excel</button>
+    </div>`;
+  }).filter(Boolean);
+  return parts.join('');
+}
+// Nhắc chủ động qua chuông thông báo (addNotif) — tối đa 1 lần/24h/thiết
+// bị (dùng lại chung mốc AUTOCLEAN_MIN_INTERVAL_MS), để Admin/nhân sự
+// vẫn được nhắc kể cả khi không mở sẵn tab Số liệu. Gọi cùng lúc/cùng
+// chỗ với autoCleanupSoLieu() (xem điểm gọi ở initApp/visibilitychange/
+// setInterval bên dưới) để không cần thêm lịch chạy riêng.
+function slRemindExportIfNeeded(){
+  try{
+    const last = Number(localStorage.getItem(SL_REMIND_LOCK_KEY))||0;
+    if(Date.now() - last < AUTOCLEAN_MIN_INTERVAL_MS) return;
+    const soonParts = [];
+    Object.keys(SL_META).forEach(k=>{
+      const info = slSoonExpireInfo(k);
+      if(info) soonParts.push(`${SL_META[k].label}: ${info.count} dòng (còn ${info.daysLeft<=0?'0':info.daysLeft} ngày)`);
+    });
+    if(!soonParts.length) return;
+    localStorage.setItem(SL_REMIND_LOCK_KEY, String(Date.now()));
+    addNotif('warning', '⏰ Sắp tự động xoá dữ liệu Số liệu',
+      `Một số dòng trong tab 📊 Số liệu sắp bị tự động xoá (quá ${SL_AUTOCLEAN_DAYS} ngày, không thể khôi phục) — ${soonParts.join('; ')}. Vào tab Số liệu và bấm "Xuất Excel" cho từng sổ để lưu trữ trước khi bị xoá.`,
+      'soLieu');
+  }catch(e){
+    console.warn('[slRemindExportIfNeeded] lỗi khi kiểm tra nhắc xuất Excel:', e);
+  }
+}
+
 function slAutoCleanLastRun(){
   try{ return Number(localStorage.getItem(SL_AUTOCLEAN_LOCK_KEY))||0; }catch(e){ return 0; }
 }
@@ -10417,7 +10488,7 @@ async function initAndStartSync(){
   // hiểu lầm "cứ Auto Cleanup chạy là mất dữ liệu". Trễ thêm vài giây và tự
   // kiểm tra lại _pendingSaves/dirty ngay trong autoCleanupDoneOrders() để
   // chắc chắn đồng bộ đã thực sự ổn định trước khi đụng tới dữ liệu.
-  setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); }, 5000);
+  setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); slRemindExportIfNeeded(); }, 5000);
   renderTab(currentTab);
   updateBadges();
   // Chức năng sao lưu tự động đã được TẮT theo yêu cầu (xem ghi chú ở khối
@@ -10438,14 +10509,14 @@ document.addEventListener('visibilitychange', ()=>{
     // Auto Cleanup 30 ngày / 32 ngày: thử lại khi app được mở lại (VD để qua
     // đêm ở nền rồi mở lại) — cả 2 hàm tự bỏ qua nếu chưa tới hạn 24h, chưa
     // đồng bộ xong hoặc đang có ghi dở dang, nên gọi lại đây an toàn.
-    setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); }, 3000);
+    setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); slRemindExportIfNeeded(); }, 3000);
   }
 });
 // Auto Cleanup 30 ngày (Đơn hoàn thành) / 32 ngày (tab Số liệu): kiểm tra
 // định kỳ mỗi giờ cho các phiên mở app kéo dài nhiều ngày liên tục không
 // tải lại trang — bản thân từng hàm tự bỏ qua nếu chưa tới hạn 24h/thiết
 // bị hoặc đồng bộ chưa ổn định (xem canRunAutoClean()/canRunSlAutoClean()).
-setInterval(()=>{ if(currentUser && fbOk()){ autoCleanupDoneOrders(); autoCleanupSoLieu(); } }, 60*60*1000);
+setInterval(()=>{ if(currentUser && fbOk()){ autoCleanupDoneOrders(); autoCleanupSoLieu(); slRemindExportIfNeeded(); } }, 60*60*1000);
 window.addEventListener('online', ()=>{ if(currentUser && fbOk()){ startRealtimeStream(); doPoll(); updateOnline(); } });
 window.addEventListener('offline', ()=>{ setSyncDot('error'); });
 
@@ -19586,12 +19657,16 @@ function inDateRange(dateStr, from, to){
 function renderSoLieu(){
   const tabsHtml = Object.keys(SL_META).map(k=>{
     const m = SL_META[k], n = slArr(k).length, active = _slTab===k;
-    return `<button class="sl-tab-card ${active?'active':''}" style="--sl-c:${m.color};--sl-c-l:${m.colorLight}" onclick="goSlTab('${k}')">
+    const soon = slSoonExpireInfo(k);
+    const soonDot = soon ? `<span title="${soon.count} dòng sắp bị tự động xoá" style="position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 3px;border-radius:20px;background:#dc2626;color:#fff;font-size:9.5px;font-weight:800;line-height:16px;text-align:center;box-shadow:0 0 0 2px #fff">${soon.count>9?'9+':soon.count}</span>` : '';
+    return `<button class="sl-tab-card ${active?'active':''}" style="--sl-c:${m.color};--sl-c-l:${m.colorLight};position:relative" onclick="goSlTab('${k}')">
+      ${soonDot}
       <div class="sl-tab-icon">${m.icon}</div>
       <div class="sl-tab-info"><div class="sl-tab-label">${m.label}</div><div class="sl-tab-count">${n} dòng đã ghi</div></div>
     </button>`;
   }).join('');
   $('mc').innerHTML = `
+    ${slRemindBannerHTML()}
     <div class="sl-tabs">${tabsHtml}</div>
     <div id="slStats" class="khm-stats"></div>
     <div class="hs-filter-row">
