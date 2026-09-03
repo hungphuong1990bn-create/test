@@ -20115,6 +20115,10 @@ async function exportProfessionalExcel(opts){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast('✅ Đã xuất file Excel '+opts.docTitle);
+    // Chỉ gọi callback sau khi file ĐÃ thực sự được tạo & tải về thành công —
+    // để các nơi gọi (VD dọn dữ liệu sau khi xuất) không bao giờ xoá nhầm
+    // dữ liệu khi việc xuất file thất bại ở trên.
+    if(typeof opts.onExported==='function') opts.onExported();
   }catch(err){
     console.error(err);
     showToast('❌ Xuất Excel thất bại: '+(err&&err.message||err), true);
@@ -20129,6 +20133,16 @@ function exportSlExcel(tab){
   const meta = SL_META[tab];
   const now = new Date(); const pad=n=>String(n).padStart(2,'0');
   const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+  // Ghi lại đúng tập ID các dòng đang được xuất ra file lần này — dùng để,
+  // SAU KHI file đã tải về thành công, hỏi người dùng có muốn xoá đúng các
+  // dòng này (dữ liệu vừa xuất + mọi dữ liệu cũ hơn đang có trong sổ, vì
+  // exportSlExcel luôn xuất TOÀN BỘ sổ) khỏi hệ thống hay không, để giảm
+  // dung lượng lưu trữ. Chỉ xoá đúng các ID đã chốt tại thời điểm bấm xuất —
+  // không xoá theo "toàn bộ mảng hiện tại" phòng trường hợp có dòng mới
+  // được thêm vào đúng lúc hộp thoại xác nhận đang mở.
+  const exportedIds = slArr(tab).map(r=>r.id).filter(Boolean);
+  const onExported = ()=> slConfirmClearAfterExport(tab, exportedIds);
+
   if(tab==='nguyenLieu'){
     exportProfessionalExcel({
       docTitle: 'SỔ GHI NGUYÊN LIỆU PHẾ PHOI VÀ CHẠY CÁC KÍCH CỠ', docCode: meta.code, sheetName:'SoNguyenLieu',
@@ -20156,7 +20170,8 @@ function exportSlExcel(tab){
       rows: slArr('nguyenLieu').slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0))
         .map(r=>({...r, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems), updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''})),
       totalsCols:['soLuong','phe','phoi'],
-      filename:`So_nguyen_lieu_${stamp}.xlsx`
+      filename:`So_nguyen_lieu_${stamp}.xlsx`,
+      onExported
     });
   } else {
     const sorted = slArr(tab).slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0));
@@ -20180,9 +20195,44 @@ function exportSlExcel(tab){
         {header:'Cập nhật lúc', key:'updatedAtText', width:16}
       ],
       rows, totalsCols:['soThanh'],
-      filename:`So_may_${tab==='mayRut'?'rut':'danh_bong_cat'}_${stamp}.xlsx`
+      filename:`So_may_${tab==='mayRut'?'rut':'danh_bong_cat'}_${stamp}.xlsx`,
+      onExported
     });
   }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// SAU KHI XUẤT EXCEL (tab 📊 Số liệu — cả 3 sổ: Nguyên liệu / Máy Rút /
+// Máy Đánh bóng+Cắt): hỏi xác nhận rồi TỰ ĐỘNG XOÁ đúng các dòng dữ liệu
+// vừa được ghi vào file Excel đã tải về (bao gồm cả dữ liệu cũ, vì mỗi
+// lần xuất luôn xuất TOÀN BỘ sổ) khỏi hệ thống, để giảm bớt dung lượng
+// lưu trữ — dữ liệu vẫn còn nguyên vẹn trong file Excel vừa tải về máy.
+// Chỉ admin/nhân sự có quyền sửa sổ Số liệu (isSlEditor) mới được xoá;
+// người chỉ có quyền xem (Viewer) xuất Excel bình thường nhưng KHÔNG bị
+// hỏi xoá (guardSlEdit chặn) — dữ liệu của họ được giữ nguyên.
+// ════════════════════════════════════════════════════════════════════
+function slConfirmClearAfterExport(tab, exportedIds){
+  if(!isSlEditor()) return; // Viewer: chỉ xem/xuất, không có quyền xoá dữ liệu
+  if(!exportedIds || !exportedIds.length) return; // sổ trống, không có gì để dọn
+  const meta = SL_META[tab];
+  confirm2(
+    '🗑️ Dọn dữ liệu sau khi xuất?',
+    `Đã xuất ${exportedIds.length} dòng của "${meta.label}" ra file Excel. Dữ liệu đã được lưu đầy đủ trong file vừa tải về — bạn có muốn xoá các dòng này khỏi hệ thống để giảm dung lượng lưu trữ không? Không thể hoàn tác.`,
+    ()=> slClearAfterExport(tab, exportedIds)
+  );
+}
+function slClearAfterExport(tab, exportedIds){
+  const field = SL_META[tab].field;
+  const idSet = new Set(exportedIds);
+  const arr = DB[field]||[];
+  const kept = arr.filter(r=> !(r && idSet.has(r.id)));
+  const removed = arr.length - kept.length;
+  if(removed<=0) return;
+  DB[field] = kept;
+  slDoSave(tab);
+  log(SL_META[tab].label, `Dọn dữ liệu sau khi xuất Excel — đã xoá ${removed} dòng (đã lưu trong file Excel vừa tải về)`, null, null, {deletedBy:'AFTER_EXPORT'});
+  if(currentTab==='soLieu') renderSoLieu();
+  showToast(`🗑️ Đã dọn ${removed} dòng dữ liệu — sổ đã gọn nhẹ hơn`);
 }
 
 // ════════════════════════════════════════════════════════════════════
