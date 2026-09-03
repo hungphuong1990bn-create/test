@@ -13775,25 +13775,57 @@ function tbGlobalSearchLive(v){
   _tbGlobalSearchLiveDebounced(v);
 }
 
-function ddExportExcel(){
+// ════════════════════════════════════════════════════════════════════
+// XUẤT EXCEL CHUYÊN NGHIỆP — Tab Đơn hàng: dùng lại đúng khung xuất Excel
+// (exportProfessionalExcel — xem định nghĩa gần tab 📊 Số liệu) đang áp
+// dụng cho 3 sổ Số liệu: có tên công ty, tên sổ, mã hồ sơ, ngày/người
+// xuất, header tô màu + viền, AutoFilter, Freeze Header, dòng TỔNG CỘNG,
+// chữ ký Người lập/Người kiểm tra/QA, canh in khổ A4 ngang.
+// Xuất đúng danh sách ĐANG HIỂN THỊ (đã áp bộ lọc/tìm kiếm hiện tại),
+// giữ nguyên hành vi như trước — chỉ nâng cấp phần khung/định dạng.
+// ════════════════════════════════════════════════════════════════════
+async function ddExportExcel(){
   const ids = _ddVisibleIds||[];
   if(!ids.length){ showToast && showToast('Không có đơn hàng để xuất'); return; }
   const rows = ids.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
-  const header = ['Mã đơn','Khách hàng','Loại','Nguyên liệu','Quy cách','Số lượng','Đã sản xuất','Tiến độ','KL (kg)','Ngày đặt','Hạn giao','Ưu tiên','Trạng thái','Người phụ trách'];
-  const esc = v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
-  const lines = [header.map(esc).join(',')];
-  rows.forEach(o=>{
+  const now = new Date(); const pad=n=>String(n).padStart(2,'0');
+  const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+  const sorted = rows.slice().sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+  const data = sorted.map((o,i)=>{
     const meta = ddStatusMeta(o);
     const doneUnit = o.isCoil?'cuộn':(o.isRound?'cây':'thanh');
-    lines.push([ddCode(o), o.customer||'', o.type||'', ddMaterialLabel(o.material), specStr(o), qtyLabel(o), `${o.doneQty||0} ${doneUnit}`, ddProgressPct(o)+'%', o.kg||'', fmtDate(o.createdAt), fmtDate(o.deliveryDate), o.priority||'', meta.label, ddOwner(o)].map(esc).join(','));
+    return {
+      stt: i+1, code: ddCode(o), customer: o.customer||'', po: o.po||'',
+      type: o.type||'', material: ddMaterialLabel(o.material), spec: specStr(o),
+      qty: qtyLabel(o), kg: o.kg||'', doneQty: `${o.doneQty||0} ${doneUnit}`,
+      progress: ddProgressPct(o)+'%', createdAt: o.createdAt, deliveryDate: o.deliveryDate,
+      priority: o.priority||'', status: meta.label, owner: ddOwner(o), note: o.note||''
+    };
   });
-  const csv = '\uFEFF'+lines.join('\r\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `don-hang-${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  await exportProfessionalExcel({
+    docTitle: 'SỔ THEO DÕI ĐƠN HÀNG SẢN XUẤT', docCode: 'TC-01', sheetName: 'DonHang',
+    columns:[
+      {header:'STT', key:'stt', width:6, numFmt:'num'},
+      {header:'Mã đơn / PO', key:'code', width:14},
+      {header:'Khách hàng', key:'customer', width:18},
+      {header:'Loại', key:'type', width:12},
+      {header:'Nguyên liệu', key:'material', width:16},
+      {header:'Quy cách', key:'spec', width:16},
+      {header:'Số lượng KH', key:'qty', width:16},
+      {header:'KL (kg)', key:'kg', width:10, numFmt:'num'},
+      {header:'Đã sản xuất', key:'doneQty', width:14},
+      {header:'Tiến độ', key:'progress', width:10},
+      {header:'Ngày đặt', key:'createdAt', width:12, numFmt:'date'},
+      {header:'Hạn giao', key:'deliveryDate', width:12, numFmt:'date'},
+      {header:'Ưu tiên', key:'priority', width:10},
+      {header:'Trạng thái', key:'status', width:16},
+      {header:'Người phụ trách', key:'owner', width:16},
+      {header:'Ghi chú', key:'note', width:22}
+    ],
+    rows: data,
+    totalsCols:['kg'],
+    filename:`Don_hang_${stamp}.xlsx`
+  });
 }
 
 function ddRow(o, stt){
@@ -16157,25 +16189,51 @@ function htmCard(o){
 }
 
 // Xuất Excel (CSV) đúng danh sách đang lọc/hiển thị ở tab Đơn hoàn thành
-function htExportExcel(){
+// ════════════════════════════════════════════════════════════════════
+// XUẤT EXCEL CHUYÊN NGHIỆP — Tab Đơn hoàn thành: dùng chung khung xuất
+// Excel chuyên nghiệp (exportProfessionalExcel) như tab Đơn hàng và 3 sổ
+// Số liệu — xem ghi chú chi tiết ở ddExportExcel() phía trên.
+// ════════════════════════════════════════════════════════════════════
+async function htExportExcel(){
   const ids = _htVisibleIds||[];
   if(!ids.length){ showToast && showToast('Không có đơn thành phẩm để xuất'); return; }
   const rows = ids.map(id=>DB.orders.find(o=>o.id===id)).filter(Boolean);
-  const header = ['Mã đơn','Khách hàng','PO','Sản phẩm','Nguyên liệu','Quy cách','Số lượng','KL (kg)','Ngày nhận','Hoàn thành lúc','Thời gian SX','Trạng thái','Xác nhận bởi'];
-  const esc = v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
-  const lines = [header.map(esc).join(',')];
-  rows.forEach(o=>{
+  const now = new Date(); const pad=n=>String(n).padStart(2,'0');
+  const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+  const sorted = rows.slice().sort((a,b)=> (b.doneAt||0)-(a.doneAt||0));
+  const data = sorted.map((o,i)=>{
     const st = htStage(o);
     const dur = (o.startedAt&&o.doneAt) ? fmtDuration(o.doneAt-o.startedAt) : '';
-    lines.push([htCode(o), o.customer||'', o.po||'', o.type||'', ddMaterialLabel(o.material), specStr(o), qtyLabel(o), o.kg||'', fmtDate(o.createdAt), fmtDateTime(o.doneAt), dur, st.label, htConfirmedBy(o)].map(esc).join(','));
+    return {
+      stt: i+1, code: htCode(o), customer: o.customer||'', po: o.po||'',
+      type: o.type||'', material: ddMaterialLabel(o.material), spec: specStr(o),
+      qty: qtyLabel(o), kg: o.kg||'', createdAt: o.createdAt,
+      doneAtText: o.doneAt?fmtDateTime(o.doneAt):'', duration: dur,
+      status: st.label, confirmedBy: htConfirmedBy(o), note: o.note||''
+    };
   });
-  const csv = '\uFEFF'+lines.join('\r\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `don-hoan-thanh-${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  await exportProfessionalExcel({
+    docTitle: 'SỔ THEO DÕI ĐƠN HÀNG HOÀN THÀNH', docCode: 'TC-05', sheetName: 'HoanThanh',
+    columns:[
+      {header:'STT', key:'stt', width:6, numFmt:'num'},
+      {header:'Mã đơn / PO', key:'code', width:14},
+      {header:'Khách hàng', key:'customer', width:18},
+      {header:'Loại', key:'type', width:12},
+      {header:'Nguyên liệu', key:'material', width:16},
+      {header:'Quy cách', key:'spec', width:16},
+      {header:'Số lượng', key:'qty', width:16},
+      {header:'KL (kg)', key:'kg', width:10, numFmt:'num'},
+      {header:'Ngày đặt', key:'createdAt', width:12, numFmt:'date'},
+      {header:'Hoàn thành lúc', key:'doneAtText', width:16},
+      {header:'Thời gian SX', key:'duration', width:12},
+      {header:'Trạng thái', key:'status', width:14},
+      {header:'Xác nhận bởi', key:'confirmedBy', width:16},
+      {header:'Ghi chú', key:'note', width:22}
+    ],
+    rows: data,
+    totalsCols:['kg'],
+    filename:`Don_hoan_thanh_${stamp}.xlsx`
+  });
 }
 
 // Ngày giao hiển thị: đã giao thì lấy ngày giao thực tế, chưa thì lấy hạn giao dự kiến
@@ -16548,6 +16606,17 @@ function renderHoanThanh(){
   ];
 
   $('mc').innerHTML=`
+    <div class="dd-page-head">
+      <div>
+        <div class="dd-page-title">✅ Đơn hoàn thành</div>
+        <div class="dd-page-sub">Theo dõi đơn hàng đã hoàn thành sản xuất</div>
+      </div>
+      <div class="dd-page-actions">
+        <button class="dd-page-btn" onclick="tbFilterBtnClick(this)">🔽 Bộ lọc</button>
+        <button class="dd-page-btn" onclick="htResetFilters()">↺ Đặt lại</button>
+        <button class="dd-page-btn" onclick="htExportExcel()">⬇️ Xuất Excel</button>
+      </div>
+    </div>
     <div class="dd-overview">
       <span><b>${totalDone}</b>đơn thành phẩm</span>
       <span><b>${totalKg.toLocaleString('vi-VN')}kg</b>tổng sản lượng</span>
