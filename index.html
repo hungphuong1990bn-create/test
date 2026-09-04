@@ -20405,19 +20405,64 @@ function slConfirmClearAfterExport(tab, exportedIds){
     ()=> slClearAfterExport(tab, exportedIds)
   );
 }
-function slClearAfterExport(tab, exportedIds){
+async function slClearAfterExport(tab, exportedIds){
   const field = SL_META[tab].field;
+  const path = '/data/'+field;
   const idSet = new Set(exportedIds);
   const arr = DB[field]||[];
   const kept = arr.filter(r=> !(r && idSet.has(r.id)));
   const removed = arr.length - kept.length;
   if(removed<=0) return;
+
+  // Cập nhật UI ngay cho mượt — máy đang thao tác thấy dòng biến mất tức thì.
   DB[field] = kept;
-  slDoSave(tab);
+  lsSave();
   log(SL_META[tab].label, `Dọn dữ liệu sau khi xuất Excel — đã xoá ${removed} dòng (đã lưu trong file Excel vừa tải về)`, null, null, {deletedBy:'AFTER_EXPORT'});
   if(currentTab==='soLieu') renderSoLieu();
   showToast(`🗑️ Đã dọn ${removed} dòng dữ liệu — sổ đã gọn nhẹ hơn`);
+
+  // ── ĐỒNG BỘ LÊN FIREBASE — KHÔNG dùng cơ chế "so ảnh chụp lần đồng bộ
+  // gần nhất" (mergeAndSaveArrField) cho thao tác này nữa. Lý do: đây là
+  // thao tác XOÁ HÀNG LOẠT theo 1 danh sách ID đã biết CHẮC CHẮN (chính là
+  // exportedIds — các dòng vừa được ghi vào file Excel), nên không cần suy
+  // luận "dòng nào vừa đổi" qua so sánh ảnh chụp (cách suy luận này có thể
+  // sai nếu lỡ bỏ sót 1 sự kiện đồng bộ realtime nào đó trước đó, khiến
+  // dòng xoá không được đẩy lên server — đúng lỗi "xoá ở máy mình nhưng
+  // máy khác vẫn còn"). Thay vào đó: đọc thẳng bản MỚI NHẤT từ server, bỏ
+  // đúng các ID trong exportedIds (dù ảnh chụp cũ tới đâu cũng không ảnh
+  // hưởng), giữ nguyên mọi dòng khác kể cả dòng thiết bị khác vừa thêm
+  // trong lúc mình đang xuất/xoá, rồi ghi thẳng đè lên nhánh đó.
+  if(!fbOk()){ return; }
+  setSyncDot('saving'); markDirty(field); beginSave();
+  let attempt = 0;
+  const maxRetry = 3;
+  while(true){
+    try{
+      const serverRaw = await fbRead(path);
+      const serverList = serverRaw ? (Array.isArray(serverRaw)?serverRaw:Object.values(serverRaw)) : [];
+      const mergedMap = {};
+      serverList.forEach(o=>{ if(o && o.id && !idSet.has(o.id)) mergedMap[o.id]=o; });
+      // Giữ lại mọi dòng cục bộ hiện có (kể cả dòng vừa thêm/sửa trên máy
+      // này mà có thể chưa kịp lên server) — không bị mất khi ghi đè.
+      (DB[field]||[]).forEach(o=>{ if(o && o.id) mergedMap[o.id]=o; });
+      const merged = Object.values(mergedMap);
+      DB[field] = merged; lsSave();
+      await fbWrite(path, merged, 'PUT');
+      _lastSyncedArrSnap[field] = snapshotArrById(DB[field]);
+      setSyncDot('ok'); clearDirty(field); endSave();
+      break;
+    }catch(e){
+      attempt++;
+      if(attempt > maxRetry){
+        setSyncDot('error'); endSave(); // giữ dấu "dirty" để lần mở app sau tự đẩy lại
+        showToast('❌ Lỗi đồng bộ khi dọn dữ liệu — sẽ tự thử lại khi mở app: '+(e.message||e), true);
+        break;
+      }
+      await new Promise(res=>setTimeout(res, 1500*attempt));
+    }
+  }
 }
+
 
 // ════════════════════════════════════════════════════════════════════
 // IN / XUẤT PDF CHUYÊN NGHIỆP — dựng khung in A4 ngang có tiêu đề công
