@@ -10614,21 +10614,29 @@ function applyDataSnapshot(data){
     if(JSON.stringify(freshTrash)!==JSON.stringify(DB.ordersTrash)){ DB.ordersTrash = freshTrash; _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash); changed = true; }
   }
   if(data.attendance && JSON.stringify(data.attendance)!==JSON.stringify(DB.attendance)){ DB.attendance = data.attendance; _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); changed = true; }
-  if(data.workers && JSON.stringify(data.workers)!==JSON.stringify(DB.workers)){ DB.workers = data.workers; changed = true; }
-  if(data.kyLuat && JSON.stringify(data.kyLuat)!==JSON.stringify(DB.kyLuat)){ DB.kyLuat = data.kyLuat; changed = true; }
-  if(data.nghiPhep && JSON.stringify(data.nghiPhep)!==JSON.stringify(DB.nghiPhep)){ DB.nghiPhep = data.nghiPhep; changed = true; }
-  if(data.lichLamViec && JSON.stringify(data.lichLamViec)!==JSON.stringify(DB.lichLamViec)){ DB.lichLamViec = data.lichLamViec; changed = true; }
-  if(data.baoTri && JSON.stringify(data.baoTri)!==JSON.stringify(DB.baoTri)){ DB.baoTri = data.baoTri; changed = true; }
-  if(data.khuonCatalog && JSON.stringify(data.khuonCatalog)!==JSON.stringify(DB.khuonCatalog)){ DB.khuonCatalog = data.khuonCatalog; changed = true; }
-  if(data.khuonQty && JSON.stringify(data.khuonQty)!==JSON.stringify(DB.khuonQty)){ DB.khuonQty = data.khuonQty; changed = true; }
-  if(data.csTemplates && JSON.stringify(data.csTemplates)!==JSON.stringify(DB.csTemplates)){ DB.csTemplates = data.csTemplates; changed = true; }
+  // GHI CHÚ: mọi nhánh mảng-theo-id dưới đây (workers/kyLuat/nghiPhep/
+  // lichLamViec/baoTri/khuonCatalog/khuonQty/csTemplates) cũng làm mới
+  // _lastSyncedArrSnap[field] ngay khi nhận bản mới từ server — cùng lý do
+  // đã sửa ở nguyenLieuLog/mayRutLog/mayDanhBongLog bên dưới và ở
+  // applyFieldChange(): nếu không, "ảnh chụp lần đồng bộ gần nhất" bị cũ dần
+  // trên các thiết bị ít tự lưu, khiến lần XOÁ kế tiếp trên thiết bị đó tính
+  // sai dòng cần xoá trên Firebase (dòng đã xoá cục bộ nhưng không hề bị xoá
+  // trên server/thiết bị khác).
+  if(data.workers && JSON.stringify(data.workers)!==JSON.stringify(DB.workers)){ DB.workers = data.workers; _lastSyncedArrSnap.workers=snapshotArrById(DB.workers); changed = true; }
+  if(data.kyLuat && JSON.stringify(data.kyLuat)!==JSON.stringify(DB.kyLuat)){ DB.kyLuat = data.kyLuat; _lastSyncedArrSnap.kyLuat=snapshotArrById(DB.kyLuat); changed = true; }
+  if(data.nghiPhep && JSON.stringify(data.nghiPhep)!==JSON.stringify(DB.nghiPhep)){ DB.nghiPhep = data.nghiPhep; _lastSyncedArrSnap.nghiPhep=snapshotArrById(DB.nghiPhep); changed = true; }
+  if(data.lichLamViec && JSON.stringify(data.lichLamViec)!==JSON.stringify(DB.lichLamViec)){ DB.lichLamViec = data.lichLamViec; _lastSyncedArrSnap.lichLamViec=snapshotArrById(DB.lichLamViec); changed = true; }
+  if(data.baoTri && JSON.stringify(data.baoTri)!==JSON.stringify(DB.baoTri)){ DB.baoTri = data.baoTri; _lastSyncedArrSnap.baoTri=snapshotArrById(DB.baoTri); changed = true; }
+  if(data.khuonCatalog && JSON.stringify(data.khuonCatalog)!==JSON.stringify(DB.khuonCatalog)){ DB.khuonCatalog = data.khuonCatalog; _lastSyncedArrSnap.khuonCatalog=snapshotArrById(DB.khuonCatalog); changed = true; }
+  if(data.khuonQty && JSON.stringify(data.khuonQty)!==JSON.stringify(DB.khuonQty)){ DB.khuonQty = data.khuonQty; _lastSyncedArrSnap.khuonQty=snapshotArrById(DB.khuonQty); changed = true; }
+  if(data.csTemplates && JSON.stringify(data.csTemplates)!==JSON.stringify(DB.csTemplates)){ DB.csTemplates = data.csTemplates; _lastSyncedArrSnap.csTemplates=snapshotArrById(DB.csTemplates); changed = true; }
   if(data.csData && JSON.stringify(data.csData)!==JSON.stringify(DB.csData)){ DB.csData = data.csData; _lastSyncedCsDataSnapshot = flattenCsData(DB.csData); changed = true; }
   if(data.nguyenLieuLog){ const fresh=Array.isArray(data.nguyenLieuLog)?data.nguyenLieuLog:Object.values(data.nguyenLieuLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.nguyenLieuLog)){ DB.nguyenLieuLog=fresh; _lastSyncedArrSnap.nguyenLieuLog=snapshotArrById(DB.nguyenLieuLog); changed=true; } }
   if(data.mayRutLog){ const fresh=Array.isArray(data.mayRutLog)?data.mayRutLog:Object.values(data.mayRutLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.mayRutLog)){ DB.mayRutLog=fresh; _lastSyncedArrSnap.mayRutLog=snapshotArrById(DB.mayRutLog); changed=true; } }
   if(data.mayDanhBongLog){ const fresh=Array.isArray(data.mayDanhBongLog)?data.mayDanhBongLog:Object.values(data.mayDanhBongLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.mayDanhBongLog)){ DB.mayDanhBongLog=fresh; _lastSyncedArrSnap.mayDanhBongLog=snapshotArrById(DB.mayDanhBongLog); changed=true; } }
   if(data.qrProducts){
     const freshQr = Array.isArray(data.qrProducts)?data.qrProducts:Object.values(data.qrProducts);
-    if(JSON.stringify(freshQr)!==JSON.stringify(DB.qrProducts)){ DB.qrProducts = freshQr; changed = true; }
+    if(JSON.stringify(freshQr)!==JSON.stringify(DB.qrProducts)){ DB.qrProducts = freshQr; _lastSyncedArrSnap.qrProducts=snapshotArrById(DB.qrProducts); changed = true; }
   }
   // AUTO DISPATCH (mục 13) chạy chung tại scheduleUIRefresh() bên dưới —
   // đúng 1 điểm cho mọi đường đồng bộ (poll toàn bộ /data, SSE theo field,
@@ -10698,6 +10706,23 @@ function applyFieldChange(field, val){
     if(JSON.stringify(fresh)===JSON.stringify(DB[field])) return;
     DB[field] = fresh;
     if(field==='attendance') _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
+    // SỬA LỖI ĐỒNG BỘ QUAN TRỌNG: các nhánh mảng-theo-id (Sổ nguyên liệu,
+    // Sổ máy Rút, Sổ máy Đánh bóng, Lịch làm việc, Bảo trì, Kỷ luật, Nghỉ
+    // phép, Workers, Khuôn, Check Sheet, QR...) dùng _lastSyncedArrSnap để
+    // biết CHÍNH XÁC dòng nào mình vừa thêm/sửa/xoá khi lưu (mergeAndSaveArrField).
+    // Trước đây, khi có cập nhật REALTIME (SSE) từ THIẾT BỊ KHÁC báo về đúng
+    // nhánh này, DB[field] được cập nhật nhưng _lastSyncedArrSnap[field] KHÔNG
+    // được làm mới theo — khiến "ảnh chụp lần đồng bộ gần nhất" bị CŨ dần theo
+    // thời gian trên các thiết bị ít tự lưu (chỉ xem). Hậu quả: khi thiết bị đó
+    // xoá dữ liệu (VD "Dọn dữ liệu sau khi xuất Excel"), các dòng do THIẾT BỊ
+    // KHÁC thêm SAU lần đồng bộ cũ đó không nằm trong "ảnh chụp cũ" → không
+    // được tính là "vừa xoá" → không bị xoá khỏi Firebase, nên vẫn còn nguyên
+    // trên server và trên các thiết bị khác (dù trên máy vừa xoá thì đã biến
+    // mất khỏi màn hình). Nay làm mới lại _lastSyncedArrSnap[field] MỖI KHI
+    // nhận được cập nhật realtime, để lần xoá kế tiếp luôn tính đúng.
+    if(Object.prototype.hasOwnProperty.call(_lastSyncedArrSnap, field)){
+      _lastSyncedArrSnap[field] = snapshotArrById(DB[field]);
+    }
   }
   lsSave(); scheduleUIRefresh(true);
 }
