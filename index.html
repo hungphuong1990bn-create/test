@@ -3734,6 +3734,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .ht-status-sub{font-size:10px;color:var(--text4);font-weight:700;white-space:nowrap;padding-left:2px;display:flex;align-items:center;gap:3px}
 .ht-fresh-pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;background:var(--green-m);color:#fff;padding:2.5px 8px 2.5px 7px;border-radius:20px;white-space:nowrap;animation:htFreshPulse2 2s ease-in-out infinite}
 .ht-fresh-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#fff;flex-shrink:0}
+/* Nhắc nhở đơn sắp bị tự động XOÁ VĨNH VIỄN (xem HT_PURGE_WARN_DAYS) */
+.ht-expire-pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;background:var(--amber-m);color:#fff;padding:2.5px 8px 2.5px 7px;border-radius:20px;white-space:nowrap;margin-top:3px}
+.htm-expire-pill{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;background:var(--amber-l);color:var(--amber);border:1px solid var(--amber-m);padding:3px 8px;border-radius:20px;white-space:nowrap;margin:2px 10px 0}
+.htm-card.ht-expiring{border-color:var(--amber-m);box-shadow:0 0 0 1px rgba(217,119,6,.18)}
 @keyframes htFreshPulse2{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(21,150,108,.35)}50%{opacity:.85;box-shadow:0 0 0 4px rgba(21,150,108,0)}}
 .dd-due.overdue{color:var(--red-m)}
 .dd-actions{display:flex;gap:4px;align-items:center}
@@ -5192,6 +5196,9 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dd-table tbody tr.ht-fresh td{background:#F0FDF4}
 .dd-table tbody tr.ht-fresh:hover td{background:#DCFCE7}
 .dd-table tbody tr.ht-fresh td:first-child{box-shadow:inset 3px 0 0 var(--green-m)}
+.dd-table tbody tr.ht-expiring td{background:#FFFBEB}
+.dd-table tbody tr.ht-expiring:hover td{background:#FEF3C7}
+.dd-table tbody tr.ht-expiring td:first-child{box-shadow:inset 3px 0 0 var(--amber-m)}
 
 /* ═══ ĐÓNG BĂNG CỘT khi cuộn ngang ═══
    Tab Hoàn thành (#htTable): giữ cố định cột đầu "Khách hàng" (không còn
@@ -5216,6 +5223,8 @@ body.sl-fullscreen #slGearBtn{display:flex}
 #ddTable tbody tr.is-overdue:hover td:nth-child(1), #ddTable tbody tr.is-overdue:hover td:nth-child(2){background:#FEEEEC}
 #htTable tbody tr.ht-fresh td:nth-child(1){background:#F0FDF4}
 #htTable tbody tr.ht-fresh:hover td:nth-child(1){background:#DCFCE7}
+#htTable tbody tr.ht-expiring td:nth-child(1){background:#FFFBEB}
+#htTable tbody tr.ht-expiring:hover td:nth-child(1){background:#FEF3C7}
 @media (max-width:640px){
   #ddTable th:nth-child(1), #ddTable td:nth-child(1){width:40px;min-width:40px;max-width:40px}
   #ddTable th:nth-child(2), #ddTable td:nth-child(2){left:40px;width:140px;min-width:140px;max-width:140px}
@@ -6962,19 +6971,6 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
   </div>
 </div>
 
-<!-- Trash Modal (Thùng rác — Soft Delete, chỉ Admin) -->
-<div class="modal" id="trashModal">
-  <div class="modal-box">
-    <div class="modal-handle"></div>
-    <div class="modal-title">🗑 Thùng rác (đơn đã xoá)</div>
-    <div style="font-size:12.5px;color:var(--text4);margin:-6px 0 10px">Đơn hoàn thành quá 30 ngày (tính từ ngày hoàn thành) sẽ tự động được chuyển vào đây. Có thể khôi phục hoặc xoá vĩnh viễn.</div>
-    <div id="trashList" style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:10px"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('trashModal')">Đóng</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODALS -->
 <!-- Order Modal -->
 <div class="modal" id="orderModal">
@@ -8588,11 +8584,13 @@ async function mergeAndSaveOrdersTrash(retryCount){
 }
 
 // ════════════════════════════════════════════════════════════
-// AUTO CLEANUP — tự động chuyển "Đơn hoàn thành" quá 30 NGÀY (tính theo
-// doneAt, KHÔNG dùng ngày tạo đơn) từ DB.orders sang DB.ordersTrash (Soft
-// Delete). CHỈ đụng đúng các order id thoả điều kiện — không tác động bất
-// kỳ dữ liệu/tab nào khác (kế hoạch SX, tiến độ, chấm công, nhân sự, tài
-// khoản, kỷ luật/nghỉ phép/lịch làm việc, bảo trì, QR/khuôn...).
+// AUTO CLEANUP — tự động XOÁ VĨNH VIỄN "Đơn hoàn thành" quá 30 NGÀY (tính
+// theo doneAt, KHÔNG dùng ngày tạo đơn) khỏi DB.orders — KHÔNG còn chuyển
+// vào DB.ordersTrash (đã bỏ cơ chế Soft Delete cho luồng này, xoá là mất
+// hẳn, không khôi phục được). CHỈ đụng đúng các order id thoả điều kiện —
+// không tác động bất kỳ dữ liệu/tab nào khác (kế hoạch SX, tiến độ, chấm
+// công, nhân sự, tài khoản, kỷ luật/nghỉ phép/lịch làm việc, bảo trì,
+// QR/khuôn...).
 // ────────────────────────────────────────────────────────────
 // AN TOÀN ĐỒNG BỘ (đọc kỹ trước khi sửa):
 //   • Chỉ chạy khi đồng bộ đã ổn định: _pendingSaves===0 (không có lượt ghi/
@@ -8600,17 +8598,17 @@ async function mergeAndSaveOrdersTrash(retryCount){
 //     phiên trước (nghĩa là dữ liệu cục bộ đã lên Firebase đầy đủ). Đây
 //     chính là yêu cầu "chạy sau khi Firebase Sync đã hoàn tất".
 //   • TUYỆT ĐỐI không dùng saveAll()/fbWrite('/data', ...) — chỉ gọi
-//     saveOrders() và saveOrdersTrash(), 2 hàm này đã dùng đúng cơ chế
-//     merge-theo-id + ETag conditional write, chỉ ghi riêng đúng 2 nhánh
-//     /data/orders và /data/ordersTrash, không đụng nhánh nào khác.
+//     saveOrders(), hàm này đã dùng đúng cơ chế merge-theo-id + ETag
+//     conditional write, chỉ ghi riêng đúng nhánh /data/orders, không đụng
+//     nhánh nào khác.
 //   • Chống Race Condition nhiều thiết bị: không tự đọc/so sánh toàn bộ
-//     mảng rồi ghi đè — để mergeAndSaveOrders()/mergeAndSaveOrdersTrash() lo
-//     phần đọc bản mới nhất từ server làm nền trước khi ghi (xem 2 hàm đó).
-//   • Mất mạng/Firebase lỗi: DB.orders/DB.ordersTrash cục bộ + localStorage
-//     ĐÃ được cập nhật ngay (soft-delete cục bộ luôn thành công), còn phần
-//     đẩy lên Firebase nếu lỗi sẽ tự retry theo đúng cơ chế "dirty" sẵn có
-//     (markDirty bên trong saveOrders/saveOrdersTrash) — không coi là mất
-//     dữ liệu, không tự ý huỷ/khôi phục lại đơn, lần sync sau tự đẩy lại.
+//     mảng rồi ghi đè — để mergeAndSaveOrders() lo phần đọc bản mới nhất
+//     từ server làm nền trước khi ghi (xem hàm đó).
+//   • Mất mạng/Firebase lỗi: DB.orders cục bộ + localStorage ĐÃ được cập
+//     nhật ngay (xoá cục bộ luôn thành công), còn phần đẩy lên Firebase
+//     nếu lỗi sẽ tự retry theo đúng cơ chế "dirty" sẵn có (markDirty bên
+//     trong saveOrders) — không coi là mất dữ liệu đồng bộ, lần sync sau
+//     tự đẩy lại đúng trạng thái đã xoá.
 //   • Khoá chống chạy đồng thời + tối đa 1 lần/ngày trên CÙNG thiết bị: dùng
 //     cờ bộ nhớ _autoCleanRunning (chặn 2 lệnh gọi chồng lấn trong cùng
 //     phiên) và mốc thời gian lưu trong localStorage (chặn chạy lại trong
@@ -8650,34 +8648,26 @@ async function autoCleanupDoneOrders(){
     if(_pendingSaves>0 || getDirtyFields().length>0) return;
 
     const cutoff = Date.now() - AUTOCLEAN_DAYS*24*60*60*1000;
-    const toMove = DB.orders.filter(o=>o && o.status==='done' && Number(o.doneAt)>0 && Number(o.doneAt)<=cutoff);
-    if(!toMove.length) return; // không có đơn nào quá hạn — không đụng gì cả
+    const toRemove = DB.orders.filter(o=>o && o.status==='done' && Number(o.doneAt)>0 && Number(o.doneAt)<=cutoff);
+    if(!toRemove.length) return; // không có đơn nào quá hạn — không đụng gì cả
 
-    const movedIds = new Set(toMove.map(o=>o.id));
-    const now = Date.now();
-    const trashed = toMove.map(o=>({
-      ...o,
-      deleted:true,
-      deletedAt: now,
-      deletedBy: 'AUTO_30_DAYS',
-      deletedReason: 'Tự động dọn: Đơn hoàn thành quá 30 ngày (theo ngày hoàn thành)'
-    }));
+    const removedIds = new Set(toRemove.map(o=>o.id));
 
-    // Chỉ bớt đúng các id quá hạn khỏi DB.orders, không sửa/xoá bất kỳ đơn
-    // nào khác (đơn mới, đơn đang sản xuất...). Không đụng bất kỳ mảng/field
-    // nào khác của DB (kế hoạch SX, tiến độ, chấm công, nhân sự, tài khoản,
-    // kỷ luật/nghỉ phép/lịch làm việc, bảo trì, QR/khuôn...).
-    DB.orders = DB.orders.filter(o=>!movedIds.has(o.id));
-    DB.ordersTrash = [...DB.ordersTrash, ...trashed];
+    // XOÁ VĨNH VIỄN — không còn chuyển vào Thùng rác nữa (đã bỏ cơ chế soft-
+    // delete cho luồng tự động dọn 30 ngày). Chỉ bớt đúng các id quá hạn khỏi
+    // DB.orders, không sửa/xoá bất kỳ đơn nào khác (đơn mới, đơn đang sản
+    // xuất...). Không đụng bất kỳ mảng/field nào khác của DB (kế hoạch SX,
+    // tiến độ, chấm công, nhân sự, tài khoản, kỷ luật/nghỉ phép/lịch làm
+    // việc, bảo trì, QR/khuôn...).
+    DB.orders = DB.orders.filter(o=>!removedIds.has(o.id));
 
-    log('Tự động chuyển đơn hoàn thành quá 30 ngày vào Thùng rác',
-      `${trashed.length} đơn: ${trashed.map(o=>o.customer||o.id).slice(0,10).join(', ')}${trashed.length>10?'…':''}`,
-      null, null, {ids:[...movedIds], deletedBy:'AUTO_30_DAYS'});
+    log('Tự động xoá vĩnh viễn đơn hoàn thành quá 30 ngày',
+      `${toRemove.length} đơn: ${toRemove.map(o=>o.customer||o.id).slice(0,10).join(', ')}${toRemove.length>10?'…':''}`,
+      null, null, {ids:[...removedIds], deletedBy:'AUTO_30_DAYS_PERMANENT'});
 
-    // CHỈ ghi riêng /data/orders và /data/ordersTrash bằng cơ chế merge-theo-id
-    // sẵn có — TUYỆT ĐỐI không saveAll()/ghi đè cả node /data.
+    // CHỈ ghi riêng /data/orders bằng cơ chế merge-theo-id sẵn có — TUYỆT ĐỐI
+    // không saveAll()/ghi đè cả node /data.
     saveOrders();
-    saveOrdersTrash();
 
     // Tab "Đơn hoàn thành" tự refresh để các đơn vừa dọn biến mất khỏi danh
     // sách ngay, không cần người dùng bấm gì thêm.
@@ -10275,56 +10265,6 @@ function processAiCommand(text){
 // Hash để detect thay đổi
 function hashOrders(list){
   return (list||[]).map(o=>o.id+'|'+o.status+'|'+(o.doneAt||0)+'|'+(o.startedAt||0)).join(';');
-}
-
-// ── KHÔI PHỤC ĐƠN TỪ THÙNG RÁC ───────────────────────────────
-function restoreOrderFromTrash(id){
-  const idx = DB.ordersTrash.findIndex(o=>o.id===id);
-  if(idx<0) return;
-  const o = {...DB.ordersTrash[idx]};
-  delete o.deleted; delete o.deletedAt; delete o.deletedBy; delete o.deletedReason;
-  o.version = (Number(o.version)||0) + 1;
-  o.updatedAt = Date.now();
-  o.updatedBy = actorName();
-  DB.ordersTrash = DB.ordersTrash.filter(x=>x.id!==id);
-  DB.orders.push(o);
-  log('Khôi phục từ thùng rác', `${o.customer||'?'}`, o.id, null, {restored:true});
-  saveOrders();
-  saveOrdersTrash();
-  showToast('♻️ Đã khôi phục đơn hàng');
-  renderTab(currentTab);
-}
-
-// ── XOÁ VĨNH VIỄN KHỎI THÙNG RÁC (CHỈ ADMIN) ─────────────────
-function permanentlyDeleteOrder(id){
-  if(!isAdmin()){ showToast('⛔ Chỉ Admin mới được xoá vĩnh viễn', true); return; }
-  const o = DB.ordersTrash.find(x=>x.id===id);
-  if(!o) return;
-  if(!confirm(`Xoá VĨNH VIỄN đơn "${o.customer||o.id}"? Không thể khôi phục sau khi xoá.`)) return;
-  DB.ordersTrash = DB.ordersTrash.filter(x=>x.id!==id);
-  log('Xoá vĩnh viễn khỏi thùng rác', `${o.customer||'?'}`, o.id, {customer:o.customer}, null);
-  saveOrdersTrash();
-  showToast('🗑 Đã xoá vĩnh viễn');
-  renderTrashPanel();
-}
-
-// ── HIỂN THỊ PANEL THÙNG RÁC (chỉ Admin, mở từ Cài đặt) ──────
-
-function renderTrashPanel(){
-  const box = $('trashList'); if(!box) return;
-  const list = [...DB.ordersTrash].sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));
-  if(!list.length){ box.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text4)">Thùng rác trống</div>`; return; }
-  box.innerHTML = list.map(o=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)">
-      <div style="min-width:0">
-        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.customer||'(không tên)'}</div>
-        <div style="font-size:12px;color:var(--text4)">Đã xoá: ${fmtDate(o.deletedAt)} · ${o.deletedReason||o.deletedBy||''}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button onclick="restoreOrderFromTrash('${o.id}')" style="padding:6px 10px;border-radius:8px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;font-weight:600;font-size:13px">♻️ Khôi phục</button>
-        <button onclick="permanentlyDeleteOrder('${o.id}')" style="padding:6px 10px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-weight:600;font-size:13px">🗑 Xoá vĩnh viễn</button>
-      </div>
-    </div>`).join('');
 }
 
 async function initAndStartSync(){
@@ -16041,6 +15981,24 @@ function htIsToday(ts){
   return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
 }
 
+// ── Nhắc nhở đơn SẮP bị tự động XOÁ VĨNH VIỄN ──────────────────────────
+// Dùng lại đúng mốc AUTOCLEAN_DAYS (30 ngày kể từ doneAt) của
+// autoCleanupDoneOrders() ở trên để tính còn bao nhiêu ngày nữa 1 đơn
+// hoàn thành sẽ bị tự động xoá vĩnh viễn (KHÔNG qua Thùng rác, không thể
+// khôi phục), rồi cảnh báo trước cho người dùng ngay trong tab "Đơn hoàn
+// thành" (không đợi tới lúc đơn biến mất mới biết). null nghĩa là không
+// áp dụng (đơn chưa có doneAt).
+const HT_PURGE_WARN_DAYS = 5; // còn <= 5 ngày thì bắt đầu nhắc nhở
+function htDaysUntilPurge(o){
+  if(!o || !Number(o.doneAt)) return null;
+  const purgeAt = Number(o.doneAt) + AUTOCLEAN_DAYS*24*60*60*1000;
+  return Math.ceil((purgeAt - Date.now())/(24*60*60*1000));
+}
+function htIsExpiringSoon(o){
+  const d = htDaysUntilPurge(o);
+  return d!=null && d>=0 && d<=HT_PURGE_WARN_DAYS;
+}
+
 // Trạng thái nghiệp vụ của 1 đơn thành phẩm — 5 mốc: Hoàn thành → Đã nhập
 // kho / Chờ giao → Đã giao, cộng thêm Hoàn trả (nếu có, luôn ưu tiên hiển thị)
 function htStage(o){
@@ -16167,12 +16125,15 @@ function htmPagerHTML(total, page, pageSize){
 function htmCard(o){
   const st = htStage(o);
   const dur = (o.startedAt && o.doneAt) ? fmtDuration(o.doneAt-o.startedAt) : '—';
-  return `<div class="htm-card" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
+  const expSoon = htIsExpiringSoon(o);
+  const purgeDays = expSoon ? htDaysUntilPurge(o) : null;
+  return `<div class="htm-card${expSoon?' ht-expiring':''}" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
     <div class="htm-top">
       <span class="htm-check" style="color:${st.color}">${htStageIcon(st.key)}</span>
       <span class="htm-code">${o.customer||'—'}</span>
       <span class="htm-badge" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.label}</span>
     </div>
+    ${expSoon?`<div class="htm-expire-pill" title="Đơn sẽ tự động bị XOÁ VĨNH VIỄN (không khôi phục được) nếu không có thao tác gì thêm">⏳ ${purgeDays<=0?'Sắp bị tự động xoá':'Còn '+purgeDays+' ngày sẽ tự động xoá'}</div>`:''}
     <div class="htm-grid">
       <div class="htm-cell"><span class="htm-lbl">Nguyên liệu</span><span class="htm-val">${ddMaterialLabel(o.material)}</span></div>
       <div class="htm-cell"><span class="htm-lbl">PO</span><span class="htm-val">${o.po||'—'}</span></div>
@@ -16212,6 +16173,11 @@ async function htExportExcel(){
       status: st.label, confirmedBy: htConfirmedBy(o), note: o.note||''
     };
   });
+  // Chốt đúng tập ID các đơn đang thực sự được đưa vào file lần này — dùng
+  // để, SAU KHI file đã tải về thành công, hỏi có muốn xoá vĩnh viễn đúng
+  // các đơn này hay không, để lần xuất kế tiếp không bị lặp lại các đơn đã
+  // xuất trước đó (xem htConfirmClearAfterExport bên dưới).
+  const exportedIds = sorted.map(o=>o.id);
   await exportProfessionalExcel({
     docTitle: 'SỔ THEO DÕI ĐƠN HÀNG HOÀN THÀNH', docCode: 'TC-05', sheetName: 'HoanThanh',
     columns:[
@@ -16232,8 +16198,42 @@ async function htExportExcel(){
     ],
     rows: data,
     totalsCols:['kg'],
-    filename:`Don_hoan_thanh_${stamp}.xlsx`
+    filename:`Don_hoan_thanh_${stamp}.xlsx`,
+    onExported: ()=> htConfirmClearAfterExport(exportedIds)
   });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// SAU KHI XUẤT EXCEL (tab "Đơn hoàn thành"): hỏi xác nhận rồi XOÁ VĨNH
+// VIỄN đúng các đơn vừa được ghi vào file Excel đã tải về khỏi DB.orders
+// — KHÔNG còn chuyển vào Thùng rác nữa (đã bỏ cơ chế soft-delete cho
+// luồng này), để lần xuất Excel kế tiếp không lặp lại các đơn đã xuất
+// trước đó nữa. Không thể khôi phục sau khi xoá — dữ liệu chỉ còn lại
+// trong file Excel đã tải về. Chỉ admin (đúng quyền xoá đơn — xem
+// canDel=isAdmin() ở htToggleMenu) mới được hỏi; các vai trò khác vẫn
+// xuất Excel bình thường và không bị hỏi/không mất dữ liệu.
+// ════════════════════════════════════════════════════════════════════
+function htConfirmClearAfterExport(exportedIds){
+  if(!isAdmin()) return; // không đủ quyền xoá đơn — giữ nguyên dữ liệu
+  if(!exportedIds || !exportedIds.length) return;
+  confirm2(
+    '🗑️ Xoá vĩnh viễn đơn sau khi xuất?',
+    `Đã xuất ${exportedIds.length} đơn ra file Excel — dữ liệu đã được lưu đầy đủ trong file vừa tải về. Bạn có muốn XOÁ VĨNH VIỄN các đơn này khỏi hệ thống để lần xuất sau không bị trùng lặp không? Không thể hoàn tác.`,
+    ()=> htClearAfterExport(exportedIds)
+  );
+}
+function htClearAfterExport(exportedIds){
+  const idSet = new Set(exportedIds);
+  const removed = DB.orders.filter(o=>o && idSet.has(o.id));
+  if(!removed.length) return;
+  DB.orders = DB.orders.filter(o=>!idSet.has(o.id));
+  log('Xoá vĩnh viễn đơn hoàn thành sau khi xuất Excel',
+    `${removed.length} đơn: ${removed.map(o=>o.customer||o.id).slice(0,10).join(', ')}${removed.length>10?'…':''}`,
+    null, null, {ids:[...idSet], deletedBy:'AFTER_EXPORT_HT_PERMANENT'});
+  saveOrders();
+  if(currentTab==='hoanThanh') renderTab(currentTab);
+  updateBadges();
+  showToast(`🗑️ Đã xoá vĩnh viễn ${removed.length} đơn — không còn trùng lặp ở lần xuất sau`);
 }
 
 // Ngày giao hiển thị: đã giao thì lấy ngày giao thực tế, chưa thì lấy hạn giao dự kiến
@@ -16515,7 +16515,10 @@ function htPrintOrder(id, ev){
 function htRow(o, stt){
   const st = htStage(o);
   const fresh = htIsFresh(o);
-  return `<tr class="${fresh?'ht-fresh':''}" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
+  const expSoon = htIsExpiringSoon(o);
+  const purgeDays = expSoon ? htDaysUntilPurge(o) : null;
+  const rowCls = [fresh?'ht-fresh':'', expSoon?'ht-expiring':''].filter(Boolean).join(' ');
+  return `<tr class="${rowCls}" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
     <td><div class="ord-cust-info"><span class="ord-stt-badge" title="STT">${stt!=null?stt:''}</span><div class="ord-cust-info-txt"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></div></td>
     <td>${o.type||'—'}</td>
     <td>${ddMaterialLabel(o.material)}</td>
@@ -16529,6 +16532,7 @@ function htRow(o, stt){
         <span class="dd-status-pill ht-status-pill-modern" style="background:${st.bg};color:${st.color};border-color:${st.border}"><span class="ht-status-ic">${htStageIcon(st.key)}</span>${st.label}</span>
         ${htStatusSub(o,st)?`<div class="ht-status-sub">${htStatusSub(o,st)}</div>`:''}
         ${fresh?'<span class="ht-fresh-pill">Mới</span>':''}
+        ${expSoon?`<span class="ht-expire-pill" title="Đơn sẽ tự động bị XOÁ VĨNH VIỄN (không khôi phục được) nếu không có thao tác gì thêm">⏳ ${purgeDays<=0?'Sắp bị':'Còn '+purgeDays+' ngày'} xoá</span>`:''}
       </div>
     </td>
     <td>${htConfirmedBy(o)}</td>
@@ -16553,12 +16557,16 @@ function renderHoanThanh(){
   const totalKg     = allDone.reduce((s,o)=>s+(Number(o.kg)||0),0);
   const totalCustomers = new Set(allDone.map(o=>o.customer).filter(Boolean)).size;
   const customers = [...new Set(allDone.map(o=>o.customer).filter(Boolean))].sort();
+  // Đơn sắp bị AUTO CLEANUP xoá vĩnh viễn (xem HT_PURGE_WARN_DAYS/AUTOCLEAN_DAYS)
+  const expiringSoon = allDone.filter(htIsExpiringSoon).sort((a,b)=>(a.doneAt||0)-(b.doneAt||0));
+  const expiringCount = expiringSoon.length;
 
   // Áp bộ lọc
   let list = allDone;
   if(htSearchQ) list = list.filter(o=>htMatchSearch(o,htSearchQ));
   if(htFilterStatus==='today') list = list.filter(o=>htIsToday(o.doneAt));
   else if(htFilterStatus==='wh_all') list = list.filter(o=>o.whIn);
+  else if(htFilterStatus==='expiringSoon') list = list.filter(htIsExpiringSoon);
   else if(htFilterStatus!=='all') list = list.filter(o=>htStage(o).key===htFilterStatus);
   if(htDoneFrom||htDoneTo) list = list.filter(o=>ddInRange(o.doneAt, htDoneFrom, htDoneTo));
   if(htCustomerFilter!=='all') list = list.filter(o=>o.customer===htCustomerFilter);
@@ -16573,6 +16581,7 @@ function renderHoanThanh(){
     {key:'wh_all',    icon:'📦', ic:'#DBEAFE', col:'#1D4ED8', n:inWh,      l:'Đã nhập kho'},
     {key:'shipping',  icon:'🚚', ic:'#DBEAFE', col:'#1D4ED8', n:waitShip,  l:'Chờ giao'},
     {key:'delivered', icon:'✅', ic:'#F3E8FF', col:'#6D28D9', n:delivered, l:'Đã giao'},
+    {key:'expiringSoon', icon:'⏳', ic:'#FCF1DE', col:'#8A5A0E', n:expiringCount, l:'Sắp bị tự động xoá'},
   ];
 
   const selIds = list.map(o=>o.id);
@@ -16595,6 +16604,7 @@ function renderHoanThanh(){
     {key:'today', c:'#0C7A54', bg:'#E3F5EE', icon:'📅', n:doneToday, l:'Hoàn thành hôm nay', unit:'đơn', clickable:true},
     {key:'kg',    c:'#7C3AED', bg:'#F3E8FF', icon:'📊', n:totalKg.toLocaleString('vi-VN'), l:'SL hoàn thành', unit:'kg', clickable:false},
     {key:'cust',  c:'#C2700A', bg:'#FCF1DE', icon:'👥', n:totalCustomers, l:'Khách hàng', unit:'khách hàng', clickable:false},
+    {key:'expiringSoon', c:'#8A5A0E', bg:'#FCF1DE', icon:'⏳', n:expiringCount, l:'Sắp bị tự động xoá', unit:'đơn', clickable:true},
   ];
   const htmDateTabs = [
     {key:'all',       l:'Tất cả'},
@@ -16622,6 +16632,11 @@ function renderHoanThanh(){
       <span><b>${totalKg.toLocaleString('vi-VN')}kg</b>tổng sản lượng</span>
       <span><b>${totalCustomers}</b>khách hàng</span>
     </div>
+
+    ${expiringCount>0 ? `<div class="warn-banner" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;cursor:pointer" onclick="htSetFilter('expiringSoon')">
+      <span>⏳ <b>${expiringCount} đơn</b> sắp bị tự động XOÁ VĨNH VIỄN (không khôi phục được) trong vòng ${HT_PURGE_WARN_DAYS} ngày tới (đã hoàn thành ≥ ${AUTOCLEAN_DAYS-HT_PURGE_WARN_DAYS} ngày) — xuất Excel hoặc xử lý sớm nếu cần giữ lại.</span>
+      <span style="font-weight:800;white-space:nowrap">Xem ngay →</span>
+    </div>` : ''}
 
     <div class="dd-stats-sticky"><div class="dd-stats">
       ${stats.map(s=>`<button class="dd-stat${htFilterStatus===s.key?' active':''}" onclick="htSetFilter('${s.key}')">
