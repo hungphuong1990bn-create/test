@@ -19802,9 +19802,9 @@ function renderSlBody(){
   const admin = isSlEditor();
   let head, rows;
   if(tab==='nguyenLieu'){
-    head = `<tr><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Máy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
-    rows = filtered.map(r=>`<tr class="dt-row-clickable" onclick="slViewDetail('nguyenLieu','${r.id}')">
-        <td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
+    head = `<tr><th>STT</th><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Máy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
+    rows = filtered.map((r,i)=>`<tr class="dt-row-clickable" onclick="slViewDetail('nguyenLieu','${r.id}')">
+        <td class="dt-stt">${i+1}</td><td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
         <td>${fmtNum(r.soLuong)}</td><td>${esc(r.loaiThanhPham)}</td><td>${esc(r.soMetChay)}</td>
         <td>${r.may?`🏭 ${esc(r.may)}`:'<span style="color:var(--text4)">—</span>'}</td>
         <td>${nlMultiCellHTML(r.phe,r.pheItems)}</td><td>${nlMultiCellHTML(r.phoi,r.phoiItems)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
@@ -19822,7 +19822,7 @@ function renderSlBody(){
       </tr>`).join('');
   }
 
-  const nCols = tab==='nguyenLieu' ? 13 : 13;
+  const nCols = tab==='nguyenLieu' ? 14 : 13;
   $('slBody').innerHTML = `
     <div class="dt-wrap" style="--sl-accent:${c}"><table class="dt-table"><thead>${head}</thead>
       <tbody>${filtered.length?rows:`<tr><td colspan="${nCols}" class="dt-empty">📭 Chưa có dữ liệu — bấm "+ Thêm dòng" để bắt đầu ghi ${meta.label.toLowerCase()}</td></tr>`}</tbody>
