@@ -9003,9 +9003,120 @@ async function mergeAndSaveArrField(field, path, onSuccess){
   fbSaveField(field, path, false, ()=>{ _lastSyncedArrSnap[field] = snapshotArrById(DB[field]); if(onSuccess) onSuccess(); });
 }
 
-// Đẩy lên Firebase (nếu đang online) theo cơ chế merge ở trên cho 1
-// trong 4 nhánh; dùng chung bởi mọi thao tác thêm/sửa/xoá/duyệt của
-// lịch làm việc, kỷ luật, nghỉ phép, bảo trì.
+// ════════════════════════════════════════════════════════════════════
+// NÂNG CẤP: ĐỒNG BỘ TỪNG DÒNG THEO ID cho 3 sổ ở tab 📊 Số liệu (Sổ
+// nguyên liệu / Sổ máy Rút / Sổ máy Đánh bóng+Cắt) — giống HỆT cơ chế
+// đang dùng cho tab Đơn hoàn thành (writeOrderRecord/mergeAndSaveOrders
+// ở trên, ghi trực tiếp /data/orders/{id}), THAY VÌ dùng
+// mergeAndSaveArrField (tải + ghi đè NGUYÊN CẢ mảng) như trước.
+//
+// Lý do đổi riêng cho 3 sổ này: đây là nơi có thao tác XOÁ HÀNG LOẠT
+// ("Dọn dữ liệu sau khi xuất Excel") — với cơ chế ghi đè cả mảng, việc
+// xoá đúng phụ thuộc vào so sánh với "ảnh chụp lần đồng bộ gần nhất"
+// (có thể bị cũ trong vài tình huống hiếm), khiến có lúc xoá ở máy này
+// nhưng máy khác vẫn còn dữ liệu cũ. Ghi/xoá TRỰC TIẾP từng dòng tại
+// /data/<field>/{id} thì:
+//   - Không phụ thuộc ảnh chụp nào cả — xoá đúng ID nào, ID đó biến mất
+//     khỏi Firebase ngay, chắc chắn 100%.
+//   - Firebase phát sự kiện SSE đúng path /data/<field>/{id} tới MỌI
+//     thiết bị khác đang mở app → nhận và cập nhật/xoá NGAY LẬP TỨC,
+//     không cần đợi vòng poll hay lần lưu kế tiếp — đúng như tab Đơn
+//     hoàn thành đang chạy.
+// Các nhánh mảng khác (baoTri, lichLamViec, kyLuat, nghiPhep, workers,
+// khuôn, check sheet, qrProducts) KHÔNG đổi — vẫn dùng mergeAndSaveArrField
+// như cũ vì không có thao tác xoá hàng loạt tương tự.
+// ════════════════════════════════════════════════════════════════════
+
+// Ghi (PUT) hoặc xoá (DELETE, khi recordOrNull=null) ĐÚNG 1 dòng tại
+// /data/<field>/{id}. Có thử lại tối đa vài lần nếu mạng chập chờn.
+async function writeSlLogRecord(field, id, recordOrNull, maxRetry){
+  maxRetry = maxRetry==null ? 3 : maxRetry;
+  const path = '/data/'+field+'/'+id;
+  for(let attempt=0; attempt<=maxRetry; attempt++){
+    try{
+      await fbWrite(path, recordOrNull===undefined?null:recordOrNull, recordOrNull?'PUT':'DELETE');
+      return true;
+    }catch(e){
+      if(attempt>=maxRetry) throw e;
+      await new Promise(res=>setTimeout(res, 500*(attempt+1)));
+    }
+  }
+}
+
+// So sánh trạng thái cục bộ hiện tại với "ảnh chụp lần đồng bộ gần nhất"
+// (_lastSyncedArrSnap[field] — luôn được làm mới đúng lúc mỗi khi có cập
+// nhật realtime, xem applyFieldChange/applySingleSlItemChange/applyDataSnapshot)
+// để biết CHÍNH XÁC dòng nào vừa thêm/sửa (PUT) hay vừa xoá (DELETE),
+// rồi gửi từng lệnh riêng lẻ — dùng chung cho thêm/sửa 1 dòng, xoá 1
+// dòng, và xoá hàng loạt sau khi xuất Excel.
+async function syncSlFieldPerRecord(field){
+  if(!fbOk()) return;
+  const localSnap = snapshotArrById(DB[field]);
+  const lastSnap = _lastSyncedArrSnap[field] || {};
+  const byId = {}; (DB[field]||[]).forEach(o=>{ if(o && o.id) byId[o.id]=o; });
+  const changedIds = Object.keys(localSnap).filter(id=>localSnap[id]!==lastSnap[id]);
+  const removedIds = Object.keys(lastSnap).filter(id=>!localSnap[id]);
+  if(!changedIds.length && !removedIds.length) return;
+
+  setSyncDot('saving'); markDirty(field); beginSave();
+  let hasFailure = false;
+  try{
+    const ops = changedIds.map(id=>({id, val:byId[id]})).concat(removedIds.map(id=>({id, val:null})));
+    const chunkSize = 15; // gửi theo lô nhỏ, tránh dội quá nhiều request cùng lúc khi xoá hàng loạt
+    for(let i=0;i<ops.length;i+=chunkSize){
+      const chunk = ops.slice(i, i+chunkSize);
+      const results = await Promise.allSettled(chunk.map(op=>writeSlLogRecord(field, op.id, op.val)));
+      results.forEach(r=>{ if(r.status==='rejected') hasFailure = true; });
+    }
+  }catch(e){ hasFailure = true; }
+
+  if(!hasFailure){
+    _lastSyncedArrSnap[field] = snapshotArrById(DB[field]);
+    clearDirty(field); setSyncDot('ok');
+  } else {
+    // Giữ nguyên dấu "dirty" — lần mở app sau (initAndStartSync) sẽ tự
+    // dùng mergeAndSaveArrField làm lưới an toàn đọc-lại-và-đối-chiếu để
+    // đẩy nốt phần còn thiếu lên server, không mất dữ liệu.
+    setSyncDot('error');
+    showToast('⚠️ Một vài dòng chưa đồng bộ được lên máy chủ do lỗi mạng — sẽ tự thử lại khi mở app.', true);
+  }
+  endSave();
+}
+
+// Nhận cập nhật realtime cho ĐÚNG 1 dòng của 1 trong 3 sổ (SSE báo path
+// /data/<field>/{id}) — áp thẳng vào DB[field] và làm mới ảnh chụp đồng
+// bộ, y hệt applySingleOrderChange nhưng dùng chung cho cả 3 sổ.
+function applySingleSlItemChange(field, id, val){
+  if(_pendingSaves>0) return; // đang có lượt ghi cục bộ dở dang — để lượt đó tự lo, poll/lượt sau bù phần còn thiếu
+  const arr = DB[field] || (DB[field]=[]);
+  const idx = arr.findIndex(x=>x && x.id===id);
+  if(val==null){ if(idx>=0) arr.splice(idx,1); }
+  else { if(idx>=0) arr[idx]=val; else arr.push(val); }
+  if(Object.prototype.hasOwnProperty.call(_lastSyncedArrSnap, field)) _lastSyncedArrSnap[field] = snapshotArrById(DB[field]);
+  lsSave();
+  if(currentTab==='soLieu') renderSoLieu();
+}
+
+// DI TRÚ DỮ LIỆU CŨ 1 LẦN: 3 sổ này trước đây lưu NGUYÊN 1 MẢNG tại
+// /data/<field> (không tách theo id). Nếu vẫn ghi thẳng từng dòng vào
+// /data/<field>/{id} trong khi nhánh gốc còn là mảng, dữ liệu sẽ lẫn lộn
+// giữa index số (0,1,2...) và id chuỗi → hỏng cấu trúc. Vì vậy: phát
+// hiện đúng 1 lần khi nhánh còn là mảng, chuyển hẳn sang dạng object
+// theo id rồi ghi đè lại URL gốc — CHỈ đổi cấu trúc lưu trữ, không đổi
+// nội dung dữ liệu. Sau lần này, mọi thao tác thêm/sửa/xoá đều dùng
+// writeSlLogRecord ở trên; các lần load sau nhánh này sẽ luôn là object.
+const _slMigratedField = {};
+async function migrateSlLogIfArray(field, path, rawValue){
+  if(!Array.isArray(rawValue) || !rawValue.length) return;
+  if(_slMigratedField[field]) return;
+  _slMigratedField[field] = true;
+  try{
+    const obj = {};
+    rawValue.forEach(r=>{ if(r && r.id) obj[r.id]=r; });
+    await fbWrite(path, obj, 'PUT');
+  }catch(e){ _slMigratedField[field] = false; /* mạng lỗi — tự thử lại ở lần mở app sau */ }
+}
+
 function syncArrFieldToServer(field, path){
   if(!fbOk()) return;
   setSyncDot('saving');
@@ -9043,19 +9154,20 @@ function saveCsTemplates(){if(guardNotAdmin())return;
 // chấm công), Viewer chỉ xem. Dùng cơ chế merge-theo-khoá y hệt Attendance
 // để nhiều người cùng tick ở nhiều máy/thiết bị khác nhau không đè mất nhau.
 // ── Sổ Nguyên liệu / Sổ Máy rút / Sổ Máy đánh bóng (tab 📊 Số liệu) ──────
-// Dùng chung cơ chế merge-theo-id (mergeAndSaveArrField) như baoTri/lichLamViec
-// ở trên, để nhiều người cùng nhập ở nhiều thiết bị không đè mất nhau.
+// NÂNG CẤP: dùng cơ chế đồng bộ TỪNG DÒNG THEO ID (syncSlFieldPerRecord ở
+// trên) — giống hệt tab Đơn hoàn thành — thay cho mergeAndSaveArrField
+// (ghi đè nguyên cả mảng) như baoTri/lichLamViec ở trên.
 function saveNguyenLieuLog(){if(guardViewer())return;
   lsSave();
-  syncArrFieldToServer('nguyenLieuLog', '/data/nguyenLieuLog');
+  syncSlFieldPerRecord('nguyenLieuLog');
 }
 function saveMayRutLog(){if(guardViewer())return;
   lsSave();
-  syncArrFieldToServer('mayRutLog', '/data/mayRutLog');
+  syncSlFieldPerRecord('mayRutLog');
 }
 function saveMayDanhBongLog(){if(guardViewer())return;
   lsSave();
-  syncArrFieldToServer('mayDanhBongLog', '/data/mayDanhBongLog');
+  syncSlFieldPerRecord('mayDanhBongLog');
 }
 
 function saveCsData(){if(guardViewer())return;
@@ -10324,8 +10436,14 @@ async function initAndStartSync(){
         // nền, chỉ áp đè đúng phần cục bộ) giống hệt các nhánh khác.
         const ARR_FIELD_PATHS = {workers:'/data/workers', qrProducts:'/data/qrProducts',
           lichLamViec:'/data/lichLamViec', kyLuat:'/data/kyLuat', nghiPhep:'/data/nghiPhep', baoTri:'/data/baoTri',
-          khuonCatalog:'/data/khuonCatalog', khuonQty:'/data/khuonQty', csTemplates:'/data/csTemplates',
-          nguyenLieuLog:'/data/nguyenLieuLog', mayRutLog:'/data/mayRutLog', mayDanhBongLog:'/data/mayDanhBongLog'};
+          khuonCatalog:'/data/khuonCatalog', khuonQty:'/data/khuonQty', csTemplates:'/data/csTemplates'};
+        // 3 sổ Số liệu (nguyenLieuLog/mayRutLog/mayDanhBongLog) giờ lưu theo
+        // dạng object-theo-id tại /data/<field>/{id} (xem syncSlFieldPerRecord/
+        // writeSlLogRecord) — KHÔNG được đi qua mergeAndSaveArrField ở đây nữa,
+        // vì hàm đó ghi đè cả path bằng 1 MẢNG (Object.values(...)), sẽ xoá mất
+        // cấu trúc theo-id vừa chuyển đổi. Dùng đúng syncSlFieldPerRecord để
+        // vẫn tự đối chiếu và đẩy nốt đúng từng dòng còn "dirty" theo ID.
+        const SL_LOG_FIELDS = {nguyenLieuLog:1, mayRutLog:1, mayDanhBongLog:1};
         await Promise.all(dirty.map(async f=>{
           try{
             if(f==='orders'){ beginSave(); await mergeAndSaveOrders(); }
@@ -10333,6 +10451,7 @@ async function initAndStartSync(){
             else if(f==='attendance'){ beginSave(); await mergeAndSaveAttendance(); }
             else if(f==='csData'){ beginSave(); await mergeAndSaveCsData(); }
             else if(f==='ordersTrash'){ beginSave(); await mergeAndSaveOrdersTrash(); }
+            else if(SL_LOG_FIELDS[f]){ await syncSlFieldPerRecord(f); }
             else if(ARR_FIELD_PATHS[f]){ beginSave(); await mergeAndSaveArrField(f, ARR_FIELD_PATHS[f]); }
             else { await fbWrite('/data/'+f, DB[f], 'PUT'); clearDirty(f); }
           }catch(e){}
@@ -10389,9 +10508,9 @@ async function initAndStartSync(){
           syncArrFieldToServer('csTemplates', '/data/csTemplates');
         }
         if(data.csData){ DB.csData = data.csData; }
-        if(data.nguyenLieuLog){ DB.nguyenLieuLog = Array.isArray(data.nguyenLieuLog)?data.nguyenLieuLog:Object.values(data.nguyenLieuLog); }
-        if(data.mayRutLog){ DB.mayRutLog = Array.isArray(data.mayRutLog)?data.mayRutLog:Object.values(data.mayRutLog); }
-        if(data.mayDanhBongLog){ DB.mayDanhBongLog = Array.isArray(data.mayDanhBongLog)?data.mayDanhBongLog:Object.values(data.mayDanhBongLog); }
+        if(data.nguyenLieuLog){ DB.nguyenLieuLog = Array.isArray(data.nguyenLieuLog)?data.nguyenLieuLog:Object.values(data.nguyenLieuLog); migrateSlLogIfArray('nguyenLieuLog','/data/nguyenLieuLog',data.nguyenLieuLog); }
+        if(data.mayRutLog){ DB.mayRutLog = Array.isArray(data.mayRutLog)?data.mayRutLog:Object.values(data.mayRutLog); migrateSlLogIfArray('mayRutLog','/data/mayRutLog',data.mayRutLog); }
+        if(data.mayDanhBongLog){ DB.mayDanhBongLog = Array.isArray(data.mayDanhBongLog)?data.mayDanhBongLog:Object.values(data.mayDanhBongLog); migrateSlLogIfArray('mayDanhBongLog','/data/mayDanhBongLog',data.mayDanhBongLog); }
         lsSave();
         _lastHash = hashOrders(DB.orders);
         DB.orders.forEach(o=>_knownIds.add(o.id));
@@ -10702,7 +10821,15 @@ function applyFieldChange(field, val){
     DB.users = fresh;
     _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
   } else {
-    const fresh = val || (Array.isArray(DB[field])?[]:{});
+    // 3 sổ Số liệu (nguyenLieuLog/mayRutLog/mayDanhBongLog) giờ lưu dạng
+    // object-theo-id trên Firebase (xem migrateSlLogIfArray/writeSlLogRecord)
+    // — khi SSE báo cả nhánh đổi (VD ngay lúc di trú dữ liệu), giá trị trả về
+    // luôn là OBJECT chứ không còn là mảng, nên phải Object.values() lại
+    // trước khi gán, nếu không DB[field] sẽ thành object và làm hỏng mọi chỗ
+    // đang coi đây là mảng (slArr, .filter, .find...).
+    const SL_LOG_FIELDS = {nguyenLieuLog:1, mayRutLog:1, mayDanhBongLog:1};
+    let fresh = val || (Array.isArray(DB[field])?[]:{});
+    if(SL_LOG_FIELDS[field] && fresh && !Array.isArray(fresh)) fresh = Object.values(fresh);
     if(JSON.stringify(fresh)===JSON.stringify(DB[field])) return;
     DB[field] = fresh;
     if(field==='attendance') _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
@@ -10761,6 +10888,23 @@ function handleRealtimeChange(path, val){
   if(path.indexOf('/data/orders/')===0){
     const id = path.slice('/data/orders/'.length);
     if(id && id.indexOf('/')===-1){ applySingleOrderChange(id, val); setSyncDot('ok'); return; }
+  }
+  // Sổ nguyên liệu / Máy Rút / Máy Đánh bóng+Cắt (tab 📊 Số liệu) — NÂNG CẤP
+  // giống hệt Đơn hoàn thành ở trên: mỗi dòng lưu riêng tại /data/<field>/{id},
+  // nên nhận đúng path này là biết ngay dòng nào vừa thêm/sửa/xoá, áp thẳng
+  // vào DB tương ứng — các thiết bị khác thấy thay đổi NGAY LẬP TỨC, không
+  // cần đợi vòng poll hay lần lưu kế tiếp.
+  if(path.indexOf('/data/nguyenLieuLog/')===0){
+    const id = path.slice('/data/nguyenLieuLog/'.length);
+    if(id && id.indexOf('/')===-1){ applySingleSlItemChange('nguyenLieuLog', id, val); setSyncDot('ok'); return; }
+  }
+  if(path.indexOf('/data/mayRutLog/')===0){
+    const id = path.slice('/data/mayRutLog/'.length);
+    if(id && id.indexOf('/')===-1){ applySingleSlItemChange('mayRutLog', id, val); setSyncDot('ok'); return; }
+  }
+  if(path.indexOf('/data/mayDanhBongLog/')===0){
+    const id = path.slice('/data/mayDanhBongLog/'.length);
+    if(id && id.indexOf('/')===-1){ applySingleSlItemChange('mayDanhBongLog', id, val); setSyncDot('ok'); return; }
   }
   const field = _FB_FIELD_MAP[path];
   if(field){ applyFieldChange(field, val); setSyncDot('ok'); return; }
@@ -20394,6 +20538,14 @@ function exportSlExcel(tab){
 // Chỉ admin/nhân sự có quyền sửa sổ Số liệu (isSlEditor) mới được xoá;
 // người chỉ có quyền xem (Viewer) xuất Excel bình thường nhưng KHÔNG bị
 // hỏi xoá (guardSlEdit chặn) — dữ liệu của họ được giữ nguyên.
+//
+// NÂNG CẤP: việc lưu sau khi xoá (slDoSave→saveXxxLog) giờ đi qua
+// syncSlFieldPerRecord — tự động so với ảnh chụp đồng bộ để nhận ra
+// CHÍNH XÁC các dòng vừa biến mất (đúng các dòng vừa xuất) và gửi lệnh
+// XOÁ RIÊNG từng dòng thẳng tới /data/<field>/{id}, giống hệt cơ chế
+// Đơn hoàn thành — nên các thiết bị khác nhận được và xoá theo NGAY LẬP
+// TỨC qua SSE, không còn tình trạng "xoá ở máy mình nhưng máy khác vẫn
+// còn dữ liệu cũ".
 // ════════════════════════════════════════════════════════════════════
 function slConfirmClearAfterExport(tab, exportedIds){
   if(!isSlEditor()) return; // Viewer: chỉ xem/xuất, không có quyền xoá dữ liệu
@@ -20405,63 +20557,20 @@ function slConfirmClearAfterExport(tab, exportedIds){
     ()=> slClearAfterExport(tab, exportedIds)
   );
 }
-async function slClearAfterExport(tab, exportedIds){
+function slClearAfterExport(tab, exportedIds){
   const field = SL_META[tab].field;
-  const path = '/data/'+field;
   const idSet = new Set(exportedIds);
   const arr = DB[field]||[];
   const kept = arr.filter(r=> !(r && idSet.has(r.id)));
   const removed = arr.length - kept.length;
   if(removed<=0) return;
-
-  // Cập nhật UI ngay cho mượt — máy đang thao tác thấy dòng biến mất tức thì.
   DB[field] = kept;
-  lsSave();
+  slDoSave(tab); // syncSlFieldPerRecord tự nhận ra đúng các ID vừa biến mất và gửi lệnh xoá riêng từng dòng lên server
   log(SL_META[tab].label, `Dọn dữ liệu sau khi xuất Excel — đã xoá ${removed} dòng (đã lưu trong file Excel vừa tải về)`, null, null, {deletedBy:'AFTER_EXPORT'});
   if(currentTab==='soLieu') renderSoLieu();
   showToast(`🗑️ Đã dọn ${removed} dòng dữ liệu — sổ đã gọn nhẹ hơn`);
-
-  // ── ĐỒNG BỘ LÊN FIREBASE — KHÔNG dùng cơ chế "so ảnh chụp lần đồng bộ
-  // gần nhất" (mergeAndSaveArrField) cho thao tác này nữa. Lý do: đây là
-  // thao tác XOÁ HÀNG LOẠT theo 1 danh sách ID đã biết CHẮC CHẮN (chính là
-  // exportedIds — các dòng vừa được ghi vào file Excel), nên không cần suy
-  // luận "dòng nào vừa đổi" qua so sánh ảnh chụp (cách suy luận này có thể
-  // sai nếu lỡ bỏ sót 1 sự kiện đồng bộ realtime nào đó trước đó, khiến
-  // dòng xoá không được đẩy lên server — đúng lỗi "xoá ở máy mình nhưng
-  // máy khác vẫn còn"). Thay vào đó: đọc thẳng bản MỚI NHẤT từ server, bỏ
-  // đúng các ID trong exportedIds (dù ảnh chụp cũ tới đâu cũng không ảnh
-  // hưởng), giữ nguyên mọi dòng khác kể cả dòng thiết bị khác vừa thêm
-  // trong lúc mình đang xuất/xoá, rồi ghi thẳng đè lên nhánh đó.
-  if(!fbOk()){ return; }
-  setSyncDot('saving'); markDirty(field); beginSave();
-  let attempt = 0;
-  const maxRetry = 3;
-  while(true){
-    try{
-      const serverRaw = await fbRead(path);
-      const serverList = serverRaw ? (Array.isArray(serverRaw)?serverRaw:Object.values(serverRaw)) : [];
-      const mergedMap = {};
-      serverList.forEach(o=>{ if(o && o.id && !idSet.has(o.id)) mergedMap[o.id]=o; });
-      // Giữ lại mọi dòng cục bộ hiện có (kể cả dòng vừa thêm/sửa trên máy
-      // này mà có thể chưa kịp lên server) — không bị mất khi ghi đè.
-      (DB[field]||[]).forEach(o=>{ if(o && o.id) mergedMap[o.id]=o; });
-      const merged = Object.values(mergedMap);
-      DB[field] = merged; lsSave();
-      await fbWrite(path, merged, 'PUT');
-      _lastSyncedArrSnap[field] = snapshotArrById(DB[field]);
-      setSyncDot('ok'); clearDirty(field); endSave();
-      break;
-    }catch(e){
-      attempt++;
-      if(attempt > maxRetry){
-        setSyncDot('error'); endSave(); // giữ dấu "dirty" để lần mở app sau tự đẩy lại
-        showToast('❌ Lỗi đồng bộ khi dọn dữ liệu — sẽ tự thử lại khi mở app: '+(e.message||e), true);
-        break;
-      }
-      await new Promise(res=>setTimeout(res, 1500*attempt));
-    }
-  }
 }
+
 
 
 // ════════════════════════════════════════════════════════════════════
