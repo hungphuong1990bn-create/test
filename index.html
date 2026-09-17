@@ -3258,6 +3258,15 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .khm-item-chip:hover{border-color:var(--brand2)}
 .khm-item-chip .khm-item-size{font-variant-numeric:tabular-nums}
 .khm-item-chip .khm-item-edit{position:absolute;top:2px;right:3px;font-size:10px;opacity:.55;cursor:pointer;padding:2px}
+/* Nút xóa kích thước trong danh mục "Tổng hợp Khuôn" — chỉ Admin (xem renderKhuonCatalog) */
+.khm-item-chip .khm-item-del{position:absolute;top:2px;left:3px;font-size:10px;opacity:.5;cursor:pointer;padding:2px;color:#b91c1c;-webkit-tap-highlight-color:transparent}
+.khm-item-chip .khm-item-del:hover,.khm-item-chip .khm-item-edit:hover{opacity:1}
+.khm-item-chip.khm-sel{border-color:#b91c1c;background:#FEF2F2}
+.khm-item-chip .khm-item-chk{position:absolute;bottom:2px;right:4px;width:14px;height:14px;margin:0;cursor:pointer;accent-color:#b91c1c}
+.khm-bulk-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid #FCA5A5;background:#FEF2F2;border-radius:10px;font-size:12.5px;font-weight:700;color:#B91C1C}
+.khm-bulk-bar button{border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.khm-bulk-del{background:#DC2626;color:#fff}
+.khm-bulk-clear{background:#fff;color:#64748b;border:1px solid var(--border)!important}
 .khm-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);background:#fff}
 .khm-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
 .khm-table th{background:var(--bg2);color:var(--text3);font-weight:700;text-align:left;padding:10px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0}
@@ -5127,6 +5136,9 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .moc-icon-plain{width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:26px}
 .moc-sub{font-size:10px;font-weight:700;color:var(--text4);line-height:1.3}
 .moc-chev{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:18px;font-weight:700}
+/* Nút xóa đơn hàng trên thẻ mobile — CHỈ hiện với Admin (xem mocCard/isAdmin) */
+.moc-del{flex-shrink:0;width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;border-radius:9px;border:1px solid var(--red-m);background:var(--red-l);color:var(--red);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.moc-del:active{background:var(--red-m);color:#fff;transform:scale(.94)}
 .mob-ord-empty{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:40px 18px;text-align:center;color:var(--text4);font-size:13px}
 
 /* ══════════════════════════════════════════════════════════════════
@@ -7124,6 +7136,7 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
       <input id="khCatSize" class="field-inp" placeholder="VD: 10x60 hoặc Φ 20">
     </div>
     <div class="modal-footer">
+      <button class="btn btn-ghost" id="khCatDelBtn" style="display:none;color:#B91C1C;border-color:#FCA5A5;margin-right:auto" onclick="khCatDeleteFromModal()">🗑 Xóa</button>
       <button class="btn btn-ghost" onclick="closeModal('khCatModal')">Huỷ</button>
       <button class="btn btn-primary" onclick="khCatSave()">💾 Lưu</button>
     </div>
@@ -14436,6 +14449,7 @@ function mocCard(o){
     <div class="moc-head">
       <span class="moc-code">${o.customer||'—'}</span>
       <span class="moc-badge" style="background:${badge.bg};color:${badge.color};border-color:${badge.border}">${badge.label}</span>
+      ${isAdmin()?`<button class="moc-del" title="Xóa đơn hàng" aria-label="Xóa đơn hàng" onclick="mocDeleteCard('${o.id}',event)">🗑</button>`:''}
     </div>
     <div class="moc-body">
       <div class="moc-left">
@@ -14451,6 +14465,19 @@ function mocCard(o){
     </div>
     <div class="moc-chev">›</div>
   </div>`;
+}
+
+// ── Xóa đơn hàng ngay trên thẻ mobile (tab Đơn hàng) ──
+// Chỉ Admin mới thấy nút 🗑 (xem mocCard), nhưng vẫn kiểm tra lại quyền ở đây
+// để chặn trường hợp gọi trực tiếp từ console / thẻ cũ còn sót trong DOM sau
+// khi đổi tài khoản. Dùng lại NGUYÊN deleteOrder() đã có (confirm2 + ghi
+// nhật ký "Xóa đơn" + saveOrders + dò đơn trùng lặp), không tạo luồng xoá
+// riêng để tránh lệch dữ liệu giữa mobile và desktop.
+function mocDeleteCard(id, ev){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  closeAllActionMenus();
+  if(!isAdmin()){ showToast('Chỉ Admin mới được xóa đơn hàng', true); return; }
+  deleteOrder(id);
 }
 
 function clearSearch(){
@@ -19484,9 +19511,12 @@ let _khQtyFilter = 'all';     // lọc theo nhóm ở tab Số lượng Khuôn
 let _khQtyTypeFilter = 'all'; // lọc theo loại (Đùn/Kéo) ở tab Số lượng Khuôn
 let _khCatEditId = null;
 let _khQtyEditId = null;
+// Tập id kích thước đang được tick chọn ở tab "Tổng hợp Khuôn" (xóa hàng loạt)
+let _khCatSel = new Set();
 
 function khGoSubTab(tab){
   _khTab = tab; _khSearch=''; _khCatFilter='all'; _khQtyFilter='all'; _khQtyTypeFilter='all';
+  _khCatSel.clear(); // bỏ mọi mục đang tick chọn khi đổi tab con
   renderKhuon();
 }
 // Gõ tìm kiếm không bị "rớt" ô input mỗi ký tự: lưu trạng thái focus + vị
@@ -19597,12 +19627,23 @@ function renderKhuonCatalog(catalog, cats, admin){
   Object.keys(groups).forEach(g=>{ groups[g] = sortKhuonList(groups[g], 'size'); });
   const groupNames = Object.keys(groups).sort((a,b)=>a.localeCompare(b,'vi'));
 
+  // Chỉ giữ lại các mục đang được tick mà vẫn còn tồn tại trong danh mục —
+  // tránh "xóa nhầm" id cũ còn sót lại sau khi dữ liệu được đồng bộ lại.
+  const liveIds = new Set(catalog.map(x=>x.id));
+  [..._khCatSel].forEach(id=>{ if(!liveIds.has(id)) _khCatSel.delete(id); });
+  const selCount = _khCatSel.size;
+
   $('khmBody').innerHTML = `
     <div class="khm-toolbar">
       <input class="khm-search" placeholder="🔎 Tìm kích thước, nhóm khuôn..." value="${(_khSearch||'').replace(/"/g,'&quot;')}" oninput="khSetSearch(this.value)">
       <button class="khm-add-btn" style="background:#1B3A6B" onclick="exportKhuonCatalogExcel()">📥 Xuất Excel</button>
       ${admin?`<button class="khm-add-btn" onclick="khCatOpenAdd()">+ Thêm kích thước</button>`:''}
     </div>
+    ${admin&&selCount?`<div class="khm-bulk-bar">
+      <span>🗑 Đã chọn ${selCount} kích thước</span>
+      <button class="khm-bulk-del" onclick="khCatDeleteSelected()">Xóa ${selCount} mục đã chọn</button>
+      <button class="khm-bulk-clear" onclick="khCatClearSel()">Bỏ chọn</button>
+    </div>`:''}
     <div class="khm-chip-row">
       <button class="khm-chip ${_khCatFilter==='all'?'active':''}" onclick="khSetCatFilter('all')">Tất cả (${catalog.length})</button>
       ${cats.map(c=>`<button class="khm-chip ${_khCatFilter===c?'active':''}" onclick="khSetCatFilter('${c.replace(/'/g,"\\'")}')">${c} (${catalog.filter(x=>x.category===c).length})</button>`).join('')}
@@ -19610,12 +19651,14 @@ function renderKhuonCatalog(catalog, cats, admin){
     ${groupNames.length===0?`<div class="empty"><div class="empty-icon">🗂️</div>Không tìm thấy kích thước khuôn nào phù hợp</div>`:
       groupNames.map(g=>`
         <div class="khm-cat-section">
-          <div class="khm-cat-title">${g} <span class="khm-cat-count">${groups[g].length} kích thước</span></div>
+          <div class="khm-cat-title">${g} <span class="khm-cat-count">${groups[g].length} kích thước</span>${admin?` <span class="khm-item-del" style="position:static;padding:2px 6px;font-size:11px;font-weight:700" title="Xóa toàn bộ nhóm này" onclick="khCatDeleteGroup('${g.replace(/'/g,"\\'")}')">🗑 Xóa nhóm</span>`:''}</div>
           <div class="khm-item-grid">
             ${groups[g].map(it=>`
-              <div class="khm-item-chip">
+              <div class="khm-item-chip${_khCatSel.has(it.id)?' khm-sel':''}">
+                ${admin?`<span class="khm-item-del" title="Xóa kích thước này" onclick="khCatDelete('${it.id}')">🗑</span>`:''}
                 ${admin?`<span class="khm-item-edit" onclick="khCatOpenEdit('${it.id}')">✏️</span>`:''}
                 <span class="khm-item-size">${it.size.replace(/</g,'&lt;')}</span>
+                ${admin?`<input type="checkbox" class="khm-item-chk" title="Chọn để xóa hàng loạt" ${_khCatSel.has(it.id)?'checked':''} onclick="khCatToggleSel('${it.id}',this.checked)">`:''}
               </div>
             `).join('')}
           </div>
@@ -21132,6 +21175,7 @@ function khFillGroupDatalist(listId, cats){
 function khCatOpenAdd(){if(guardNotAdmin())return;
   _khCatEditId = null;
   $('khCatModalTitle').textContent = 'Thêm kích thước khuôn';
+  $('khCatDelBtn').style.display = 'none'; // đang thêm mới — chưa có gì để xóa
   $('khCatGroup').value = _khCatFilter!=='all'?_khCatFilter:'';
   $('khCatSize').value = '';
   $('khCatErr').style.display='none';
@@ -21142,6 +21186,7 @@ function khCatOpenEdit(id){if(guardNotAdmin())return;
   const it = (DB.khuonCatalog||[]).find(x=>x.id===id); if(!it) return;
   _khCatEditId = id;
   $('khCatModalTitle').textContent = 'Sửa kích thước khuôn';
+  $('khCatDelBtn').style.display = ''; // đang sửa 1 mục có sẵn — cho phép xóa luôn tại đây
   $('khCatGroup').value = it.category||'';
   $('khCatSize').value = it.size||'';
   $('khCatErr').style.display='none';
@@ -21167,6 +21212,76 @@ function khCatSave(){if(guardNotAdmin())return;
   closeModal('khCatModal');
   renderKhuon();
   showToast('✅ Đã lưu danh mục khuôn');
+}
+
+// ── Xóa kích thước trong "Tổng hợp Khuôn" (chỉ Admin) ──
+// Trước đây tab này chỉ có Thêm/Sửa, không có đường nào xóa một kích thước
+// đã nhập nhầm. Ba hàm dưới bổ sung: xóa 1 mục, xóa nhiều mục đã tick, và
+// xóa cả một nhóm khuôn. Tất cả đều đi qua confirm2 + ghi nhật ký giống
+// khQtyDelete() để lịch sử thao tác không bị thiếu.
+// Lưu ý: danh mục (khuonCatalog) và kho (khuonQty) là 2 bảng riêng — xóa
+// kích thước khỏi danh mục KHÔNG tự xóa khuôn cùng cỡ đang có trong kho,
+// nên nếu còn tồn kho thì cảnh báo rõ trong hộp xác nhận.
+function khCatQtyRefs(it){
+  const sz = (it.size||'').trim().toLowerCase();
+  return (DB.khuonQty||[]).filter(r=>(r.size||'').trim().toLowerCase()===sz);
+}
+function khCatToggleSel(id, checked){
+  if(checked) _khCatSel.add(id); else _khCatSel.delete(id);
+  renderKhuon();
+}
+function khCatClearSel(){ _khCatSel.clear(); renderKhuon(); }
+
+function khCatDelete(id){if(guardNotAdmin())return;
+  const it = (DB.khuonCatalog||[]).find(x=>x.id===id); if(!it) return;
+  const refs = khCatQtyRefs(it);
+  const warn = refs.length ? ` — ⚠️ Lưu ý: vẫn còn ${refs.length} mục cỡ này trong "Số lượng Khuôn" (kho) — xóa ở đây chỉ bỏ khỏi danh mục tổng hợp, không đụng tới dữ liệu kho.` : '';
+  confirm2('Xóa kích thước khuôn', `Xóa "${it.size}" khỏi nhóm "${it.category}"?${warn}`, ()=>{
+    DB.khuonCatalog = (DB.khuonCatalog||[]).filter(x=>x.id!==id);
+    _khCatSel.delete(id);
+    saveKhuonCatalog();
+    log('Xóa danh mục khuôn', `${it.category} · ${it.size}`, '', it, null);
+    renderKhuon();
+    showToast('🗑 Đã xóa kích thước khuôn');
+  });
+}
+
+function khCatDeleteSelected(){if(guardNotAdmin())return;
+  const ids = [..._khCatSel];
+  const items = (DB.khuonCatalog||[]).filter(x=>ids.includes(x.id));
+  if(!items.length){ showToast('Chưa chọn kích thước nào', true); return; }
+  const preview = items.slice(0,8).map(x=>x.size).join(', ') + (items.length>8?`… (+${items.length-8})`:'');
+  confirm2('Xóa nhiều kích thước', `Xóa ${items.length} kích thước đã chọn? — ${preview}`, ()=>{
+    DB.khuonCatalog = (DB.khuonCatalog||[]).filter(x=>!ids.includes(x.id));
+    _khCatSel.clear();
+    saveKhuonCatalog();
+    log('Xóa danh mục khuôn (nhiều mục)', `${items.length} kích thước: ${preview}`, '', items, null);
+    renderKhuon();
+    showToast(`🗑 Đã xóa ${items.length} kích thước`);
+  });
+}
+
+function khCatDeleteGroup(category){if(guardNotAdmin())return;
+  const items = (DB.khuonCatalog||[]).filter(x=>x.category===category);
+  if(!items.length) return;
+  confirm2('Xóa cả nhóm khuôn', `Xóa TOÀN BỘ ${items.length} kích thước của nhóm "${category}"? Không thể hoàn tác.`, ()=>{
+    DB.khuonCatalog = (DB.khuonCatalog||[]).filter(x=>x.category!==category);
+    items.forEach(x=>_khCatSel.delete(x.id));
+    saveKhuonCatalog();
+    log('Xóa nhóm danh mục khuôn', `${category} · ${items.length} kích thước`, '', items, null);
+    if(_khCatFilter===category) _khCatFilter='all';
+    renderKhuon();
+    showToast(`🗑 Đã xóa nhóm "${category}" (${items.length} kích thước)`);
+  });
+}
+
+// Xóa ngay trong hộp thoại "Sửa kích thước khuôn" — đóng modal trước rồi mới
+// hỏi xác nhận để 2 modal không chồng lên nhau.
+function khCatDeleteFromModal(){
+  const id = _khCatEditId;
+  if(!id) return;
+  closeModal('khCatModal');
+  khCatDelete(id);
 }
 
 
