@@ -20014,18 +20014,18 @@ function renderSlBody(){
   const admin = isSlEditor();
   let head, rows;
   if(tab==='nguyenLieu'){
-    head = `<tr><th>STT</th><th>Ngày</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Máy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
+    head = `<tr><th>STT</th><th>Ngày</th><th>Giờ nhập</th><th>Nguyên liệu</th><th>Mã cuộn/Heat-Lot</th><th>Độ dẫn điện</th><th>Số lượng (kg)</th><th>Loại TP chạy</th><th>Số mét chạy</th><th>Máy</th><th>Phế/đầu mẩu</th><th>Phoi</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
     rows = filtered.map((r,i)=>`<tr class="dt-row-clickable" onclick="slViewDetail('nguyenLieu','${r.id}')">
-        <td class="dt-stt">${i+1}</td><td>${fmtDate(r.ngay)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
+        <td class="dt-stt">${i+1}</td><td>${fmtDate(r.ngay)}</td><td>${slGioNhapHTML(r)}</td><td>${esc(r.nguyenLieu)}</td><td>${esc(r.heatLot)}</td><td>${esc(r.doDanDien)}</td>
         <td>${fmtNum(r.soLuong)}</td><td>${esc(r.loaiThanhPham)}</td><td>${esc(r.soMetChay)}</td>
         <td>${r.may?`🏭 ${esc(r.may)}`:'<span style="color:var(--text4)">—</span>'}</td>
         <td>${nlMultiCellHTML(r.phe,r.pheItems)}</td><td>${nlMultiCellHTML(r.phoi,r.phoiItems)}</td><td>${esc(r.khachHang)||'—'}</td><td>${esc(r.ghiChu)}</td>
         <td class="dt-actions">${admin?`<button class="dt-actbtn" onclick="event.stopPropagation();slOpenEdit('${r.id}')">✏️</button><button class="dt-actbtn danger" onclick="event.stopPropagation();slDelete('${r.id}')">🗑️</button>`:''}</td>
       </tr>`).join('');
   } else {
-    head = `<tr><th>STT</th><th>Ngày</th><th>Quy cách</th><th>Loại NL</th><th>Hàng</th><th>Số thanh</th><th>Công đoạn</th><th>Máy</th><th>Ca SX</th><th>Người SX</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
+    head = `<tr><th>STT</th><th>Ngày</th><th>Giờ nhập</th><th>Quy cách</th><th>Loại NL</th><th>Hàng</th><th>Số thanh</th><th>Công đoạn</th><th>Máy</th><th>Ca SX</th><th>Người SX</th><th>Khách hàng</th><th>Ghi chú</th><th></th></tr>`;
     rows = filtered.map((r,i)=>`<tr class="dt-row-clickable" onclick="slViewDetail('${tab}','${r.id}')">
-        <td class="dt-stt">${i+1}</td><td>${fmtDate(r.ngay)}</td><td>${esc(r.quyCach)}</td><td>${esc(r.loaiNL)}</td>
+        <td class="dt-stt">${i+1}</td><td>${fmtDate(r.ngay)}</td><td>${slGioNhapHTML(r)}</td><td>${esc(r.quyCach)}</td><td>${esc(r.loaiNL)}</td>
         <td><span class="dt-pill">${esc(r.hang)||'—'}</span></td><td>${fmtNum(r.soThanh)}</td>
         <td><span class="dt-pill" style="background:${meta.colorLight};color:${meta.color}">${esc(r.congDoan)||'—'}</span></td>
         <td>${r.may?`🏭 ${esc(r.may)}`:'<span style="color:var(--text4)">—</span>'}</td>
@@ -20034,7 +20034,7 @@ function renderSlBody(){
       </tr>`).join('');
   }
 
-  const nCols = tab==='nguyenLieu' ? 14 : 13;
+  const nCols = tab==='nguyenLieu' ? 15 : 14;
   $('slBody').innerHTML = `
     <div class="dt-wrap" style="--sl-accent:${c}"><table class="dt-table"><thead>${head}</thead>
       <tbody>${filtered.length?rows:`<tr><td colspan="${nCols}" class="dt-empty">📭 Chưa có dữ liệu — bấm "+ Thêm dòng" để bắt đầu ghi ${meta.label.toLowerCase()}</td></tr>`}</tbody>
@@ -20052,6 +20052,25 @@ function nlMultiCellHTML(total, items){
   return `<span title="${esc(detail)}">${t} <span style="opacity:.6;font-size:10px">🔖${items.length}</span></span>`;
 }
 function fmtNum(n){ n=Number(n)||0; return n.toLocaleString('vi-VN',{maximumFractionDigits:2}); }
+
+// Cột "Giờ nhập" (Sổ nguyên liệu / Sổ máy Rút / Sổ máy Đánh bóng+Cắt) — tự
+// động lấy từ createdAt (giờ:phút lúc BẤM LƯU lần đầu, không phải giờ gõ
+// tay ở ô "Ngày"), không cần/không cho nhập tay để luôn khớp đúng thực tế
+// ai ghi sổ lúc nào. Dòng cũ ghi trước khi có cột này (chưa có createdAt)
+// thì tạm dùng updatedAt để vẫn hiện được giờ thay vì để trống hẳn. Nếu
+// dòng đã từng được Sửa lại (updatedAt muộn hơn createdAt) thì thêm gợi ý
+// "✏️ sửa lúc …" ngay trong tooltip để biết đây là giờ nhập gốc, không phải
+// giờ sửa gần nhất (giờ sửa gần nhất vẫn xem đầy đủ ở khung "Xem chi tiết").
+function slGioNhapHTML(r){
+  const created = r.createdAt || r.updatedAt;
+  if(!created) return '<span style="color:var(--text4)">—</span>';
+  const time = vnTimeHM(new Date(created));
+  let title = 'Giờ nhập: ' + fmtDateTime(created);
+  if(r.updatedAt && r.updatedBy && r.updatedAt - created > 60000){
+    title += ` • ✏️ Sửa lúc ${fmtDateTime(r.updatedAt)} bởi ${r.updatedBy}`;
+  }
+  return `<span title="${esc(title)}">🕐 ${time}</span>`;
+}
 
 // Thống kê nhanh theo khu máy (nhóm máy) — gộp toàn bộ máy trong cùng 1
 // khu (VD "Máy rút 100 - 1" + "Máy rút 100 - 2" + "Máy rút 50" đều thuộc
@@ -20198,6 +20217,9 @@ function nlSave(){
     updatedAt: Date.now(), updatedBy: actorName()
   };
   const idx = arr.findIndex(x=>x.id===rec.id);
+  // "Giờ nhập" (createdAt) phải GIỮ NGUYÊN từ lần Lưu đầu tiên, kể cả khi
+  // Sửa lại dòng sau đó — chỉ updatedAt/updatedBy mới đổi mỗi lần Sửa.
+  rec.createdAt = (idx>=0 && arr[idx].createdAt) || rec.updatedAt;
   if(idx>=0) arr[idx]=rec; else arr.push(rec);
   nlLastKhuSet(khuMay); slLastMaySet(khuMay, may); // nhớ khu máy + máy vừa dùng
   saveNguyenLieuLog();
@@ -20238,6 +20260,7 @@ function slViewDetail(tab, id){
   if(tab==='nguyenLieu'){
     fieldsHTML = `<div class="kh-detail-grid">
       ${slDetailField('Ngày', fmtDate(r.ngay))}
+      ${slDetailField('Giờ nhập', (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'—')}
       ${slDetailField('Nguyên liệu', esc(r.nguyenLieu))}
       ${slDetailField('Mã cuộn/Heat-Lot', esc(r.heatLot))}
       ${slDetailField('Độ dẫn điện', esc(r.doDanDien))}
@@ -20258,6 +20281,7 @@ function slViewDetail(tab, id){
   } else {
     fieldsHTML = `<div class="kh-detail-grid">
       ${slDetailField('Ngày', fmtDate(r.ngay))}
+      ${slDetailField('Giờ nhập', (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'—')}
       ${slDetailField('Quy cách', esc(r.quyCach))}
       ${slDetailField('Loại NL', esc(r.loaiNL))}
       ${slDetailField('Hàng', esc(r.hang))}
@@ -20337,6 +20361,9 @@ function mcSave(){
     updatedAt: Date.now(), updatedBy: actorName()
   };
   const idx = arr.findIndex(x=>x.id===rec.id);
+  // "Giờ nhập" (createdAt) phải GIỮ NGUYÊN từ lần Lưu đầu tiên, kể cả khi
+  // Sửa lại dòng sau đó — chỉ updatedAt/updatedBy mới đổi mỗi lần Sửa.
+  rec.createdAt = (idx>=0 && arr[idx].createdAt) || rec.updatedAt;
   if(idx>=0) arr[idx]=rec; else arr.push(rec);
   slLastMaySet(CONGDOAN_MACHINE_GROUP[congDoan], may); // nhớ máy vừa dùng cho khu máy này
   slDoSave(tab);
@@ -20519,6 +20546,7 @@ function exportSlExcel(tab){
       docTitle: 'SỔ GHI NGUYÊN LIỆU PHẾ PHOI VÀ CHẠY CÁC KÍCH CỠ', docCode: meta.code, sheetName:'SoNguyenLieu',
       columns:[
         {header:'Ngày', key:'ngay', width:12, numFmt:'date'},
+        {header:'Giờ nhập', key:'createdAtText', width:16},
         {header:'Nguyên liệu', key:'nguyenLieu', width:16},
         {header:'Mã cuộn/Heat-Lot', key:'heatLot', width:18},
         {header:'Độ dẫn điện', key:'doDanDien', width:14},
@@ -20539,19 +20567,20 @@ function exportSlExcel(tab){
         {header:'Cập nhật lúc', key:'updatedAtText', width:16}
       ],
       rows: slArr('nguyenLieu').slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0))
-        .map(r=>({...r, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems), updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''})),
+        .map(r=>({...r, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems), createdAtText: (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'', updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''})),
       totalsCols:['soLuong','phe','phoi'],
       filename:`So_nguyen_lieu_${stamp}.xlsx`,
       onExported
     });
   } else {
     const sorted = slArr(tab).slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0));
-    const rows = sorted.map((r,i)=>({...r, stt:i+1, caLabel: r.ca?('Ca '+r.ca):'', updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''}));
+    const rows = sorted.map((r,i)=>({...r, stt:i+1, caLabel: r.ca?('Ca '+r.ca):'', createdAtText: (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'', updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''}));
     exportProfessionalExcel({
       docTitle: 'SỔ GHI THÀNH PHẨM '+(tab==='mayRut'?'RÚT':'ĐÁNH BÓNG + CẮT'), docCode: meta.code, sheetName: tab==='mayRut'?'SoMayRut':'SoMayDanhBongCat',
       columns:[
         {header:'STT', key:'stt', width:6, numFmt:'num'},
         {header:'Ngày', key:'ngay', width:12, numFmt:'date'},
+        {header:'Giờ nhập', key:'createdAtText', width:16},
         {header:'Quy cách', key:'quyCach', width:16},
         {header:'Loại NL', key:'loaiNL', width:12},
         {header:'Hàng', key:'hang', width:12},
@@ -20640,13 +20669,13 @@ function slPrintExport(tab){
 
   let head, rows, totalLabel, totalVal;
   if(tab==='nguyenLieu'){
-    head = ['Ngày','Nguyên liệu','Mã cuộn/Heat-Lot','Độ dẫn điện','Số lượng (kg)','Loại TP chạy','Số mét chạy','Khu máy','Máy','Phế/đầu mẩu (kg)','Phoi (kg)','Khách hàng','PO','WO','Ghi chú'];
-    rows = filtered.map(r=>[fmtDate(r.ngay), e2(r.nguyenLieu), e2(r.heatLot), e2(r.doDanDien), fmtNum(r.soLuong), e2(r.loaiThanhPham), e2(r.soMetChay), e2(r.khuMay)||'—', e2(r.may)||'—', fmtNum(r.phe), fmtNum(r.phoi), e2(r.khachHang), e2(r.po), e2(r.wo), e2(r.ghiChu)]);
+    head = ['Ngày','Giờ nhập','Nguyên liệu','Mã cuộn/Heat-Lot','Độ dẫn điện','Số lượng (kg)','Loại TP chạy','Số mét chạy','Khu máy','Máy','Phế/đầu mẩu (kg)','Phoi (kg)','Khách hàng','PO','WO','Ghi chú'];
+    rows = filtered.map(r=>[fmtDate(r.ngay), (r.createdAt||r.updatedAt)?vnTimeHM(new Date(r.createdAt||r.updatedAt)):'—', e2(r.nguyenLieu), e2(r.heatLot), e2(r.doDanDien), fmtNum(r.soLuong), e2(r.loaiThanhPham), e2(r.soMetChay), e2(r.khuMay)||'—', e2(r.may)||'—', fmtNum(r.phe), fmtNum(r.phoi), e2(r.khachHang), e2(r.po), e2(r.wo), e2(r.ghiChu)]);
     totalLabel = 'Tổng số lượng (kg)';
     totalVal = fmtNum(filtered.reduce((s,r)=>s+(Number(r.soLuong)||0),0));
   } else {
-    head = ['STT','Ngày','Quy cách','Loại NL','Hàng','Số thanh','Công đoạn','Máy','Ca SX','Người SX','Khách hàng','Ghi chú'];
-    rows = filtered.map((r,i)=>[i+1, fmtDate(r.ngay), e2(r.quyCach), e2(r.loaiNL), e2(r.hang)||'—', fmtNum(r.soThanh), e2(r.congDoan)||'—', e2(r.may)||'—', r.ca?('Ca '+r.ca):'—', e2(r.nguoiSanXuat), e2(r.khachHang), e2(r.ghiChu)]);
+    head = ['STT','Ngày','Giờ nhập','Quy cách','Loại NL','Hàng','Số thanh','Công đoạn','Máy','Ca SX','Người SX','Khách hàng','Ghi chú'];
+    rows = filtered.map((r,i)=>[i+1, fmtDate(r.ngay), (r.createdAt||r.updatedAt)?vnTimeHM(new Date(r.createdAt||r.updatedAt)):'—', e2(r.quyCach), e2(r.loaiNL), e2(r.hang)||'—', fmtNum(r.soThanh), e2(r.congDoan)||'—', e2(r.may)||'—', r.ca?('Ca '+r.ca):'—', e2(r.nguoiSanXuat), e2(r.khachHang), e2(r.ghiChu)]);
     totalLabel = 'Tổng số thanh';
     totalVal = fmtNum(filtered.reduce((s,r)=>s+(Number(r.soThanh)||0),0));
   }
