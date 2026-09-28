@@ -9998,6 +9998,7 @@ function aiParseDims(raw){
 }
 // Tạo đơn hàng thật trong DB (không cần mở form) — dùng chung logic với saveOrder()
 function aiCreateOrder(d){
+  if(!canCreateOrder()) throw new Error('Chỉ Admin mới có quyền tạo đơn hàng');
   const phi = d.phi||0;
   const t = d.thickness||0;
   const w = d.width||0;
@@ -11112,6 +11113,7 @@ function updateTopbarProfile(user){
   const sbR=$('sbRole'); if(sbR) sbR.textContent=roleIcon(user.role)+' '+roleLabel(user.role);
   const abName=$('abName'); if(abName) abName.textContent=user.name;
   const abRole=$('abRole'); if(abRole) abRole.textContent=user.position||roleLabel(user.role);
+  const _fab=$('fab'); if(_fab) _fab.classList.toggle('show', user.role==='admin');
   renderAvatarInto($('avatarBtnImg'), $('abInitials'), user);
   // Tab "Khách hàng": trước đây chỉ Admin xem được, nay mở thêm cho tài
   // khoản Nhân viên SX cùng xem/sử dụng (dùng isStaff() = admin||staff),
@@ -11758,6 +11760,16 @@ function isSlEditor(){ const r=currentUser?.role; return r==='admin'||r==='staff
 function guardSlEdit(){
   if(isSlEditor()) return false;
   showToast('🔒 Tài khoản Xem chỉ được xem, không có quyền thao tác', true);
+  return true;
+}
+
+// Chốt chặn TẠO ĐƠN HÀNG MỚI: CHỈ ADMIN. Trước đây chỉ dùng guardViewer()
+// (chỉ chặn viewer/solieu) nên tài khoản Nhân viên SX (staff) vẫn thấy nút
+// và tạo được đơn. Sửa đơn có sẵn vẫn theo quyền cũ (guardViewer).
+function canCreateOrder(){ return isAdmin(); }
+function guardCreateOrder(){
+  if(canCreateOrder()) return false;
+  showToast('🔒 Chỉ Quản trị viên (Admin) mới có quyền tạo đơn hàng mới', true);
   return true;
 }
 
@@ -13150,7 +13162,7 @@ function renderDashboard(){
         <div class="dash-side-card" style="margin:0">
           <div class="dash-side-card-title">⚡ Thao tác nhanh</div>
           <div class="dash-qa-grid">
-            <button class="dash-qa-btn" onclick="openAddOrder()"><div class="dash-qa-ic" style="background:#eef2ff;color:#4f46e5">＋</div><div class="dash-qa-lbl">Thêm đơn hàng</div></button>
+            ${canCreateOrder()?`<button class="dash-qa-btn" onclick="openAddOrder()"><div class="dash-qa-ic" style="background:#eef2ff;color:#4f46e5">＋</div><div class="dash-qa-lbl">Thêm đơn hàng</div></button>`:''}
             <button class="dash-qa-btn" onclick="goTab('keHoach')"><div class="dash-qa-ic" style="background:#dbeafe;color:#1d4ed8">📋</div><div class="dash-qa-lbl">Kế hoạch SX</div></button>
             <button class="dash-qa-btn" onclick="goTab('qrCode')"><div class="dash-qa-ic" style="background:#f0fdf4;color:#0C7A54">📷</div><div class="dash-qa-lbl">Quét QR</div></button>
             <button class="dash-qa-btn" onclick="goTab('chamCong')"><div class="dash-qa-ic" style="background:#fef3c7;color:#b45309">🕐</div><div class="dash-qa-lbl">Chấm công</div></button>
@@ -14337,7 +14349,7 @@ function renderDorDang(){
         <button class="dd-page-btn" onclick="tbFilterBtnClick(this)">🔽 Bộ lọc</button>
         <button class="dd-page-btn" onclick="ddResetFilters()">↺ Đặt lại</button>
         <button class="dd-page-btn" onclick="ddExportExcel()">⬇️ Xuất Excel</button>
-        <button class="dd-page-btn primary" onclick="openAddOrder()">＋ Tạo đơn hàng</button>
+        ${canCreateOrder()?`<button class="dd-page-btn primary" onclick="openAddOrder()">＋ Tạo đơn hàng</button>`:''}
       </div>
     </div>
     <div class="dd-overview">
@@ -21621,7 +21633,7 @@ document.addEventListener('click', function(e){
 }, true);
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-function openAddOrder(){if(guardViewer())return; _editOrderId=null; $('orderModalTitle').textContent='Thêm đơn hàng mới'; ['ofCust','ofPO','ofType','ofNote','ofAddr','ofKg','ofPhi'].forEach(id=>$(id).value=''); ['ofThk','ofW','ofQty'].forEach(id=>$(id).value=''); $('ofL').value='4000'; $('ofMat').value='B*'; $('ofPri').value='GẤP 1'; $('ofDate').value=''; $('orderErr').style.display='none'; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=''; if($('ofIsCoil')) $('ofIsCoil').checked=false; toggleCoilMode(); openModal('orderModal'); }
+function openAddOrder(){if(guardViewer()||guardCreateOrder())return; _editOrderId=null; $('orderModalTitle').textContent='Thêm đơn hàng mới'; ['ofCust','ofPO','ofType','ofNote','ofAddr','ofKg','ofPhi'].forEach(id=>$(id).value=''); ['ofThk','ofW','ofQty'].forEach(id=>$(id).value=''); $('ofL').value='4000'; $('ofMat').value='B*'; $('ofPri').value='GẤP 1'; $('ofDate').value=''; $('orderErr').style.display='none'; const lbl=$('kgAutoLabel'); if(lbl) lbl.textContent=''; if($('ofIsCoil')) $('ofIsCoil').checked=false; toggleCoilMode(); openModal('orderModal'); }
 // Chốt chặn quyền cuối cùng: chỉ Admin được sửa đơn hàng đã có (khớp đúng
 // quyền canEdit=isAdmin() đang dùng để ẩn/hiện nút Sửa ở danh sách) — trước
 // đây hàm này chỉ chặn tài khoản Xem (guardViewer), nên nhân viên vẫn sửa
@@ -22240,6 +22252,7 @@ function calcKgAuto(){
 
 let _savingOrder = false;
 function saveOrder(){if(guardViewer())return;
+  if(!_editOrderId && guardCreateOrder()){ closeModal('orderModal'); return; }
   // SỬA LỖI: bấm "Lưu đơn hàng" 2 lần liên tiếp thật nhanh (double-click
   // chuột, hoặc double-tap trên điện thoại/tablet khi mạng/máy hơi chậm)
   // trước đây gọi saveOrder() 2 lần trước khi modal kịp đóng ở lần đầu →
@@ -22255,6 +22268,7 @@ function saveOrder(){if(guardViewer())return;
   }
 }
 function _saveOrderImpl(){
+  if(!_editOrderId && !canCreateOrder()) return; // chốt chặn cuối
   const customer=$('ofCust').value.trim();
   if(!customer){ $('orderErr').textContent='Nhập tên khách hàng'; $('orderErr').style.display='block'; return; }
   saveCustomerHistory(customer);
