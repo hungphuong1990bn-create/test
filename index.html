@@ -7031,6 +7031,20 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
       <div class="field"><div class="field-lbl">Dày (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ</span></div><input id="ofThk" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
       <div class="field"><div class="field-lbl">Rộng (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ</span></div><input id="ofW" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
     </div>
+    <!-- Bo cạnh: R tự động = Dày/2 (readonly), hiển thị diện tích tiết diện thực tế A và KG -->
+    <div id="ofBcPanel" style="display:none;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:10px 12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:800;color:#9a3412;margin-bottom:8px">⭕ Chế độ Bo cạnh — R tự động = Dày ÷ 2</div>
+      <div class="modal-row">
+        <div class="field" style="margin-bottom:8px"><div class="field-lbl">Dày T (mm)</div><input id="ofBcT" class="field-inp" readonly tabindex="-1" style="background:var(--bg2);cursor:not-allowed" placeholder="—"></div>
+        <div class="field" style="margin-bottom:8px"><div class="field-lbl">Rộng W (mm)</div><input id="ofBcW" class="field-inp" readonly tabindex="-1" style="background:var(--bg2);cursor:not-allowed" placeholder="—"></div>
+      </div>
+      <div class="modal-row">
+        <div class="field" style="margin-bottom:8px"><div class="field-lbl">R tự động (mm)</div><input id="ofR" class="field-inp" readonly tabindex="-1" style="background:var(--bg2);cursor:not-allowed;font-weight:700" placeholder="—"></div>
+        <div class="field" style="margin-bottom:8px"><div class="field-lbl">Diện tích thực tế A (mm²)</div><input id="ofA" class="field-inp" readonly tabindex="-1" style="background:var(--bg2);cursor:not-allowed;font-weight:700" placeholder="—"></div>
+      </div>
+      <div id="ofBcSummary" style="font-size:11.5px;color:#7c2d12;line-height:1.55"></div>
+      <div id="ofBcWarn" style="display:none;font-size:11.5px;font-weight:700;color:var(--red-m,#dc2626);margin-top:4px"></div>
+    </div>
     <!-- Toggle: Đơn hàng dạng cuộn (dây/băng đồng cuốn thành cuộn thay vì cắt thanh) -->
     <div class="field" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
       <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px">
@@ -7056,7 +7070,7 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
     <div class="field">
       <div class="field-lbl">Loại / Quy cách</div>
       <div class="combo-wrap">
-        <input id="ofType" class="field-inp" placeholder="VD: Thanh dẹt, Lục giác..." autocomplete="off" oninput="renderComboList('ofType', getQuyCachHistory(), this.value)" onfocus="renderComboList('ofType', getQuyCachHistory(), this.value)">
+        <input id="ofType" class="field-inp" placeholder="VD: Thanh dẹt, Lục giác..." autocomplete="off" oninput="renderComboList('ofType', getQuyCachHistory(), this.value); calcKgAuto()" onfocus="renderComboList('ofType', getQuyCachHistory(), this.value)">
         <button type="button" class="combo-arrow" id="ofTypeArrow" onclick="toggleComboList('ofType', getQuyCachHistory())" title="Chọn nhanh: Bo cạnh, Loại đặc biệt...">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
@@ -21623,6 +21637,7 @@ function toggleComboList(inputId, items){
 function selectComboItem(inputId, val){
   const inp=$(inputId); if(inp){ inp.value=val; inp.focus(); }
   closeAllComboLists();
+  if(inputId==='ofType' && typeof calcKgAuto==='function') calcKgAuto(); // đổi sang/khỏi "Bo cạnh" → cập nhật R, A, KG ngay
 }
 function closeAllComboLists(){
   document.querySelectorAll('.combo-list.open').forEach(el=>el.classList.remove('open'));
@@ -22211,7 +22226,42 @@ function toggleCoilMode(){
   calcKgAuto();
 }
 
-// Tự tính KG khi nhập Φ hoặc dày/rộng/dài/qty
+// ── BO CẠNH ──────────────────────────────────────────────────
+// Nhận diện Loại/Quy cách = "Bo cạnh" (không phân biệt hoa/thường, dấu, khoảng trắng thừa)
+function isBoCanhType(val){
+  const n = String(val||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/\s+/g,' ').trim();
+  return n === 'bo canh' || n.indexOf('bo canh ') === 0;
+}
+// Hai bên cạnh bo tròn đối xứng: R = T/2 ; A = T×(W−2R) + π×R²  (mm²)
+// Trả về null nếu thiếu dữ liệu hoặc W < 2R (hình học không hợp lệ).
+function calcBoCanhArea(t, w){
+  if(!(t>0) || !(w>0)) return null;
+  const r = t/2;
+  if(w - 2*r < 0) return null;
+  return { r, area: t*(w-2*r) + Math.PI*r*r };
+}
+// Cập nhật khối hiển thị Bo cạnh (T, W, R, A, KG). calc = kết quả calcBoCanhArea hoặc null
+function updateBoCanhPanel(show, t, w, calc, kgText){
+  const panel = $('ofBcPanel'); if(!panel) return;
+  panel.style.display = show ? 'block' : 'none';
+  if(!show){
+    ['ofBcT','ofBcW','ofR','ofA'].forEach(id=>{ const e=$(id); if(e) e.value=''; });
+    const sm=$('ofBcSummary'); if(sm) sm.textContent='';
+    const wn=$('ofBcWarn'); if(wn){ wn.style.display='none'; wn.textContent=''; }
+    return;
+  }
+  $('ofBcT').value = t>0 ? t : '';
+  $('ofBcW').value = w>0 ? w : '';
+  $('ofR').value = t>0 ? (t/2).toFixed(2) : '';
+  $('ofA').value = calc ? calc.area.toFixed(2) : '';
+  const wn = $('ofBcWarn');
+  if(t>0 && w>0 && !calc){ wn.textContent='⚠ Chiều rộng W phải ≥ độ dày T (W − 2R không được âm)'; wn.style.display='block'; }
+  else { wn.textContent=''; wn.style.display='none'; }
+  const sm = $('ofBcSummary');
+  if(sm) sm.innerHTML = `A = T×(W−2R) + π×R² · KG = A × L × 8.96 / 1.000.000 × SL` + (kgText ? ` · <b>⚖️ ${kgText} kg</b>` : '');
+}
+
+// Tự tính KG khi nhập Φ hoặc dày/rộng/dài/qty (và Bo cạnh khi Loại/Quy cách = "Bo cạnh")
 function calcKgAuto(){
   const isCoil = $('ofIsCoil') && $('ofIsCoil').checked;
   const phi = parseFloat($('ofPhi').value)||0;
@@ -22223,12 +22273,22 @@ function calcKgAuto(){
   const lbl = $('kgAutoLabel');
   const coilInfo = $('ofCoilInfo');
   let kg = 0, computed = false;
+  // Chế độ Bo cạnh: chỉ áp dụng khi Loại/Quy cách = "Bo cạnh" và KHÔNG nhập Φ (thanh tròn giữ nguyên công thức riêng)
+  const boMode = isBoCanhType($('ofType') ? $('ofType').value : '') && !phi;
+  const boCalc = boMode ? calcBoCanhArea(t, w) : null;
 
   if(phi && l && qty){
     // Thanh/dây tròn: KG = Φ² × L × 7 / 1,000,000 × qty
     kg = parseFloat((phi*phi*l*7/1000000*qty).toFixed(3));
     computed = true;
     if(lbl) lbl.textContent = isCoil ? `✓ Tự tính dây tròn Φ${phi}` : `✓ Tự tính thanh tròn Φ${phi}`;
+  } else if(boMode){
+    // Bo cạnh: R = T/2 ; A = T×(W−2R)+πR² ; KG = A × L × 8.96 / 1.000.000 × qty
+    if(boCalc && l && qty){
+      kg = parseFloat((boCalc.area*l*CU_DENSITY/1000000*qty).toFixed(3));
+      computed = true;
+      if(lbl) lbl.textContent = isCoil ? '✓ Tự tính Bo cạnh dạng cuộn (R=T/2, D=8.96)' : '✓ Tự tính Bo cạnh (R=T/2, D=8.96)';
+    } else if(lbl) lbl.textContent = '';
   } else if(t && w && l && qty){
     // Thanh/băng dẹt (đồng đỏ): KG = T × W × L × D / 1.000.000 × qty  (D=8.96 g/cm³)
     kg = parseFloat((t*w*l*CU_DENSITY/1000000*qty).toFixed(3));
@@ -22238,6 +22298,7 @@ function calcKgAuto(){
     if(lbl) lbl.textContent = '';
   }
   if(computed) $('ofKg').value = kg;
+  updateBoCanhPanel(boMode, t, w, boCalc, computed ? kg : '');
 
   if(coilInfo){
     if(isCoil && qty && lRaw){
@@ -22283,8 +22344,11 @@ function _saveOrderImpl(){
   const qty = parseInt($('ofQty').value)||0; // số thanh hoặc số cuộn
   let kg    = parseFloat($('ofKg').value)||0;
   // Auto-calc nếu chưa có
+  const isBoCanh = isBoCanhType($('ofType').value) && !(phi > 0);
+  const boCalc = isBoCanh ? calcBoCanhArea(t, w) : null;
   if(!kg){
     if(phi&&l&&qty) kg=parseFloat((phi*phi*l*7/1000000*qty).toFixed(3));
+    else if(isBoCanh){ if(boCalc&&l&&qty) kg=parseFloat((boCalc.area*l*CU_DENSITY/1000000*qty).toFixed(3)); }
     else if(t&&w&&l&&qty) kg=parseFloat((t*w*l*CU_DENSITY/1000000*qty).toFixed(3));
   }
   const isRound = phi > 0; // true = thanh/dây tròn
@@ -22293,6 +22357,7 @@ function _saveOrderImpl(){
     customer, po:$('ofPO').value.trim(), type:$('ofType').value.trim(),
     material:$('ofMat').value, thickness:t, width:w, length:l, qty, kg,
     phi: isRound?phi:0, isRound,
+    isBoCanh, boR: boCalc ? boCalc.r : 0, boArea: boCalc ? parseFloat(boCalc.area.toFixed(4)) : 0,
     isCoil, meterPerCoil, totalMeters,
     priority:$('ofPri').value, deliveryDate:$('ofDate').value,
     address:$('ofAddr').value.trim(), note:$('ofNote').value.trim()
