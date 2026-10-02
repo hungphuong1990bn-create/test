@@ -4715,16 +4715,37 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh3-sched-period{font-size:10.5px;font-weight:700;color:#9db3e0;flex:0 0 auto}
 .dh3-sched-group{display:flex;flex-direction:column;gap:5px;border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:6px;background:rgba(255,255,255,.02)}
 .dh3-sched-group-hd{font-size:10.5px;font-weight:800;border-radius:6px;padding:3px 8px;text-transform:uppercase;letter-spacing:.3px}
-.dh3-sched-row-v{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:#eaf1ff;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:5px 9px;cursor:pointer}
-.dh3-sched-row-v:hover{background:rgba(255,255,255,.09)}
-.dh3-sched-stt{flex:0 0 auto;min-width:16px;text-align:center;font-weight:800;color:#8fc0ff}
-.dh3-sched-name{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25}
-.dh3-sched-badge{flex:0 0 auto;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap}
-.dh3-sched-meta{font-weight:600;color:#9db3e0;font-size:.92em}
-.dh3-sched-sep{color:#5a6d94;font-weight:600;margin:0 5px}
+/* ── Dòng nhân viên (v2): bố cục DỌC trong thẻ — [STT][Avatar][Tên / Bộ phận·Ca / Nghỉ]
+   Tên luôn có TOÀN BỘ chiều rộng còn lại và chỉ xuống dòng theo TỪ (không bẻ
+   từng ký tự); thông tin phụ & badge nghỉ nằm ở dòng riêng bên dưới nên không
+   còn chen ngang làm vỡ chữ. Mọi kích thước dùng em → tự co giãn theo chế độ TV. */
+.dh3-sched-row-v{--lc:#22d3ee;--lb:rgba(34,211,238,.14);position:relative;display:flex;align-items:flex-start;gap:.65em;font-size:11.5px;font-weight:700;color:#eaf1ff;
+  background:linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.09);border-radius:.8em;padding:.5em .7em .5em .55em;cursor:pointer;
+  transition:background .15s,border-color .15s,transform .15s}
+.dh3-sched-row-v:hover{background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(255,255,255,.05));border-color:rgba(143,192,255,.35)}
+.dh3-sched-row-v.is-leave{border-color:color-mix(in srgb,var(--lc) 45%,rgba(255,255,255,.08));background:linear-gradient(135deg,var(--lb),rgba(255,255,255,.02) 70%)}
+.dh3-sched-row-v.is-leave::before{content:'';position:absolute;left:0;top:.45em;bottom:.45em;width:.25em;border-radius:0 .25em .25em 0;background:var(--lc)}
+.dh3-sched-stt{flex:0 0 auto;align-self:center;min-width:1.5em;text-align:center;font-size:.86em;font-weight:800;color:#7fa8e8;font-variant-numeric:tabular-nums}
+.dh3-sched-av{flex:0 0 auto;width:2.3em;height:2.3em;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.95em;font-weight:800;color:#fff;
+  background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 0 0 .13em rgba(143,192,255,.22)}
+.dh3-sched-row-v.is-leave .dh3-sched-av{background:linear-gradient(145deg,color-mix(in srgb,var(--lc) 85%,#fff),color-mix(in srgb,var(--lc) 65%,#000));box-shadow:0 0 0 .13em color-mix(in srgb,var(--lc) 35%,transparent);color:#06222b}
+.dh3-sched-main{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:.22em}
+.dh3-sched-name{font-size:1.04em;font-weight:800;line-height:1.28;color:#f2f7ff;overflow-wrap:break-word;word-break:normal;hyphens:none;text-wrap:balance}
+.dh3-sched-row-v.is-leave .dh3-sched-name{color:#fff}
+.dh3-sched-sub{display:flex;flex-wrap:wrap;align-items:center;gap:.15em .45em;line-height:1.3}
+.dh3-sched-meta{font-weight:600;color:#9db3e0;font-size:.86em;white-space:nowrap}
+.dh3-sched-meta+.dh3-sched-meta::before{content:'·';margin-right:.45em;color:#5a6d94;font-weight:800}
+.dh3-sched-leave{display:flex;flex-wrap:wrap;align-items:center;gap:.25em .5em;margin-top:.1em}
+.dh3-sched-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:.3em;font-size:.88em;font-weight:800;padding:.18em .7em;border-radius:999px;white-space:nowrap;
+  background:var(--lc);color:#04222b;box-shadow:0 .1em .5em color-mix(in srgb,var(--lc) 35%,transparent)}
+.dh3-sched-leave-date{font-size:.84em;font-weight:700;color:color-mix(in srgb,var(--lc) 70%,#fff);white-space:nowrap}
+.dh3-sched-count{font-weight:700;opacity:.85}
+.dh3-sched-count.off{margin-left:.35em;padding:.05em .55em;border-radius:999px;background:rgba(6,34,43,.14);font-weight:800}
+.dh3-sched-period{display:inline-flex;align-self:flex-start;align-items:center;gap:.35em;background:rgba(143,192,255,.1);border:1px solid rgba(143,192,255,.22);border-radius:999px;padding:.2em .8em}
 .dh-tv .dh3-sched-row-v{font-size:clamp(9.5px,1.05dvh,14px)}
 .dh-tv .dh3-sched-group-hd{font-size:clamp(8.5px,0.95dvh,12px)}
 .dh-tv.dh-tv-compact-2 .dh3-sched-row-v{font-size:clamp(8px,1dvh,11px);padding:clamp(3px,0.45dvh,6px) clamp(5px,0.6dvw,8px)}
+.dh-tv.dh-tv-compact-2 .dh3-sched-av{width:2em;height:2em}
 
 
 /* ── Hàng dưới: 3 cột (Ca làm việc / Đơn kế tiếp / Tổng hợp công đoạn) */
@@ -15838,7 +15859,7 @@ function dhOverdueColV3HTML(){
 function dhSchedulePanelV3HTML(){
   const sheets = (DB.lichLamViec||[]).filter(s=>(s.rows||[]).length);
   const multiDept = sheets.length > 1;
-  let totalCount = 0;
+  let totalCount = 0, totalLeave = 0;
   // ── "📅 Thời gian áp dụng" (sheet.period) giờ ĐÓNG BĂNG — tách khỏi khung
   // cuộn (dhScheduleScrollBox), đặt CỐ ĐỊNH ngay dưới tiêu đề panel, KHÔNG
   // bị cuốn trôi mất khi danh sách nhân viên tự cuộn. Nếu nhiều bộ phận có
@@ -15850,25 +15871,44 @@ function dhSchedulePanelV3HTML(){
   const blocksHTML = sheets.length ? sheets.map(s=>{
     const groups = llvGroupRows(s.rows||[]);
     totalCount += (s.rows||[]).length;
+    totalLeave += (s.rows||[]).filter(r=>llvActiveLeave(r.name,null,s)).length;
     const deptHd = multiDept ? `<div class="dh3-sched-dept-hd">${(s.name||'Bộ phận').replace(/</g,'&lt;')}</div>` : '';
     const groupsHTML = groups.map(g=>{
       const rowsHTML = g.items.map(({r},gi)=>{
+        const esc = v=>(v==null?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
         const leaveRec = llvActiveLeave(r.name, null, s);
-        const badge = leaveRec ? `<span class="dh3-sched-badge" style="background:#cffafe;color:#0e7490">🏖️ ${(leaveRec.loai||'Nghỉ').toString().replace(/</g,'&lt;')}</span>` : '';
+        const nm = (r.name||'').trim();
+        const initial = nm ? Array.from(nm.split(/\s+/).pop())[0].toUpperCase() : '?';
+        // Màu theo loại nghỉ — nhận biết nhanh ốm / phép năm / việc riêng... từ xa trên TV
+        const loai = (leaveRec && leaveRec.loai ? leaveRec.loai : 'Nghỉ').toString();
+        const LT = /ốm/i.test(loai) ? ['#fb7185','rgba(251,113,133,.15)']
+                 : /thai/i.test(loai) ? ['#f0abfc','rgba(240,171,252,.15)']
+                 : /không\s*lương/i.test(loai) ? ['#cbd5e1','rgba(203,213,225,.13)']
+                 : /phép/i.test(loai) ? ['#4ade80','rgba(74,222,128,.14)']
+                 : /riêng/i.test(loai) ? ['#22d3ee','rgba(34,211,238,.14)']
+                 : ['#fbbf24','rgba(251,191,36,.14)'];
+        const dm = d => { const m=(d||'').match(/^\d{4}-(\d{2})-(\d{2})/); return m?`${m[2]}/${m[1]}`:''; };
+        let range = '';
+        if(leaveRec){
+          const f=dm(leaveRec.fromDate), t=dm(leaveRec.toDate);
+          range = (f&&t&&f!==t) ? `${f} → ${t}` : (t||f);
+        }
+        const leaveHtml = leaveRec ? `<div class="dh3-sched-leave"><span class="dh3-sched-badge">🏖️ ${esc(loai)}</span>${range?`<span class="dh3-sched-leave-date">${range}</span>`:''}</div>` : '';
         const dept = llvWorkerDept(r.name);
         const shiftShort = LLV_SHIFT_SHORT[g.key] || '';
-        const deptHtml = dept ? `<span class="dh3-sched-sep">|</span><span class="dh3-sched-meta">${dept.replace(/</g,'&lt;')}</span>` : '';
-        const shiftHtml = shiftShort ? `<span class="dh3-sched-sep">|</span><span class="dh3-sched-meta">${shiftShort}</span>` : '';
-        return `<div class="dh3-sched-row-v" onclick="goTab('lichLamViec')">
+        const subHtml = (dept||shiftShort) ? `<div class="dh3-sched-sub">${dept?`<span class="dh3-sched-meta">${esc(dept)}</span>`:''}${shiftShort?`<span class="dh3-sched-meta">${esc(shiftShort)}</span>`:''}</div>` : '';
+        return `<div class="dh3-sched-row-v${leaveRec?' is-leave':''}" style="--lc:${LT[0]};--lb:${LT[1]}" title="${esc(nm)}${leaveRec?' — '+esc(loai)+(leaveRec.lydo?': '+esc(leaveRec.lydo):''):''}" onclick="goTab('lichLamViec')">
           <span class="dh3-sched-stt">${gi+1}</span>
-          <span class="dh3-sched-name">${(r.name||'—').replace(/</g,'&lt;')}</span>
-          ${deptHtml}
-          ${shiftHtml}
-          ${badge}
+          <span class="dh3-sched-av">${esc(initial)}</span>
+          <div class="dh3-sched-main">
+            <div class="dh3-sched-name">${esc(nm||'—')}</div>
+            ${subHtml}
+            ${leaveHtml}
+          </div>
         </div>`;
       }).join('');
       return `<div class="dh3-sched-group">
-        <div class="dh3-sched-group-hd" style="background:${g.meta.bg};color:${g.meta.color}">${g.meta.label} <span style="font-weight:600;opacity:.8">· ${g.items.length} người</span></div>
+        <div class="dh3-sched-group-hd" style="background:${g.meta.bg};color:${g.meta.color}">${g.meta.label} <span class="dh3-sched-count">· ${g.items.length} người</span>${(()=>{const n=g.items.filter(({r})=>llvActiveLeave(r.name,null,s)).length;return n?`<span class="dh3-sched-count off">🏖️ ${n} nghỉ</span>`:'';})()}</div>
         ${rowsHTML}
       </div>`;
     }).join('');
@@ -15876,7 +15916,7 @@ function dhSchedulePanelV3HTML(){
   }).join('') : `<div class="dh3-next-empty">Chưa có lịch làm việc nào · vào tab "Lịch làm việc" để tạo</div>`;
   return `
     <div class="dh3-panel">
-      <div class="dh3-panel-hd">📅 LỊCH LÀM VIỆC <b style="font-size:10.5px;color:#8fc0ff;font-weight:700">· ${totalCount} người</b></div>
+      <div class="dh3-panel-hd">📅 LỊCH LÀM VIỆC <b style="font-size:10.5px;color:#8fc0ff;font-weight:700">· ${totalCount} người</b>${totalLeave?`<b style="font-size:10.5px;color:#22d3ee;font-weight:800"> · 🏖️ ${totalLeave} nghỉ</b>`:''}</div>
       ${periodsFixedHTML}
       <div class="dh3-sched-rows-v" id="dhScheduleScrollBox">${blocksHTML}</div>
     </div>`;
