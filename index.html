@@ -6466,6 +6466,255 @@ body{letter-spacing:-.1px}
   .kh-util-icon{width:28px!important;height:28px!important;font-size:13px!important;flex-shrink:0!important}
 }
 </style>
+<style id="dh4-style">
+.dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(8,1fr)}
+.dh-tv .dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(8,1fr)!important}
+@media (max-width:1400px){.dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:760px){.dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(2,1fr)}}
+.dh3-kpi-val small{font-size:.5em;font-weight:700;opacity:.75}
+.dh4-shift{display:block;font-size:.8em;font-weight:800;color:#fbbf24}
+.dh4-mid-row,.dh4-next-wrap{display:flex;gap:12px;min-height:0}
+.dh4-mid-row{flex:0 0 auto;height:360px}
+.dh4-next-wrap{flex:0 0 auto;height:420px}
+.dh4-mid-row>.dh4-orders{flex:2.6 1 0}
+.dh4-mid-row>.dh3-panel:not(.dh4-orders){flex:1 1 0}
+.dh4-next-wrap>.dh3-panel{flex:1 1 0}
+@media (max-width:1100px){.dh4-mid-row{flex-direction:column;height:auto}.dh4-mid-row>.dh3-panel{min-height:320px}}
+.dh-tv .dh4-mid-row{flex:1 1 0;height:auto;gap:clamp(6px,.9dvw,16px)}
+.dh-tv .dh4-next-wrap{flex:1.15 1 0;height:auto}
+.dh-tv .dh3-machine-row{flex:1.3 1 0;min-height:clamp(200px,32dvh,900px)}
+.dh4-hd-big{font-size:clamp(12px,1.5dvh,20px)}
+.dh4-hd-big b{color:#8fc0ff;font-weight:700}
+.dh4-tbl{display:flex;flex-direction:column;flex:1;min-height:0;font-size:12.5px;color:#eaf2ff}
+.dh-tv .dh4-tbl{font-size:clamp(10px,1.45dvh,24px)}
+.dh4-otbl{--g:2.4em minmax(0,1.35fr) repeat(7,minmax(0,1fr)) 86px}
+.dh-tv .dh4-otbl{--g:2.4em minmax(0,1.35fr) repeat(7,minmax(0,1fr))}
+.dh4-ntbl{--g:2.4em minmax(0,1.3fr) repeat(5,minmax(0,1fr))}
+.dh4-row{display:grid;grid-template-columns:var(--g);gap:6px;align-items:center;padding:5px 8px}
+.dh4-head{font-size:.78em;font-weight:800;color:#9db3e0;text-transform:uppercase;flex:0 0 auto}
+.dh4-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:4px}
+.dh4-body::-webkit-scrollbar{display:none}
+.dh4-orow,.dh4-nrow{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;cursor:pointer;flex:0 0 auto}
+.dh4-orow{border-left:4px solid var(--pc,#64748b)}
+.dh4-orow:hover,.dh4-nrow:hover{background:rgba(255,255,255,.1)}
+.dh4-row>span{min-width:0;overflow-wrap:anywhere;line-height:1.2}
+.dh4-c-stt{font-weight:800;color:#8fc0ff}
+.dh4-c-code{font-weight:800;color:#7cc4ff}
+.dh4-pri{display:block;font-style:normal;font-size:.72em;font-weight:800}
+.dh4-c-cust{font-weight:700}
+.dh4-num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.dh4-late{color:#ff6b6b;font-weight:800}
+.dh4-prog{display:flex;align-items:center;gap:6px}
+.dh4-bar{flex:1;height:.8em;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden}
+.dh4-bar i{display:block;height:100%;border-radius:99px;transition:width .6s}
+.dh4-bar i.ok{background:#22c55e}.dh4-bar i.soon{background:#f59e0b}.dh4-bar i.late{background:#ef4444}
+.dh4-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.82em;font-weight:800;color:#fff;white-space:nowrap}
+.dh4-b-run{background:#16a34a}.dh4-b-late{background:#dc2626}.dh4-b-soon{background:#d97706}
+.dh4-b-done{background:#65a30d}.dh4-b-wait{background:#ca8a04}.dh4-b-ready{background:transparent;border:1.5px solid #22c55e;color:#4ade80}
+.dh4-b-maint{background:#7c3aed}
+.dh4-act{display:flex;gap:4px}
+.dh4-act button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff;cursor:pointer;padding:2px 6px}
+.dh-tv .dh4-act{display:none}
+/* ═══ BẢNG MÀU THEO ẢNH MẪU (chỉ đổi màu, không đổi logic/bố cục) ═══ */
+.dh-wrap.dh2{--dh-bg1:#071a3f;--dh-bg2:#0a2656;--dh-bg3:#0d3278;
+  background:radial-gradient(120% 90% at 50% 0%,#0c2a63 0%,#081f4b 45%,#061633 100%)}
+/* Header */
+.dh-wrap.dh2 .dh2-topbar{background:linear-gradient(90deg,#08193d,#0b2455 55%,#08193d);border-bottom:1px solid #1d4390;border-radius:0}
+.dh-wrap.dh2 .dh2-tb-center{color:#fff;text-shadow:none;font-weight:900}
+.dh-wrap.dh2 .dh3-tb-datebox{background:transparent;border:0;color:#cfe0ff}
+.dh-wrap.dh2 #dhClockTime{color:#fff;font-weight:900}
+.dh-wrap.dh2 .dh4-shift{color:#fff}
+.dh-wrap.dh2 .dh3-tb-account,.dh-wrap.dh2 .dh3-tb-bell{background:transparent;border-color:#27498f}
+.dh-wrap.dh2 .dh-tv-btn{background:#0d2a63;border:1px solid #2f5fc4;color:#fff}
+/* KPI: thẻ màu đặc, chữ trắng */
+.dh-wrap.dh2 .dh3-kpi-card{border:0;border-radius:12px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.dh-wrap.dh2 .dh3-kpi-card:hover{filter:brightness(1.08)}
+.dh-wrap.dh2 .dh3-kpi-ic{background:rgba(255,255,255,.22);color:#fff!important}
+.dh-wrap.dh2 .dh3-kpi-lbl{color:#fff;opacity:.95}
+.dh-wrap.dh2 .dh3-kpi-val{color:#fff}
+.dh-wrap.dh2 .dh3-kpi-delta,.dh-wrap.dh2 .dh3-kpi-delta.up,.dh-wrap.dh2 .dh3-kpi-delta.warn,.dh-wrap.dh2 .dh3-kpi-delta.flat{color:rgba(255,255,255,.88)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(1){background:linear-gradient(135deg,#2478f0,#1559c8)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(2){background:linear-gradient(135deg,#25b45b,#168f40)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(3){background:linear-gradient(135deg,#f6a60f,#e48a00)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(4){background:linear-gradient(135deg,#17a0c2,#0e7f9f)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(5){background:linear-gradient(135deg,#2ba35f,#1b8049)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(6){background:linear-gradient(135deg,#e5344f,#c01f3a)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(7){background:linear-gradient(135deg,#7152e6,#5538c4)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(8){background:linear-gradient(135deg,#f03c66,#d02551)}
+/* Tiêu đề khu máy */
+.dh-wrap.dh2 .dh-group-title{color:#fff;border-bottom:2px solid #2f7bff;padding-bottom:4px}
+.dh-wrap.dh2 .dh-group-title::before{display:none}
+.dh-wrap.dh2 .dh-group-count{color:#9db3e0}
+/* Thẻ máy: nền sáng, viền cyan, chữ xanh navy */
+.dh-wrap.dh2 .dh-card{--dh-accent:#5fd3ff;--dh-card:#f4faff;--dh-card2:#dcebfa;--dh-text2:#38557f;
+  background:linear-gradient(160deg,#f6fbff,#dcebfa);border:2px solid #5fd3ff;border-radius:14px;
+  box-shadow:0 0 0 1px rgba(95,211,255,.5),0 0 18px -2px rgba(80,200,255,.65),0 8px 18px rgba(0,0,10,.3);animation:none}
+.dh-wrap.dh2 .dh-card::before,.dh-wrap.dh2 .dh-card::after{display:none}
+.dh-wrap.dh2 .dh-card{padding-left:14px}
+.dh-wrap.dh2 .dh-card.st-run{--dh-accent:#22c55e;animation:none}
+.dh-wrap.dh2 .dh-card.st-fault{--dh-accent:#ef4444;border-color:#ff8da0;
+  box-shadow:0 0 0 1px rgba(255,100,130,.6),0 0 20px -2px rgba(255,70,100,.7),0 8px 18px rgba(0,0,10,.3);animation:none}
+.dh-wrap.dh2 .dh-card.st-wait{--dh-accent:#f5b533}
+.dh-wrap.dh2 .dh-card.st-ready{--dh-accent:#3b82f6}
+.dh-wrap.dh2 .dh-card.st-maint{--dh-accent:#7c3aed}
+.dh-wrap.dh2 .dh-card.dh-card-overdue{box-shadow:0 0 0 2px #f59e0b,0 0 18px -2px #f59e0b,0 8px 18px rgba(0,0,10,.3)}
+.dh-wrap.dh2 .dh-card-name{color:#0b2250;font-weight:900}
+.dh-wrap.dh2 .dh-card-ic{background:rgba(11,34,80,.08);border-color:rgba(11,34,80,.2)}
+.dh-wrap.dh2 .dh-card-cust{color:#0b2250}
+.dh-wrap.dh2 .dh-card-cust-mat{color:#38557f}
+.dh-wrap.dh2 .dh-card-spec{color:#0b2250;background:rgba(11,34,80,.07);border-color:rgba(11,34,80,.2)}
+.dh-wrap.dh2 .dh-card-kg{color:#1b3a6b;background:rgba(11,34,80,.05);border-color:rgba(11,34,80,.18)}
+.dh-wrap.dh2 .dh-card-time{color:#166534;background:rgba(34,197,94,.14);border-color:rgba(22,101,52,.35)}
+.dh-wrap.dh2 .dh-card-empty{color:#38557f}
+.dh-wrap.dh2 .dh-card-empty-queue-hint{color:#2563eb}
+.dh-wrap.dh2 .dh-card-qty span{color:#38557f}
+.dh-wrap.dh2 .dh-ring{color:#0b2250;background:conic-gradient(var(--dh-accent) calc(var(--p)*1%),rgba(11,34,80,.15) 0)}
+.dh-wrap.dh2 .dh-prog-wrap{background:#c7d6ea}
+.dh-wrap.dh2 .dh-card.st-run .dh-prog-bar{background:#22c55e;box-shadow:none}
+.dh-wrap.dh2 .dh-card.st-fault .dh-prog-bar{background:#ef4444;box-shadow:none}
+.dh-wrap.dh2 .dh-card.st-wait .dh-prog-bar,.dh-wrap.dh2 .dh-card.st-ready .dh-prog-bar{background:#94a3b8;box-shadow:none}
+/* Nhãn trạng thái máy: màu đặc, chữ trắng */
+.dh-wrap.dh2 .dh-card .dh-status-chip{color:#fff;border:0;border-radius:6px;padding:3px 10px;background:var(--dh-accent)}
+.dh-wrap.dh2 .dh-card .dh-status-chip::before{background:#fff;box-shadow:none}
+.dh-wrap.dh2 .dh-card.st-wait .dh-status-chip{color:#3b2a00}
+.dh-wrap.dh2 .dh-card.st-wait .dh-status-chip::before{background:#3b2a00}
+/* Panel + bảng */
+.dh-wrap.dh2 .dh3-panel{background:linear-gradient(180deg,#0e2659,#0a1e48);border:1px solid #1f4a9a;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(80,150,255,.07)}
+.dh-wrap.dh2 .dh3-panel-hd{color:#fff}
+.dh-wrap.dh2 .dh4-hd-big b{color:#8fc0ff}
+.dh-wrap.dh2 .dh4-head{background:rgba(255,255,255,.07);color:#cfe0ff;border-radius:6px}
+.dh-wrap.dh2 .dh4-orow,.dh-wrap.dh2 .dh4-nrow{background:transparent;border:0;border-bottom:1px solid rgba(120,160,255,.16);border-radius:0;color:#e8f0ff}
+.dh-wrap.dh2 .dh4-orow{border-left:0}
+.dh-wrap.dh2 .dh4-orow:hover,.dh-wrap.dh2 .dh4-nrow:hover{background:rgba(80,140,255,.12)}
+.dh-wrap.dh2 .dh4-body{gap:0}
+.dh-wrap.dh2 .dh4-c-code{color:#4da3ff}
+.dh-wrap.dh2 .dh4-c-stt{color:#e8f0ff}
+.dh-wrap.dh2 .dh4-c-cust{color:#fff}
+.dh-wrap.dh2 .dh4-bar{background:rgba(255,255,255,.16);height:.55em}
+.dh-wrap.dh2 .dh4-bar i.ok{background:linear-gradient(90deg,#2f7bff,#22d3ee)}
+.dh-wrap.dh2 .dh4-bar i.full{background:#22c55e}
+.dh-wrap.dh2 .dh4-bar i.soon{background:#f5b533}
+.dh-wrap.dh2 .dh4-bar i.late{background:#ef4444}
+.dh-wrap.dh2 .dh4-badge{border-radius:5px;min-width:5.5em;text-align:center;padding:3px 8px}
+.dh-wrap.dh2 .dh4-b-run{background:#1fa75a}
+.dh-wrap.dh2 .dh4-b-late{background:#e11d48}
+.dh-wrap.dh2 .dh4-b-soon,.dh-wrap.dh2 .dh4-b-wait{background:#f5b533;color:#3b2a00}
+.dh-wrap.dh2 .dh4-b-done{background:#2a6fe0}
+.dh-wrap.dh2 .dh4-b-ready{background:#3b82f6;border:0;color:#fff}
+.dh-wrap.dh2 .dh4-b-maint{background:#7c3aed}
+/* ═══ Bố cục dưới: [Đơn đang SX / Sắp chạy] cùng chiều rộng, Lịch làm việc cao suốt 2 hàng ═══ */
+.dh4-lower{display:flex;gap:12px;min-height:0;flex:0 0 auto;align-items:stretch}
+.dh4-lower-left{flex:2.6 1 0;min-width:0;display:flex;flex-direction:column;gap:12px;min-height:0}
+.dh4-lower-right{flex:1 1 0;min-width:0;display:flex;min-height:0}
+.dh4-lower-right>.dh3-panel{flex:1 1 auto;min-height:0}
+.dh4-lower-left>.dh4-orders{flex:0 0 360px}
+.dh4-lower-left>.dh4-next{flex:0 0 420px}
+@media (max-width:1100px){.dh4-lower{flex-direction:column}.dh4-lower-right>.dh3-panel{min-height:420px}}
+.dh-tv .dh4-lower{flex:1 1 0;gap:clamp(6px,.9dvw,16px)}
+.dh-tv .dh4-lower-left{gap:clamp(6px,.9dvh,14px)}
+.dh-tv .dh4-lower-left>.dh4-orders{flex:1 1 0;min-height:0}
+.dh-tv .dh4-lower-left>.dh4-next{flex:1.15 1 0;min-height:0}
+/* ═══ 2 khối [ĐƠN ĐANG SX | SẮP CHẠY] cạnh nhau, mỗi khối ~50% bề rộng cột trái → cao hơn, xem được nhiều dòng hơn ═══ */
+.dh4-sub{display:block;font-style:normal;font-size:.78em;font-weight:600;color:#9db3e0;margin-top:1px}
+.dh-wrap.dh2 .dh4-sub{color:#9db3e0}
+/* ═══ Căn cột cân đối 2 bảng: tiêu đề & dữ liệu cùng canh lề, cùng độ lệch viền ═══ */
+.dh4-head{border:1px solid transparent}
+.dh4-otbl .dh4-head{border-left:4px solid transparent}
+.dh-wrap.dh2 .dh4-head{border:0}
+/* Căn cột ĐỀU NHAU: các cột dữ liệu rộng bằng nhau (1fr) và căn giữa → khoảng cách giữa các cột đều; chỉ Khách hàng căn trái */
+.dh4-otbl .dh4-row>span:nth-child(1),.dh4-ntbl .dh4-row>span:nth-child(1),
+.dh4-otbl .dh4-row>span:nth-child(n+3):nth-child(-n+9),.dh4-ntbl .dh4-row>span:nth-child(n+3):nth-child(-n+7){text-align:center;padding-left:0;padding-right:0}
+.dh4-otbl .dh4-row>span:nth-child(n+3):nth-child(-n+9),.dh4-ntbl .dh4-row>span:nth-child(n+3):nth-child(-n+7){overflow-wrap:normal;white-space:normal}
+.dh4-otbl .dh4-row>span:nth-child(6),.dh4-otbl .dh4-row>span:nth-child(7),.dh4-ntbl .dh4-row>span:nth-child(6){white-space:nowrap}
+.dh4-head>span{white-space:normal;line-height:1.1}
+.dh4-otbl .dh4-badge{min-width:0;padding:2px 6px;font-size:.78em;text-align:center}
+.dh4-c-mat{font-weight:700;color:#bfe0ff;overflow-wrap:anywhere}
+.dh4-tag{display:inline-block;padding:2px 7px;border-radius:6px;font-size:.82em;font-weight:800;white-space:nowrap}
+.dh4-tag-bo{background:#f97316;color:#fff}
+.dh4-head>span{white-space:normal;line-height:1.1;overflow-wrap:normal;hyphens:none}
+.dh4-lower-left{container-type:inline-size}
+.dh-wrap:not(.dh-tv) .dh4-tbl{font-size:clamp(10px,.85cqw,13px)}
+.dh4-row>.dh4-c-cust{overflow-wrap:break-word}
+.dh4-otbl .dh4-row>span.dh4-act{justify-content:center;gap:3px}
+.dh4-otbl .dh4-act button{padding:2px 4px;font-size:.9em;line-height:1.2}
+.dh4-otbl .dh4-row>span.dh4-act{min-width:0;flex-wrap:nowrap;overflow:visible}
+/* ═══ Khối đồng hồ + ca làm việc (hiện đại): giờ lớn · ngày · ca có thanh tiến độ ═══ */
+.dh3-tb-datebox.dhx-clock,.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock{--sc:#38bdf8;flex-direction:row;align-items:center;gap:14px;padding:7px 16px 7px 14px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(56,120,255,.20),rgba(255,255,255,.04) 60%),rgba(8,20,48,.55);
+  border:1px solid rgba(120,170,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 6px 18px rgba(0,10,40,.35);color:#eaf1ff;font-size:inherit;min-width:0}
+.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock[data-shift="1"]{--sc:#fbbf24}.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock[data-shift="2"]{--sc:#38bdf8}.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock[data-shift="3"]{--sc:#a78bfa}
+.dhx-time,.dh-wrap.dh2 #dhClockTime.dhx-time{font-size:30px;line-height:1;font-weight:800;color:#fff;letter-spacing:.5px;font-variant-numeric:tabular-nums;white-space:nowrap;
+  text-shadow:0 0 18px rgba(96,165,250,.45)}
+.dhx-time small{font-size:.5em;font-weight:700;color:#7fb2ff;letter-spacing:.3px;margin-left:1px;text-shadow:none}
+.dhx-colon{font-weight:700;color:#8fc0ff;margin:0 1px;animation:dhxBlink 1s steps(1,end) infinite}
+@keyframes dhxBlink{0%{opacity:1}50%{opacity:.25}}
+.dhx-vline{align-self:stretch;width:1px;background:linear-gradient(180deg,transparent,rgba(160,195,255,.38),transparent)}
+.dhx-info{display:flex;flex-direction:column;gap:4px;min-width:128px}
+.dhx-date{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:#cfe0ff;white-space:nowrap}
+.dhx-wd{font-weight:800;text-transform:uppercase;letter-spacing:.9px;font-size:.88em;color:#8fc0ff}
+.dhx-dsep{width:3px;height:3px;border-radius:50%;background:#5c76ad}
+.dhx-dmy{font-variant-numeric:tabular-nums;font-weight:700;color:#eaf1ff}
+.dhx-shiftrow{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.dhx-dot{width:7px;height:7px;border-radius:50%;background:var(--sc);box-shadow:0 0 0 0 var(--sc);animation:dhxPulse 2s ease-out infinite;flex:0 0 auto}
+@keyframes dhxPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--sc) 70%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
+.dhx-shift{display:flex;align-items:baseline;gap:6px;font-size:11px}
+.dhx-shift b{color:var(--sc);font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.dhx-shift em{font-style:normal;font-weight:600;color:#9db3e0;font-variant-numeric:tabular-nums}
+.dhx-prog{height:3px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.dhx-prog i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 55%,#fff),var(--sc));box-shadow:0 0 8px var(--sc);transition:width 1s linear}
+.dh-tv .dhx-clock{gap:clamp(6px,1dvh,14px);padding:clamp(3px,.6dvh,7px) clamp(8px,1.2dvh,16px);border-radius:clamp(7px,1.1dvh,14px)}
+.dh-tv .dhx-time,.dh-wrap.dh2.dh-tv #dhClockTime.dhx-time{font-size:clamp(14px,3dvh,30px)}
+.dh-tv .dhx-info{min-width:0;gap:clamp(1px,.3dvh,4px)}
+.dh-tv .dhx-date{font-size:clamp(7px,1.15dvh,11.5px)}.dh-tv .dhx-shift{font-size:clamp(7px,1.1dvh,11px)}
+@media (prefers-reduced-motion:reduce){.dhx-colon,.dhx-dot{animation:none}}
+/* ═══ Thanh trên cùng: chống tràn viền/khung — 1 hàng, khối đồng hồ không bị bóp, thu gọn dần theo bề rộng ═══ */
+.dh2-topbar{container-type:inline-size;container-name:dhtb;flex-wrap:nowrap;gap:clamp(8px,1.2vw,18px)}
+.dh2-topbar .dh2-tb-left{flex:1 1 0;min-width:0}
+.dh2-topbar .dh2-tb-center{flex:0 1 auto;min-width:0}
+.dh2-topbar .dh2-tb-right{flex:0 0 auto;flex-wrap:nowrap;gap:clamp(6px,.8vw,12px);min-width:0}
+.dh2-topbar .dh2-tb-right>*{flex:0 0 auto}
+.dh3-tb-datebox.dhx-clock{flex:0 0 auto;min-width:max-content;box-sizing:border-box}
+.dhx-clock .dhx-time,.dhx-clock .dhx-info,.dhx-clock .dhx-date,.dhx-clock .dhx-shiftrow{flex:0 0 auto;min-width:max-content}
+.dhx-clock .dhx-prog{min-width:100%}
+.dhx-clock .dhx-info{min-width:max-content}
+.dh-tv .dh2-topbar .dh2-tb-right{flex-wrap:nowrap}
+.dh-tv .dhx-clock .dhx-info{min-width:max-content}
+@container dhtb (max-width:1500px){
+  .dh2-tb-center{font-size:16px}
+  .dh3-tb-account-role{display:none}
+  .dh-company-sub{display:none}
+}
+@container dhtb (max-width:1320px){
+  .dh3-tb-account>div:last-child{display:none}
+  .dh3-tb-account{padding:4px}
+  .dh2-tb-center{font-size:15px;letter-spacing:.4px}
+  .dh3-tb-datebox.dhx-clock{gap:10px;padding:6px 12px}
+  .dhx-time{font-size:26px}
+}
+@media (max-width:1180px){.dh2-topbar,.dh-tv .dh2-topbar{flex-wrap:wrap}}
+@container dhtb (max-width:1120px){
+  .dh2-topbar .dh2-tb-center{order:3;flex:1 0 100%;text-align:center;font-size:14px}
+  .dh2-topbar .dh2-tb-left{flex:1 1 220px}
+  .dh2-topbar .dh2-tb-right{margin-left:auto}
+}
+@container dhtb (max-width:760px){
+  .dh3-tb-sync-btn{padding:6px 8px}
+  .dhx-vline,.dhx-prog{display:none}
+}
+.dh4-lower{height:760px}
+.dh4-lower-left{flex:4.2 1 0;flex-direction:row}
+.dh4-lower-left>.dh4-orders{flex:1.2 1 0;min-width:0}
+.dh4-lower-left>.dh4-next{flex:1 1 0;min-width:0}
+.dh4-lower-right{flex:.8 1 0}
+.dh-tv .dh4-lower{height:auto}
+.dh-tv .dh4-lower-left{gap:clamp(6px,.9dvw,16px)}
+.dh-tv .dh4-lower-left>.dh4-orders{flex:1.2 1 0}
+.dh-tv .dh4-lower-left>.dh4-next{flex:1 1 0}
+@media (max-width:1100px){.dh4-lower{height:auto}.dh4-lower-left{flex-direction:column}.dh4-lower-left>.dh3-panel{flex:0 0 420px}}
+/* Đơn đang SX rộng hơn, Đơn sắp chạy thu nhỏ lại */
+.dh4-lower-left>.dh4-orders,.dh-tv .dh4-lower-left>.dh4-orders{flex:1.35 1 0}
+.dh4-lower-left>.dh4-next,.dh-tv .dh4-lower-left>.dh4-next{flex:.85 1 0}
+</style>
 </head>
 <body>
 
@@ -14988,6 +15237,24 @@ if(typeof window!=='undefined' && window.tvNative && window.tvNative.isElectron)
   }catch(e){}
 }
 
+// Dữ liệu hiển thị cho khối đồng hồ: giờ, ngày, ca và % tiến độ của ca hiện tại
+function dhClockParts(now){
+  now = now || new Date();
+  const h = now.getHours(), m = now.getMinutes(), sec = now.getSeconds();
+  let key, name, range, startH;
+  if(h>=6 && h<14){ key='1'; name='Ca 1'; range='06:00–14:00'; startH=6; }
+  else if(h>=14 && h<22){ key='2'; name='Ca 2'; range='14:00–22:00'; startH=14; }
+  else { key='3'; name='Ca 3'; range='22:00–06:00'; startH = h>=22 ? 22 : -2; }
+  const elapsed = ((h-startH)*3600 + m*60 + sec);
+  const pct = Math.max(0, Math.min(100, Math.round(elapsed/(8*3600)*1000)/10));
+  const hh = String(h).padStart(2,'0'), mm = String(m).padStart(2,'0'), ss = String(sec).padStart(2,'0');
+  return {
+    key, pct,
+    timeHTML: `${hh}<b class="dhx-colon">:</b>${mm}<small>:${ss}</small>`,
+    dateHTML: `<span class="dhx-wd">${VN_WEEKDAYS[now.getDay()]}</span><span class="dhx-dsep"></span><span class="dhx-dmy">${vnDateDMY(now)}</span>`,
+    shiftHTML: `<b>${name}</b><em>${range}</em>`
+  };
+}
 function dhCurrentShift(){
   const h = new Date().getHours();
   if(h>=6 && h<14) return 'Ca 1 · 06:00–14:00';
@@ -15141,7 +15408,7 @@ function dhMachineCard(m){
           <div class="dh-ring" style="--p:${pct}"><span>${pct}%</span></div>
           <div class="dh-card-qty">
             <div class="dh-prog-wrap"><div class="dh-prog-bar" style="width:${qtyPct}%"></div></div>
-            <span>${done.toLocaleString('vi-VN')}/${qty.toLocaleString('vi-VN')||0} — Sản lượng</span>
+            <span>${done.toLocaleString('vi-VN')}/${qty.toLocaleString('vi-VN')||0} thanh · còn ${Math.max(0,qty-done).toLocaleString('vi-VN')}${o.deliveryDate?` · giao ${dhFmtDate(o.deliveryDate)}`:''}${overdue?' · TRỄ':''}</span>
           </div>
         </div>
       </div>
@@ -15467,9 +15734,17 @@ function dhTopbarV3HTML(){
           <div class="dh-company-sub">🏭 Hệ thống quản lý sản xuất</div>
         </div>
       </div>
-      <div class="dh2-tb-center">ĐIỀU HÀNH SẢN XUẤT - CHẾ ĐỘ TIVI MODE</div>
+      <div class="dh2-tb-center">ĐIỀU HÀNH SẢN XUẤT</div>
       <div class="dh2-tb-right">
-        <div class="dh3-tb-datebox"><span id="dhClockDate">${dateStr}</span><span id="dhClockTime">--:--:--</span></div>
+        <div class="dh3-tb-datebox dhx-clock" id="dhClockBox" data-shift="${dhClockParts(now).key}">
+          <div class="dhx-time" id="dhClockTime">${dhClockParts(now).timeHTML}</div>
+          <div class="dhx-vline"></div>
+          <div class="dhx-info">
+            <div class="dhx-date" id="dhClockDate">${dhClockParts(now).dateHTML}</div>
+            <div class="dhx-shiftrow"><i class="dhx-dot"></i><span id="dhShift" class="dhx-shift">${dhClockParts(now).shiftHTML}</span></div>
+            <div class="dhx-prog" title="Tiến độ ca hiện tại"><i id="dhShiftBar" style="width:${dhClockParts(now).pct}%"></i></div>
+          </div>
+        </div>
         <button class="dh3-tb-sync-btn" onclick="renderDieuHanh();showToast&&showToast('Đã đồng bộ dữ liệu mới nhất')">🔄 Đồng bộ</button>
         <button class="dh3-tb-bell" onclick="goTab('nhatKy')" title="Thông báo">🔔${notifCount>0?`<span class="dh3-tb-bell-badge">${notifCount>9?'9+':notifCount}</span>`:''}</button>
         <div class="dh3-tb-account" onclick="goTab('settings')">
@@ -15501,15 +15776,21 @@ function dhTopKpisV3HTML(){
   const overdue = dhOverdueOrdersList().length;
   const perf = dhPerformanceData();
 
+  const mCnt={run:0,cho:0,sc:0,bt:0,sang:0};
+  MACHINES.forEach(m=>{ const c=machineRuntimeStatus(m.id).code; mCnt[c]=(mCnt[c]||0)+1; });
+  const remain=Math.max(0,perf.planned-perf.actual);
+  const fmt=n=>(n||0).toLocaleString('vi-VN');
   const cards = [
-    {ic:'📋',col:'#5d9cff',lbl:'Tổng đơn hàng',val:total.toLocaleString('vi-VN'),delta:`▲ ${Math.round(total? (running/total*100):0)}% đang sản xuất`,cls:'up',click:"goToKeHoachFilter('all')"},
-    {ic:'🏭',col:'#4ade80',lbl:'Đơn đang sản xuất',val:running.toLocaleString('vi-VN'),delta:`${total?Math.round(running/total*100):0}% tổng đơn`,cls:'flat',click:"goToKeHoachFilter('running')"},
-    {ic:'✅',col:'#fbbf24',lbl:'Hoàn thành hôm nay',val:doneToday.toLocaleString('vi-VN'),delta:`${doneDelta>=0?'▲':'▼'} ${Math.abs(doneDelta)}% so với hôm qua`,cls:doneDelta>=0?'up':'warn',click:"goTab('hoanThanh')"},
-    {ic:'⚖️',col:'#38bdf8',lbl:'Tổng sản lượng (kg)',val:Math.round(totalKg).toLocaleString('vi-VN'),delta:`${Math.round(runningKg).toLocaleString('vi-VN')}kg đang sản xuất`,cls:'flat',click:"goTab('hoanThanh')"},
-    {ic:'📈',col:'#a78bfa',lbl:'Hiệu suất TB ngày',val:perf.pct+'%',delta:`▲ ${perf.oee}% OEE trung bình`,cls:'up',click:"goTab('baoCao')"},
-    {ic:'⚠️',col:'#ff5c5c',lbl:'Đơn trễ hạn',val:overdue.toLocaleString('vi-VN'),delta:`${total?Math.round(overdue/total*100):0}% tổng đơn`,cls:overdue>0?'warn':'flat',click:"goToKeHoachFilter('overdue')"}
+    {ic:'📋',col:'#5d9cff',lbl:'Kế hoạch SX',val:fmt(perf.planned)+' <small>thanh</small>',delta:'tổng đơn đang chạy',cls:'flat',click:"goToKeHoachFilter('running')"},
+    {ic:'✅',col:'#4ade80',lbl:'Đã sản xuất',val:fmt(perf.actual)+' <small>thanh</small>',delta:perf.pct+'% kế hoạch',cls:'up',click:"goToKeHoachFilter('running')"},
+    {ic:'⏳',col:'#fbbf24',lbl:'Còn lại',val:fmt(remain)+' <small>thanh</small>',delta:(perf.planned?Math.round(remain/perf.planned*1000)/10:0)+'% kế hoạch',cls:'flat',click:"goToKeHoachFilter('running')"},
+    {ic:'📈',col:'#22d3ee',lbl:'Tiến độ',val:perf.pct+'%',delta:'đã SX / kế hoạch',cls:'up',click:"goTab('baoCao')"},
+    {ic:'🏭',col:'#4ade80',lbl:'Máy đang chạy',val:mCnt.run+'<small>/'+MACHINES.length+'</small>',delta:mCnt.cho+' chờ · '+mCnt.sang+' rảnh',cls:'flat',click:"goTab('baoTriMay')"},
+    {ic:'🛑',col:'#ff5c5c',lbl:'Máy dừng',val:String(mCnt.sc),delta:mCnt.bt+' đang bảo trì',cls:mCnt.sc>0?'warn':'flat',click:"goTab('baoTriMay')"},
+    {ic:'🧾',col:'#a78bfa',lbl:'Đơn đang SX',val:String(running),delta:total?Math.round(running/total*100)+'% tổng đơn':'',cls:'flat',click:"goToKeHoachFilter('running')"},
+    {ic:'⚠️',col:'#ff5c5c',lbl:'Đơn trễ',val:String(overdue),delta:overdue>0?'quá hạn giao':'không trễ',cls:overdue>0?'warn':'flat',click:"goToKeHoachFilter('overdue')"}
   ];
-  return `<div class="dh3-kpi-row">${cards.map(c=>`
+  return `<div class="dh3-kpi-row dh4-kpi8">${cards.map(c=>`
     <div class="dh3-kpi-card" style="--kc:${c.col}" onclick="${c.click}">
       <div class="dh3-kpi-top"><div class="dh3-kpi-ic" style="color:${c.col}">${c.ic}</div><div class="dh3-kpi-lbl">${c.lbl}</div></div>
       <div class="dh3-kpi-val">${c.val}</div>
@@ -15614,7 +15895,8 @@ function dhSchedulePanelV3HTML(){
 // khít khung thì đứng yên, không cuộn thừa.
 var DH_AUTOSCROLL_BOXES = [
   {id:'dhScheduleScrollBox', pauseTop:4000, pauseBottom:6000, speed:2.5, backMs:3500, minDownMs:9000, maxDownMs:45000},
-  {id:'dhNextScrollBox',  pauseTop:1800, pauseBottom:2600, speed:32, backMs:900}
+  {id:'dhNextScrollBox',  pauseTop:1800, pauseBottom:2600, speed:32, backMs:900},
+  {id:'dhOrdersScrollBox',  pauseTop:3000, pauseBottom:3000, speed:28, backMs:900}
 ];
 var _dhAutoScrollCycleStart = {};
 function _dhAutoScrollTick(){
@@ -15749,6 +16031,13 @@ function dhShortMachineName(m){
 // KHÁCH HÀNG, không hiển thị mã đơn hàng. Cột "Máy" hiển thị tên RÚT GỌN
 // (xem dhShortMachineName ở trên) — VD "TJ550 (1)" / "Rút - 100 (1)" — thay
 // vì tên đầy đủ, cho gọn & dễ đọc từ xa trên màn TV.
+// Thẻ "Loại": đơn Bo cạnh → nhãn cam nổi bật; loại khác → chữ thường; không có → "—"
+function dhTypeTag(o){
+  const t=o&&o.type;
+  if(!t) return '—';
+  if(typeof isBoCanhType==='function' && isBoCanhType(t)) return '<b class="dh4-tag dh4-tag-bo">BO CẠNH</b>';
+  return dhEsc(t);
+}
 function dhNextQueueListV3(){
   const rows = [];
   MACHINES.forEach(m=>{
@@ -15756,7 +16045,7 @@ function dhNextQueueListV3(){
     const runningOrder = dhOrderAtMachine(m.id);
     const queue = (rs.queue||[]).filter(q=>!runningOrder || q.id!==runningOrder.id);
     const st = ASSIGN_STAGES.find(s=>s.group===m.group);
-    queue.forEach(q=>rows.push({stage: st?st.label:m.group, machine:dhShortMachineName(m), order:q}));
+    queue.forEach((q,qi)=>rows.push({stage: st?st.label:m.group, machine:dhShortMachineName(m), order:q, mid:m.id, qi}));
   });
   rows.sort((a,b)=>{
     const pa=parseInt(String(a.order.priority||'GẤP 9').replace('GẤP ',''))||9;
@@ -15766,29 +16055,91 @@ function dhNextQueueListV3(){
   });
   return rows;
 }
-var DH3_NEXT_QUEUE_MAX_SHOW = 40; // trần an toàn (phòng dữ liệu lỗi/vô hạn) — bình thường danh sách cuộn hết, không còn cắt bớt như trước
+var DH3_NEXT_QUEUE_MAX_SHOW = 200; // trần an toàn (phòng dữ liệu lỗi/vô hạn) — bình thường danh sách cuộn hết, không còn cắt bớt như trước
 function dhNextQueuePanelV3HTML(){
   const all = dhNextQueueListV3();
   const rows = all.slice(0, DH3_NEXT_QUEUE_MAX_SHOW);
   const rest = all.length - rows.length;
-  const rowsHTML = rows.length ? rows.map(r=>`
-    <div class="dh3-next-row" onclick="khViewDetail('${r.order.id}')">
-      <span class="dh3-next-stage">${r.stage}</span>
-      <span class="dh3-next-machine">${r.machine}</span>
-      <span class="dh3-next-cust">${(r.order.customer||'—').replace(/</g,'&lt;')}</span>
-      <span class="dh3-next-typespec">${r.order.type?`${r.order.type} `:''}${specStr(r.order)}</span>
-      <span class="dh3-next-mat">${r.order.material||'—'}</span>
-      <span class="dh3-next-qty">${(r.order.qty||0).toLocaleString('vi-VN')}</span>
-    </div>`).join('') : `<div class="dh3-next-empty">Không có đơn chờ chạy tiếp</div>`;
+  const ca = dhShiftShort();
+  const rowsHTML = rows.length ? rows.map((r,i)=>{
+    const o=r.order;
+    return `<div class="dh4-row dh4-nrow" onclick="khViewDetail('${o.id}')">
+      <span class="dh4-c-stt">${i+1}</span>
+      <span class="dh4-c-cust">${dhEsc(o.customer||'—')}</span>
+      <span class="dh4-c-mat">${dhEsc(o.material||'—')}</span>
+      <span class="dh4-c-type">${dhTypeTag(o)}</span>
+      <span>${dhEsc(specStr(o)).replace(/×/g,'×\u200b')}</span>
+      <span class="dh4-num">${(o.qty||0).toLocaleString('vi-VN')}</span>
+      <span class="dh4-c-mc">${dhEsc(r.stage)} · ${dhEsc(r.machine)}</span>
+    </div>`;}).join('') : `<div class="dh3-next-empty">Không có đơn chờ chạy tiếp</div>`;
   return `
-    <div class="dh3-panel">
-      <div class="dh3-panel-hd">⏭️ ĐƠN KẾ TIẾP (SẮP CHẠY) <b style="font-size:10.5px;color:#8fc0ff;font-weight:700">· ${all.length} đơn</b></div>
-      <div class="dh3-next-table">
-        <div class="dh3-next-cols"><span>Công đoạn</span><span>Máy</span><span>Khách hàng</span><span>Loại / Quy cách</span><span>Nguyên liệu</span><span>SL</span></div>
-        <div class="dh3-next-rows" id="dhNextScrollBox">
-          ${rowsHTML}
-          ${rest>0?`<div class="dh3-next-more">+${rest} đơn khác trong hàng đợi</div>`:''}
-        </div>
+    <div class="dh3-panel dh4-next">
+      <div class="dh3-panel-hd dh4-hd-big">⏭️ ĐƠN SẮP CHẠY <b>· ${all.length} đơn</b></div>
+      <div class="dh4-tbl dh4-ntbl">
+        <div class="dh4-row dh4-head"><span>STT</span><span>Khách hàng</span><span>Nguyên liệu</span><span>Loại</span><span>Quy cách</span><span>Số lượng</span><span>Máy</span></div>
+        <div class="dh4-body" id="dhNextScrollBox">${rowsHTML}${rest>0?`<div class="dh3-next-more">+${rest} đơn khác trong hàng đợi</div>`:''}</div>
+      </div>
+    </div>`;
+}
+
+function dhEsc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function dhShiftShort(){ return String(dhCurrentShift()).split(' ·')[0]; }
+function dhFmtDate(s){
+  if(!s) return '—';
+  const m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}` : esc(s);
+}
+function dhFmtStart(ts){
+  if(!ts) return '—';
+  const d=new Date(ts);
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())} ${pad2(d.getDate())}/${pad2(d.getMonth()+1)}`;
+}
+
+// ── "ĐƠN HÀNG ĐANG SẢN XUẤT" — lấy TRỰC TIẾP từ DB.orders (status running/cutting),
+// cùng nguồn với khu máy. Đơn vị sản lượng: THANH (o.qty / o.doneQty), không quy đổi kg.
+// Trạng thái hiển thị (chỉ để hiển thị, không ghi DB): TRỄ (khIsOverdue) > SẮP XONG (>=90%)
+// > SẮP HẠN (giao trong <=2 ngày) > ĐANG SX. Ưu tiên = o.priority sẵn có ("GẤP n").
+function dhRunningOrdersTableHTML(){
+  const today0=new Date(new Date().toDateString()).getTime();
+  const list=DB.orders.filter(o=>o.status==='running'||o.status==='cutting');
+  const pn=o=>parseInt(String(o.priority||'GẤP 9').replace('GẤP ',''))||9;
+  list.sort((a,b)=>(khIsOverdue(b)-khIsOverdue(a))||(pn(a)-pn(b))||((a.createdAt||0)-(b.createdAt||0)));
+  const ca=dhShiftShort();
+  const rowsHTML=list.length?list.map((o,i)=>{
+    const qty=o.qty||0, done=o.doneQty||0, left=Math.max(0,qty-done);
+    const pct=qty?Math.min(100,Math.round(done/qty*100)):0;
+    const late=khIsOverdue(o);
+    const dl=o.deliveryDate?Math.round((new Date(o.deliveryDate+'T00:00:00')-today0)/86400000):null;
+    let st=['ĐANG SX','run'];
+    if(late) st=['TRỄ','late'];
+    else if(pct>=90) st=['SẮP XONG','done'];
+    else if(dl!==null && dl<=2) st=['SẮP HẠN','soon'];
+    const sk=orderActiveAssignStage(o).key;
+    const mid=orderMachineAssign(o)[sk];
+    const mc=mid?machineById(mid):null;
+    const pc=PRI_COLOR[o.priority]||'#64748b';
+    return `<div class="dh4-row dh4-orow" style="--pc:${pc}" data-order-id="${o.id}" onclick="khViewDetail('${o.id}')">
+      <span class="dh4-c-stt">${i+1}</span>
+      <span class="dh4-c-cust">${dhEsc(o.customer||'—')}${o.priority?`<i class="dh4-sub"><b class="dh4-pri" style="color:${pc}">${dhEsc(o.priority)}</b></i>`:''}</span>
+      <span class="dh4-c-mat">${dhEsc(o.material||'—')}</span>
+      <span class="dh4-c-type">${dhTypeTag(o)}</span>
+      <span>${dhEsc(specStr(o)).replace(/×/g,'×\u200b')}</span>
+      <span class="dh4-num">${qty.toLocaleString('vi-VN')}</span>
+      <span class="dh4-num">${left.toLocaleString('vi-VN')}</span>
+      <span class="dh4-c-mc">${mc?dhEsc(dhShortMachineName(mc)):'—'}</span>
+      <span><b class="dh4-badge dh4-b-${st[1]}">${st[0]}</b></span>
+      <span class="dh4-act" onclick="event.stopPropagation()">
+        <button title="Xem chi tiết" onclick="khViewDetail('${o.id}')">👁</button>
+        <button title="Ghi sản lượng" onclick="openProgress('${o.id}')">✏️</button>
+        <button title="Mã QR" onclick="openQrGenForOrder('${o.id}')">🔳</button>
+      </span>
+    </div>`;}).join(''):`<div class="dh3-next-empty">Hiện không có đơn nào đang sản xuất</div>`;
+  return `
+    <div class="dh3-panel dh4-orders">
+      <div class="dh3-panel-hd dh4-hd-big">🏭 ĐƠN HÀNG ĐANG SẢN XUẤT <b>· ${list.length} đơn</b></div>
+      <div class="dh4-tbl dh4-otbl">
+        <div class="dh4-row dh4-head"><span>STT</span><span>Khách hàng</span><span>Nguyên liệu</span><span>Loại</span><span>Quy cách</span><span>Số lượng</span><span>Còn lại</span><span>Máy</span><span>Trạng thái</span><span class="dh4-act"></span></div>
+        <div class="dh4-body" id="dhOrdersScrollBox">${rowsHTML}</div>
       </div>
     </div>`;
 }
@@ -15850,12 +16201,13 @@ function renderDieuHanh(){
             </div>
           `;}).join('')}
         </div>
-        <div class="dh3-bottom-row">
-          ${dhShiftPanelV3HTML()}
-          ${dhNextQueuePanelV3HTML()}
-          ${dhSchedulePanelV3HTML()}
+        <div class="dh4-lower">
+          <div class="dh4-lower-left">
+            ${dhRunningOrdersTableHTML()}
+            ${dhNextQueuePanelV3HTML()}
+          </div>
+          <div class="dh4-lower-right">${dhSchedulePanelV3HTML()}</div>
         </div>
-        ${dhTotalProgressV3HTML()}
       </div>
       </div></div>
     </div>
@@ -15938,9 +16290,12 @@ function dhTickClock(){
   const dEl = document.getElementById('dhClockDate');
   if(!tEl && !dEl) return;
   const now = new Date();
-  if(tEl) tEl.textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
-  if(dEl) dEl.innerHTML = `<span class="dh-clock-wd">${VN_WEEKDAYS[now.getDay()]}</span><span class="dh-clock-sep">•</span><span>${vnDateDMY(now)}</span>`;
-  const shiftEl = document.getElementById('dhShift'); if(shiftEl) shiftEl.textContent = dhCurrentShift();
+  const cp = dhClockParts(now);
+  if(tEl) tEl.innerHTML = cp.timeHTML;
+  if(dEl && dEl.dataset.d !== vnDateDMY(now)){ dEl.innerHTML = cp.dateHTML; dEl.dataset.d = vnDateDMY(now); }
+  const shiftEl = document.getElementById('dhShift'); if(shiftEl && shiftEl.dataset.k !== cp.key){ shiftEl.innerHTML = cp.shiftHTML; shiftEl.dataset.k = cp.key; }
+  const boxEl = document.getElementById('dhClockBox'); if(boxEl) boxEl.dataset.shift = cp.key;
+  const barEl = document.getElementById('dhShiftBar'); if(barEl) barEl.style.width = cp.pct + '%';
   const rtEl = document.getElementById('dhRuntimeClock'); if(rtEl) rtEl.textContent = dhRuntimeElapsedStr();
   const remEl = document.getElementById('dhRuntimeRemain'); if(remEl) remEl.textContent = dhRuntimeRemainStr();
 }
