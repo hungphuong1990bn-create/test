@@ -4163,13 +4163,19 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .dh-wrap.dh2 .dh-rut-out .dh-rut-lbl{color:#1d4ed8}
 .dh-wrap.dh2 .dh-rut-val{color:#0b2250}
 .dh-wrap.dh2 .dh-rut-sub{color:#38557f}
-.dh-tv .dh-rut-strip{flex:1 0 auto;min-height:0;overflow:visible;align-items:stretch;align-content:center;gap:clamp(3px,0.4dvh,6px);font-size:clamp(8px,1.3dvh,17px)}
-.dh-tv .dh-card-rut .dh-card-main{overflow:visible;justify-content:space-between}
-.dh-tv .dh-rut-cell{flex:1 1 7.5em;justify-content:center;overflow:visible}
-.dh-tv .dh-rut-val,.dh-tv .dh-rut-sub{white-space:normal;overflow-wrap:anywhere}
-.dh-tv .dh-rut-cell{padding:clamp(1px,0.3dvh,5px) clamp(4px,0.6dvw,10px);border-radius:clamp(4px,0.55dvh,9px)}
-.dh-tv.dh-tv-compact-2 .dh-rut-strip{font-size:clamp(7px,1dvh,12px)}
-.dh-tv.dh-tv-compact-3 .dh-rut-strip{font-size:clamp(6.5px,0.9dvh,11px)}
+/* ── TV: thẻ có chiều cao CỐ ĐỊNH nên 2 ô phải co theo đúng khung còn trống.
+   .dh-rut-strip là "container" (size) chiếm phần cao còn lại của thẻ; chữ trong
+   2 ô tính theo cqh/cqw của khung đó → luôn vừa khít, KHÔNG tràn/lấn sang thẻ
+   khác ở mọi độ phân giải. 2 ô luôn đứng cạnh nhau, 1 dòng/chữ (không xuống dòng
+   gây tăng chiều cao). Trình duyệt cũ không hỗ trợ cq → dùng cỡ chữ dvh dự phòng. */
+.dh-tv .dh-rut-strip{flex:1 1 0;min-height:0;min-width:0;overflow:hidden;flex-wrap:nowrap;align-items:stretch;gap:clamp(3px,0.5dvw,8px);container-type:size}
+.dh-tv .dh-rut-cell{flex:1 1 0;min-width:0;min-height:0;overflow:hidden;justify-content:center;gap:.12em;
+  font-size:clamp(7px,1.05dvh,14px);padding:.3em .6em;border-radius:.7em}
+.dh-tv .dh-rut-lbl,.dh-tv .dh-rut-val,.dh-tv .dh-rut-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.dh-tv .dh-card-rut .dh-card-main{overflow:hidden}
+@supports (container-type:size){
+  .dh-tv .dh-rut-cell{font-size:max(6.5px,min(21cqh,3.7cqw))}
+}
 .dh-card-ring-row{display:flex;align-items:center;gap:12px;margin-top:3px;position:relative;z-index:1}
 .dh-ring{--p:0;width:58px;height:58px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;
   background:conic-gradient(var(--dh-accent) calc(var(--p)*1%),rgba(255,255,255,.1) 0);position:relative;
