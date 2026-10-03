@@ -6768,6 +6768,52 @@ body{letter-spacing:-.1px}
 /* Đơn đang SX rộng hơn, Đơn sắp chạy thu nhỏ lại */
 .dh4-lower-left>.dh4-orders,.dh-tv .dh4-lower-left>.dh4-orders{flex:1.35 1 0}
 .dh4-lower-left>.dh4-next,.dh-tv .dh4-lower-left>.dh4-next{flex:.85 1 0}
+
+/* ═══ Typography v2 — "ĐƠN HÀNG ĐANG SẢN XUẤT" & "ĐƠN SẮP CHẠY" ═══
+   Phân cấp chữ rõ ràng: Khách hàng (to, đậm, trắng) > số liệu (đậm, số đều nét) >
+   thông tin phụ (nhỏ, xám xanh). Quy cách / Máy / Ưu tiên / Trạng thái dạng "chip"
+   bo tròn để quét mắt nhanh từ xa. Mọi cỡ chữ dùng em → tự co giãn theo chế độ TV. */
+.dh-wrap.dh2 .dh4-tbl{font-feature-settings:"tnum" 1,"cv11" 1;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.dh-wrap.dh2 .dh4-hd-big{display:flex;align-items:center;gap:.65em;font-weight:800;letter-spacing:.9px;text-transform:uppercase}
+.dh-wrap.dh2 .dh4-hd-big b{font-size:.74em;font-weight:800;letter-spacing:.3px;color:#bfe0ff;background:rgba(143,192,255,.14);border:1px solid rgba(143,192,255,.3);border-radius:99px;padding:.18em .8em;text-transform:none}
+.dh-wrap.dh2 .dh4-head{font-size:.7em;font-weight:800;letter-spacing:.8px;color:#9fbdf0;background:rgba(255,255,255,.06);padding-top:.6em;padding-bottom:.6em}
+.dh-wrap.dh2 .dh4-row{padding-top:.5em;padding-bottom:.5em}
+.dh-wrap.dh2 .dh4-body>.dh4-row:nth-child(even){background:rgba(255,255,255,.035)}
+.dh-wrap.dh2 .dh4-orow{box-shadow:inset .26em 0 0 var(--pc,#64748b)}
+.dh-wrap.dh2 .dh4-row>.dh4-c-stt{font-size:.9em;font-weight:800;color:#7fa8e8}
+.dh-wrap.dh2 .dh4-row>.dh4-c-cust{font-size:1.12em;font-weight:800;letter-spacing:.1px;line-height:1.2;color:#fff}
+.dh-wrap.dh2 .dh4-sub{margin-top:.3em;font-size:.72em}
+.dh-wrap.dh2 .dh4-pri{display:inline-block;font-size:1em;font-weight:800;letter-spacing:.4px;padding:.1em .65em;border-radius:99px;
+  background:color-mix(in srgb,currentColor 15%,transparent);border:1px solid color-mix(in srgb,currentColor 42%,transparent)}
+.dh-wrap.dh2 .dh4-c-mat{font-size:1em;font-weight:800;color:#a8d4ff;letter-spacing:.2px}
+.dh-wrap.dh2 .dh4-tag{font-size:.8em;letter-spacing:.5px;border-radius:99px;padding:.18em .75em}
+.dh-wrap.dh2 .dh4-spec{display:inline-block;font-weight:800;font-size:.98em;letter-spacing:.2px;color:#fff;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:.55em;padding:.2em .6em;line-height:1.25}
+.dh-wrap.dh2 .dh4-num{font-size:1.1em;font-weight:800;color:#fff}
+.dh-wrap.dh2 .dh4-left{color:#5eead4}
+.dh-wrap.dh2 .dh4-left.zero{color:#7f93bd;font-weight:700}
+.dh-wrap.dh2 .dh4-c-mc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2em}
+.dh-wrap.dh2 .dh4-chip{display:inline-block;max-width:100%;text-align:center;font-size:.92em;font-weight:800;letter-spacing:.2px;line-height:1.2;color:#bae6fd;
+  background:rgba(56,189,248,.13);border:1px solid rgba(56,189,248,.42);border-radius:99px;padding:.2em .7em}
+.dh-wrap.dh2 .dh4-mc-stage{font-style:normal;font-size:.72em;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8ea6d6}
+.dh-wrap.dh2 .dh4-badge{display:inline-flex;align-items:center;justify-content:center;gap:.4em;border-radius:99px;font-size:.76em;font-weight:800;letter-spacing:.5px;padding:.28em .85em;min-width:0;white-space:nowrap}
+.dh-wrap.dh2 .dh4-badge::before{content:'';width:.55em;height:.55em;border-radius:50%;background:currentColor;opacity:.9}
+.dh-wrap.dh2 .dh4-b-run{background:rgba(34,197,94,.2);color:#86efac;border:1px solid rgba(34,197,94,.55)}
+.dh-wrap.dh2 .dh4-b-late{background:rgba(244,63,94,.2);color:#fda4af;border:1px solid rgba(244,63,94,.6)}
+.dh-wrap.dh2 .dh4-b-soon{background:rgba(245,181,51,.2);color:#fcd34d;border:1px solid rgba(245,181,51,.6)}
+.dh-wrap.dh2 .dh4-b-done{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.6)}
+/* Chia lại độ rộng cột: Quy cách rộng hơn (không bị ngắt 3 dòng), Máy đủ chỗ cho chip 1 dòng */
+.dh-wrap.dh2 .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,.95fr) minmax(0,1.7fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.1fr) 86px}
+.dh-wrap.dh2.dh-tv .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,.95fr) minmax(0,1.7fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.1fr)}
+.dh-wrap.dh2 .dh4-ntbl{--g:2.2em minmax(0,1.25fr) minmax(0,.9fr) minmax(0,.95fr) minmax(0,1.75fr) minmax(0,.85fr) minmax(0,1.15fr)}
+.dh-wrap.dh2 .dh4-spec{font-size:.94em;padding:.2em .5em}
+.dh-wrap.dh2 .dh4-chip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.88em;padding:.2em .6em}
+.dh-wrap.dh2 .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,1.05fr) minmax(0,1.6fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.15fr) 86px}
+.dh-wrap.dh2.dh-tv .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,1.05fr) minmax(0,1.6fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.15fr)}
+.dh-wrap.dh2 .dh4-ntbl{--g:2.2em minmax(0,1.2fr) minmax(0,.85fr) minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1.4fr)}
+.dh-wrap.dh2 .dh4-ntbl .dh4-chip{white-space:normal;overflow:visible}
+.dh-wrap.dh2 .dh4-tag{padding:.18em .6em;letter-spacing:.3px}
+.dh-wrap.dh2 .dh4-badge{letter-spacing:.3px;padding:.28em .75em}
 </style>
 </head>
 <body>
@@ -16167,9 +16213,9 @@ function dhNextQueuePanelV3HTML(){
       <span class="dh4-c-cust">${dhEsc(o.customer||'—')}</span>
       <span class="dh4-c-mat">${dhEsc(o.material||'—')}</span>
       <span class="dh4-c-type">${dhTypeTag(o)}</span>
-      <span>${dhEsc(specStr(o)).replace(/×/g,'×\u200b')}</span>
+      <span><b class="dh4-spec">${dhEsc(specStr(o)).replace(/×/g,'×\u200b')}</b></span>
       <span class="dh4-num">${(o.qty||0).toLocaleString('vi-VN')}</span>
-      <span class="dh4-c-mc">${dhEsc(r.stage)} · ${dhEsc(r.machine)}</span>
+      <span class="dh4-c-mc"><b class="dh4-chip">${dhEsc(r.machine)}</b><i class="dh4-mc-stage">${dhEsc(r.stage)}</i></span>
     </div>`;}).join('') : `<div class="dh3-next-empty">Không có đơn chờ chạy tiếp</div>`;
   return `
     <div class="dh3-panel dh4-next">
@@ -16222,10 +16268,10 @@ function dhRunningOrdersTableHTML(){
       <span class="dh4-c-cust">${dhEsc(o.customer||'—')}${o.priority?`<i class="dh4-sub"><b class="dh4-pri" style="color:${pc}">${dhEsc(o.priority)}</b></i>`:''}</span>
       <span class="dh4-c-mat">${dhEsc(o.material||'—')}</span>
       <span class="dh4-c-type">${dhTypeTag(o)}</span>
-      <span>${dhEsc(specStr(o)).replace(/×/g,'×\u200b')}</span>
+      <span><b class="dh4-spec">${dhEsc(specStr(o)).replace(/×/g,'×\u200b')}</b></span>
       <span class="dh4-num">${qty.toLocaleString('vi-VN')}</span>
-      <span class="dh4-num">${left.toLocaleString('vi-VN')}</span>
-      <span class="dh4-c-mc">${mc?dhEsc(dhShortMachineName(mc)):'—'}</span>
+      <span class="dh4-num dh4-left${left?'':' zero'}">${left.toLocaleString('vi-VN')}</span>
+      <span class="dh4-c-mc">${mc?`<b class="dh4-chip">${dhEsc(dhShortMachineName(mc))}</b>`:'—'}</span>
       <span><b class="dh4-badge dh4-b-${st[1]}">${st[0]}</b></span>
       <span class="dh4-act" onclick="event.stopPropagation()">
         <button title="Xem chi tiết" onclick="khViewDetail('${o.id}')">👁</button>
