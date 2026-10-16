@@ -3684,15 +3684,14 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .dd-table thead th{position:sticky;top:0;z-index:5;background:var(--bg2);color:var(--text3);font-weight:800;text-transform:uppercase;font-size:10.2px;letter-spacing:.3px;padding:11px 12px;text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap}
 .dd-table tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 /* ── Tab "Đơn hàng" (#ddTable): table-layout:fixed + % cột cố định cho
-   TOÀN BỘ 12 cột (thay vì table-layout:auto trước đây, vốn vẫn để trình
+   TOÀN BỘ 13 cột (thay vì table-layout:auto trước đây, vốn vẫn để trình
    duyệt nới rộng bảng theo nội dung nowrap và gây cuộn ngang trên mọi màn
    hình desktop/laptop). Với table-layout:fixed, tổng chiều rộng bảng luôn
    khớp đúng 100% khung chứa — nội dung dài được cắt gọn (ellipsis) kèm
    thuộc tính title để xem đầy đủ khi rê chuột, không còn thanh cuộn ngang.
    Dùng clamp() cho font/padding để tự động mượt theo bề rộng khung nhìn.
-   Đã BỎ cột "Ngày giao" (đã có sẵn trong khung xem chi tiết đơn hàng khi
-   bấm vào dòng), phần % rảnh ra được dồn thêm cho Quy cách và Ưu tiên để
-   hiển thị đầy đủ, ít bị cắt ellipsis hơn. ── */
+   Cột "Ngày giao" được đặt NGAY SAU "Ngày nhận" (cặp mốc thời gian nằm cạnh
+   nhau), kèm chip còn/trễ bao nhiêu ngày — xem ddDueCellHTML(). ── */
 #ddTable{min-width:0;width:100%;table-layout:fixed;font-size:clamp(11px,1.05vw,12.5px)}
 #ddTable thead th{padding:clamp(6px,.7vw,11px) clamp(5px,.8vw,12px);font-size:clamp(9.3px,.82vw,10.2px);white-space:normal;word-break:break-word;line-height:1.25}
 #ddTable tbody td{padding:clamp(6px,.65vw,10px) clamp(5px,.8vw,12px);overflow:hidden}
@@ -3701,21 +3700,22 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 #ddTable .ord-po-sub,#ddTable .spec-chip,#ddTable .ord-pri,#ddTable .dd-status-pill{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:bottom}
 #ddTable td:nth-child(3),#ddTable td:nth-child(4){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ddTable .ord-progress{min-width:0}
-/* Độ rộng % cho từng cột (cộng đúng 100%) — giữ toàn bộ 12 cột luôn nằm
+/* Độ rộng % cho từng cột (cộng đúng 100%) — giữ toàn bộ 13 cột luôn nằm
    gọn trong khung nhìn, không cột nào bị đẩy tràn ra ngoài. Quy cách (cột 5)
-   và Ưu tiên (cột 10) được nới rộng hẳn để hiển thị đầy đủ, ít bị cắt chữ. */
+   và Ưu tiên (cột 11) được nới rộng để hiển thị đầy đủ, ít bị cắt chữ. */
 #ddTable th:nth-child(1),#ddTable td:nth-child(1){width:3.5%}
-#ddTable th:nth-child(2),#ddTable td:nth-child(2){width:14.5%}
-#ddTable th:nth-child(3),#ddTable td:nth-child(3){width:7%}
-#ddTable th:nth-child(4),#ddTable td:nth-child(4){width:8%}
-#ddTable th:nth-child(5),#ddTable td:nth-child(5){width:12.5%}
+#ddTable th:nth-child(2),#ddTable td:nth-child(2){width:13%}
+#ddTable th:nth-child(3),#ddTable td:nth-child(3){width:6.5%}
+#ddTable th:nth-child(4),#ddTable td:nth-child(4){width:7.5%}
+#ddTable th:nth-child(5),#ddTable td:nth-child(5){width:11%}
 #ddTable th:nth-child(6),#ddTable td:nth-child(6){width:7.5%}
-#ddTable th:nth-child(7),#ddTable td:nth-child(7){width:7.5%}
-#ddTable th:nth-child(8),#ddTable td:nth-child(8){width:10%}
+#ddTable th:nth-child(7),#ddTable td:nth-child(7){width:7%}
+#ddTable th:nth-child(8),#ddTable td:nth-child(8){width:8.5%}
 #ddTable th:nth-child(9),#ddTable td:nth-child(9){width:7.5%}
-#ddTable th:nth-child(10),#ddTable td:nth-child(10){width:9.5%}
-#ddTable th:nth-child(11),#ddTable td:nth-child(11){width:7.5%}
-#ddTable th:nth-child(12),#ddTable td:nth-child(12){width:5%}
+#ddTable th:nth-child(10),#ddTable td:nth-child(10){width:8%}
+#ddTable th:nth-child(11),#ddTable td:nth-child(11){width:8.5%}
+#ddTable th:nth-child(12),#ddTable td:nth-child(12){width:7.5%}
+#ddTable th:nth-child(13),#ddTable td:nth-child(13){width:4%}
 @media(min-width:761px) and (max-width:1360px){
   #ddTable .spec-chip{padding:2px 6px}
   #ddTable .ord-pri,#ddTable .dd-status-pill{padding:2px 7px;font-size:10.5px}
@@ -5080,6 +5080,13 @@ body.sl-fullscreen #slGearBtn{display:flex}
 .spec-chip{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:900;font-size:13px;color:#0B0E14;background:#F0F1F4;border:1px solid #DEE1E8;padding:5px 12px;border-radius:8px;white-space:nowrap;letter-spacing:.3px}
 .ord-dt-main{display:block;font-weight:700;font-size:12.5px;color:var(--text2)}
 .ord-dt-sub{font-size:10.5px;color:var(--text4);font-weight:600;margin-top:1px}
+.ord-due-none{color:var(--text4);font-weight:600}
+.ord-due-late-txt{color:#B91C1C}
+.ord-due-chip{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:700;line-height:1.5;border:1px solid transparent}
+.ord-due-chip.norm{background:#EEF0F3;color:#556072;border-color:#CBD5E1}
+.ord-due-chip.soon{background:#FCF0DE;color:#C2700A;border-color:#FCD34D}
+.ord-due-chip.late{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}
+.ord-due-chip.ok{background:#E3F5EE;color:#0C7A54;border-color:#86EFAC}
 .ord-val.overdue{color:var(--red-m);font-weight:800}
 
 .ord-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -14325,6 +14332,26 @@ async function ddExportExcel(){
   });
 }
 
+// Ô "Ngày giao" của bảng Đơn hàng: ngày giao (đậm) + dòng phụ cho biết còn
+// bao lâu / trễ bao lâu, tô màu theo mức khẩn cấp để nhìn lướt là nắm được.
+// Tính theo NGÀY ĐỊA PHƯƠNG (không dùng new Date('yyyy-mm-dd') vì bị hiểu là
+// UTC 00:00 → lệch múi giờ VN, đơn giao hôm nay sẽ bị tính nhầm là "còn 1 ngày").
+function ddDueCellHTML(o){
+  if(!o.deliveryDate) return '<span class="ord-due-none">—</span>';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(o.deliveryDate));
+  const due = m ? new Date(+m[1], +m[2]-1, +m[3]) : new Date(o.deliveryDate);
+  const t = new Date(); const today0 = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  const d = Math.round((due - today0)/86400000);
+  let cls, txt;
+  if(o.delivered){ cls='ok'; txt='✓ Đã giao'; }
+  else if(o.status==='done'){ cls='ok'; txt='✓ Đã xong SX'; }
+  else if(d<0){ cls='late'; txt='⚠ Trễ '+(-d)+' ngày'; }
+  else if(d===0){ cls='soon'; txt='Giao hôm nay'; }
+  else if(d<=2){ cls='soon'; txt='Còn '+d+' ngày'; }
+  else { cls='norm'; txt='Còn '+d+' ngày'; }
+  return `<span class="ord-dt-main${cls==='late'?' ord-due-late-txt':''}">${fmtDate(o.deliveryDate)}</span><div class="ord-due-chip ${cls}">${txt}</div>`;
+}
+
 function ddRow(o, stt){
   const meta = ddStatusMeta(o);
   const isNew = ddIsNew(o);
@@ -14344,6 +14371,7 @@ function ddRow(o, stt){
     <td>${o.doneQty||0} ${doneUnit}</td>
     <td><div class="ord-progress"><div class="ord-progress-pct" style="color:${pctColor}">${pct}%</div><div class="ord-progress-track"><div class="ord-progress-fill" style="width:${pct}%;background:${pctColor}"></div></div></div></td>
     <td><span class="ord-dt-main">${fmtDate(o.createdAt)}</span>${o.createdAt?`<div class="ord-dt-sub">🕐 ${vnTimeHM(new Date(o.createdAt))}</div>`:''}</td>
+    <td>${ddDueCellHTML(o)}</td>
     <td><span class="ord-pri"${tAttr(o.priority)} style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span></td>
     <td><span class="dd-status-pill"${tAttr(meta.label)} style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span></td>
     <td onclick="event.stopPropagation()" style="white-space:nowrap">
@@ -14781,6 +14809,7 @@ function renderDorDang(){
           <th>Đã sản xuất</th>
           <th>Tiến độ</th>
           <th>Ngày nhận</th>
+          <th>Ngày giao</th>
           <th>Ưu tiên</th>
           <th>Trạng thái</th>
           <th>Thao tác</th>
