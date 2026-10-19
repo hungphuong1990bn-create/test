@@ -8090,7 +8090,7 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
     <div class="modal-handle"></div>
     <div class="modal-title">🏷 Mã QR danh sách nhân sự</div>
     <div style="font-size:12.5px;color:var(--text3);margin-bottom:12px">
-      In hoặc dán mã này ở bảng tin, xưởng sản xuất… Mọi người chỉ cần dùng camera điện thoại quét là xem được <b>danh sách nhân viên</b> (họ tên, mã NV, chức vụ, bộ phận, trạng thái) và <b>tình hình nghỉ phép</b> — không cần cài app, không cần đăng nhập. Trang công khai <b>không hiển thị</b> SĐT, CCCD, kỷ luật hay lý do nghỉ.
+      In hoặc dán mã này ở bảng tin, xưởng sản xuất… Mọi người chỉ cần dùng camera điện thoại quét là xem được <b>danh sách nhân viên</b> (họ tên, mã NV, chức vụ, bộ phận, trạng thái) và <b>tình hình nghỉ phép</b> — không cần cài app, không cần đăng nhập. Bấm vào từng nhân viên trên trang công khai sẽ hiện <b>toàn bộ hồ sơ</b> (gồm SĐT, CCCD, lương, tài khoản ngân hàng, nghỉ phép, kỷ luật) — ai có link/mã QR đều xem được, hãy chỉ dán ở nơi tin cậy.
     </div>
     <div style="display:flex;justify-content:center;padding:10px 0">
       <div id="nhanSuQrCanvasWrap" style="background:#fff;padding:12px;border-radius:12px;box-shadow:var(--sh)">
@@ -24175,7 +24175,7 @@ async function downloadKhuonQr(){
 // MÃ QR CÔNG KHAI: DANH SÁCH NHÂN SỰ + NGHỈ PHÉP
 // Ai quét bằng camera điện thoại thường (không cài app, không đăng nhập)
 // đều mở thẳng trang xem danh sách nhân viên và tình hình nghỉ phép, đọc
-// trực tiếp từ Firebase RTDB. Cố ý KHÔNG hiển thị SĐT, CCCD, kỷ luật, lý do nghỉ.
+// trực tiếp từ Firebase RTDB. Bấm vào 1 nhân viên để xem toàn bộ hồ sơ.
 // ════════════════════════════════════════════════════════════
 function nhanSuPublicUrl(){
   const base = location.origin + location.pathname;
@@ -24240,11 +24240,12 @@ let _pubNs = { workers:[], nghiPhep:[], search:'', status:'all', tab:'ds', dbUrl
 let _pubNsPollTimer = null;
 
 async function pubNsFetchData(dbUrl){
-  let workers=[], nghiPhep=[], errMsg=null;
+  let workers=[], nghiPhep=[], kyLuat=[], errMsg=null;
   try{
-    const [rw, rn] = await Promise.all([
+    const [rw, rn, rk] = await Promise.all([
       fetch(await fbAppendAuth(dbUrl + '/data/workers.json?print=pretty'), {cache:'no-store'}),
-      fetch(await fbAppendAuth(dbUrl + '/data/nghiPhep.json?print=pretty'), {cache:'no-store'})
+      fetch(await fbAppendAuth(dbUrl + '/data/nghiPhep.json?print=pretty'), {cache:'no-store'}),
+      fetch(await fbAppendAuth(dbUrl + '/data/kyLuat.json?print=pretty'), {cache:'no-store'})
     ]);
     if(!rw.ok){
       errMsg = (rw.status===401||rw.status===403)
@@ -24255,11 +24256,13 @@ async function pubNsFetchData(dbUrl){
       const dn = rn.ok ? await rn.json() : null;
       workers = Array.isArray(dw) ? dw.filter(Boolean) : Object.values(dw||{}).filter(Boolean);
       nghiPhep = Array.isArray(dn) ? dn.filter(Boolean) : Object.values(dn||{}).filter(Boolean);
+      const dk = rk.ok ? await rk.json() : null;
+      kyLuat = Array.isArray(dk) ? dk.filter(Boolean) : Object.values(dk||{}).filter(Boolean);
     }
   }catch(e){
     errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
   }
-  return {workers, nghiPhep, errMsg};
+  return {workers, nghiPhep, kyLuat, errMsg};
 }
 
 async function renderPublicNhanSu(){
@@ -24272,9 +24275,9 @@ async function renderPublicNhanSu(){
     wrap.innerHTML = `<div class="pub-msg">⚠️ Không thể tải dữ liệu — liên kết thiếu thông tin kết nối.<br>Vui lòng liên hệ nhà máy để được hỗ trợ.</div>`;
     return;
   }
-  const {workers, nghiPhep, errMsg} = await pubNsFetchData(dbUrl);
+  const {workers, nghiPhep, kyLuat, errMsg} = await pubNsFetchData(dbUrl);
   if(errMsg){ wrap.innerHTML = `<div class="pub-msg">${errMsg}</div>`; return; }
-  _pubNs = { workers, nghiPhep, search:'', status:'all', tab:'ds', dbUrl };
+  _pubNs = { workers, nghiPhep, kyLuat, search:'', status:'all', tab:'ds', dbUrl };
 
   wrap.innerHTML = `
     <div class="pub-header">
@@ -24289,6 +24292,7 @@ async function renderPublicNhanSu(){
       <button class="chip pub-ns-tab" data-tab="np" onclick="pubNsSetTab('np')" style="flex:1">🏖️ Nghỉ phép</button>
     </div>
     <div id="pubNsBody"></div>
+    <div id="pubNsDetail" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);overflow-y:auto;padding:14px" onclick="if(event.target===this)pubNsClose()"></div>
     <div class="pub-kh-updated" id="pubNsUpdated">Cập nhật lúc ${fmtDateTime(Date.now())}</div>
     <div class="pub-footer">Trang xem danh sách nhân sự — vui lòng liên hệ quản lý nếu có sai lệch.<br>Liên hệ SĐT/Zalo: 0979698351</div>
   `;
@@ -24304,9 +24308,10 @@ async function renderPublicNhanSu(){
 async function pubNsRefresh(){
   const st = $('pubNsSyncStatus');
   try{
-    const {workers, nghiPhep, errMsg} = await pubNsFetchData(_pubNs.dbUrl);
+    const {workers, nghiPhep, kyLuat, errMsg} = await pubNsFetchData(_pubNs.dbUrl);
     if(errMsg){ if(st){ st.className='pub-kh-sync danger'; st.textContent='🔴 Không thể cập nhật dữ liệu mới'; } return; }
-    _pubNs.workers = workers; _pubNs.nghiPhep = nghiPhep;
+    _pubNs.workers = workers; _pubNs.nghiPhep = nghiPhep; _pubNs.kyLuat = kyLuat;
+    if(_pubNs.openId) pubNsOpen(_pubNs.openId, true);
     if(st){ st.className='pub-kh-sync ok'; st.textContent='🟢 Đang đồng bộ dữ liệu'; }
     const upd = $('pubNsUpdated'); if(upd) upd.textContent = 'Cập nhật lúc ' + fmtDateTime(Date.now());
     pubNsRenderAll();
@@ -24376,7 +24381,7 @@ function pubNsListHtml(){
     <div class="pub-card" style="padding:6px 12px">
       ${list.map((w,i)=>{
         const st = w.trangThai || 'Đang làm';
-        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+        return `<div onclick="pubNsOpen('${pubEsc(w.id)}')" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer">
           <div style="width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${pubEsc(workerInitials(w.name))}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:13.5px;color:var(--text)">${i+1}. ${pubEsc(w.name||'(Chưa đặt tên)')}</div>
@@ -24385,10 +24390,66 @@ function pubNsListHtml(){
             ${onLeaveIds.has(w.id)?`<div style="font-size:11px;font-weight:700;color:#0e7490">🏖️ Đang nghỉ phép</div>`:''}
           </div>
           <span class="ns-badge" style="background:${NS_STATUS_BG[st]||'#f1f5f9'};color:${NS_STATUS_COLOR[st]||'#6b7280'};white-space:nowrap">${pubEsc(st)}</span>
+          <span style="color:var(--text4);font-size:16px">›</span>
         </div>`;
       }).join('')}
     </div>`}
   `;
+}
+
+// ── Chi tiết 1 nhân viên: hiện TOÀN BỘ thông tin hồ sơ + nghỉ phép + kỷ luật ──
+function pubNsClose(){
+  _pubNs.openId = null;
+  const d = $('pubNsDetail'); if(d){ d.style.display='none'; d.innerHTML=''; }
+  document.body.style.overflow = '';
+}
+function pubNsOpen(id, keepScroll){
+  const w = _pubNs.workers.find(x=>String(x.id)===String(id));
+  const d = $('pubNsDetail'); if(!w || !d) return;
+  _pubNs.openId = id;
+  const st = w.trangThai || 'Đang làm';
+  const row = (l,v)=>`<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><div style="width:120px;flex-shrink:0;color:var(--text3)">${l}</div><div style="flex:1;font-weight:600;color:var(--text);word-break:break-word">${v===''||v==null?'—':pubEsc(v)}</div></div>`;
+  const money = w.luongCoBan ? (Number(w.luongCoBan)||0).toLocaleString('vi-VN')+' VNĐ' : '';
+  const leaves = (_pubNs.nghiPhep||[]).filter(k=>k.workerId===w.id)
+    .slice().sort((a,b)=>String(b.fromDate||'').localeCompare(String(a.fromDate||'')));
+  const kls = (_pubNs.kyLuat||[]).filter(k=>k.workerId===w.id)
+    .slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const stColor = {'Chờ duyệt':'#f59e0b','Đã duyệt':'#22c55e','Từ chối':'#ef4444'};
+  const sec = t=>`<div style="font-size:12px;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 4px">${t}</div>`;
+  d.innerHTML = `<div style="background:var(--card);border-radius:14px;max-width:520px;margin:20px auto;padding:16px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${pubEsc(workerInitials(w.name))}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:16px;font-weight:800;color:var(--text)">${pubEsc(w.name||'(Chưa đặt tên)')}</div>
+        <span class="ns-badge" style="background:${NS_STATUS_BG[st]||'#f1f5f9'};color:${NS_STATUS_COLOR[st]||'#6b7280'}">${pubEsc(st)}</span>
+      </div>
+      <button onclick="pubNsClose()" style="border:1px solid var(--border);background:var(--bg2);color:var(--text2);border-radius:8px;width:34px;height:34px;font-size:15px;cursor:pointer">✕</button>
+    </div>
+    ${sec('Thông tin cá nhân')}
+    ${row('Mã nhân viên',w.maNV)}${row('Giới tính',w.gioiTinh)}${row('Ngày sinh',w.ngaySinh?fmtDate(w.ngaySinh):'')}
+    ${row('Số điện thoại',w.sdt)}${row('CCCD/CMND',w.cccd)}${row('Địa chỉ',w.diaChi)}
+    ${sec('Công việc')}
+    ${row('Chức vụ',w.chucVu)}${row('Bộ phận / Tổ',w.boPhan)}${row('Ngày vào làm',w.ngayVaoLam?fmtDate(w.ngayVaoLam):'')}
+    ${row('Loại hợp đồng',w.loaiHopDong)}${row('Lương cơ bản',money)}
+    ${sec('Tài khoản ngân hàng')}
+    ${row('Ngân hàng',w.nganHang)}${row('Số tài khoản',w.soTaiKhoan)}
+    ${sec('Ghi chú')}
+    ${row('Ghi chú',w.ghiChu)}
+    ${sec('Nghỉ phép ('+leaves.length+')')}
+    ${leaves.length ? leaves.map(k=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+      <div style="display:flex;gap:8px;align-items:center"><b style="flex:1">${pubEsc(k.loai||'Nghỉ phép')}</b><span class="ns-badge" style="color:#fff;background:${stColor[k.status]||'#6b7280'}">${pubEsc(k.status||'Chờ duyệt')}</span></div>
+      <div style="color:var(--text3)">${fmtDate(k.fromDate)}${k.toDate&&k.toDate!==k.fromDate?' → '+fmtDate(k.toDate):''}</div>
+      ${k.lydo?`<div style="color:var(--text4)">Lý do: ${pubEsc(k.lydo)}</div>`:''}</div>`).join('') : '<div style="font-size:12.5px;color:var(--text4);padding:6px 0">Chưa có đơn nghỉ phép</div>'}
+    ${sec('Kỷ luật ('+kls.length+')')}
+    ${kls.length ? kls.map(k=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+      <div style="display:flex;gap:8px"><b style="flex:1;color:#dc2626">${pubEsc(k.loai||'Vi phạm')}</b><span style="color:var(--text3)">${fmtDate(k.date)}</span></div>
+      ${k.lydo?`<div style="color:var(--text3)">Lý do: ${pubEsc(k.lydo)}</div>`:''}
+      ${k.nguoiqd?`<div style="color:var(--text4)">Người quyết định: ${pubEsc(k.nguoiqd)}</div>`:''}
+      ${k.ghichu?`<div style="color:var(--text4)">Ghi chú: ${pubEsc(k.ghichu)}</div>`:''}</div>`).join('') : '<div style="font-size:12.5px;color:var(--text4);padding:6px 0">Không có kỷ luật</div>'}
+    <button onclick="pubNsClose()" style="width:100%;margin-top:14px;padding:10px;border:none;border-radius:10px;background:var(--brand);color:#fff;font-weight:700;font-size:13px;cursor:pointer">Đóng</button>
+  </div>`;
+  d.style.display = 'block';
+  document.body.style.overflow = 'hidden';
 }
 
 function pubNsLeaveHtml(){
