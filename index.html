@@ -7384,8 +7384,8 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
       <input id="ofPhi" class="field-inp" type="number" step="0.1" placeholder="VD: 6, 8, 10... (để trống nếu thanh dẹt)" oninput="calcKgAuto()">
     </div>
     <div class="modal-row">
-      <div class="field"><div class="field-lbl">Dày (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ</span></div><input id="ofThk" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
-      <div class="field"><div class="field-lbl">Rộng (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ</span></div><input id="ofW" class="field-inp" type="number" placeholder="0" oninput="calcKgAuto()"></div>
+      <div class="field"><div class="field-lbl">Dày (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ · ghi được 6/10, 6-10, 3.71/9.71</span></div><input id="ofThk" class="field-inp" type="text" inputmode="decimal" autocomplete="off" placeholder="VD: 6 hoặc 6/10" oninput="calcKgAuto()"></div>
+      <div class="field"><div class="field-lbl">Rộng (mm) <span style="font-size:10px;color:var(--text4)">bỏ qua nếu nhập Φ · ghi được 6/10, 6-10, 3.71/9.71</span></div><input id="ofW" class="field-inp" type="text" inputmode="decimal" autocomplete="off" placeholder="VD: 20 hoặc 3.71/9.71" oninput="calcKgAuto()"></div>
     </div>
     <!-- Bo cạnh: R tự động = Dày/2 (readonly), hiển thị diện tích tiết diện thực tế A và KG -->
     <div id="ofBcPanel" style="display:none;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:10px 12px;margin-bottom:14px">
@@ -7564,10 +7564,12 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
       <div class="field"><div class="field-lbl">Độ dẫn điện</div><input id="nlDoDanDien" class="field-inp" type="text" inputmode="decimal" placeholder="VD: 96.2 - 98.5"></div>
     </div>
     <div class="field"><div class="field-lbl">Số lượng (kg)</div><input id="nlSoLuong" class="field-inp" type="number" step="0.01" placeholder="VD: 2502"></div>
-    <div class="modal-row">
-      <div class="field"><div class="field-lbl">Loại thành phẩm chạy</div><input id="nlLoaiTP" class="field-inp" placeholder="VD: 10x100"></div>
-      <div class="field"><div class="field-lbl">Số mét chạy</div><input id="nlSoMet" class="field-inp" placeholder="VD: 200m"></div>
+    <div class="field">
+      <div class="field-lbl">Loại thành phẩm chạy <span style="font-weight:400;color:var(--text4)">(nhiều loại trên cùng 1 cuộn)</span></div>
+      <div class="nl-multi-list" id="nlTPList"></div>
+      <button type="button" class="nl-multi-add" onclick="nlTPAdd()">+ Thêm loại thành phẩm khác</button>
     </div>
+    <div class="field"><div class="field-lbl">Số mét chạy</div><input id="nlSoMet" class="field-inp" placeholder="VD: 200m"></div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Khu máy 🏭</div>
         <select id="nlKhuMay" class="field-inp" onchange="nlOnKhuMayChange()"></select>
@@ -8078,6 +8080,32 @@ window.BRAND_LOGO_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBD
       <button class="btn btn-ghost" onclick="closeModal('khuonQrModal')">Đóng</button>
       <button class="btn btn-ghost" onclick="copyKhuonLink()">🔗 Sao chép liên kết</button>
       <button class="btn btn-primary" onclick="downloadKhuonQr()">⬇️ Tải ảnh mã QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Mã QR công khai Danh sách nhân sự -->
+<div class="modal" id="nhanSuQrModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏷 Mã QR danh sách nhân sự</div>
+    <div style="font-size:12.5px;color:var(--text3);margin-bottom:12px">
+      In hoặc dán mã này ở bảng tin, xưởng sản xuất… Mọi người chỉ cần dùng camera điện thoại quét là xem được <b>danh sách nhân viên</b> (họ tên, mã NV, chức vụ, bộ phận, trạng thái) và <b>tình hình nghỉ phép</b> — không cần cài app, không cần đăng nhập. Trang công khai <b>không hiển thị</b> SĐT, CCCD, kỷ luật hay lý do nghỉ.
+    </div>
+    <div style="display:flex;justify-content:center;padding:10px 0">
+      <div id="nhanSuQrCanvasWrap" style="background:#fff;padding:12px;border-radius:12px;box-shadow:var(--sh)">
+        <span style="font-size:12px;color:var(--text4)">Đang tạo mã QR…</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:10px;padding:8px 10px;margin-bottom:10px">
+      <span style="font-size:11.5px;color:var(--text3);word-break:break-all;flex:1" id="nhanSuQrLinkTxt"></span>
+    </div>
+    <div id="nhanSuQrWarn" style="display:none;font-size:11.5px;color:var(--red-m);margin-bottom:10px">⚠️ Chưa bật Firebase Sync (Cài đặt ▸ Cấu hình Firebase Sync) — mã QR sẽ KHÔNG xem được từ điện thoại khác cho tới khi bật đồng bộ.</div>
+    <div id="nhanSuQrStats" style="display:flex;gap:8px;margin-bottom:10px"></div>
+    <div class="modal-footer" style="flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="closeModal('nhanSuQrModal')">Đóng</button>
+      <button class="btn btn-ghost" onclick="copyNhanSuLink()">🔗 Sao chép liên kết</button>
+      <button class="btn btn-primary" onclick="downloadNhanSuQr()">⬇️ Tải ảnh mã QR</button>
     </div>
   </div>
 </div>
@@ -12386,6 +12414,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   // trang công khai, không yêu cầu đăng nhập.
   if(_pubParam==='khuon'){
     renderPublicKhuon();
+    return;
+  }
+  // Link QR xem Danh sách nhân sự + Nghỉ phép (công khai, không đăng nhập).
+  if(_pubParam==='nhansu'){
+    renderPublicNhanSu();
     return;
   }
   $('lp').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
@@ -18761,7 +18794,10 @@ function renderNhanSu(){
       <div class="card" style="padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <div style="font-weight:700;font-size:15px;color:var(--brand)">👥 Danh sách nhân viên <span style="font-weight:500;font-size:12px;color:var(--text4)">(${dangLamCount} đang làm việc)</span></div>
-          ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700;border:none;cursor:pointer" onclick="addWorker()">➕ Thêm nhân viên</button>`:''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700;border:none;cursor:pointer" onclick="openNhanSuQrModal()">🏷 Tạo mã QR xem công khai</button>
+            ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700;border:none;cursor:pointer" onclick="addWorker()">➕ Thêm nhân viên</button>`:''}
+          </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
           <input id="nsWorkerSearch" class="field-inp" style="flex:1;min-width:200px" placeholder="🔍 Tìm theo tên, mã NV, chức vụ, bộ phận, SĐT..." value="${(_nsWorkerSearch||'').replace(/"/g,'&quot;')}" oninput="nsApplyWorkerFilter(this.value, undefined)">
@@ -18801,7 +18837,7 @@ function renderNhanSu(){
           ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700;border:none;cursor:pointer" onclick="openNghiPhepForm()">➕ Thêm đơn nghỉ phép</button>`:''}
         </div>
         ${admin?`<div id="nghiPhepForm" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
-          <div style="font-weight:700;font-size:13px;margin-bottom:10px">📝 Đơn xin nghỉ phép</div>
+          <div id="npFormTitle" style="font-weight:700;font-size:13px;margin-bottom:10px">📝 Đơn xin nghỉ phép</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Nhân viên *</label>
               <select id="np_worker" class="field-inp" style="width:100%">
@@ -18831,7 +18867,7 @@ function renderNhanSu(){
               </select></div>
           </div>
           <div style="display:flex;gap:8px;margin-top:12px">
-            <button class="set-btn" style="width:auto;padding:9px 18px;background:var(--brand);color:#fff;font-weight:700;border:none;cursor:pointer" onclick="saveNghiPhep()">💾 Lưu đơn</button>
+            <button class="set-btn" style="width:auto;padding:9px 18px;background:var(--brand);color:#fff;font-weight:700;border:none;cursor:pointer" id="npSaveBtn" onclick="saveNghiPhep()">💾 Lưu đơn</button>
             <button class="set-btn" style="width:auto;padding:9px 14px;border:none;cursor:pointer" onclick="closeNghiPhepForm()">✕ Hủy</button>
           </div>
         </div>`:''}
@@ -18931,13 +18967,38 @@ function renderNhanSu(){
 
 function parseCongValNum(s){ const n=parseFloat(s); return isNaN(n)?0:n; }
 
+let _npEditId = null; // id đơn nghỉ phép đang SỬA (null = đang thêm mới)
+function npSetFormMode(edit){
+  const t=document.getElementById('npFormTitle'), b=document.getElementById('npSaveBtn');
+  if(t) t.textContent = edit ? '✏️ Sửa đơn nghỉ phép' : '📝 Đơn xin nghỉ phép';
+  if(b) b.textContent = edit ? '💾 Cập nhật đơn' : '💾 Lưu đơn';
+}
 function openNghiPhepForm(){if(guardViewer())return;
   const f=document.getElementById('nghiPhepForm');
+  _npEditId=null; npSetFormMode(false);
+  const setV=(id,v)=>{const e=document.getElementById(id); if(e) e.value=v;};
+  setV('np_worker',''); setV('np_loai','Nghỉ phép năm'); setV('np_from',todayStr()); setV('np_to',todayStr()); setV('np_lydo',''); setV('np_status','Chờ duyệt');
   if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth',block:'start'});}
 }
 function closeNghiPhepForm(){
   const f=document.getElementById('nghiPhepForm');
   if(f) f.style.display='none';
+  _npEditId=null; npSetFormMode(false);
+}
+function editNghiPhep(id){if(guardViewer())return;
+  const rec=(DB.nghiPhep||[]).find(k=>k.id===id);
+  if(!rec){ showToast('⚠️ Không tìm thấy đơn nghỉ phép', true); return; }
+  const f=document.getElementById('nghiPhepForm'); if(!f) return;
+  const sel=document.getElementById('np_worker');
+  if(sel && rec.workerId && ![...sel.options].some(o=>o.value===rec.workerId)){
+    const op=document.createElement('option'); op.value=rec.workerId; op.textContent=(rec.workerName||'(Nhân viên đã xoá)'); sel.appendChild(op);
+  }
+  const setV=(i,v)=>{const e=document.getElementById(i); if(e) e.value=v;};
+  setV('np_worker',rec.workerId||''); setV('np_loai',rec.loai||'Nghỉ phép năm');
+  setV('np_from',rec.fromDate||todayStr()); setV('np_to',rec.toDate||todayStr());
+  setV('np_lydo',rec.lydo||''); setV('np_status',rec.status||'Chờ duyệt');
+  _npEditId=id; npSetFormMode(true);
+  f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function saveNghiPhep(){if(guardViewer())return;
   const workerId = document.getElementById('np_worker').value;
@@ -18951,11 +19012,18 @@ function saveNghiPhep(){if(guardViewer())return;
   if(to<from){ showToast('⚠️ Ngày kết thúc phải sau ngày bắt đầu', true); return; }
   if(!DB.nghiPhep) DB.nghiPhep=[];
   const worker = DB.workers.find(w=>w.id===workerId);
-  DB.nghiPhep.unshift({id:'np_'+Date.now(), workerId, workerName:worker?worker.name:'', loai, fromDate:from, toDate:to, lydo, status, createdAt:todayStr()});
+  let _isEdit = false;
+  const _npRec = _npEditId ? DB.nghiPhep.find(k=>k.id===_npEditId) : null;
+  if(_npRec){
+    _isEdit = true;
+    Object.assign(_npRec, {workerId, workerName:worker?worker.name:(_npRec.workerName||''), loai, fromDate:from, toDate:to, lydo, status, updatedAt:todayStr()});
+  } else {
+    DB.nghiPhep.unshift({id:'np_'+Date.now(), workerId, workerName:worker?worker.name:'', loai, fromDate:from, toDate:to, lydo, status, createdAt:todayStr()});
+  }
   lsSave();
   syncArrFieldToServer('nghiPhep', '/data/nghiPhep');
-  log('Nghỉ phép',`${worker?worker.name:'?'} · ${loai} · ${from}→${to}`,'','','');
-  showToast('✅ Đã lưu đơn nghỉ phép');
+  log('Nghỉ phép',`${_isEdit?'Sửa đơn: ':''}${worker?worker.name:'?'} · ${loai} · ${from}→${to}`,'','','');
+  showToast(_isEdit?'✅ Đã cập nhật đơn nghỉ phép':'✅ Đã lưu đơn nghỉ phép');
   closeNghiPhepForm();
   // Render lại TOÀN BỘ tab quản lý nhân sự (không chỉ riêng danh sách đơn
   // nghỉ phép) — trước đây chỉ cập nhật #nghiPhepList nên thẻ thống kê
@@ -18992,7 +19060,7 @@ function renderNghiPhepList(){
   return `<div style="overflow-x:auto"><table class="ns-table" style="min-width:640px">
     <thead><tr>
       <th>Nhân viên</th><th>Loại nghỉ</th><th>Từ ngày</th><th>Đến ngày</th><th>Lý do</th><th style="text-align:center">Trạng thái</th>
-      ${admin?'<th style="width:90px"></th>':''}
+      ${admin?'<th style="width:130px"></th>':''}
     </tr></thead>
     <tbody>
       ${list.map(k=>`<tr>
@@ -19005,6 +19073,7 @@ function renderNghiPhepList(){
         ${admin?`<td style="text-align:center;white-space:nowrap">
           ${k.status!=='Đã duyệt'?`<button class="chip" style="font-size:11px;padding:3px 7px;background:#dcfce7;color:#166534;border:none;cursor:pointer;border-radius:5px" onclick="approveNghiPhep('${k.id}','Đã duyệt')">✓ Duyệt</button> `:''}
           ${k.status!=='Từ chối'?`<button class="chip" style="font-size:11px;padding:3px 7px;background:#fee2e2;color:#dc2626;border:none;cursor:pointer;border-radius:5px" onclick="approveNghiPhep('${k.id}','Từ chối')">✗ Từ chối</button> `:''}
+          <button class="icon-btn" onclick="editNghiPhep('${k.id}')" title="Sửa đơn" style="font-size:13px">✏️</button>
           <button class="icon-btn del" onclick="deleteNghiPhep('${k.id}')" title="Xóa" style="font-size:13px">🗑</button>
         </td>`:''}
       </tr>`).join('')}
@@ -20711,15 +20780,48 @@ function nlMultiPack(type){
     .map(it=>({ma:String(it.ma||'').trim(), kg:Number(it.kg)||0}));
 }
 
+// ── Nhiều "Loại thành phẩm chạy" trên cùng 1 cuộn ───────────────────────
+// _nlTPItems: mảng chuỗi đang chỉnh trong modal. Khi Lưu: loaiThanhPhamItems
+// = mảng đầy đủ, loaiThanhPham = nối bằng " + " (giữ tương thích bảng, tìm
+// kiếm, xuất Excel và dữ liệu cũ vốn chỉ có 1 chuỗi).
+let _nlTPItems = [''];
+function nlTPRender(){
+  const el = $('nlTPList'); if(!el) return;
+  el.innerHTML = _nlTPItems.map((v,i)=>`
+    <div class="nl-multi-row">
+      <input class="field-inp nl-multi-code" style="flex:1" placeholder="${i===0?'VD: 10x100':'Loại thành phẩm khác (VD: 8x60)'}" value="${esc(v)}" oninput="nlTPUpdate(${i},this.value)">
+      <button type="button" class="nl-multi-del" title="Xoá loại này" onclick="nlTPDel(${i})">✕</button>
+    </div>`).join('');
+}
+function nlTPUpdate(i,val){ if(i>=0 && i<_nlTPItems.length) _nlTPItems[i]=val; }
+function nlTPAdd(){
+  _nlTPItems.push('');
+  nlTPRender();
+  const rows = $('nlTPList').querySelectorAll('.nl-multi-code');
+  if(rows.length) rows[rows.length-1].focus();
+}
+function nlTPDel(i){
+  _nlTPItems.splice(i,1);
+  if(!_nlTPItems.length) _nlTPItems.push('');
+  nlTPRender();
+}
+function nlTPFromRecord(r){
+  if(Array.isArray(r.loaiThanhPhamItems) && r.loaiThanhPhamItems.length) return r.loaiThanhPhamItems.map(x=>String(x||''));
+  if(r.loaiThanhPham) return String(r.loaiThanhPham).split(/\s+\+\s+/);
+  return [''];
+}
+function nlTPPack(){ return _nlTPItems.map(x=>String(x||'').trim()).filter(Boolean); }
+
 function nlOpenAdd(){
   if(guardSlEdit())return;
   _slEditId = null;
   $('nlModalTitle').textContent = 'Thêm dòng Sổ nguyên liệu';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
-  ['nlNguyenLieu','nlHeatLot','nlDoDanDien','nlSoLuong','nlLoaiTP','nlSoMet','nlDonHang','nlPO','nlWO','nlGhiChu'].forEach(id=>$(id).value='');
+  ['nlNguyenLieu','nlHeatLot','nlDoDanDien','nlSoLuong','nlSoMet','nlDonHang','nlPO','nlWO','nlGhiChu'].forEach(id=>$(id).value='');
   $('nlNgay').value = todayStr();
   _nlPheItems = [{ma:'',kg:''}]; _nlPhoiItems = [{ma:'',kg:''}];
   nlMultiRender('phe'); nlMultiRender('phoi');
+  _nlTPItems = ['']; nlTPRender();
   const dfKhu = nlLastKhuGet();
   $('nlKhuMay').innerHTML = machineGroupOptionsHTML(dfKhu);
   $('nlMay').innerHTML = machineOptionsHTMLByGroup(dfKhu, slLastMayGet(dfKhu));
@@ -20733,7 +20835,7 @@ function nlOpenEdit(id){
   $('nlModalTitle').textContent = 'Sửa dòng Sổ nguyên liệu';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   $('nlNgay').value=r.ngay||''; $('nlNguyenLieu').value=r.nguyenLieu||''; $('nlHeatLot').value=r.heatLot||'';
-  $('nlDoDanDien').value=r.doDanDien||''; $('nlSoLuong').value=r.soLuong??''; $('nlLoaiTP').value=r.loaiThanhPham||'';
+  $('nlDoDanDien').value=r.doDanDien||''; $('nlSoLuong').value=r.soLuong??''; _nlTPItems = nlTPFromRecord(r); nlTPRender();
   $('nlSoMet').value=r.soMetChay||'';
   _nlPheItems = nlMultiSetFromRecord(r.pheItems, r.phe);
   _nlPhoiItems = nlMultiSetFromRecord(r.phoiItems, r.phoi);
@@ -20749,6 +20851,7 @@ function nlSave(){
   if(guardSlEdit())return;
   const ngay=$('nlNgay').value, nl=$('nlNguyenLieu').value.trim();
   const pheItems = nlMultiPack('phe'), phoiItems = nlMultiPack('phoi');
+  const tpItems = nlTPPack();
   const phe = pheItems.reduce((s,it)=>s+it.kg,0);
   const phoi = phoiItems.reduce((s,it)=>s+it.kg,0);
   if(!ngay){ $('nlErr').textContent='⚠️ Vui lòng nhập Ngày.'; $('nlErr').style.display='block'; return; }
@@ -20764,7 +20867,7 @@ function nlSave(){
     ngay, nguyenLieu: nl, heatLot: $('nlHeatLot').value.trim(),
     doDanDien: $('nlDoDanDien').value.trim(),
     soLuong: $('nlSoLuong').value?Number($('nlSoLuong').value):0,
-    loaiThanhPham: $('nlLoaiTP').value.trim(), soMetChay: $('nlSoMet').value.trim(),
+    loaiThanhPham: tpItems.join(' + '), loaiThanhPhamItems: tpItems, soMetChay: $('nlSoMet').value.trim(),
     khuMay, may,
     phe, phoi, pheItems, phoiItems,
     khachHang: $('nlDonHang').value.trim(), po: $('nlPO').value.trim(), wo: $('nlWO').value.trim(),
@@ -20820,7 +20923,7 @@ function slViewDetail(tab, id){
       ${slDetailField('Mã cuộn/Heat-Lot', esc(r.heatLot))}
       ${slDetailField('Độ dẫn điện', esc(r.doDanDien))}
       ${slDetailField('Số lượng', fmtNum(r.soLuong)+' kg')}
-      ${slDetailField('Loại thành phẩm chạy', esc(r.loaiThanhPham))}
+      ${slDetailField('Loại thành phẩm chạy', esc((r.loaiThanhPhamItems&&r.loaiThanhPhamItems.length>1)?r.loaiThanhPhamItems.join('  •  '):r.loaiThanhPham))}
       ${slDetailField('Số mét chạy', esc(r.soMetChay))}
       ${slDetailField('Khu máy', esc(r.khuMay))}
       ${slDetailField('Máy sản xuất', r.may?('🏭 '+esc(r.may)):'—')}
@@ -22790,6 +22893,20 @@ function updateBoCanhPanel(show, t, w, calc, kgText){
   if(sm) sm.innerHTML = `A = T×(W−2R) + π×R² · KG = A × L × 8.96 / 1.000.000 × SL` + (kgText ? ` · <b>⚖️ ${kgText} kg</b>` : '');
 }
 
+// Đọc ô Dày/Rộng: cho phép ghi 1 số (6, 3.71) hoặc nhiều giá trị ngăn bởi / , -
+// (VD 6/10, 6-10, 3.71/9.71). val = giá trị LƯU & HIỂN THỊ (số nếu chỉ 1 giá trị,
+// chuỗi nếu nhiều giá trị); num = số dùng để TÍNH KG (trung bình các giá trị).
+function parseDimInput(raw){
+  const s = String(raw==null?'':raw).trim().replace(/\s+/g,'');
+  if(!s) return {val:0,num:0,multi:false};
+  const nums = s.split(/[\/,\-–—]+/).map(p=>parseFloat(p)).filter(n=>isFinite(n)&&n>0);
+  if(!nums.length) return {val:0,num:0,multi:false};
+  if(nums.length===1) return {val:nums[0],num:nums[0],multi:false};
+  const avg = nums.reduce((a,b)=>a+b,0)/nums.length;
+  const txt = s.replace(/[–—]/g,'-').replace(/[^\d.\/,\-]/g,'');
+  return {val:txt, num:parseFloat(avg.toFixed(4)), multi:true};
+}
+
 // Tự tính KG khi nhập Φ hoặc dày/rộng/dài/qty (và Bo cạnh khi Loại/Quy cách = "Bo cạnh")
 function calcKgAuto(){
   const isCoil = $('ofIsCoil') && $('ofIsCoil').checked;
@@ -22797,8 +22914,9 @@ function calcKgAuto(){
   const lRaw = parseFloat($('ofL').value)||0; // mm bình thường, hoặc mét/cuộn nếu ở chế độ cuộn
   const l = isCoil ? lRaw*1000 : lRaw; // quy đổi mét/cuộn → mm để dùng chung công thức tính khối lượng
   const qty = parseInt($('ofQty').value)||0; // số thanh hoặc số cuộn
-  const t   = parseFloat($('ofThk').value)||0;
-  const w   = parseFloat($('ofW').value)||0;
+  const dT  = parseDimInput($('ofThk').value), dW = parseDimInput($('ofW').value);
+  const t   = dT.num;
+  const w   = dW.num;
   const lbl = $('kgAutoLabel');
   const coilInfo = $('ofCoilInfo');
   let kg = 0, computed = false;
@@ -22827,6 +22945,7 @@ function calcKgAuto(){
     if(lbl) lbl.textContent = '';
   }
   if(computed) $('ofKg').value = kg;
+  if(computed && lbl && (dT.multi||dW.multi)) lbl.textContent += ' · dày/rộng nhiều giá trị → tính theo trung bình';
   updateBoCanhPanel(boMode, t, w, boCalc, computed ? kg : '');
 
   if(coilInfo){
@@ -22865,8 +22984,9 @@ function _saveOrderImpl(){
   saveQuyCachHistory($('ofType').value.trim());
   const isCoil = $('ofIsCoil') ? $('ofIsCoil').checked : false;
   const phi = parseFloat($('ofPhi').value)||0;
-  const t   = parseFloat($('ofThk').value)||0;
-  const w   = parseFloat($('ofW').value)||0;
+  const dT  = parseDimInput($('ofThk').value), dW = parseDimInput($('ofW').value);
+  const t   = dT.num, w = dW.num;            // số để tính KG (trung bình nếu ghi nhiều giá trị)
+  const tDisp = dT.val, wDisp = dW.val;      // giá trị lưu/hiển thị (VD "6/10")
   const lInput = parseFloat($('ofL').value)|| (isCoil?100:4000); // mm (thanh) hoặc mét/cuộn (cuộn)
   const l   = isCoil ? lInput*1000 : lInput; // luôn quy về mm để tính khối lượng nhất quán
   const meterPerCoil = isCoil ? lInput : 0;
@@ -22884,7 +23004,7 @@ function _saveOrderImpl(){
   const totalMeters = isCoil ? parseFloat((qty*meterPerCoil).toFixed(2)) : 0;
   const data={
     customer, po:$('ofPO').value.trim(), type:$('ofType').value.trim(),
-    material:$('ofMat').value, thickness:t, width:w, length:l, qty, kg,
+    material:$('ofMat').value, thickness:tDisp, width:wDisp, thicknessNum:t, widthNum:w, length:l, qty, kg,
     phi: isRound?phi:0, isRound,
     isBoCanh, boR: boCalc ? boCalc.r : 0, boArea: boCalc ? parseFloat(boCalc.area.toFixed(4)) : 0,
     isCoil, meterPerCoil, totalMeters,
@@ -22905,10 +23025,10 @@ function _saveOrderImpl(){
       const newId=uid();
       DB.orders.push({id:newId,status:'pending',createdAt:Date.now(),createdBy:currentUser?.id,...data});
       _knownIds.add(newId);
-      const dimStr = isRound?`Φ${phi}`:`${t}×${w}`;
+      const dimStr = isRound?`Φ${phi}`:`${tDisp}×${wDisp}`;
       const specStrTxt = isCoil
         ? `${dimStr}mm · ${qty} cuộn × ${meterPerCoil}m = ${totalMeters}m`
-        : (isRound?`Φ${phi}×${lInput}mm · ${qty} cây`:`${t}×${w}×${lInput}mm · ${qty} thanh`);
+        : (isRound?`Φ${phi}×${lInput}mm · ${qty} cây`:`${tDisp}×${wDisp}×${lInput}mm · ${qty} thanh`);
       log('Thêm đơn',`${customer} · ${specStrTxt} · ${data.priority}`,newId,null,{customer,qty,priority:data.priority});
       showToast('✅ Đã thêm đơn hàng mới');
       addNotif('order_new','📦 Đơn mới: '+customer,`${specStrTxt} · ${data.priority}`,'keHoach',currentUser?.name);
@@ -22920,10 +23040,10 @@ function _saveOrderImpl(){
     // Cảnh báo TRƯỚC khi tạo nếu đã có đơn giống hệt (cùng khách, cùng kích
     // thước, cùng số lượng, tạo trong vòng vài tiếng gần đây) — chặn ngay từ
     // gốc tình trạng nhập trùng đơn do 2 người/2 thiết bị cùng nhập 1 đơn.
-    const dups=findDuplicateOrders({customer,isRound,isCoil,phi:isRound?phi:0,thickness:t,width:w,length:l,qty,createdAt:Date.now()});
+    const dups=findDuplicateOrders({customer,isRound,isCoil,phi:isRound?phi:0,thickness:tDisp,width:wDisp,length:l,qty,createdAt:Date.now()});
     if(dups.length){
       confirm2('⚠️ Có thể bị trùng đơn',
-        `Đã có ${dups.length} đơn giống hệt của "${customer}" (${specStr({isCoil,isRound,phi,thickness:t,width:w,length:l})}, ${qty} ${isRound?'cây':isCoil?'cuộn':'thanh'}) được tạo gần đây. Bạn có chắc muốn tạo thêm đơn mới này không?`,
+        `Đã có ${dups.length} đơn giống hệt của "${customer}" (${specStr({isCoil,isRound,phi,thickness:tDisp,width:wDisp,length:l})}, ${qty} ${isRound?'cây':isCoil?'cuộn':'thanh'}) được tạo gần đây. Bạn có chắc muốn tạo thêm đơn mới này không?`,
         doCreate);
       return;
     }
@@ -23784,7 +23904,8 @@ const SCAN_STAT_TYPES = {
   lichlamviec: 'Lịch làm việc',
   chamcong: 'Chấm công',
   donhang: 'Thông tin đơn hàng',
-  khuon: 'Tổng hợp Khuôn'
+  khuon: 'Tổng hợp Khuôn',
+  nhansu: 'Danh sách nhân sự'
 };
 async function pubTrackScan(type){
   try{
@@ -24048,6 +24169,247 @@ async function downloadKhuonQr(){
   }catch(e){
     showToast('❌ Không tạo được ảnh mã QR, vui lòng thử lại', true);
   }
+}
+
+// ════════════════════════════════════════════════════════════
+// MÃ QR CÔNG KHAI: DANH SÁCH NHÂN SỰ + NGHỈ PHÉP
+// Ai quét bằng camera điện thoại thường (không cài app, không đăng nhập)
+// đều mở thẳng trang xem danh sách nhân viên và tình hình nghỉ phép, đọc
+// trực tiếp từ Firebase RTDB. Cố ý KHÔNG hiển thị SĐT, CCCD, kỷ luật, lý do nghỉ.
+// ════════════════════════════════════════════════════════════
+function nhanSuPublicUrl(){
+  const base = location.origin + location.pathname;
+  const db = fbUrl();
+  return base + '?pub=nhansu' + (db ? '&db=' + encodeURIComponent(db) : '');
+}
+
+async function loadNhanSuQrStats(){
+  const box = $('nhanSuQrStats'); if(!box) return;
+  if(!fbOk()){ box.innerHTML = ''; return; }
+  box.innerHTML = `<div style="font-size:11.5px;color:var(--text4)">Đang tải số lượt quét…</div>`;
+  const st = await fetchScanStats('nhansu');
+  if(!$('nhanSuQrStats')) return; // modal đã đóng trong lúc tải
+  box.innerHTML = scanStatCardHtml('👥 Danh sách nhân sự', st);
+}
+
+async function openNhanSuQrModal(){
+  if(guardViewer()) return;
+  openModal('nhanSuQrModal');
+  const link = nhanSuPublicUrl();
+  $('nhanSuQrLinkTxt').textContent = link;
+  $('nhanSuQrWarn').style.display = fbOk() ? 'none' : 'block';
+  loadNhanSuQrStats();
+  const wrap = $('nhanSuQrCanvasWrap');
+  wrap.innerHTML = '<span style="font-size:12px;color:var(--text4)">Đang tạo mã QR…</span>';
+  await ensureQrLib();
+  if(!$('nhanSuQrCanvasWrap')) return;
+  if(!window.QRCode){ wrap.innerHTML=''; wrap.textContent = link; return; }
+  wrap.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  wrap.appendChild(canvas);
+  QRCode.toCanvas(canvas, link, {width:220, margin:1}, function(err){
+    if(err){ wrap.innerHTML=''; wrap.textContent = link; }
+  });
+}
+
+function copyNhanSuLink(){
+  const link = nhanSuPublicUrl();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(()=>showToast('✅ Đã sao chép liên kết')).catch(()=>showToast('❌ Không thể sao chép, vui lòng tự chọn và copy', true));
+  } else {
+    showToast('❌ Trình duyệt không hỗ trợ sao chép tự động, vui lòng tự chọn và copy', true);
+  }
+}
+
+async function downloadNhanSuQr(){
+  await ensureQrLib();
+  if(!window.QRCode){ showToast('❌ Chưa tải xong thư viện tạo mã QR, kiểm tra kết nối mạng và thử lại', true); return; }
+  try{
+    const dataUrl = await QRCode.toDataURL(nhanSuPublicUrl(), {margin:1, width:640});
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'QR_Danh_sach_nhan_su.png';
+    a.click();
+  }catch(e){
+    showToast('❌ Không tạo được ảnh mã QR, vui lòng thử lại', true);
+  }
+}
+
+// ── Trang công khai ──
+let _pubNs = { workers:[], nghiPhep:[], search:'', status:'all', tab:'ds', dbUrl:'' };
+let _pubNsPollTimer = null;
+
+async function pubNsFetchData(dbUrl){
+  let workers=[], nghiPhep=[], errMsg=null;
+  try{
+    const [rw, rn] = await Promise.all([
+      fetch(await fbAppendAuth(dbUrl + '/data/workers.json?print=pretty'), {cache:'no-store'}),
+      fetch(await fbAppendAuth(dbUrl + '/data/nghiPhep.json?print=pretty'), {cache:'no-store'})
+    ]);
+    if(!rw.ok){
+      errMsg = (rw.status===401||rw.status===403)
+        ? `⚠️ Không kết nối được tới máy chủ dữ liệu (mã lỗi HTTP ${rw.status}).<br>Có thể quy tắc bảo mật (Rules) của Firebase đang chặn truy cập công khai.`
+        : `⚠️ Không kết nối được tới máy chủ dữ liệu.<br>Vui lòng thử lại sau ít phút hoặc liên hệ nhà máy.`;
+    } else {
+      const dw = await rw.json();
+      const dn = rn.ok ? await rn.json() : null;
+      workers = Array.isArray(dw) ? dw.filter(Boolean) : Object.values(dw||{}).filter(Boolean);
+      nghiPhep = Array.isArray(dn) ? dn.filter(Boolean) : Object.values(dn||{}).filter(Boolean);
+    }
+  }catch(e){
+    errMsg = `⚠️ Không có kết nối mạng hoặc máy chủ dữ liệu không phản hồi.<br>Vui lòng kiểm tra lại Wi-Fi/4G rồi thử quét lại.`;
+  }
+  return {workers, nghiPhep, errMsg};
+}
+
+async function renderPublicNhanSu(){
+  $('loginScreen').classList.remove('active');
+  $('publicScanScreen').classList.add('active');
+  const wrap = $('pubWrap');
+  const params = new URLSearchParams(location.search);
+  const dbUrl = (params.get('db') || fbUrl() || '').replace(/\/$/,'');
+  if(!dbUrl){
+    wrap.innerHTML = `<div class="pub-msg">⚠️ Không thể tải dữ liệu — liên kết thiếu thông tin kết nối.<br>Vui lòng liên hệ nhà máy để được hỗ trợ.</div>`;
+    return;
+  }
+  const {workers, nghiPhep, errMsg} = await pubNsFetchData(dbUrl);
+  if(errMsg){ wrap.innerHTML = `<div class="pub-msg">${errMsg}</div>`; return; }
+  _pubNs = { workers, nghiPhep, search:'', status:'all', tab:'ds', dbUrl };
+
+  wrap.innerHTML = `
+    <div class="pub-header">
+      <div class="pub-header-logo"><img src="${DP_LOGO_DATAURL}" alt="Logo Đông Phương" class="pub-header-logo-img"><span>CÔNG TY CP CÔNG THƯƠNG ĐÔNG PHƯƠNG</span></div>
+      <div class="pub-header-title">👥 Danh sách nhân sự</div>
+      <div class="pub-header-code">Xem công khai — cập nhật trực tiếp từ hệ thống</div>
+    </div>
+    <div id="pubNsSyncStatus" class="pub-kh-sync ok">🟢 Đang đồng bộ dữ liệu</div>
+    <div id="pubNsSummary" class="pub-kh-summary pub-kh-summary-2"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="chip pub-ns-tab active" data-tab="ds" onclick="pubNsSetTab('ds')" style="flex:1">👥 Danh sách</button>
+      <button class="chip pub-ns-tab" data-tab="np" onclick="pubNsSetTab('np')" style="flex:1">🏖️ Nghỉ phép</button>
+    </div>
+    <div id="pubNsBody"></div>
+    <div class="pub-kh-updated" id="pubNsUpdated">Cập nhật lúc ${fmtDateTime(Date.now())}</div>
+    <div class="pub-footer">Trang xem danh sách nhân sự — vui lòng liên hệ quản lý nếu có sai lệch.<br>Liên hệ SĐT/Zalo: 0979698351</div>
+  `;
+  pubNsRenderAll();
+  if(!_pubCcllvTracked.has('nhansu')){
+    _pubCcllvTracked.add('nhansu');
+    pubTrackScan('nhansu');
+  }
+  if(_pubNsPollTimer) clearInterval(_pubNsPollTimer);
+  _pubNsPollTimer = setInterval(pubNsRefresh, 30000);
+}
+
+async function pubNsRefresh(){
+  const st = $('pubNsSyncStatus');
+  try{
+    const {workers, nghiPhep, errMsg} = await pubNsFetchData(_pubNs.dbUrl);
+    if(errMsg){ if(st){ st.className='pub-kh-sync danger'; st.textContent='🔴 Không thể cập nhật dữ liệu mới'; } return; }
+    _pubNs.workers = workers; _pubNs.nghiPhep = nghiPhep;
+    if(st){ st.className='pub-kh-sync ok'; st.textContent='🟢 Đang đồng bộ dữ liệu'; }
+    const upd = $('pubNsUpdated'); if(upd) upd.textContent = 'Cập nhật lúc ' + fmtDateTime(Date.now());
+    pubNsRenderAll();
+  }catch(e){
+    if(st){ st.className='pub-kh-sync danger'; st.textContent='🔴 Không thể cập nhật dữ liệu mới'; }
+  }
+}
+
+function pubNsSetTab(t){
+  _pubNs.tab = t;
+  document.querySelectorAll('.pub-ns-tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===t));
+  pubNsRenderBody();
+}
+function pubNsSetSearch(v){ _pubNs.search = v||''; pubNsRenderBody(); }
+function pubNsSetStatus(v){ _pubNs.status = v; pubNsRenderBody(); }
+
+// Đơn nghỉ phép hiển thị công khai: bỏ đơn bị từ chối
+function pubNsLeaves(){
+  return (_pubNs.nghiPhep||[]).filter(k=>k.status!=='Từ chối')
+    .slice().sort((a,b)=>String(b.fromDate||'').localeCompare(String(a.fromDate||'')));
+}
+function pubNsOnLeaveToday(){
+  const today = todayStr();
+  return (_pubNs.nghiPhep||[]).filter(k=>k.status==='Đã duyệt' && (k.fromDate||'')<=today && today<=(k.toDate||''));
+}
+
+function pubNsRenderAll(){
+  const ws = _pubNs.workers;
+  const working = ws.filter(w=>(w.trangThai||'Đang làm')==='Đang làm').length;
+  const sum = $('pubNsSummary');
+  if(sum) sum.innerHTML = `
+    <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${working}</div><div class="pub-kh-sum-lbl">Đang làm việc</div></div>
+    <div class="pub-kh-sum-card"><div class="pub-kh-sum-n">${pubNsOnLeaveToday().length}</div><div class="pub-kh-sum-lbl">Nghỉ phép hôm nay</div></div>`;
+  pubNsRenderBody();
+}
+
+function pubNsRenderBody(){
+  const body = $('pubNsBody'); if(!body) return;
+  const active = document.activeElement;
+  const wasSearch = active && active.classList && active.classList.contains('pub-kh-search');
+  const caret = wasSearch ? active.selectionStart : null;
+  body.innerHTML = _pubNs.tab==='np' ? pubNsLeaveHtml() : pubNsListHtml();
+  if(wasSearch){
+    const inp = body.querySelector('.pub-kh-search');
+    if(inp){ inp.focus(); if(caret!=null) inp.setSelectionRange(caret, caret); }
+  }
+}
+
+function pubNsListHtml(){
+  const q = (_pubNs.search||'').trim().toLowerCase();
+  const onLeaveIds = new Set(pubNsOnLeaveToday().map(k=>k.workerId));
+  let list = _pubNs.workers.filter(w=>_pubNs.status==='all' || (w.trangThai||'Đang làm')===_pubNs.status);
+  if(q) list = list.filter(w=>[w.name,w.maNV,w.chucVu,w.boPhan].filter(Boolean).join(' ').toLowerCase().includes(q));
+  list = list.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'vi'));
+  const stBtn = (v,l)=>`<button class="pub-kh-chip ${_pubNs.status===v?'active':''}" onclick="pubNsSetStatus('${v}')">${l}</button>`;
+  return `
+    <div class="pub-kh-toolbar">
+      <input class="pub-kh-search" placeholder="🔎 Tìm tên, mã NV, chức vụ, bộ phận..." value="${pubEsc(_pubNs.search)}" oninput="pubNsSetSearch(this.value)">
+      <div class="pub-kh-chips">
+        ${stBtn('all','Tất cả ('+_pubNs.workers.length+')')}
+        ${stBtn('Đang làm','🟢 Đang làm')}
+        ${stBtn('Tạm nghỉ','🟡 Tạm nghỉ')}
+        ${stBtn('Đã nghỉ việc','⚪ Đã nghỉ việc')}
+      </div>
+    </div>
+    ${list.length===0 ? `<div class="pub-kh-empty">🗂️ Không tìm thấy nhân viên phù hợp</div>` : `
+    <div class="pub-card" style="padding:6px 12px">
+      ${list.map((w,i)=>{
+        const st = w.trangThai || 'Đang làm';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+          <div style="width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${pubEsc(workerInitials(w.name))}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:13.5px;color:var(--text)">${i+1}. ${pubEsc(w.name||'(Chưa đặt tên)')}</div>
+            <div style="font-size:11.5px;color:var(--text3)">${[w.maNV?('Mã NV: '+pubEsc(w.maNV)):'', pubEsc(w.chucVu||''), pubEsc(w.boPhan||'')].filter(Boolean).join(' · ') || '—'}</div>
+            ${w.ngayVaoLam?`<div style="font-size:11px;color:var(--text4)">Vào làm: ${pubEsc(w.ngayVaoLam)}</div>`:''}
+            ${onLeaveIds.has(w.id)?`<div style="font-size:11px;font-weight:700;color:#0e7490">🏖️ Đang nghỉ phép</div>`:''}
+          </div>
+          <span class="ns-badge" style="background:${NS_STATUS_BG[st]||'#f1f5f9'};color:${NS_STATUS_COLOR[st]||'#6b7280'};white-space:nowrap">${pubEsc(st)}</span>
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+function pubNsLeaveHtml(){
+  const list = pubNsLeaves();
+  const today = todayStr();
+  const stColor = {'Chờ duyệt':'#f59e0b','Đã duyệt':'#22c55e'};
+  if(!list.length) return `<div class="pub-kh-empty">🏖️ Chưa có đơn nghỉ phép nào</div>`;
+  return `<div class="pub-card" style="padding:6px 12px">
+    ${list.map(k=>{
+      const now = k.status==='Đã duyệt' && (k.fromDate||'')<=today && today<=(k.toDate||'');
+      const range = (k.fromDate===k.toDate || !k.toDate) ? fmtDate(k.fromDate) : `${fmtDate(k.fromDate)} → ${fmtDate(k.toDate)}`;
+      return `<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;font-weight:700;font-size:13.5px;color:var(--text)">${pubEsc(k.workerName||'—')}</div>
+          <span class="ns-badge" style="color:#fff;background:${stColor[k.status]||'#6b7280'};white-space:nowrap">${pubEsc(k.status||'Chờ duyệt')}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${pubEsc(k.loai||'Nghỉ phép')} · ${range}</div>
+        ${now?`<div style="font-size:11px;font-weight:700;color:#0e7490;margin-top:2px">🏖️ Đang nghỉ hôm nay</div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 let _pubCcllvTab = 'llv';
